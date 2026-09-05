@@ -106,3 +106,11 @@ def events(conn, *, actor, agent_id):
     ).fetchall()
     return [dict(zip(('sequence', 'kind', 'soul_revision', 'purpose', 'actor', 'created_at'), row))
             for row in rows]
+
+
+def list_roots(conn, *, actor):
+    """Installation roster; only the trusted owner may enumerate roots."""
+    _require_owner(actor)
+    return [_read(conn, row[0]) for row in conn.execute(
+        'SELECT id FROM agent_native_agents ORDER BY created_at, id'
+    ).fetchall()]

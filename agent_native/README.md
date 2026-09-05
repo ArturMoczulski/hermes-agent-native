@@ -12,9 +12,10 @@ an in-process capability for trusted host code; it must never be selected from
 request content or exposed in an agent tool. Any process with database write
 access can bypass these operations. Managed workers are not launched yet.
 
-Roots deliberately remain `not_started`. Dashboard authentication, parent/grant
-rules, protected soul projections, workspace isolation, activation intents and
-cadence still need implementation before this becomes user-facing agent creation.
+Roots deliberately remain `not_started`. The existing dashboard now exposes creation and listing at `/agents`, through
+owner-session authenticated `/api/agent-native/agents` endpoints. Request data
+cannot choose the actor. Parent/grant rules, protected soul projections, workspace
+isolation, activation intents and cadence remain to be implemented.
 At that point creation must record an immediate activation atomically, as required
 by the product specification. Do not present this interim record as a working agent.
 
@@ -27,3 +28,7 @@ scripts/run_tests.sh tests/hermes_cli/test_agent_native_identity.py tests/hermes
 Tests use real isolated SQLite databases, including concurrent duplicate requests
 and failed-event rollback. No model subscription, personal profile or browser is
 used. The first dashboard flow must add Playwright coverage against the real API.
+
+The Agents page is an interim inactive-record workflow and explicitly says work
+has not started. Open it in the existing Hermes dashboard navigation. Browser
+acceptance setup: [web/e2e/README.md](../web/e2e/README.md).

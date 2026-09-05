@@ -86,6 +86,7 @@ const LogsPage = lazy(() => import("@/pages/LogsPage"));
 const AnalyticsPage = lazy(() => import("@/pages/AnalyticsPage"));
 const ModelsPage = lazy(() => import("@/pages/ModelsPage"));
 const CronPage = lazy(() => import("@/pages/CronPage"));
+const AgentsPage = lazy(() => import("@/pages/AgentsPage"));
 const ProfilesPage = lazy(() => import("@/pages/ProfilesPage"));
 const ProfileBuilderPage = lazy(() => import("@/pages/ProfileBuilderPage"));
 const SkillsPage = lazy(() => import("@/pages/SkillsPage"));
@@ -168,6 +169,7 @@ const BUILTIN_ROUTES_CORE: Record<string, ComponentType> = {
   "/channels": ChannelsPage,
   "/webhooks": WebhooksPage,
   "/system": SystemPage,
+  "/agents": AgentsPage,
   "/profiles": ProfilesPage,
   "/profiles/new": ProfileBuilderPage,
   "/config": ConfigPage,
@@ -211,6 +213,7 @@ const BUILTIN_NAV_REST: NavItem[] = [
   { path: "/channels", label: "Channels", icon: Radio },
   { path: "/webhooks", label: "Webhooks", icon: Webhook },
   { path: "/pairing", label: "Pairing", icon: ShieldCheck },
+  { path: "/agents", label: "Agents", icon: Users },
   { path: "/profiles", labelKey: "profiles", label: "Profiles", icon: Users },
   { path: "/config", labelKey: "config", label: "Config", icon: Settings },
   { path: "/env", labelKey: "keys", label: "Keys", icon: KeyRound },
