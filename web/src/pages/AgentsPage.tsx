@@ -94,7 +94,7 @@ export default function AgentsPage() {
         </div>
         <Button type="submit" disabled={saving || loading || !name.trim() || !purpose.trim()}>{saving ? "Creating…" : "Create agent"}</Button>
       </form>
-      {error && <div role="alert" className="space-y-2"><p>{error}</p><Button variant="outline" disabled={saving} onClick={() => { setLoading(true); setError(""); setReload((value) => value + 1); }}>Reload agents</Button></div>}
+      {error && <div role="alert" className="space-y-2"><p>{error}</p><Button disabled={saving} onClick={() => { setLoading(true); setError(""); setReload((value) => value + 1); }}>Reload agents</Button></div>}
       <p role="status" className="text-sm">{notice}</p>
       <section aria-label="Agent list" className="space-y-4">
         <h2 className="text-lg font-semibold">Agents</h2>
