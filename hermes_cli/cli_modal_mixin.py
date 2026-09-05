@@ -818,6 +818,11 @@ class CLIModalMixin:
     def _computer_use_approval_callback(self, action: str, args: dict, summary: str) -> str:
         """Adapt the generic approval UI (once/session/always/deny) to the computer_use verdicts
         (approve_once/approve_session/always_approve/deny)."""
+        # One-shot runs never start the composer that answers modal approvals.
+        # Use the same explicit, default-deny policy as the terminal approval gate.
+        if getattr(self, "_single_query_mode", False):
+            from tools.approval_context import _get_single_query_approval_mode
+            return "approve_once" if _get_single_query_approval_mode() == "approve" else "deny"
         verdict = self._approval_callback(
             command=f"computer_use: {summary}",
             description=f"Allow computer_use to perform `{action}`?")
