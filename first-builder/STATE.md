@@ -16,8 +16,8 @@ operations. M7 is now the first handoff gate, using root-relevant M0/M1/M2 work.
 Use Plane through the Builder API account for current work and priorities. The
 full specification is now organized in milestone modules and rolling cycles; see
 [coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
-the latest review: AN-20 scoped writes (within AN-4), then AN-22 retry recovery.
-AN-19 scoped reads are accepted; sequence 2 is current and remains undated.
+the latest review: AN-22 retry recovery (within AN-4). AN-19 scoped reads and
+AN-20 scoped writes are accepted; sequence 2 is current and remains undated.
 
 ## Initial identity increment
 
@@ -353,3 +353,29 @@ is acyclic and the handoff has no deferred-feature blockers. Independent documen
 review checked 71 local links/anchors and all 24 product plus 20 UX scenario rows.
 No runtime tests were needed for this planning/documentation change. Current live
 scope remains in Plane; this entry is handoff evidence rather than a second board.
+
+
+## Latest increment — scoped Plane writes (2026-09-06)
+
+AN-20 adds ten trusted-host planning mutations, discoverable schemas, explicit
+operation/field grants and redacted durable intent/outcome events. Source checks
+reject observed drift, cycle moves verify prior membership, and dependencies stay
+within the project with bounded cycle detection. Returned business fields and
+service attribution must match. Artifact references are escaped unverified text;
+no crawler, upload or terminal state bypass is exposed.
+
+TDD progressed through failing contract, authority, journal and real HTTP checks.
+The final run passed 340 tests with zero failures/skips, including existing read,
+identity and schema regressions. Independent failure tests cover revocation,
+replay, lost/invalid responses and storage failures. Ruff and documentation links
+passed. The isolated live Plane v1.4.2 probe confirmed all ten operations plus
+cycle movement, scope/ownership denials, journal attribution and independent
+readback. Its workspace was deleted, tokens revoked and accounts deactivated.
+Commands, evidence location and limits: [AN-20 validation](../implementation/plane-scoped-writes.md).
+
+Next: AN-22. Start with a committed Plane creation whose response is lost, reopen
+the local journal and recover the original item ID without a second creation.
+Current receipts are hash-only and one-shot; they do not recover uncertain writes
+or deduplicate equivalent requests with new UUIDs. AN-3 remains Blocked on that
+proof. Fingerprints are not atomic remote compare-and-swap. No managed-agent tool
+transport, activation, autonomous work or new UI was enabled by AN-20.

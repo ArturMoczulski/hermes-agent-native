@@ -29,12 +29,12 @@ pauses the performing agent/subtree. The roadmap must implement these rules in
 the first autonomous root and then extend them to teams.
 
 Completed identity, authenticated creation UI, private provisioning, restricted
-Hermes environments and the scoped Plane read boundary are recorded in Git and
+Hermes environments and scoped Plane read/write boundaries are recorded in Git and
 Builder state. They do not
 yet establish autonomous managed agents.
 
-The current planning increment remains AN-20, followed by AN-22 and the carried
-AN-3 recovery acceptance. Existing Plane resources are reused for the Builder;
+AN-20 scoped planning writes are verified. The next planning increment is AN-22
+uncertain-write recovery, followed by the carried AN-3 recovery acceptance. Existing Plane resources are reused for the Builder;
 general onboarding and the complete multi-agent product follow the first handoff.
 Use the live AN-16 milestone and AN-57/AN-58 execution/proof records for acceptance;
 plan changes do not establish a deployed Builder.

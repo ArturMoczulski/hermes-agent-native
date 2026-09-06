@@ -4,9 +4,10 @@ Status: selected planning direction by the owner, 2026-09-06. Plane replaces the
 earlier Hermes-only task-board recommendation. The [product contract](../design/13-project-management.md)
 is authoritative. The owner subsequently authorized local setup: Plane Community v1.4.2 is now
 running in Docker, with a [live Builder workspace](../first-builder/PLANE.md).
-The [trusted-host read boundary](plane-scoped-reads.md) is implemented and verified.
-Managed launch/transport integration and scoped writes remain pending. Existing
-identity and sandbox increments remain useful.
+The [trusted-host read boundary](plane-scoped-reads.md) and
+[scoped planning writes](plane-scoped-writes.md) are implemented and verified.
+Uncertain-write recovery and managed launch/transport integration remain pending.
+Existing identity and sandbox increments remain useful.
 
 ## Reuse and boundary
 
@@ -115,7 +116,8 @@ of a workspace whose identity cannot be resolved.
 ## Delivery sequence and evidence
 
 The owner prioritizes the first managed Builder handoff. Reuse its existing
-workspace/project and stable IDs: scoped writes and retry recovery are next, then
+workspace/project and stable IDs: scoped reads/writes are verified; retry recovery
+is next, then
 source reconciliation and managed execution. General root onboarding (AN-21)
 follows the handoff; existing bindings still require validation and safe recovery.
 The stages below describe full integration coverage, not a requirement to finish

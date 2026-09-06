@@ -14,8 +14,9 @@ access can bypass these operations. Managed workers are not launched yet.
 
 Roots deliberately remain `not_started`. The existing dashboard now exposes creation and listing at `/agents`, through
 owner-session authenticated `/api/agent-native/agents` endpoints. Request data
-cannot choose the actor. Parent/grant rules, protected soul projections, workspace
-isolation, activation intents and cadence remain to be implemented.
+cannot choose the actor. Private provisioning, restricted tool environments and
+host Plane grants are described below; they are not yet connected to managed
+launch. Parent control, activation intents and cadence remain to be implemented.
 At that point creation must record an immediate activation atomically, as required
 by the product specification. Do not present this interim record as a working agent.
 
@@ -27,7 +28,8 @@ scripts/run_tests.sh tests/hermes_cli/test_agent_native_identity.py tests/hermes
 
 Tests use real isolated SQLite databases, including concurrent duplicate requests
 and failed-event rollback. No model subscription, personal profile or browser is
-used. The first dashboard flow must add Playwright coverage against the real API.
+used by these identity checks. Dashboard browser acceptance uses the real API;
+its setup is linked below.
 
 The Agents page is an interim inactive-record workflow and explicitly says work
 has not started. Open it in the existing Hermes dashboard navigation. Browser
@@ -59,11 +61,11 @@ checks still run. The container test applies the emitted binds with no network,
 read-only root filesystem, dropped capabilities and no-new-privileges. It verifies
 failed soul writes/chmod, absent neighbor/control paths and persisted mutable work.
 
-Before startup integration, Hermes' Docker backend must stop inheriting automatic
-credential/skill/cache mounts, environment forwarding, container reuse and any
-other options that widen these grants. That integration is still pending. The
-current provisioning module is not exposed as a worker tool or a dashboard action,
-and purpose changes require an explicit refresh workflow before startup.
+The restricted Hermes environment below excludes automatic credential/skill/cache
+mounts, environment forwarding and container reuse that would widen these grants.
+Managed startup integration remains pending. The provisioning module is not exposed
+as a worker tool or a dashboard action, and purpose changes still require an
+explicit refresh workflow before startup.
 
 ## Restricted Hermes execution environment
 
@@ -135,3 +137,39 @@ The tests use isolated SQLite and a real loopback HTTP server. They require no
 browser, model credential or existing Plane account. The separate live Plane
 probe uses its own disposable accounts and workspace; see the scoped-read
 [validation report](../implementation/plane-scoped-reads.md) for observed results.
+
+## Scoped Plane writes
+
+`plane_writes.PlaneWrites` adds a trusted-host dispatcher for ten planning
+mutations and read-only source inspection. `tool_schemas(context)` exposes the
+fixed schema subset granted to the binding. `execute(context, operation_id,
+operation, arguments)` keeps the opaque authority context and operation UUID
+outside model arguments; the host supplies the Plane credential and service-user
+identity. This is not yet a registered managed-agent tool or a dashboard route.
+
+`plane_write_access` layers explicit operation grants over the existing project
+read binding. Existing resource edits also need owner-selected fields. Confirmed
+item/cycle creation records the created resource's fixed field rights without
+expanding the operation grant. Current scope, purpose and field rights are checked
+around execution. Direct control-database access remains privileged host access,
+not something a worker receives.
+
+The operations cover project descriptions, work-item creation/updates, appended
+comments, undated cycles and memberships, dependencies, and unverified artifact
+references. Plain text is escaped; artifact references are not fetched or converted
+into native crawler-triggering links. This surface rejects terminal Plane states;
+it cannot replace framework result acceptance or cancellation controls. Source
+fingerprints detect observed changes but do not provide atomic remote writes.
+
+`plane_write_journal` durably records a one-shot operation intent before sending,
+then its confirmed/rejected/unknown outcome. Stored receipts contain hashes and
+identifiers, not work text or credentials. Reusing an operation UUID is denied;
+using a new UUID does not deduplicate an earlier semantic request. Missing final
+receipts remain pending, including after journal-write failure. Pending or unknown
+effects require reconciliation, not automatic replay. AN-22 remains necessary for
+retry recovery and AN-23 for source reconciliation before managed planning.
+
+Read the [operation boundary and evidence](../implementation/plane-scoped-writes.md)
+for the supported surface, focused checks and remaining runtime integration.
+Neither these contexts nor the journal authenticate an admitted run. Existing
+sandbox restrictions remain in force; no managed Builder or cadence is activated.

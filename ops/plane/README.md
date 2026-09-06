@@ -98,3 +98,21 @@ actually pulled. The Compose file pins application tags and the MinIO digest.
 See [AN-2 validation](../../implementation/plane-api-validation.md) for the isolated
 `probe_api.py` command, observations and remaining gaps. It creates disposable
 accounts/workspace and checks cleanup; it does not use the Builder's API quota.
+
+
+## Scoped planning verification
+
+The trusted-host [read proof](../../implementation/plane-scoped-reads.md) and
+[write proof](../../implementation/plane-scoped-writes.md) use disposable accounts
+and projects with separate API keys. The write probe exercises all ten planning
+operations and authorization failures without uploads or reference fetches:
+
+```sh
+.venv/bin/python ops/plane/probe_scoped_writes.py --base-url http://localhost:19230 --output-dir /absolute/private/new-scoped-write-probe
+```
+
+Use a new private directory outside the repository. It retains the recovery
+manifest, SQLite journal and a redacted report. Read both `result` and `cleanup`;
+success requires deletion of its fixture workspace, token revocation and account
+deactivation. These are logical Plane operations, not physical database erasure.
+No owner/Builder project, credentials, model or managed worker is used by the probe.

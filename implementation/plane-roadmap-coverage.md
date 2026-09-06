@@ -247,6 +247,17 @@ Readback verified 70 unique work items, 39 updated existing items with their sta
 preserved, 14 revised dependency sets, six exact undated cycle memberships and
 preserved original module memberships. The graph including aggregate completion
 remains acyclic; the first handoff has no prerequisite in deferred teams, complete
-UI, multi-model switching or broad operation hardening. AN-20 remains the next
-implementation slice in sequence 2. The completed first cycle and accepted evidence
+UI, multi-model switching or broad operation hardening. At that planning update AN-20 was the next
+implementation slice in sequence 2; the acceptance update below supersedes it. The completed first cycle and accepted evidence
 remain intact. Documentation checks preserve all 24 product and 20 UX mappings.
+
+
+## Scoped-write acceptance update
+
+[AN-20 validation](plane-scoped-writes.md) records 340 passing focused checks and
+the isolated live Plane proof for ten scoped planning operations. AN-20 is now
+accepted and AN-22 is the next ready item in sequence 2. AN-3 remains Blocked until
+uncertain-write/retry recovery is verified; the passing storage restore evidence
+is preserved. This acceptance covers the trusted-host adapter, schemas and
+receipts. Managed-run authentication, execution, source reconciliation and the
+first Builder handoff remain separate work. Cycles remain ordered and undated.

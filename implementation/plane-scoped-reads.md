@@ -90,7 +90,8 @@ interruption; do not delete unrelated objects or workspaces.
 
 ## Remaining integration
 
-AN-20 adds scoped planning writes; AN-22 addresses uncertain mutations and retries.
+[AN-20 now supplies scoped planning writes](plane-scoped-writes.md); AN-22 still
+needs to address uncertain mutations and retries.
 Managed launch identity and admission remain AN-24/AN-7 work. They must retain the
 context privately, associate it with the invoking run, and enforce lifecycle.
 Parent delegation policy, unified authorization events and attachment downloading
