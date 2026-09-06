@@ -32,3 +32,35 @@ used. The first dashboard flow must add Playwright coverage against the real API
 The Agents page is an interim inactive-record workflow and explicitly says work
 has not started. Open it in the existing Hermes dashboard navigation. Browser
 acceptance setup: [web/e2e/README.md](../web/e2e/README.md).
+
+## Private profile provisioning
+
+`provisioning.provision_root` publishes a complete host-owned directory for an
+inactive root, keyed by its stable ID. It projects the database purpose and
+revision into `profile/SOUL.md` and `profile/identity.json`, seeds an empty `.env`,
+and creates separate workspace/practices, memories and skills directories.
+Retries preserve mutable files and reject stale/tampered projections, symlinked
+layout paths, and weakened protected permissions. No existing owner profile or
+credential is copied. This currently uses POSIX filesystem permissions.
+
+`sandbox_mounts` describes exactly four binds: read-only soul/identity files,
+writable workspace, and writable memory. The profile root, `.env`, control
+database and sibling directories are not included. This mount description is not
+a worker launcher, and chmod alone does not isolate generated code from the host.
+
+Real-container verification (local Alpine required; never pulls an image):
+
+```sh
+HERMES_TEST_IMAGE=alpine:latest scripts/run_tests.sh tests/hermes_cli/test_agent_native_provisioning.py
+```
+
+Without that explicit image setting, the Docker case skips and local filesystem
+checks still run. The container test applies the emitted binds with no network,
+read-only root filesystem, dropped capabilities and no-new-privileges. It verifies
+failed soul writes/chmod, absent neighbor/control paths and persisted mutable work.
+
+Before startup integration, Hermes' Docker backend must stop inheriting automatic
+credential/skill/cache mounts, environment forwarding, container reuse and any
+other options that widen these grants. That integration is still pending. The
+current provisioning module is not exposed as a worker tool or a dashboard action,
+and purpose changes require an explicit refresh workflow before startup.
