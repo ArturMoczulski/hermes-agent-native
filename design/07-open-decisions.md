@@ -20,9 +20,6 @@ behavior or introduce implementation choices.
 | Decision | Question to settle | Current proposal |
 | --- | --- | --- |
 | Participation across projects | Can an agent work on unrelated projects concurrently, and who resolves competing priorities? | No default adopted. |
-| Proposals for new direction | When does an agent wait for a reply to a proposal, and when may it proceed within existing authority? | Clear, already authorized next steps can proceed; the proposal boundary needs definition. |
-| Approval policy | Which levels of involvement exist, and does any policy permit a timed opportunity to veto? | Required approval means explicit authorization; notification is separate. |
-| Parent permission administration | Which capabilities and permissions may a parent grant or change without further human involvement? | The human has ultimate control; agents remain within the authority granted to them. |
 | After a purpose change or replacement | When does new work start after the immediate stop, and what context and unfinished work are handed over? | Stop affected active work immediately; retain existing results and replan or hand over explicitly. |
 | Cancelled or finished assignments and retained work | Does a child become idle or retire after a bounded assignment ends? How are records and unfinished work retained or deliberately transferred after retirement? | Parent retirement retires all descendants. Assignment completion is separate, and results are preserved. |
 | Resume and project pause | How does subtree resume treat separately paused descendants? Does project pause stop only work belonging to that project? | Preserve separate descendant pauses; project pause scope remains open. |
@@ -35,6 +32,27 @@ concern work and children after stopping, not whether stopping happens.
 
 Retirement is settled: retiring an agent retires every descendant. They do not
 automatically remain active or get reassigned.
+
+## Resolved: autonomy and permissions
+
+The owner approved AN-60, AN-61 and AN-62 in the decision discussion following the
+Plane roadmap review: "Yes, this all sounds good." Approval applies to the three
+presented defaults, not the remaining lifecycle or timing proposals above.
+
+- **AN-60 — Next work:** clear authorized steps proceed; missing direction prompts
+  clarification, and no apparent next step prompts a proposal. A proposal needs a
+  response when direction or authority is missing, not merely because it was stated.
+- **AN-61 — Permission policy:** ordinary root defaults support private work, Plane,
+  public research and child creation within configured limits. Scoped standing permission or explicit
+  approval is required for publication, spending, contacting people and deployment.
+  Silence and timeouts never approve an action.
+- **AN-62 — Parent administration:** a parent can select and narrow a subset of its
+  own delegable permissions for a child. It cannot grant additional powers; the
+  owner can mark permissions non-delegable.
+
+Canonical behavior lives in [Human interaction](05-human-interaction.md#questions-proposals-and-permission)
+and [Default capabilities](04-workspaces-and-skills.md#default-capabilities).
+These are settled product rules; their enforcement still needs implementation.
 
 ## Optional scope to decide explicitly
 

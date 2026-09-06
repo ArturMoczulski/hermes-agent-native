@@ -42,3 +42,12 @@ contradictory instructions or store secrets here.
   Docker deployment and using Plane for the Builder's ongoing work. Live references
   and private API credential location are in PLANE.md. Use the separate Builder
   account through Plane's API. PLAN.md is now a pointer, not a duplicate backlog.
+
+- **Autonomy/permission decisions — after the Plane roadmap review:** owner approved
+  AN-60–62: ordinary authorized work proceeds; root defaults cover private work,
+  Plane, public research and child creation within configured limits; external publication/spending/
+  contact/deployment needs scoped standing permission or explicit approval, never
+  silence. Children receive only a selected subset of parent-held delegable
+  permissions; owner can prohibit delegation. Source: owner reply "Yes, this all
+  sounds good" to those three defaults. Canonical rules: design/04 and design/05;
+  remaining lifecycle, timing and capacity choices were not approved by that reply.

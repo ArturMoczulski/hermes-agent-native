@@ -1,7 +1,8 @@
 # Proposed decisions and supporting evidence
 
 Prepared on 2026-09-05. These recommendations support the
-[implementation proposal](README.md); they are not approved product changes.
+[implementation proposal](README.md); the initial review did not approve product changes. Later owner decisions are
+identified and linked below.
 The review used documentation and source inspection. It did not validate a
 working Hermes integration or execute tests.
 
@@ -96,18 +97,18 @@ an event stream is a permanent audit log.
 ## Proposed product defaults
 
 These fill the open choices in
-[the product decision list](../design/07-open-decisions.md). They are proposed
-defaults for review, not new authority over that document. After agreement,
-update the canonical specification and link to it instead of keeping competing
-definitions here.
+[the product decision list](../design/07-open-decisions.md). Rows marked Accepted
+link to the canonical owner-approved rules. Other rows remain proposals and do
+not gain approval from the accepted subset. Implementation evidence is still
+required independently of a product decision.
 
-| Decision | Recommended initial behavior |
+| Decision | Status and initial behavior |
 | --- | --- |
 | Multiple projects and priority | An agent may work across projects within its authority. It proposes priorities; its responsible parent resolves delegated conflicts, and the human can override. Project membership does not change parentage or grant access. |
-| Next work and proposals | Continue clear, already authorized work and useful exploration. Ask when ambiguity affects the choice; wait when the proposed direction requires a decision or new authority. Label a suggestion as a suggestion rather than implying that silence approves it. |
-| Approval | Required approval is explicit and scoped to the action, resource, relevant parameters and purpose/grant revision. Notification is separate. No timed veto or approval inferred from silence initially. |
-| Parent permissions | A parent can give a child only explicitly delegable capabilities within its own grants, and can narrow them. Expansion beyond those grants goes through the parent chain to the human. Human ownership remains unrestricted. |
-| Default creation experience | The owner approves a capability template at installation: private workspace, work/memory tools, approved public research and bounded child creation. Root creation can then start from purpose alone. Personal-resource access and consequential external actions remain separately granted. |
+| Next work and proposals | **Accepted, AN-60.** Follow [questions and permissions](../design/05-human-interaction.md#questions-proposals-and-permission). |
+| Approval | **Accepted, AN-61.** Follow [standing permission and explicit approval](../design/05-human-interaction.md#questions-proposals-and-permission). |
+| Parent permissions | **Accepted, AN-62.** Follow [delegable authority](../design/05-human-interaction.md#applying-ownership-to-permissions). |
+| Default creation experience | **Accepted, AN-61.** Follow [default capabilities](../design/04-workspaces-and-skills.md#default-capabilities). |
 | Purpose changes | Begin stopping affected work immediately, retain evidence, reconcile known effects, then replan under the new revision. Uncertain outstanding effects block conflicting new actions until reconciled. Unrelated authorized work need not be discarded. |
 | Child replacement | Create a new agent ID with an explicit brief and selected handover artifacts; retire the old child and its descendants. Do not automatically copy all memory or reparent descendants. The parent can choose a different explicitly authorized restructuring. |
 | Finished or cancelled bounded assignment | End that assignment and retain its child as idle for inspection, reassignment or explicit retirement. It does not invent an unrelated ongoing purpose. Ending an assignment is distinct from retiring an agent. |

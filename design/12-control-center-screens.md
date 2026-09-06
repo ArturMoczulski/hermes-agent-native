@@ -353,7 +353,8 @@ Do not build every screen as an empty shell and defer functional verification.
 
 The [open decisions](07-open-decisions.md) still govern resume handling,
 post-purpose-change restart, replacement handoff, bounded-child disposition,
-parent-grant policy and progress thresholds. Do not invent these in frontend code.
+and progress thresholds. Do not invent these in frontend code. Parent permission
+administration follows the approved [permission rules](05-human-interaction.md#applying-ownership-to-permissions).
 Project-wide pause, automatic request expiry, reminder timing, graph editing and
 history replay are not required controls for this first interface. Their absence
 does not remove immediate agent/subtree interruption or the owner's authority.

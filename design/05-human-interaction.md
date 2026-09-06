@@ -65,20 +65,32 @@ These interactions have different meanings:
 | Permission request | “May I publish these tracks?” | Authorization for a particular action |
 | Progress report | “The compositions are ready; recording is underway.” | Visibility into work |
 
-An answer to a question does not automatically authorize every action related
-to it. An agent can independently take clear next steps already within its
-purpose and permissions. Whether a new-direction proposal requires a reply
-is an [open decision](07-open-decisions.md).
+An agent independently takes clear next steps within its purpose and permissions.
+It asks through the parent chain when material direction is missing, and proposes
+a useful direction when no next step is apparent. A proposal waits for a reply
+when choosing it requires missing direction or additional authority. Describing
+an already authorized next step does not create a new approval gate.
 
-**Proposed:** a required approval waits for explicit authorization. Silence leaves
-the request pending; denial leads to replanning or continued waiting. Requests
-identify the action and scope so the same answer is not reused as permission for
-an unrelated action. Notification alone does not count as approval.
+The owner can grant standing permission for a class of actions within explicit
+scope and limits, or approve a particular action. Publishing, spending, contacting
+people and deployment require one of those permissions. Actions within a standing
+permission can proceed without asking again for each occurrence. For example,
+permission to publish finished tracks to a specified account applies to that
+publication activity; it does not authorize spending on promotion. These external
+action permissions do not add an approval step for the framework's trusted owner
+conversation or already permitted agent-to-agent communication.
 
-Permission policies must support different levels of human involvement and
-different rules for different actions or milestones. Their exact labels and
-defaults remain open. The framework enforces applicable restrictions independently
-of whether the agent remembers to mention them in its reasoning.
+When required permission is absent, the action waits for explicit authorization.
+Silence, elapsed time and notification do not grant approval. Requests identify
+the action and scope; an answer to a clarification does not authorize unrelated
+actions. Denial leads to replanning or continued waiting. Other clear, permitted
+work can proceed independently.
+
+The framework enforces the current permissions and applicable fundamental rules
+at the operation that causes the effect, independently of the agent's reasoning.
+The owner can change or withdraw permissions. A standing permission cannot be
+reused outside its scope or after it no longer applies. The initial capability
+template is specified in [Workspaces and skills](04-workspaces-and-skills.md#default-capabilities).
 
 ## Unified human decision inbox
 
@@ -171,10 +183,17 @@ record of actions, decisions, approvals, and failures that supports them.
 
 ## Applying ownership to permissions
 
-[Agent ownership](01-agents.md) defines who can change an agent. An agent cannot
-use child creation, skills, or editable practices to bypass a restriction, or
-delegate more authority than it is allowed to grant. Which permissions a parent
-may change without additional human involvement remains an open decision.
+[Agent ownership](01-agents.md) defines who can change an agent. A parent can
+give a child a selected subset of its own delegable permissions and can narrow
+that subset. It cannot grant powers it does not hold or is not allowed to delegate.
+The owner can mark particular permissions non-delegable. Additional authority
+follows the parent escalation chain to the owner where necessary.
+
+Authorized child creation and delegation within these limits do not require
+human approval for every child. Child creation, skills and editable practices
+cannot bypass restrictions. Permission administration does not change soul
+ownership: no agent can edit its own soul or a root's soul, and the human remains
+the ultimate owner of every agent.
 
 ## Terms for ending or continuing work
 

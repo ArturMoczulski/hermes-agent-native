@@ -133,7 +133,12 @@ The same behavior applies to permitted sibling communication.
 
 An agent without an explicit grant cannot read the human's personal files or
 control the human's machine. A skill describing how to use such resources does
-not grant access. After a permitted action, the human can inspect which agent
+not grant access. An artist with standing permission to publish finished tracks
+to a specified account can do so without asking for every release. Spending on
+promotion outside its granted limits still waits for authorization; silence is
+not approval. A parent can give a production child only a subset of its own
+delegable permissions, never an owner-marked non-delegable capability.
+After a permitted action, the human can inspect which agent
 acted, the affected work, its known result, and any associated approval. A later
 plan update or restart does not silently remove that record.
 

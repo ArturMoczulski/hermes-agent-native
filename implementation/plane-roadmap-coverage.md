@@ -31,7 +31,7 @@ Near-term work is refined into smaller linked items; distant work stays coarser.
 | [M5 - Evaluate outcomes and detect stalled work](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/a758b594-f81b-4343-898b-bbff2e623a98/) | Gate: domain-appropriate result review and one evidence-linked concern per recurring no-progress pattern. |
 | [M6 - Reliable always-on operation](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/95e8fc96-2b57-4679-b0dd-ac52def9c32f/) | Gate AN-15: failure-tested recovery, consistent backups, revocation/cancellation, measured capacity and a documented Linux deployment independent of the personal computer. |
 | [M7 - First Builder self-bootstrap](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/38d8aafd-cc77-4d6a-bb98-e610c8a77acd/) | Gate AN-16: the real managed Builder completes a bounded TDD improvement from the repository workspace, survives interruption and owner steering, and cannot grant itself deployment or soul-edit authority. |
-| [Product decisions - resolve before dependent behavior](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/3ceeb4bd-b69d-4543-8d4c-9be5684b9011/) | Nine unresolved product choices from design/07-open-decisions. |
+| [Product decisions - resolve before dependent behavior](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/3ceeb4bd-b69d-4543-8d4c-9be5684b9011/) | Product policy choices from design/07-open-decisions. |
 
 ## Rolling cycles and priority
 
@@ -126,8 +126,10 @@ evidence is recorded separately from deterministic model fixtures.
 
 ## Decision and evidence boundaries
 
-All nine chapter-07 choices have decision items. Their dependencies gate only
-behavior that needs that choice; creating the items does not approve the proposals.
+The original nine chapter-07 choices have decision items. AN-60–62 were subsequently
+approved by the owner; see the [decision record](../design/07-open-decisions.md#resolved-autonomy-and-permissions).
+The remaining six remain open. Their dependencies gate only
+behavior that needs that choice; creating an item does not approve its proposal.
 Parent notification after direct human direction remains proposed, within the
 handoff decision. Required immediate stopping is already settled and is part of
 the first root, not deferred to team replacement.

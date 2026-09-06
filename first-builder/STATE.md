@@ -219,7 +219,7 @@ Builder workflow. Preserved AN-1–AN-16 and added AN-17–AN-67 with source ref
 acceptance, implementer/evaluator, native parent/dependency links and priorities.
 Eight M0–M7 milestone modules plus a product-decision module cover the work; all
 24 product scenarios and UX-01–20 have linked delivery records. The nine product
-choices remain undecided, not silently adopted through backlog wording.
+choices were undecided at that review; subsequent decisions are recorded below.
 
 Current cycle retains setup/API evidence and blocked AN-3, adding AN-19 scoped
 reads. The next two weekly cycles are tentative: scoped writes/uncertain-write
@@ -238,3 +238,13 @@ Final roadmap audit passed: 67 unique items, 51 additions, all module/cycle/pare
 assignments and native dependencies verified; no dependency cycle, including
 parent-completion edges. Original accepted setup/API work retained. Documentation
 links and all 44 scenario references checked. Plane remains the live priority source.
+
+## Owner decision — autonomy and permissions
+
+Owner approved the three presented defaults, resolving AN-60, AN-61 and AN-62.
+Canonical design/02, /04, /05 and the resolved section of /07 now specify clear
+next-work autonomy, standing scoped permissions or explicit approval, no approval
+by silence, and bounded parent-to-child permission delegation. Reconciled the
+engineering/UX caveats; no runtime enforcement or remaining policy adoption is
+claimed. Next decision discussion: completed bounded children and replacement
+handoff. AN-3 still requires retry implementation evidence, not an owner decision.

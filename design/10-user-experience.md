@@ -221,7 +221,9 @@ confirm a stop, grant or response. Reconnection refreshes authoritative state an
 deduplicates updates. Persisted conversations and tasks survive closing the client;
 their agents continue according to lifecycle and authority, not page visibility.
 
-Creation defaults, permissions, reminder timing, project pause and resume semantics
-remain governed by [open decisions](07-open-decisions.md). This UX does not settle
-them through an implicit button behavior. Multiple owner channels, group-chat rooms,
+Creation defaults and permissions follow the approved
+[capability template](04-workspaces-and-skills.md#default-capabilities) and
+[permission rules](05-human-interaction.md#questions-proposals-and-permission).
+Reminder timing, project pause and resume semantics remain governed by
+[open decisions](07-open-decisions.md); the UI does not settle them implicitly. Multiple owner channels, group-chat rooms,
 historical replay, a graph canvas and native clients are outside this first UX.

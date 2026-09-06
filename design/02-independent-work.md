@@ -50,7 +50,10 @@ the agent is continuously making decisions between check-ins.
 
 When the next step is clear and authorized, the agent can proceed independently.
 When important information is missing, it asks for clarification. When no next
-step is apparent, it proposes what would be best to work on next.
+step is apparent, it proposes what would be best to work on next. A proposal
+requires an answer when direction or permission is missing; announcing an already
+authorized step does not create an approval requirement. See
+[questions and permissions](05-human-interaction.md#questions-proposals-and-permission).
 
 Finishing a task or milestone does not automatically finish an ongoing purpose.
 Equally, an enduring purpose does not justify busywork. The agent should connect

@@ -120,10 +120,11 @@ prompt must not become the new authority.
 
 Keep the creation experience simple: installation setup establishes an
 owner-approved default capability template, so creating a root can begin with
-its purpose. Proposed initial capabilities are its private workspace, structured
-work and memory tools, approved public research, and child creation within a
-configured limit. Personal resources and consequential external actions require
-separate grants. Show the inherited capabilities to the owner; do not ask the
+its purpose. Apply the owner-approved
+[default capabilities](../design/04-workspaces-and-skills.md#default-capabilities)
+and [permission policy](../design/05-human-interaction.md#questions-proposals-and-permission).
+Standing scoped permissions allow recurring actions within their limits; otherwise
+required approval is explicit. Personal-resource access remains separately granted. Show the inherited capabilities to the owner; do not ask the
 model to invent its own permissions from the purpose text.
 
 ## 3. Execution and environments

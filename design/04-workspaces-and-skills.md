@@ -58,6 +58,21 @@ actions and rolling Kanban for continuous operations. Skills are provisioned and
 loaded explicitly for managed planning sessions; merely storing this file does
 not establish runtime loading or Plane access.
 
+## Default capabilities
+
+The initial root template supports ordinary work without a human-maintained prompt
+queue: its private workspace, Plane project management, approved public research,
+private drafts and results, and child creation within configured capacity limits.
+The owner can configure these defaults and inspect what an agent receives.
+Creating a root from a broad purpose does not grant additional access.
+
+Child permissions are selected from the parent's delegable authority under
+[the permission rules](05-human-interaction.md#applying-ownership-to-permissions).
+Publishing, spending, contacting people and deployment follow the same chapter's
+standing-permission or explicit-approval policy. Ordinary root defaults provide
+no blanket access to the owner's personal files, credentials or computer controls.
+Skills explain methods; they cannot add capabilities to this template.
+
 ## Capabilities and resources
 
 Tools enable actions; skills explain how to use capabilities effectively. Access
