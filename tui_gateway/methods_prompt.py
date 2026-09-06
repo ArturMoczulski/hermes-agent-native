@@ -465,7 +465,7 @@ def _persist_session_row_for_submit(rid, session):
     return None
 
 
-def _run_after_agent_ready(rid, sid, session, text, display_kind, hosted_terminal_callback):
+def _run_after_agent_ready(rid, sid, session, text, display_kind, hosted_terminal_callback, managed_permit=None):
     """Turn thread body: patient wait for a deferred build (a slow build must not eat the
     accepted in-flight message), then run."""
     # The wait delivers the prompt when the still-running build completes, honors a cancel promptly, notices
@@ -495,7 +495,7 @@ def _run_after_agent_ready(rid, sid, session, text, display_kind, hosted_termina
             return
     _run_prompt_submit(
         rid, sid, session, text, display_kind=display_kind,
-        terminal_callback=hosted_terminal_callback)
+        terminal_callback=hosted_terminal_callback, managed_permit=managed_permit)
 
 
 _TRUNCATION_PARAMS = (
@@ -540,7 +540,7 @@ def _(rid, params: dict) -> dict:
     # Off-screen sends (widget intents) type the row so no client renders a bubble;
     # whitelisted to "hidden" — this RPC must not mint kinds.
     display_kind = "hidden" if params.get("display_kind") == "hidden" else None
-    if (stopped := _typed_stop_phrase_response(rid, text)) is not None:
+    if not getattr(current_transport(), "managed_chat", None) and (stopped := _typed_stop_phrase_response(rid, text)) is not None:
         return stopped
     if params.get("interrupted"):
         # Client-side barge-in: latch so this turn's model message carries the note.
@@ -569,7 +569,7 @@ def _(rid, params: dict) -> dict:
         # A rewind replays what the transcript shows: re-expand a skill invocation or
         # `/work fix it` sends nine literal chars.
         text = _expand_skill_invocation_for_replay(text, str(session.get("session_key") or ""))
-    turn_isolation = _session_uses_compute_host(session, _load_dashboard_process_isolation_config())
+    turn_isolation = not session.get("managed_chat") and _session_uses_compute_host(session, _load_dashboard_process_isolation_config())
     if internal_hosted_submit and turn_isolation:
         return _err(rid, 4121, "hosted room turns do not support isolated compute workers yet")
     # Re-bind to the current transport: streaming must stay on the active websocket even
@@ -585,6 +585,8 @@ def _(rid, params: dict) -> dict:
         with session["history_lock"]:
             if not session.get("running"):
                 break
+            if session.get("managed_chat"):
+                return _err(rid, 4091, "Managed chat is busy; interrupt the current reply before sending another")
             if internal_hosted_submit:
                 return _err(rid, 4091, "hosted room member session is busy")
             busy_transport = t or session.get("transport")
@@ -623,9 +625,11 @@ def _(rid, params: dict) -> dict:
     # A completed FAILED build must not wedge the session: rebuild, don't replay it.
     if not _restart_completed_failed_agent_build(sid, session, session.get("agent_ready")):
         _start_agent_build(sid, session)
+    from tui_gateway.managed_chat import issue_turn_permit
+    managed_permit = issue_turn_permit(session)
     run_thread = threading.Thread(
         target=lambda: _run_after_agent_ready(
-            rid, sid, session, text, display_kind, hosted_terminal_callback),
+            rid, sid, session, text, display_kind, hosted_terminal_callback, managed_permit),
         daemon=True)
     # Handle lets session.interrupt tell a live turn from a stuck `running` flag.
     session["_run_thread"] = run_thread

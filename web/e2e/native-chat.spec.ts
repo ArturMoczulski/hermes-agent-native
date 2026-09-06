@@ -16,9 +16,21 @@ test.beforeEach(async ({ page }) => {
 test('native chat sends through the TUI and Hermes engine, then resumes its persisted conversation', async ({ page, request }, testInfo) => {
   test.setTimeout(120000);
   let terminalOutput = '';
+  let terminalSessionId = '';
   const inputFrames: string[] = [];
   page.on('websocket', (socket) => {
-    if (new URL(socket.url()).pathname !== '/api/pty') return;
+    const path = new URL(socket.url()).pathname;
+    if (path === '/api/events') {
+      socket.on('framereceived', ({ payload }) => {
+        try {
+          const frame = JSON.parse(typeof payload === 'string' ? payload : payload.toString('utf8'));
+          if (frame.params?.type === 'session.info' && !frame.params.payload?.managed_agent) {
+            terminalSessionId = frame.params.session_id;
+          }
+        } catch { /* Ignore unrelated event frames. */ }
+      });
+    }
+    if (path !== '/api/pty') return;
     socket.on('framesent', ({ payload }) => inputFrames.push(typeof payload === 'string' ? payload : payload.toString('utf8')));
     socket.on('framereceived', ({ payload }) => {
       terminalOutput += typeof payload === 'string' ? payload : payload.toString('utf8');
@@ -27,10 +39,14 @@ test('native chat sends through the TUI and Hermes engine, then resumes its pers
   await page.goto('/chat');
   const terminal = page.locator('.hermes-chat-xterm-host .xterm-screen');
   await expect(terminal).toBeVisible();
+  // ChatSidebar has its own source=tool session. Only the PTY's published
+  // runtime identity plus its rendered header establish composer readiness.
+  await expect.poll(() => terminalSessionId, { timeout: 60000 }).not.toBe('');
   await expect.poll(async () => {
     const response = await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers });
-    return (await response.json()).ready;
-  }, { timeout: 60000 }).toBe(true);
+    return (await response.json()).native_ready_session_ids;
+  }, { timeout: 60000 }).toContain(terminalSessionId);
+  await expect.poll(() => terminalOutput, { timeout: 15000 }).toContain('Session:');
   await page.locator('.xterm-helper-textarea').focus();
   await page.keyboard.type(opener);
   await page.keyboard.press('Enter');
@@ -38,20 +54,22 @@ test('native chat sends through the TUI and Hermes engine, then resumes its pers
 
   await expect.poll(async () => {
     const data = await (await request.get(`${backend}/api/sessions?min_messages=2`, { headers })).json();
-    return data.sessions.length;
+    return data.sessions.filter((s: { id: string }) => !s.id.startsWith('an_chat_')).length;
   }).toBe(1);
   const nativeSessions = await (await request.get(`${backend}/api/sessions?min_messages=2`, { headers })).json();
-  expect(nativeSessions.sessions).toHaveLength(1);
-  const sessionId = nativeSessions.sessions[0].id;
+  const ordinarySessions = nativeSessions.sessions.filter((s: { id: string }) => !s.id.startsWith('an_chat_'));
+  expect(ordinarySessions).toHaveLength(1);
+  const sessionId = ordinarySessions[0].id;
   const messagesUrl = `${backend}/api/sessions/${sessionId}/messages`;
   await expect.poll(async () => {
     const data = await (await request.get(messagesUrl, { headers })).json();
     return data.messages.filter((message: { role: string; content: string }) => message.role === 'assistant').map((message: { content: string }) => message.content);
   }).toEqual([reply]);
   const firstEvidence = await (await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers })).json();
-  expect(firstEvidence.model_requests).toHaveLength(1);
-  expect(firstEvidence.model_requests[0].last_user).toContain(opener);
-  expect(firstEvidence.model_requests[0].model).toBe('native-browser-fixture');
+  const firstRequests = firstEvidence.model_requests.filter((r: { last_user: string }) => r.last_user.startsWith('Native browser test:'));
+  expect(firstRequests).toHaveLength(1);
+  expect(firstRequests[0].last_user).toContain(opener);
+  expect(firstRequests[0].model).toBe('native-browser-fixture');
 
   terminalOutput = '';
   await page.reload();
@@ -67,9 +85,10 @@ test('native chat sends through the TUI and Hermes engine, then resumes its pers
     return data.messages.filter((message: { role: string }) => message.role === 'user' || message.role === 'assistant').map((message: { content: string }) => message.content);
   }).toEqual([opener, reply, followup, recalled]);
   const finalEvidence = await (await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers })).json();
-  expect(finalEvidence.model_requests).toHaveLength(2);
-  expect(finalEvidence.model_requests[1].history_has_first_exchange).toBe(true);
-  expect((await (await request.get(`${backend}/api/sessions?min_messages=2`, { headers })).json()).sessions.map((session: { id: string }) => session.id)).toEqual([sessionId]);
+  const finalRequests = finalEvidence.model_requests.filter((r: { last_user: string }) => r.last_user.startsWith('Native browser test:'));
+  expect(finalRequests).toHaveLength(2);
+  expect(finalRequests[1].history_has_first_exchange).toBe(true);
+  expect((await (await request.get(`${backend}/api/sessions?min_messages=2`, { headers })).json()).sessions.filter((s: { id: string }) => !s.id.startsWith('an_chat_')).map((session: { id: string }) => session.id)).toEqual([sessionId]);
   expect(terminalOutput).not.toContain('Chat unavailable');
   await expect(page.getByRole('button', { name: 'Reconnect chat', exact: true })).not.toBeVisible();
 });

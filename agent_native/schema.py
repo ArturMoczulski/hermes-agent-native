@@ -10,6 +10,13 @@ CREATE TABLE IF NOT EXISTS agent_native_agents (
     execution TEXT NOT NULL CHECK(execution = 'not_started'),
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_chat_sessions (
+    agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
+    soul_revision INTEGER NOT NULL CHECK(soul_revision > 0),
+    session_id TEXT NOT NULL UNIQUE,
+    created_at TEXT NOT NULL,
+    PRIMARY KEY(agent_id, soul_revision)
+);
 CREATE TABLE IF NOT EXISTS agent_native_initial_activations (
     id TEXT PRIMARY KEY,
     agent_id TEXT NOT NULL UNIQUE REFERENCES agent_native_agents(id),

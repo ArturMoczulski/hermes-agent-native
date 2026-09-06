@@ -558,6 +558,10 @@ def write_json(obj: dict) -> bool:
     session's transport (async events reach the owner even from threads with no contextvar binding);
     (2) the context-bound transport (:func:`dispatch`); (3) module stdio (tests monkey-patch ``_real_stdout``).
     Every event frame gets a per-session monotonic ``seq`` + replay-ring entry so ``session.events.since`` can resume."""
+    from tui_gateway.managed_chat import filter_event
+    obj = filter_event(globals(), obj)
+    if obj is None:
+        return True
     from tui_gateway.event_replay import _stamp_event
     _stamp_event(obj)
     if obj.get("method") == "event":
@@ -728,6 +732,13 @@ def handle_request(req: dict) -> dict | None:
     if isinstance(normalized, dict):
         return normalized
     rid, method, params = normalized
+    from tui_gateway import managed_chat
+    try:
+        params, response = managed_chat.prepare_request(globals(), rid, method, params)
+        if response is not None:
+            return response
+    except (PermissionError, ValueError) as exc:
+        return _err(rid, 4030, str(exc))
     if not (fn := _methods.get(method)):
         return _err(rid, -32601, f"unknown method: {method}")
     token = _current_rpc_method.set(method)
@@ -950,6 +961,9 @@ def _announce_built_agent(sid: str, key: str, current: dict, agent) -> None:
     with contextlib.suppress(Exception):
         from agent.credits_tracker import seed_credits_at_session_start
         seed_credits_at_session_start(agent)
+    if current.get("managed_chat"):
+        _emit("session.info", sid, _session_info(agent, current))
+        return
     _start_session_services(sid, key, current)
     info = _session_info(agent, current)
     if cfg_warn := _probe_config_health(_load_cfg()):
@@ -1016,7 +1030,8 @@ def _start_agent_build(sid: str, session: dict) -> None:
                 session_db = _open_profile_session_db(profile_home)
             try:
                 from tui_gateway.entry import ensure_mcp_discovery_started
-                ensure_mcp_discovery_started()
+                if not current.get("managed_chat"):
+                    ensure_mcp_discovery_started()
             except Exception:
                 logger.warning("MCP discovery startup failed", exc_info=True)
             try:
@@ -1046,6 +1061,11 @@ def _sess_nowait(params, rid):
     sid = params.get("session_id") or ""
     s = _sessions.get(sid)
     if s:
+        try:
+            from tui_gateway.managed_chat import check_session
+            check_session(globals(), sid, s)
+        except (PermissionError, ValueError) as exc:
+            return None, _err(rid, 4030, str(exc))
         return (s, None)
     # Stale runtime id (reaped/evicted/TTL): the client should session.resume the STORED id. Logged so
     # "message vanished" reads as "arrived and was rejected".
@@ -2031,6 +2051,14 @@ def _session_info(agent, session: dict | None = None) -> dict:
     if session is None:
         session = next((c for c in _sessions.values() if c.get("agent") is agent), None)
     sess = session or {}
+    if binding := sess.get("managed_chat"):
+        from tui_gateway.managed_chat import metadata
+        from hermes_cli import __version__
+        return {"model": getattr(agent, "model", ""), "provider": getattr(agent, "provider", ""),
+                "tools": {}, "skills": {}, "cwd": binding.workspace, "branch": "", "project": None,
+                "title": binding.name, "stored_session_id": binding.session_id, "version": __version__,
+                "managed_agent": metadata(binding), "running": bool(sess.get("running")),
+                "usage": _session_usage_snapshot(session), "profile_name": "", "mcp_servers": []}
     mirror = _metadata_mirror(session)
     cwd = _display_session_cwd(session)
     session_key = str(sess.get("session_key") or getattr(agent, "session_id", "") or "")
@@ -2267,6 +2295,9 @@ def _make_agent(
     if synthetic is not None:
         return synthetic
     from run_agent import AIAgent
+    if binding := (_sessions.get(sid) or {}).get("managed_chat"):
+        from tui_gateway.managed_chat import make_agent
+        return make_agent(globals(), binding, key, session_db)
     # MCP discovery runs in a daemon thread (a dead server can't freeze the shell); the agent snapshots its tool
     # list once, so briefly wait for in-flight discovery. Dashboard /api/ws uses mcp_startup; TUI stdio uses entry.
     for _mod in ("hermes_cli.mcp_startup", "tui_gateway.entry"):
@@ -2419,6 +2450,7 @@ def _deferred_session_record(
         "slash_worker": None, "source": source, "tool_progress_mode": _load_tool_progress_mode(),
         "tool_started_at": {}, "todo_state": todo_state,
         "transport": current_transport() or _stdio_transport,
+        "managed_chat": getattr(current_transport(), "managed_chat", None),
     }
 
 
@@ -2633,8 +2665,8 @@ def _find_live_session_by_key(session_key: str, profile_home=_ANY_PROFILE) -> tu
 
 def _fallback_session_info(session: dict) -> dict:
     agent = session.get("agent")
-    if agent is not None:
-        return _session_info(agent)
+    if agent is not None or session.get("managed_chat"):
+        return _session_info(agent, session)
     # The SESSION's own workspace, not the launch dir (wrong project in the desktop Files pane). `branch` is
     # always emitted ("" outside git) so a stale label clears; `desktop_contract` missing reads as "out of date".
     # Reporting `_default_session_cwd()` here told a lazily-resumed session's client that its workspace was

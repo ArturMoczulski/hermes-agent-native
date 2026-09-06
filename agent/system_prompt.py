@@ -591,6 +591,12 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     (snapshot, remaining session-stable guidance, caller ``system_message``,
     context files) and ``volatile`` (skills index, memory, user profile, external
     memory block, timestamp line).  Never re-rendered mid-session."""
+    from agent.managed_chat_policy import current_binding, protected_prompt
+    binding = current_binding(agent)
+    if binding is not None:
+        # Protected framework identity replaces ambient host soul/workspace text.
+        # It is byte-stable for the durable session's purpose revision.
+        return {"stable": protected_prompt(binding), "context": "", "volatile": ""}
     # Model context window scales the context-file caps; stable per conversation.
     _cc_len = getattr(getattr(agent, "context_compressor", None), "context_length", None)
     _ctx_len = _cc_len if isinstance(_cc_len, int) and _cc_len > 0 else None

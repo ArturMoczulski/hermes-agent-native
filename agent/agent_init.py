@@ -1030,6 +1030,14 @@ def _init_fallback_chain(agent, fallback_model):
 
 
 def _load_tools(agent, enabled_toolsets, disabled_toolsets):
+    from agent.managed_chat_policy import current_binding
+    if current_binding(agent) is not None:
+        # Conversation authority cannot be widened by plugin discovery, kanban
+        # worker defaults, or a shared mutable registry snapshot.
+        agent.tools, agent.valid_tool_names = [], frozenset()
+        agent._tool_snapshot_generation = 0
+        agent._kanban_worker_guidance = ""
+        return
     # A multiplexed gateway may have switched HERMES_HOME since model_tools was imported;
     # make sure this profile's plugins are discovered before the tool snapshot.
     try:
@@ -2218,6 +2226,21 @@ def init_agent(
       skip_context_files: skip SOUL.md/.hermes.md/AGENTS.md/CLAUDE.md/.cursorrules injection;
         load_soul_identity keeps ~/.hermes/SOUL.md as identity regardless.
     """
+    from agent.managed_chat_policy import current_binding
+    managed = current_binding()
+    agent._managed_chat_binding = managed
+    if managed is not None:
+        managed.validate()
+        if session_id != managed.session_id:
+            raise PermissionError("Managed conversation session does not match its binding")
+        enabled_toolsets, disabled_toolsets = [], []
+        skip_context_files, load_soul_identity = True, False
+        skip_memory = skip_background_review = True
+        checkpoints_enabled = save_trajectories = False
+        ephemeral_system_prompt = None
+        prefill_messages = []
+        fallback_model = None
+        agent._skip_mcp_refresh = True
     _install_safe_stdio()
 
     _params = locals()
@@ -2252,6 +2275,10 @@ def init_agent(
     agent.acp_command = acp_command or command
     agent.acp_args = list(acp_args or args or [])
     _resolve_api_mode(agent, api_mode, provider_name, base_url)
+    if managed is not None and agent.api_mode not in {"chat_completions", "codex_responses", "anthropic_messages"}:
+        raise PermissionError("Managed conversation requires a model-only transport")
+    if managed is not None and agent.provider in {"moa", "hermes", "opencode", "copilot-acp"}:
+        raise PermissionError("Managed conversation cannot use an agent as its model")
     _finalize_routing(agent, api_mode, credential_pool)
 
     # Platform callbacks are stored under their parameter names verbatim.
@@ -2286,6 +2313,21 @@ def init_agent(
     except Exception:
         _agent_cfg = {}
 
+    if managed is not None:
+        # Per-instance projection only: keep native enforcement/middleware config
+        # intact and use existing opt-outs for unrelated background work.
+        _agent_cfg = dict(_agent_cfg)
+        _agent_cfg["agent"] = {
+            **_cfg_dict(_agent_cfg, "agent"), "environment_probe": False,
+            "bot_mode_protocol": False, "intent_ack_continuation": False,
+        }
+        _agent_cfg["context"] = {**_cfg_dict(_agent_cfg, "context"), "engine": "compressor"}
+        _agent_cfg["compression"] = {
+            **_cfg_dict(_agent_cfg, "compression"), "enabled": False,
+            "micro_compact": False, "idle_compact_after_seconds": 0,
+            "proactive_prune_tokens": 0, "codex_app_server_auto": "off",
+            "codex_responses_native": False,
+        }
     _apply_display_config(agent, _agent_cfg, platform)
     _init_memory(agent, _agent_cfg, skip_memory, platform)
     _apply_agent_section(agent, _agent_cfg)

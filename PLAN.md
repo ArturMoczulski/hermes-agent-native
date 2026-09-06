@@ -26,14 +26,14 @@ the writer slices enforce all operations they actually expose. Minimal ordinary-
 Plane provisioning comes forward; Builder repository privileges, broader native
 integration and full teams stay later. No completed evidence is reopened or erased.
 
-AN-77 is active: the existing Hermes `/chat` now connects and has verified a real
-Astra reply through the owner's ChatGPT subscription, saved in native SessionDB.
-Next connect it to the selected framework agent's protected purpose, persistent
-session and owner controls. Reuse the embedded TUI, transcript, composer and Hermes model loop; do not
-build a second React conversation. An ordinary native chat working again is a
-useful checkpoint, but managed-agent identity and control still need verification.
-Conversation must be available before autonomous writing and independently of
-Plane setup. Sending a message must not activate project work.
+AN-77 is active: selected agents now open the existing Hermes TUI with their
+protected purpose, private workspace and separate retained native conversations.
+See [managed conversation](implementation/native-agent-chat.md) for scope and
+verification. Conversation is available independently of Plane readiness and
+cannot start project work. Remaining acceptance covers durable drafts/idempotent
+message receipts, a hard host deadline, restart/retry recovery and live managed
+subscription verification. Reuse native conversation storage, composer and model
+loop throughout; do not build a second chat implementation.
 
 AN-72 is Todo after AN-77. Its accepted creation/detail/initial-review and private
 filesystem/Plane setup evidence remains intact at `82241f4`. The managed writing

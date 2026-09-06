@@ -12,6 +12,7 @@ REPLY = 'The moonlit citadel is remembered in this conversation.'
 FOLLOWUP = 'Native browser test: what place did I mention?'
 RECALLED = 'You mentioned the moonlit citadel before reloading the browser.'
 MODEL = 'native-browser-fixture'
+MANAGED_PURPOSES = ('Write original stories about the moonlit citadel.', 'Write original stories about the glass ocean.')
 
 
 def _text(message):
@@ -35,12 +36,21 @@ def native_model_server():
             last_user = user_messages[-1] if user_messages else ''
             history_present = (any(OPENER in m for m in user_messages[:-1])
                                and any(REPLY in _text(m) for m in messages if m.get('role') == 'assistant'))
+            system_text = '\n'.join(_text(m) for m in messages if m.get('role') in ('system', 'developer'))
+            purposes = [p for p in MANAGED_PURPOSES if p in system_text]
             server.requests.append({'path': self.path, 'model': body.get('model'), 'last_user': last_user,
-                                    'history_has_first_exchange': history_present})
+                                    'history_has_first_exchange': history_present,
+                                    'managed_purposes': purposes,
+                                    'tool_names': [t.get('function', {}).get('name') for t in body.get('tools', [])]})
             if self.path != '/v1/chat/completions' or body.get('model') != MODEL:
                 self._send({'error': {'message': 'Unexpected native test provider request'}}, status=400)
                 return
-            if FOLLOWUP in last_user and history_present:
+            if 'Managed conversation test: what is your purpose?' in last_user and len(purposes) == 1:
+                answer = 'My purpose: ' + purposes[0]
+            elif ('Managed conversation test: remember our conversation?' in last_user and len(purposes) == 1
+                  and any(m.get('role') == 'assistant' and _text(m) == 'My purpose: ' + purposes[0] for m in messages)):
+                answer = 'Our conversation is retained.'
+            elif FOLLOWUP in last_user and history_present:
                 answer = RECALLED
             elif OPENER in last_user:
                 answer = REPLY

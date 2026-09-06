@@ -71,6 +71,7 @@ export default function AgentDetailPage() {
             <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">Not started</span>
           </div>
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
+          <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>
         </header>
         <section aria-label="Agent purpose" className="space-y-3 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">Purpose</h2>

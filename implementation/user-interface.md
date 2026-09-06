@@ -67,11 +67,10 @@ controls can use surrounding panels linked to the selected agent and session.
 
 Deliver this in two observable steps. First make `/chat` load, accept input and
 show a real reply through the configured Hermes connection. This is a native-chat
-repair checkpoint, not proof of a managed framework agent. Then map selection to
+repair checkpoint, not proof of a managed framework agent. The [managed conversation increment](native-agent-chat.md) now maps selection to
 one stable framework identity and its retained Hermes conversation/session, load
 its current protected purpose, and enforce the same owner authority and controls
-used elsewhere. Show native versus managed context accurately until that binding
-is implemented and verified; a title or profile name is not sufficient evidence.
+used elsewhere. Show native versus managed context accurately; a title or profile name is not sufficient evidence.
 
 Use existing durable Hermes session/message records as the conversation source,
 with framework identity and delivery/control metadata linked to those records.

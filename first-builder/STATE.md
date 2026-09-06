@@ -14,11 +14,12 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-AN-77 is In Progress and urgent: repair and reuse existing Hermes `/chat`, then bind
-selected framework identity, protected purpose, retained native sessions and owner
-controls. The owner rejected a duplicate React conversation; the uncommitted
-managed-conversation exception in `web/AGENTS.md` is withdrawn. Native chat repair
-is an initial checkpoint and must not be reported as managed-agent completion.
+AN-77 is In Progress and urgent. Native Hermes chat now binds selected framework
+identity, protected purpose and retained conversations, with conversation-only
+scope. Remaining acceptance covers durable drafts/idempotent message receipts,
+hard host deadlines, restart/retry recovery and live managed verification.
+The owner rejected a duplicate React conversation; the native TUI, gateway,
+AIAgent and SessionDB remain authoritative.
 
 AN-72 is Todo after AN-77. Creation/detail/initial review and protected filesystem/
 Plane setup are accepted at `82241f4` and verified below. Writing, story artifacts
@@ -29,6 +30,46 @@ autonomous project work or expose project tools. Existing identity, owner auth,
 provisioning, environment and Plane boundary evidence remains; AN-24's broad
 remainder stays backlog. No managed writer or Builder run is established by this
 planning update. Earlier next-step entries are historical; this focus wins.
+
+## AN-77 managed conversation — current increment
+
+The agent detail page now opens **Chat with agent**, showing the protected name,
+purpose/revision and conversation-only scope around the existing embedded TUI.
+Host-issued binding and per-revision native SessionDB keys preserve identity and
+history across agent switching/reopening. Opening chat works while Plane setup is
+unavailable and leaves the agent's project execution/startup intent unchanged.
+
+TDD first reproduced the missing link and missing host binding/API. The integrated
+browser then caught native create failing to hydrate resumed history; selecting
+native resume with the exact stored key fixed it. Review reproduced a purpose
+revision reconnect mismatch, stale saved output and inherited synthetic worker
+nudges. The fixes pin the displayed revision, fence output/persistence and refuse
+that worker context. Connection status deliberately reports connectivity; native
+TUI events own reply progress/errors. Full-suite execution also found test fixture
+readiness/counts mixing managed and ordinary sessions; those now use their own
+session/request scope without relaxing exact transcript assertions.
+
+Verification: **10 Playwright scenarios passed** against the real native stack
+and local external-model fixture; **43 managed host/gateway/core checks passed**
+together. Existing focused native gateway, core, persistence and host regressions
+also passed, as did 35 affected web unit tests. Production web build, scoped
+Ruff/ESLint and whitespace passed; ESLint retains five existing hook warnings.
+Checked 54 local documentation links/anchors. Logs: `/tmp/an77-browser-all-session-readiness.log`,
+`/tmp/an77-managed-integration-final.log`, `/tmp/an77-managed-final-build.log`.
+
+The local preview was rebuilt and only its identified dashboard restarted
+(PID 78326), retaining its existing home, both agent identities/revisions, native
+history and approved subscription configuration. An installed-Chromium readiness
+check opened the existing setup-preview agent through **Chat with agent**, observed
+its protected metadata, `gpt-6-astra`, 31 PTY frames and zero tools. Project execution
+and startup remained unchanged. No live model message was sent in that check;
+managed send/reply/history is verified with the isolated provider fixture. Evidence:
+`/tmp/an77-managed-preview-result.json`, `/tmp/an77-managed-preview.png`.
+
+See [implementation and remaining acceptance](../implementation/native-agent-chat.md).
+AN-77 stays open; AN-72's saved story and actual Pause are still next after early
+communication acceptance. This increment does not launch autonomous writing or
+establish a hosted First Builder.
 
 ## AN-77 native chat repair — current verification
 

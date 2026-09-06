@@ -295,7 +295,16 @@ def _create_overrides(params: dict) -> tuple:
 
 @method("session.create")
 def _(rid, params: dict) -> dict:
+    from tui_gateway.managed_chat import create_or_resume
+    return create_or_resume(globals(), rid, params, _create_native_session)
+
+
+def _create_native_session(rid, params: dict) -> dict:
+    from tui_gateway.managed_chat import binding_for_transport
+    binding = binding_for_transport()
     (sid, source), key = _new_runtime_ids(params), _new_session_key()
+    if binding is not None:
+        key = binding.session_id
     history = _coerce_seed_history(params.get("messages"))
     # Branch: links back so list_sessions_rich keeps it visible and the sidebar nests it.
     parent_session_id = _str_param(params, "parent_session_id") or None
@@ -325,7 +334,7 @@ def _(rid, params: dict) -> dict:
             "pending_hidden": _flag(params, "hidden"), "room_plumbing": _flag(params, "room_plumbing"),
             "follow_profile_config": _flag(params, "follow_profile_config"),
             "profile_home": str(profile_home) if profile_home is not None else None,
-            "running": False, "session_key": key, "show_reasoning": _load_show_reasoning(), "source": source,
+            "managed_chat": binding, "running": False, "session_key": key, "show_reasoning": _load_show_reasoning(), "source": source,
             "slash_worker": None, "tool_progress_mode": _load_tool_progress_mode(), "tool_started_at": {},
             "transport": current_transport() or _stdio_transport}
         _register_session_cwd(_sessions[sid])
@@ -573,10 +582,14 @@ def _resume_locate(ctx: _Resume) -> dict | None:
     """Resolve ``ctx.target`` to a stored row (``ctx.found``); a dict is an early response."""
     ctx.found = ctx.db.get_session(ctx.target)
     if ctx.found:
+        from tui_gateway.managed_chat import check_session
+        check_session(globals(), ctx.target)
         return None
     ctx.found = ctx.db.get_session_by_title(ctx.target)
     if ctx.found:
         ctx.target = ctx.found["id"]
+        from tui_gateway.managed_chat import check_session
+        check_session(globals(), ctx.target)
         return None
     if ctx.lazy and _child_run_active(ctx.target):
         # Fresh subagent watch window: `subagent.start` relays BEFORE the child's first DB flush. Proceed lazily
@@ -585,6 +598,8 @@ def _resume_locate(ctx: _Resume) -> dict | None:
         return None
     live_sid = _find_live_unpersisted(ctx.target, ctx.profile_home)
     if (live := _sessions.get(live_sid) if live_sid else None) is not None:
+        from tui_gateway.managed_chat import check_session
+        check_session(globals(), live_sid, live)
         return _resume_live_unpersisted(ctx, live_sid, live)
     if ctx.owns_db:
         _resume_adopt_stranded(ctx)
@@ -595,6 +610,9 @@ def _resume_follow_tip(ctx: _Resume) -> None:
     """Rebind a rotated-out parent id to its compression tip (resuming the original reloads the parent
     transcript and loses the post-compression reply). Skipped for lazy watch windows (exact child); Bot Chat
     follows proven compression edges only."""
+    from tui_gateway.managed_chat import binding_for_transport
+    if binding_for_transport() is not None:
+        return
     if not ctx.found or ctx.lazy:
         return
     tip = ctx.target
@@ -654,6 +672,8 @@ def _resume_response(
     status: str = "idle", hydrating: bool | None = None, started_at=None, auto_continue=None,
 ) -> dict:
     """Common resume payload; omit_messages counts ``count_source`` (client still learns the stored size)."""
+    if record.get("managed_chat"):
+        info = _session_info(record.get("agent"), record)
     if messages is None:
         messages = ctx.messages(display)
     if message_count is None:
@@ -797,9 +817,14 @@ def _(rid, params: dict) -> dict:
         if (resp := _resume_locate(ctx)) is not None:
             return resp
         _resume_follow_tip(ctx)
+        from tui_gateway.managed_chat import check_session
+        check_session(globals(), ctx.target)
         if (resp := _resume_guard(ctx)) is not None:
             return resp
-        ctx.profile_resume_cwd = _str_param(ctx.found, "cwd") or _profile_configured_cwd(ctx.profile_home)
+        from tui_gateway.managed_chat import binding_for_transport
+        binding = binding_for_transport()
+        ctx.profile_resume_cwd = (binding.workspace if binding is not None else
+                                  _str_param(ctx.found, "cwd") or _profile_configured_cwd(ctx.profile_home))
         # Fast path: reuse a session live IN THIS PROFILE (never another profile's runtime).
         with _session_resume_lock:
             live = _find_live_session_by_key(ctx.target, ctx.profile_home)
@@ -810,6 +835,8 @@ def _(rid, params: dict) -> dict:
         if ctx.eager_build:
             return _resume_eager(ctx)
         return _resume_deferred(ctx) if ctx.defer_history else _resume_cold(ctx)
+    except (PermissionError, ValueError) as exc:
+        return _err(rid, 4030, str(exc))
     finally:
         # Refcounting alone does not release the sqlite fds: SessionDB pins ITSELF (atexit.register) once its
         # background token writer starts; only close() unregisters.

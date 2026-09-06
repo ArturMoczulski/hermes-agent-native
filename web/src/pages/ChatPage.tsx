@@ -30,6 +30,8 @@ import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } fr
 import { createPortal } from "react-dom";
 import { useSearchParams } from "react-router";
 
+import type { Agent } from "@/lib/agent-native";
+import { ManagedChatStatus } from "@/components/ManagedChatStatus";
 import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatSessionList } from "@/components/ChatSessionList";
 import { usePageHeader } from "@/contexts/usePageHeader";
@@ -175,7 +177,11 @@ function terminalLineHeightForWidth(layoutWidthPx: number): number {
   return layoutWidthPx < 1024 ? 1.02 : 1.15;
 }
 
-export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
+interface ChatPageProps { isActive?: boolean; managedAgent?: Agent }
+
+export default function ChatPage({ isActive = true, managedAgent }: ChatPageProps) {
+  const managedAgentId = managedAgent?.id;
+  const managedPurposeRevision = managedAgent?.soul_revision;
   const hostRef = useRef<HTMLDivElement | null>(null);
   const termWrapRef = useRef<HTMLDivElement | null>(null);
   const termRef = useRef<Terminal | null>(null);
@@ -354,14 +360,15 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
   // Sessions page relies on `/chat?resume=<id>` changing at runtime, so we must
   // treat the current resume target as part of the PTY identity and rebuild the
   // terminal session when it changes.
-  const resumeParam = searchParams.get("resume");
+  const resumeParam = managedAgentId ? null : searchParams.get("resume");
   // Profile-scoped chat: spawn the PTY under the globally selected
   // management profile. Changing it remounts the terminal (key below /
   // effect dep) so the user explicitly starts a fresh scoped session.
-  const { profile: scopedProfile } = useProfileScope();
+  const { profile: selectedProfile } = useProfileScope();
+  const scopedProfile = managedAgentId ? undefined : selectedProfile;
   const channel = useMemo(
-    () => generateChannelId(`${resumeParam ?? ""}\0${scopedProfile}`),
-    [resumeParam, scopedProfile],
+    () => managedAgentId ? `agent-${managedAgentId}-${ptyAttachToken()}` : generateChannelId(`${resumeParam ?? ""}\0${scopedProfile}`),
+    [resumeParam, scopedProfile, managedAgentId],
   );
   const titleScope = `${channel}\0${reconnectNonce}`;
   const sessionTitle =
@@ -377,9 +384,9 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       return;
     }
 
-    setTitle(sessionTitle);
+    setTitle(managedAgent ? `${managedAgent.name} · Chat` : sessionTitle);
     return () => setTitle(null);
-  }, [isActive, sessionTitle, setTitle]);
+  }, [isActive, sessionTitle, setTitle, managedAgent]);
 
   useEffect(() => {
     if (!resumeParam) return;
@@ -466,7 +473,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     // Profiles "Build", …). Ownership rule: only write to the slot while
     // /chat is the active route AND the narrow layout needs the button;
     // the effect cleanup handles removal on every transition out.
-    if (!isActive || !narrow) return;
+    if (!isActive || !narrow || managedAgentId) return;
     setEnd(
       <Button
         ghost
@@ -486,7 +493,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
       </Button>,
     );
     return () => setEnd(null);
-  }, [isActive, narrow, mobilePanelOpen, modelToolsLabel, setEnd]);
+  }, [isActive, narrow, mobilePanelOpen, modelToolsLabel, setEnd, managedAgentId]);
 
   const handleCopyLast = () => {
     const ws = wsRef.current;
@@ -650,6 +657,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     };
     const uploadAndAttachImages = (files: File[]) => {
       if (!files.length) return;
+      if (managedAgentId) { setBanner("Attachments are not available in this agent conversation yet."); return; }
       void (async () => {
         const paths: string[] = [];
         for (const file of files) {
@@ -1163,12 +1171,16 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     void (async () => {
       if (unmounting) return;
       const params: Record<string, string> = { channel };
+      if (managedAgentId) {
+        params.agent = managedAgentId;
+        params.purpose_revision = String(managedPurposeRevision);
+      }
       if (resumeParam) params.resume = resumeParam;
-      if (forceFresh) params.fresh = "1";
+      if (forceFresh && !managedAgentId) params.fresh = "1";
       // Keep-alive identity: reattach to this tab's living PTY across
       // refresh/transient drops. A forced-fresh start rotates the token so
       // the previous keep-alive PTY is not reattached (registry reaps it).
-      params.attach = ptyAttachToken(forceFresh);
+      params.attach = ptyAttachToken(forceFresh && !managedAgentId);
       // Profile-scoped chat: the PTY child gets HERMES_HOME pointed at the
       // selected profile, so the conversation runs with that profile's model,
       // skills, memory, and sessions (see web_server._resolve_chat_argv).
@@ -1554,6 +1566,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     clearReconnectTimer,
     resumeParam,
     scopedProfile,
+    managedAgentId,
+    managedPurposeRevision,
     reconnectNonce,
   ]);
 
@@ -1729,6 +1743,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
     hydrating: resumeHydrating,
   });
   const mobileModelToolsPortal =
+    !managedAgentId &&
     isActive &&
     narrow &&
     portalRoot &&
@@ -1816,7 +1831,8 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col gap-2">
-      <PluginSlot name="chat:top" />
+      {!managedAgentId && <PluginSlot name="chat:top" />}
+      {managedAgentId && <ManagedChatStatus channel={channel} agentId={managedAgentId} />}
       {mobileModelToolsPortal}
 
       {visibleBanner && (
@@ -1946,7 +1962,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
           )}
         </div>
 
-        {!narrow && !chatPanelCollapsed && (
+        {!managedAgentId && !narrow && !chatPanelCollapsed && (
           <div
             id="chat-side-panel"
             role="complementary"
@@ -1986,7 +2002,7 @@ export default function ChatPage({ isActive = true }: { isActive?: boolean }) {
           </div>
         )}
       </div>
-      <PluginSlot name="chat:bottom" />
+      {!managedAgentId && <PluginSlot name="chat:bottom" />}
     </div>
   );
 }

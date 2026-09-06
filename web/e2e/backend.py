@@ -62,10 +62,16 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         _require_token(request)
         from tui_gateway import server
         with server._sessions_lock:
-            sessions = list(server._sessions.values())
-        ready = any(s.get('agent') is not None and s.get('agent_ready') is not None
-                    and s['agent_ready'].is_set() and not s.get('agent_error') for s in sessions)
-        return {'ready': ready, 'model_requests': list(model.requests)}
+            records = list(server._sessions.items())
+        sessions = [s for _, s in records]
+        native_ready_session_ids = [sid for sid, s in records if s.get('source') == 'tui'
+                                    and not s.get('managed_chat') and s.get('agent') is not None
+                                    and s.get('agent_ready') is not None and s['agent_ready'].is_set()
+                                    and not s.get('agent_error')]
+        ready = bool(native_ready_session_ids)
+        managed_ready_ids = [s['managed_chat'].agent_id for s in sessions
+                             if s.get('managed_chat') and s.get('agent') is not None and not s.get('agent_error')]
+        return {'ready': ready, 'native_ready_session_ids': native_ready_session_ids, 'managed_ready_ids': managed_ready_ids, 'model_requests': list(model.requests)}
 
     app.router.routes.insert(0, app.router.routes.pop())
 

@@ -61,3 +61,18 @@ def retry_agent_setup(agent_id: str, actor=Depends(owner_session)):
             raise HTTPException(status_code=404, detail='Agent not found') from exc
         except (identity.ConflictError, OperationBusy) as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@router.post('/{agent_id}/chat')
+def open_agent_chat(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.chat import issue_binding
+    try:
+        binding = issue_binding(actor=actor, agent_id=agent_id)
+        with connect_closing(board='default') as conn:
+            agent = identity.get_root(conn, actor=actor, agent_id=agent_id)
+        binding.validate()
+        return {'agent': agent, 'session_id': binding.session_id, 'mode': 'conversation_only'}
+    except KeyError as exc:
+        raise HTTPException(status_code=404, detail='Agent not found') from exc
+    except (PermissionError, identity.ConflictError, ValueError) as exc:
+        raise HTTPException(status_code=409, detail=str(exc)) from exc

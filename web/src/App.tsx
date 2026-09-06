@@ -87,6 +87,7 @@ const AnalyticsPage = lazy(() => import("@/pages/AnalyticsPage"));
 const ModelsPage = lazy(() => import("@/pages/ModelsPage"));
 const CronPage = lazy(() => import("@/pages/CronPage"));
 const AgentsPage = lazy(() => import("@/pages/AgentsPage"));
+const AgentChatPage = lazy(() => import("@/pages/AgentChatPage"));
 const AgentDetailPage = lazy(() => import("@/pages/AgentDetailPage"));
 const ProfilesPage = lazy(() => import("@/pages/ProfilesPage"));
 const ProfileBuilderPage = lazy(() => import("@/pages/ProfileBuilderPage"));
@@ -172,6 +173,7 @@ const BUILTIN_ROUTES_CORE: Record<string, ComponentType> = {
   "/system": SystemPage,
   "/agents": AgentsPage,
   "/agents/:agentId": AgentDetailPage,
+  "/agents/:agentId/chat": AgentChatPage,
   "/profiles": ProfilesPage,
   "/profiles/new": ProfileBuilderPage,
   "/config": ConfigPage,
@@ -405,6 +407,7 @@ export default function App() {
   const isDocsRoute = pathname === "/docs" || pathname === "/docs/";
   const normalizedPath = pathname.replace(/\/$/, "") || "/";
   const isChatRoute = normalizedPath === "/chat";
+  const isAgentChatRoute = /^\/agents\/[^/]+\/chat$/.test(normalizedPath);
   const embeddedChat = isDashboardEmbeddedChatEnabled();
   // Defer mounting the persistent chat host (and its xterm chunk) until the
   // user has actually opened /chat at least once. Sticky after that so the
@@ -773,7 +776,7 @@ export default function App() {
                   "w-full min-w-0",
                   !isChatRoute &&
                     "pb-[calc(2rem+env(safe-area-inset-bottom,0px))] lg:pb-8",
-                  (isDocsRoute || isChatRoute) &&
+                  (isDocsRoute || isChatRoute || isAgentChatRoute) &&
                     "min-h-0 flex flex-1 flex-col",
                 )}
               >

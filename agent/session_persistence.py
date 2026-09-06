@@ -205,6 +205,8 @@ def _db_flush_write(agent, batch_rows: List[Dict[str, Any]], batch_msgs: List[Di
     """One transaction for the turn's new rows: on failure nothing lands and no markers are stamped."""
     if not batch_rows:
         return
+    from agent.managed_chat_policy import assert_current
+    assert_current(agent)
     agent._session_db.append_messages_batch(
         session_id=agent.session_id, messages=batch_rows,
         compression_lock_holder=getattr(agent, "_active_compression_lock_holder", None),
@@ -319,7 +321,11 @@ class SessionPersistenceMixin:
         list used by the API call (#48677 is thus closed for every persist caller, not just this one).
         """
         from agent.agent_runtime_helpers import note_turn_persisted
+        from agent.managed_chat_policy import assert_current
         with _persist_lock(self):
+            # Re-check after a provider response, before JSON or native transcript
+            # writes. Direct incremental DB flushes check again at the batch seam.
+            assert_current(self)
             self._drop_trailing_empty_response_scaffolding(messages)
             self._session_messages = messages
             self._save_session_log(messages)

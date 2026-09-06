@@ -408,6 +408,12 @@ async def pty_ws(ws: WebSocket) -> None:
     if gate is None:
         return
     peer, mode, cred = gate
+    from hermes_cli.web_server_agent_chat import resolve_chat_binding
+    try:
+        managed_chat = await asyncio.to_thread(resolve_chat_binding, ws.query_params)
+    except HTTPException as exc:
+        await ws.close(code=4404 if exc.status_code == 404 else 4400, reason=str(exc.detail))
+        return
     await ws.accept()
     _log.info("pty accepted peer=%s mode=%s cred=%s", peer, mode, cred)
 
@@ -430,7 +436,7 @@ async def pty_ws(ws: WebSocket) -> None:
     force_fresh = (ws.query_params.get("fresh") or "").strip().lower() in {"1", "true", "yes", "on"}
     active_session_file: Optional[Path] = None
 
-    if channel:
+    if channel and managed_chat is None:
         active_session_file = _active_session_file_for_channel(ws.app, channel)
         if force_fresh:
             resume = None
@@ -453,6 +459,9 @@ async def pty_ws(ws: WebSocket) -> None:
 
     try:
         argv, cwd, env = await _resolve_chat_argv_async(**resolve_kwargs)
+        if managed_chat is not None:
+            from hermes_cli.web_server_agent_chat import bind_chat_renderer
+            env = await asyncio.to_thread(bind_chat_renderer, env, managed_chat)
     except HTTPException as exc:  # unknown/invalid profile
         await _pty_fail(ws, f"Chat unavailable: {exc.detail}")
         return
@@ -461,6 +470,8 @@ async def pty_ws(ws: WebSocket) -> None:
         return
 
     attach_token = ws.query_params.get("attach") or None
+    if managed_chat is not None and attach_token:
+        attach_token = f"{attach_token}\0agent\0{managed_chat.session_id}"
     registry_resume = raw_resume
     if raw_resume and env:
         registry_resume = env.get("HERMES_TUI_RESUME") or raw_resume
@@ -543,6 +554,12 @@ async def gateway_ws(ws: WebSocket) -> None:
     if not await _close_unless_sidecar_allowed(ws):
         return
     from tui_gateway.ws import handle_ws
+    from hermes_cli.web_server_agent_chat import resolve_chat_binding
+    try:
+        managed_chat = await asyncio.to_thread(resolve_chat_binding, ws.query_params)
+    except HTTPException as exc:
+        await ws.close(code=4404 if exc.status_code == 404 else 4400, reason=str(exc.detail))
+        return
 
     # The authenticated identity (ticket / internal credential) stamped by
     # _ws_auth_reason becomes the identity authority for privileged RPCs
@@ -551,6 +568,7 @@ async def gateway_ws(ws: WebSocket) -> None:
         ws,
         auth_identity=getattr(ws, "_hermes_auth_identity", None),
         subprotocol=getattr(ws, "_hermes_ws_subprotocol", None),
+        **({"managed_chat": managed_chat} if managed_chat is not None else {}),
     )
 
 

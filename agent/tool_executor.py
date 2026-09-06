@@ -675,6 +675,8 @@ def _dispatch_authorized_once(
         agent._iters_since_skill = 0
 
     _advance_start_order(lambda: _begin_tool_execution(agent, ref, display_index))
+    from agent.managed_chat_policy import deny_tools
+    deny_tools(agent)
     return _run_with_activity_heartbeat(agent, ref.name, lambda: execute(ref.args))
 
 

@@ -3,7 +3,7 @@
 The framework preview uses Hermes's existing web application and native `/chat`.
 The chat renderer is the embedded TUI; it uses Hermes sessions and the Hermes
 agent engine. See [UI integration](../../implementation/user-interface.md) for
-the remaining managed-agent binding. A working native chat does not establish
+the managed-agent binding and remaining acceptance. A working native chat does not establish
 that a record on `/agents` is executing.
 
 ## Start with the supported Node runtime
@@ -67,3 +67,16 @@ Focused Ink input tests cover empty and populated drafts. The browser test check
 exact saved messages and a history-dependent reply after reloading the same
 session. Rebuild `ui-tui` after source changes and replace old renderer processes;
 an already-running renderer does not hot-reload a rebuilt bundle.
+
+## Talk to a framework agent
+
+Open [Agents](http://127.0.0.1:19221/agents), choose an agent and select **Chat with
+agent**. This uses the same native TUI as generic Chat, with the selected agent's
+protected purpose and retained conversation. Switching agents and returning
+restores the corresponding history. Chat is available before Plane setup completes.
+
+The page currently says **Conversation only · Project work has not started**.
+Talking does not start writing, enable project tools or complete startup work.
+After changing purpose, reopen the agent conversation; an old connection is
+rejected rather than silently adopting a different purpose behind its header.
+See [scope and remaining acceptance](../../implementation/native-agent-chat.md).

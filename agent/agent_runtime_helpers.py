@@ -2251,12 +2251,17 @@ def invoke_tool(agent, function_name: str, function_args: dict, effective_task_i
                 dispatch_kwargs["skip_tool_execution_middleware"] = True
             import model_tools
             return model_tools.handle_function_call(function_name, next_args, effective_task_id, **dispatch_kwargs)
+    def _authorized_execute(next_args):
+        from agent.managed_chat_policy import deny_tools
+        deny_tools(agent)
+        return _execute(next_args if isinstance(next_args, dict) else function_args)
+
     if skip_tool_execution_middleware:
-        return _execute(function_args)
+        return _authorized_execute(function_args)
     from hermes_cli.middleware import run_tool_execution_middleware
     return run_tool_execution_middleware(
         function_name, function_args,
-        lambda next_args: _execute(next_args if isinstance(next_args, dict) else function_args),
+        _authorized_execute,
         original_args=function_args, **hook_ids,
     )
 

@@ -81,10 +81,18 @@ def _plan_goal_compression_recovery(
 
 def _admit_prompt_turn(
     sid: str, session: dict, text: Any, image_paths: list[str] | None,
-    queued_prompt_generation: int | None) -> tuple[list[str], Any] | None:
+    queued_prompt_generation: int | None, managed_permit=None) -> tuple[list[str], Any] | None:
     """Ownership + liveness gate every turn source must cross; ``(images, agent)`` or None.
     Synthesized turns (auto-continue, wake-ups) call ``_run_prompt_submit`` directly — the
     bypass that once let a second backend run a duplicate turn."""
+    try:
+        from tui_gateway.managed_chat import admit_turn
+        admit_turn(session, managed_permit)
+    except (PermissionError, ValueError) as exc:
+        with session["history_lock"]:
+            session["running"] = False
+        _emit("error", sid, {"message": str(exc)})
+        return None
     # When the session already holds its lease this is a cheap dict check. See #94778.
     if (ownership_refusal := _ensure_active_session_slot(sid, session)) is not None:
         logger.info(
@@ -456,7 +464,7 @@ def _prepare_turn_input(sid: str, session: dict, st: _TurnRun, text: Any, images
     # The sudo password callback is thread-local: without re-wiring here, sudo prompts
     # fall through to /dev/tty and hang the headless gateway (re-run is a no-op).
     _wire_callbacks(sid)
-    if not st.one_turn_restore:
+    if not session.get("managed_chat") and not st.one_turn_restore:
         # Skip the config-model sync while a /model --once override is active: the once-model is
         # intentionally not pinned as a session model_override (it must not persist), so without this guard
         # the sync would see "agent model != config model" and clobber the once-override back to the config
@@ -465,7 +473,8 @@ def _prepare_turn_input(sid: str, session: dict, st: _TurnRun, text: Any, images
         _apply_pending_model_switch(sid, session)
         _sync_agent_model_with_config(sid, session)
         _sync_agent_compression_with_config(sid, session)
-    _sync_bot_capabilities(sid, session)  # Bot Chat: adopt Settings->Capabilities edits
+    if not session.get("managed_chat"):
+        _sync_bot_capabilities(sid, session)  # Bot Chat: adopt Settings->Capabilities edits
     st.agent = agent = session["agent"]
     # Snapshot after the model sync: a deferred switch's history mutation belongs to this turn.
     with session["history_lock"]:
@@ -476,6 +485,9 @@ def _prepare_turn_input(sid: str, session: dict, st: _TurnRun, text: Any, images
     cols = session.get("cols", 80)
     streamer = make_stream_renderer(cols)
     prompt = text
+    if session.get("managed_chat"):
+        st.prompt_text = text
+        return text, text, cols, streamer
     if isinstance(prompt, str) and "@" in prompt:
         from agent.context_references import preprocess_context_references
         from agent.model_metadata import get_model_context_length
@@ -548,7 +560,9 @@ def _invoke_agent(
         "session.title", sid, {"session_id": _k, "title": t})
     _usage_stop, _usage_thread = _start_usage_ticker(sid, agent)
     try:
-        st.result = agent.run_conversation(run_message, **st.run_kwargs)
+        from tui_gateway.managed_chat import construction_scope
+        with construction_scope(session.get("managed_chat")):
+            st.result = agent.run_conversation(run_message, **st.run_kwargs)
     finally:
         # Stop AND join before anything emits: a tick surviving past message.complete would
         # roll the client's usage back to a stale snapshot (unbounded join: same worst case).
@@ -754,8 +768,8 @@ def _run_prompt_submit(
     rid, sid: str, session: dict, text: Any, *, display_kind: str | None = None,
     display_metadata: dict | None = None, image_paths: list[str] | None = None,
     queued_prompt_generation: int | None = None,
-    terminal_callback: Callable[[dict[str, Any]], None] | None = None) -> bool:
-    admitted = _admit_prompt_turn(sid, session, text, image_paths, queued_prompt_generation)
+    terminal_callback: Callable[[dict[str, Any]], None] | None = None, managed_permit=None) -> bool:
+    admitted = _admit_prompt_turn(sid, session, text, image_paths, queued_prompt_generation, managed_permit)
     if admitted is None:
         return False
     images, agent = admitted
@@ -797,9 +811,10 @@ def _run_prompt_submit(
                 sid, session, st, text, display_kind, display_metadata)
             payload, raw, status = _complete_turn_payload(session, st, status_note, cols)
             _emit("message.complete", sid, payload)
-            goal_followup = _goal_followup_after_turn(sid, session, st.result, status, raw)
-            if status == "complete":
-                _after_complete_turn(sid, session, st, raw)
+            if not session.get("managed_chat"):
+                goal_followup = _goal_followup_after_turn(sid, session, st.result, status, raw)
+                if status == "complete":
+                    _after_complete_turn(sid, session, st, raw)
         except Exception as e:
             _recover_turn_exception(sid, session, st, e)
         finally:
@@ -835,7 +850,8 @@ def _run_prompt_submit(
                     session.pop("_hosted_room_task", None)
             session.pop("_auto_continue_scheduled", None)
             _emit_settled_session_info(sid, session, st.agent)
-        _run_post_turn_followups(rid, sid, session, st.result, goal_followup)
+        if not session.get("managed_chat"):
+            _run_post_turn_followups(rid, sid, session, st.result, goal_followup)
     run_thread = threading.Thread(target=run, daemon=True)
     with _sessions_lock:
         registered = _sessions.get(sid)
