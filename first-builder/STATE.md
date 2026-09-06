@@ -14,18 +14,61 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story alone is only the first checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone,
-AN-72 is the next implementation outcome, and AN-73–76 cover chat, inspection,
-continuity and real acceptance. The next implementation starts
-with Playwright for configured creation opening the agent detail and recording one
-initial activation, then connects protected provisioning, scoped planning, a
-service-owned Hermes run, saved output and actual Pause in small TDD increments.
-No implementation or real writer run is performed by this planning update.
+AN-72 is In Progress. Its first creation/detail/initial-review increment is now
+verified below. AN-73–76 retain chat, inspection, continuity and real acceptance.
+Existing identity, owner auth, provisioning, environment and Plane boundary work
+remain evidence; AN-24's broad remainder stays backlog. No managed writer or
+Builder runs. Earlier entries retain historical next steps; this focus wins.
 
-AN-19/20/22 host planning operations/recovery and AN-17 audit remain accepted.
-AN-24's first dispatch/revocation increment remains verified; its broader remainder
-returns to backlog, with writer-specific enforcement handled by the new slices.
-Existing UI still creates not_started records. No managed writer or Builder runs.
-Earlier entries below preserve evidence and historical next steps; this focus wins.
+## AN-72 first increment — startup intent and agent detail
+
+Implemented one durable initial-review intent in the same transaction as identity
+and creation history. Concurrent/repeated creation returns the same agent and
+request. The request retains its original purpose revision; existing records
+without intents are not silently activated by reading or retrying them.
+
+Creation opens a real `/agents/:agentId` detail page, with roster links, purpose,
+request identity/time/revision and explicit Not started activity. Pending creation
+is retained in tab session storage before POST, survives a lost reply and reload,
+and clears after confirmation. Failed storage prevents sending an unrecoverable
+write. No model/cadence configuration or actual execution is implied by the intent.
+
+TDD: initial Playwright failed because creation stayed on the roster; four new
+API/domain cases failed because no startup request existed. After the first pass,
+review reproduced a lost-response-plus-reload defect: a different agent ID was
+created. The retained envelope fixed that regression. A later browser assertion
+was scoped to the main page because the shell also displays its title; the test
+now waits for the intended heading without a race or relaxed content check.
+
+Final checks: 5 browser scenarios passed using cached chromium-1208; 60 Python
+checks passed, 1 pre-existing opt-in Docker case skipped (no container change in
+this increment). Production web build, targeted ESLint/Ruff and whitespace passed.
+Commands:
+
+```sh
+npm run test:e2e --workspace web
+scripts/run_tests.sh tests/hermes_cli/test_agent_native_identity.py tests/hermes_cli/test_agent_native_api.py tests/hermes_cli/test_kanban_db_init.py tests/hermes_cli/test_agent_native_provisioning.py tests/hermes_cli/test_agent_native_plane_access.py
+npm run build --workspace web
+```
+
+Use the local Node/browser paths in earlier setup notes. Test data is disposable;
+no model call or managed agent was started. Logs for this session:
+`/tmp/an72-browser.log`, `/tmp/an72-python.log`, `/tmp/an72-build.log`.
+
+The local preview at http://127.0.0.1:19221/agents was rebuilt and restarted
+with its existing preview home/database. Read-only health/API/detail checks
+confirmed its one existing agent was preserved; no agent was created or started.
+Preview process session for this harness: 40548.
+
+Next within AN-72: bind the initial intent to configured model/finite limits,
+retry-safe protected/filesystem and Plane provisioning (including a host-seeded
+discovery item), then one service-owned run and story artifact with actual Pause.
+Reuse AIAgent.run_conversation and its callbacks for observation; callback errors
+are swallowed, so enforce authority/persistence outside callbacks. Hermes's
+run_budget_seconds is advisory, not a hard deadline; enforce displayed limits in
+the host. A narrow explicit schema/dispatch binding must deny all unselected tools.
+Do not enable unattended work before those boundaries are connected and tested.
+AN-72 remains In Progress; this is not the first-story or complete-writer proof.
 
 ## Writer planning verification — 2026-09-06
 

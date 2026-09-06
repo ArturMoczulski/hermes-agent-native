@@ -1,4 +1,4 @@
-"""Trusted host operations for inactive roots, using the shared control database.
+"""Trusted host identity and initial-review requests in the shared control database.
 
 OWNER is an in-process capability: never deserialize it from a request or expose
 these operations to generated code. Transport authentication and worker isolation
@@ -38,7 +38,14 @@ def _read(conn, agent_id):
     ).fetchone()
     if row is None:
         raise KeyError(agent_id)
-    return dict(zip(('id', 'name', 'purpose', 'soul_revision', 'execution', 'created_at'), row))
+    root = dict(zip(('id', 'name', 'purpose', 'soul_revision', 'execution', 'created_at'), row))
+    startup = conn.execute(
+        'SELECT id, cause, soul_revision, requested_at '
+        'FROM agent_native_initial_activations WHERE agent_id = ?', (agent_id,),
+    ).fetchone()
+    root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
+                       if startup is not None else None)
+    return root
 
 
 def _event(conn, root, kind):
@@ -50,7 +57,13 @@ def _event(conn, root, kind):
 
 
 def create_root(conn, *, actor, request_id, name, purpose):
-    """Persist an inactive root and event atomically; retries do not create duplicates."""
+    """Persist identity, first-review intent and event together; never launch a worker.
+
+    The intent records the creating owner's request, not execution authority or
+    observed work. Future admission must check current soul, grants, configuration
+    and planning readiness. Retrying creation never adds an intent to an older
+    record or changes the original purpose revision attached to its intent.
+    """
     _require_owner(actor)
     request_id, name, purpose = (_text(v, k) for v, k in
                                  ((request_id, 'request_id'), (name, 'name'), (purpose, 'purpose')))
@@ -69,6 +82,11 @@ def create_root(conn, *, actor, request_id, name, purpose):
             '(id, request_id, name, initial_purpose, purpose, soul_revision, execution, created_at) '
             'VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
             (agent_id, request_id, name, purpose, purpose, 'not_started', _now()),
+        )
+        conn.execute(
+            'INSERT INTO agent_native_initial_activations '
+            '(id, agent_id, cause, soul_revision, requested_at) VALUES (?, ?, ?, 1, ?)',
+            (str(uuid4()), agent_id, 'creation', _now()),
         )
         root = _read(conn, agent_id)
         _event(conn, root, 'agent.created')

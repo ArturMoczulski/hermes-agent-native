@@ -76,12 +76,15 @@ new ones. Current entry points, relative to the repository root:
 | Python unit/integration tests | `scripts/run_tests.sh tests/path/to/test_file.py` (replace the example path); do not invoke bare pytest. |
 | Web unit tests | `npm run test --workspace web -- <test-file>` (replace the example path). |
 | Web type checks, unit tests and lint | `npm run check --workspace web`. |
+| Agent-native browser acceptance | `npm run test:e2e --workspace web` (real isolated backend and installed Chromium; see setup below). |
 | Existing desktop Playwright tests | `npm run test:e2e --workspace apps/desktop` (builds and runs the existing desktop suite). |
 
-The desktop Playwright suite is not yet an agent-native web acceptance suite.
-Establish a repeatable browser/backend test setup for the framework's first user
-flow, reusing suitable upstream infrastructure. Document its actual command and
-fixtures here when implemented; do not advertise a nonexistent web E2E command.
+The framework browser/backend setup is documented in
+[web/e2e/README.md](../web/e2e/README.md). Reuse the installed Chromium with the
+local executable override when needed; the owner requested no redundant browser
+downloads. Desktop tests do not replace framework browser acceptance. Include
+`npm run build --workspace web` for frontend changes to verify the production
+TypeScript and bundle paths as well as browser behavior.
 
 Run focused tests during each loop and affected regression checks before declaring
 the increment complete. Broaden verification for cross-cutting changes and release

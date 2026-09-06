@@ -1,4 +1,4 @@
-# Agent creation browser acceptance
+# Agent creation and detail browser acceptance
 
 Run from the repository root with a Node version supported by package.json:
 
@@ -12,9 +12,15 @@ settings/provider credentials. No model request or personal profile is needed.
 The browser uses a test-only dashboard token; unauthenticated requests are also
 checked. Servers are stopped by Playwright, and backend storage is temporary.
 
-The suite checks creation, purpose retention after reload, a single visible record,
-not-started status, and rejected unauthenticated reads/writes. API tests additionally
-cover duplicate requests, conflict responses, validation and forged actor fields.
+The suite checks creation-to-detail navigation, purpose/startup retention after
+reload, a single record and initial request after a committed-but-lost POST response
+plus browser reload, unknown detail/error states, storage failure before sending,
+and rejected unauthenticated reads/writes. API/domain tests cover concurrent
+retries, atomic rollback, older records without intents, stale-purpose retry,
+conflict responses, validation and forged actor fields.
+
+The first review request is durable; actual model execution, planning provisioning,
+chat and cadence are not connected yet. These checks do not prove a writing agent.
 
 ## Reuse an installed Chromium
 

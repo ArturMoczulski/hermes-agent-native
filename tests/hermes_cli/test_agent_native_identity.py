@@ -76,6 +76,7 @@ def test_event_failure_rolls_back_identity(db):
     with pytest.raises(sqlite3.IntegrityError):
         create(db)
     assert db.execute('SELECT count(*) FROM agent_native_agents').fetchone()[0] == 0
+    assert db.execute('SELECT count(*) FROM agent_native_initial_activations').fetchone()[0] == 0
 
 
 def test_failed_revision_event_preserves_previous_soul(db):
@@ -102,3 +103,64 @@ def test_concurrent_retries_create_one_agent(tmp_path):
     assert len(set(ids)) == 1
     with kanban_db.connect_closing(path) as conn:
         assert len(events(conn, actor=OWNER, agent_id=ids[0])) == 1
+
+
+def test_creation_records_initial_review_once_across_retries_and_restart(tmp_path):
+    path = tmp_path / 'activation.db'
+    with kanban_db.connect_closing(path) as conn:
+        root = create(conn)
+        startup = root.get('startup')
+        assert startup is not None, 'Creating an agent must durably request its first review'
+        assert startup['cause'] == 'creation'
+        assert startup['soul_revision'] == root['soul_revision']
+        assert startup['requested_at']
+        assert create(conn)['startup'] == startup
+        assert root['execution'] == 'not_started'  # A request is not observed execution.
+    with kanban_db.connect_closing(path) as conn:
+        assert get_root(conn, actor=OWNER, agent_id=root['id'])['startup'] == startup
+        assert conn.execute('SELECT COUNT(*) FROM agent_native_initial_activations WHERE agent_id = ?', (root['id'],)).fetchone()[0] == 1
+
+
+def test_concurrent_creation_retries_share_one_initial_review(tmp_path):
+    from concurrent.futures import ThreadPoolExecutor
+    path = tmp_path / 'activation-race.db'
+    kanban_db.init_db(path)
+    def attempt(_):
+        with kanban_db.connect_closing(path) as conn:
+            return create(conn)
+    with ThreadPoolExecutor(max_workers=4) as pool:
+        roots = list(pool.map(attempt, range(4)))
+    assert all(root.get('startup') is not None for root in roots)
+    assert len({root['startup']['id'] for root in roots}) == 1
+
+
+def test_retried_creation_after_purpose_edit_does_not_request_old_work(db):
+    root = create(db)
+    startup = root.get('startup')
+    assert startup is not None
+    revise_soul(db, actor=OWNER, agent_id=root['id'], expected_revision=1, purpose='Write mysteries')
+    retry = create(db)
+    assert retry['purpose'] == 'Write mysteries'
+    assert retry['startup'] == startup  # Historical request stays bound to its original revision.
+    assert retry['startup']['soul_revision'] != retry['soul_revision']
+    assert db.execute('SELECT COUNT(*) FROM agent_native_initial_activations').fetchone()[0] == 1
+
+
+def test_failed_initial_review_rolls_back_entire_creation(db):
+    import sqlite3
+    db.execute("CREATE TRIGGER reject_startup BEFORE INSERT ON agent_native_initial_activations BEGIN SELECT RAISE(ABORT, 'startup unavailable'); END")
+    with pytest.raises(sqlite3.IntegrityError):
+        create(db)
+    assert db.execute('SELECT COUNT(*) FROM agent_native_agents').fetchone()[0] == 0
+    assert db.execute('SELECT COUNT(*) FROM agent_native_events').fetchone()[0] == 0
+    assert db.execute('SELECT COUNT(*) FROM agent_native_initial_activations').fetchone()[0] == 0
+
+
+def test_existing_inactive_record_is_not_activated_by_read_or_creation_retry(db):
+    # An existing pre-startup record has identity/history but no initial intent.
+    db.execute("INSERT INTO agent_native_agents VALUES ('old-agent', 'first', 'Artist', 'Create metal music', 'Create metal music', 1, 'not_started', '2026-09-05T12:00:00+00:00')")
+    db.execute("INSERT INTO agent_native_events (agent_id, kind, soul_revision, purpose, actor, created_at) VALUES ('old-agent', 'agent.created', 1, 'Create metal music', 'owner', '2026-09-05T12:00:00+00:00')")
+    assert get_root(db, actor=OWNER, agent_id='old-agent')['startup'] is None
+    assert create(db)['startup'] is None
+    assert db.execute('SELECT COUNT(*) FROM agent_native_initial_activations').fetchone()[0] == 0
+    assert len(events(db, actor=OWNER, agent_id='old-agent')) == 1

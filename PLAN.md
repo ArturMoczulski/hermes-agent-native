@@ -26,6 +26,12 @@ the writer slices enforce all operations they actually expose. Minimal ordinary-
 Plane provisioning comes forward; Builder repository privileges, broader native
 integration and full teams stay later. No completed evidence is reopened or erased.
 
+AN-72 is active. Its first verified increment opens an agent detail after creation
+and atomically retains one initial-review intent, including lost-response/reload
+retries. This remains distinct from configured run admission. Next connect the
+protected planning/workspace setup and real managed run/artifact/stop path; see
+[Builder state](first-builder/STATE.md) for evidence and the exact handoff.
+
 The subsequent AN-16/M7 First Builder handoff adds protected repository development
 and demonstrates a real TDD improvement using the writer's run/chat/continuity
 foundation. The First Builder remains hosted by the external coding environment.

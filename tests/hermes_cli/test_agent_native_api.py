@@ -36,3 +36,13 @@ def test_missing_auth_rejected_on_all_paths(client):
     assert client.get(URL).status_code == 401
     assert client.post(URL, json=BODY).status_code == 401
     assert client.get(URL + '/missing').status_code == 401
+
+
+def test_creation_response_contains_durable_initial_review(client):
+    root = client.post(URL, json=BODY).json()
+    assert root.get('startup') is not None, 'Owner creation must return its durable startup request'
+    assert root['startup']['cause'] == 'creation'
+    assert root['startup']['soul_revision'] == 1
+    assert client.post(URL, json=BODY).json()['startup'] == root['startup']
+    assert client.get(URL + '/' + root['id']).json()['startup'] == root['startup']
+    assert client.post(URL, json={**BODY, 'startup': {'actor': 'owner'}}).status_code == 422

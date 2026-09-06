@@ -12,13 +12,25 @@ an in-process capability for trusted host code; it must never be selected from
 request content or exposed in an agent tool. Any process with database write
 access can bypass these operations. Managed workers are not launched yet.
 
-Roots deliberately remain `not_started`. The existing dashboard now exposes creation and listing at `/agents`, through
-owner-session authenticated `/api/agent-native/agents` endpoints. Request data
-cannot choose the actor. Private provisioning, restricted tool environments and
-host Plane grants are described below; they are not yet connected to managed
-launch. Parent control, activation intents and cadence remain to be implemented.
-At that point creation must record an immediate activation atomically, as required
-by the product specification. Do not present this interim record as a working agent.
+Roots remain `not_started`: a saved startup request is not observed execution.
+Creation now atomically records identity, its creation event and exactly one
+`agent_native_initial_activations` row bound to the original purpose revision.
+Owner reads include `startup` (ID, cause, purpose revision and request time).
+Existing inactive records without one return null; reads and retried old creation
+requests do not silently activate them. Retrying after a purpose edit retains the
+original intent revision. Future admission must verify current purpose, grants,
+configured limits/model and fresh planning before acting on any intent.
+
+The owner-authenticated `/agents` UI now opens `/agents/:agentId` after confirmed
+creation; roster links and direct/reloaded detail URLs show purpose, startup
+request and truthful not-started activity. Pending creation envelopes survive
+reload in tab session storage until confirmation, including a lost POST response.
+No write is sent if that envelope cannot be retained. The detail page shows
+unknown/loading/error states and identifies a superseded request revision.
+
+Private provisioning, restricted tool environments and host Plane grants are
+not yet connected to startup. No dispatcher, managed run, chat, cadence, story
+artifact or Pause control is enabled by this increment.
 
 Verification:
 
@@ -31,8 +43,8 @@ and failed-event rollback. No model subscription, personal profile or browser is
 used by these identity checks. Dashboard browser acceptance uses the real API;
 its setup is linked below.
 
-The Agents page is an interim inactive-record workflow and explicitly says work
-has not started. Open it in the existing Hermes dashboard navigation. Browser
+The Agents/detail pages explicitly distinguish recorded startup from work that
+has not started. Open them in the existing Hermes dashboard navigation. Browser
 acceptance setup: [web/e2e/README.md](../web/e2e/README.md).
 
 ## Private profile provisioning
@@ -231,5 +243,5 @@ scripts/run_tests.sh tests/tools/test_agent_native_dispatch.py tests/hermes_cli/
 
 These use isolated fixture services, not live Plane accounts or model calls.
 The [Builder state](../first-builder/STATE.md) records red/green and regression
-evidence. AN-24 remains active in Plane; this is not acceptance of all managed
-operation boundaries.
+evidence. AN-24's broad remainder is now in backlog; its writer-specific integration
+is part of AN-72. The accepted increment is not full managed-operation acceptance.
