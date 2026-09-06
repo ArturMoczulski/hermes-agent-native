@@ -360,6 +360,9 @@ operations and deduplicates messages and decisions.
 
 ## Build order and unresolved policy dependencies
 
+The current delivery target is the [fantasy-writer milestone](14-first-writer-milestone.md):
+one root with Chat, Activity and Stories before the complete organization console.
+
 Build complete small workflows, following [continuous TDD](../first-builder/PRACTICES.md):
 
 1. Create one root, retain its purpose, show its startup state and basic Monitor row.

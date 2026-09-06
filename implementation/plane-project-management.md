@@ -116,14 +116,16 @@ of a workspace whose identity cannot be resolved.
 
 ## Delivery sequence and evidence
 
-The owner prioritizes the first managed Builder handoff. Reuse its existing
-workspace/project and stable IDs: scoped reads/writes and outcome recovery form
-the host planning boundary. Source reconciliation and managed execution connect
-that boundary to an actual Builder run. General root onboarding (AN-21)
-follows the handoff; existing bindings still require validation and safe recovery.
-The stages below describe full integration coverage, not a requirement to finish
-all onboarding or child features before one Builder can run. Native Plane cycles
-now follow the [Builder handoff sequence](delivery-plan.md#engineering-sequence-and-evidence).
+The owner now prioritizes the [fantasy-writer milestone](fantasy-writer-milestone.md)
+before the Builder handoff. Existing scoped host reads/writes and recovery are
+reused. Bring forward enough AN-21 provisioning to establish one ordinary root
+workspace/project retry-safely at creation; keep its stories separate from Builder
+development. General repair/team provisioning remains later. Connect current
+source reconciliation and scoped tools to the actual writer run. The subsequent
+Builder reuses its existing planning project and stable IDs. The stages below
+describe full integration coverage, not a requirement to finish every Plane
+feature before one root can run. Native cycles follow the
+[current delivery sequence](delivery-plan.md#engineering-sequence-and-evidence).
 
 1. **Capability check against a pinned Community release.** Verify workspace/project
    provisioning, credentials and scoped reads/writes, states, dependencies, cycles,

@@ -36,6 +36,7 @@ behavior; they do not require a particular profession, workflow, or application.
 | [UX acceptance scenarios](11-ux-scenarios.md) | Which interactions and failure states must the interface demonstrate? |
 | [Observability](09-observability.md) | How can the human see current activity, cadence, and system history? |
 | [Product scenarios](06-product-scenarios.md) | What observable behavior demonstrates the product? |
+| [First writer milestone](14-first-writer-milestone.md) | What is the first usable create, chat, observe and continue experience? |
 | [The First Builder](08-first-builder.md) | How does the framework eventually develop itself? |
 | [Open decisions](07-open-decisions.md) | Which product choices still need agreement? |
 

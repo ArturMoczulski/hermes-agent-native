@@ -5,22 +5,43 @@ Active repository: `/Users/arturmoczulski/Projects/hermes-agent-native`.
 
 ## Current focus
 
-The owner selected Plane planning and a reusable sprint workflow skill. See the
-local Plane deployment entry below and [live planning context](PLANE.md). Earlier
-entries record completed increments and historical gaps, not the current inventory.
-The first major milestone is a real autonomous First Builder with persistent owner
-chat, repository development, scoped Plane planning, evaluation and basic recovery.
-The owner moved this handoff ahead of complete teams, monitoring and Linux
-operations. M7 is now the first handoff gate, using root-relevant M0/M1/M2 work.
+Owner reprioritization: the current undated cycle 03 is now **Fantasy writer —
+create, chat and observe**, before the First Builder handoff. The
+[writer specification](../design/14-first-writer-milestone.md) and
+[delivery plan](../implementation/fantasy-writer-milestone.md) define its complete
+acceptance: ordinary root creation and immediate work, real saved stories,
+durable chat/questions/steering, activity/session inspection, cadence, evaluation,
+actual pause and basic restart recovery. One story alone is only the first checkpoint.
 
-Use Plane through the Builder API account for current work and priorities. The
-full specification is now organized in milestone modules and rolling cycles; see
-[coverage index](../implementation/plane-roadmap-coverage.md). Current implementation at
-the latest review: AN-24 is active in sequence 3; its first Plane dispatch and
-pre-delivery revocation increment is verified below, following the AN-17 source audit. AN-19, AN-20 and AN-22 host planning operations/recovery are accepted. Sequence 2 is reviewed;
-AN-3's existing-Builder recovery scope is accepted, general provisioning recovery
-remains AN-21, and unfinished AN-4 runtime integration is carried to sequence 3.
-All cycles remain undated. No managed Builder has been launched.
+Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone,
+AN-72 is the next implementation outcome, and AN-73–76 cover chat, inspection,
+continuity and real acceptance. The next implementation starts
+with Playwright for configured creation opening the agent detail and recording one
+initial activation, then connects protected provisioning, scoped planning, a
+service-owned Hermes run, saved output and actual Pause in small TDD increments.
+No implementation or real writer run is performed by this planning update.
+
+AN-19/20/22 host planning operations/recovery and AN-17 audit remain accepted.
+AN-24's first dispatch/revocation increment remains verified; its broader remainder
+returns to backlog, with writer-specific enforcement handled by the new slices.
+Existing UI still creates not_started records. No managed writer or Builder runs.
+Earlier entries below preserve evidence and historical next steps; this focus wins.
+
+## Writer planning verification — 2026-09-06
+
+Plane readback confirmed AN-71–76 with acceptance/dependencies and parent links,
+AN-72 Todo/urgent, AN-24 returned to Backlog with verified evidence retained,
+AN-57 moved to cycle 04, and AN-66 moved to cycle 03. Current cycle members are
+AN-17/66/70/71/72/73/74/75/76; all six cycles have null planned dates. Other original
+work-item states and cycle membership were preserved. A new writer milestone
+module precedes the retained M7 Builder handoff. No work was marked Done.
+
+Independent read-only review checked milestone scope and existing spec consistency.
+It identified and resolved first-discovery admission and stale Builder-first
+pointers. Documentation link/heading and whitespace checks passed; 24 product and
+20 UX scenario mappings were retained. This planning increment changed no code
+and launched no managed agent. Runtime tests were not run. Next: AN-72, beginning with
+its small configured-creation/activation Playwright behavior.
 
 ## Initial identity increment
 

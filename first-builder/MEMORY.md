@@ -86,3 +86,11 @@ contradictory instructions or store secrets here.
   control center and broader operation hardening follow the handoff. Preserve the
   protected deployed soul/grants/running release outside the editable repository.
   Source: owner explicitly requested reprioritizing Plane around this milestone.
+
+- **Earlier usable-agent milestone — owner reprioritization (2026-09-06):** before
+  the First Builder handoff, prove one ordinary fantasy writer created from purpose,
+  working and continuing autonomously with chat, proactive questions, activity/session
+  inspection, saved stories, owner steering/stop and local recovery. A single story
+  is an intermediate checkpoint. The Builder handoff remains next, reusing these
+  foundations. This supersedes the earlier choice to prove the Builder first.
+  Source: owner request to switch the current cycle; design/14-first-writer-milestone.md.

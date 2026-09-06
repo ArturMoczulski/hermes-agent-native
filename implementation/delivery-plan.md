@@ -5,10 +5,11 @@ the fork, and copied the specification and plan into it. The completion checks
 below describe engineering work still to perform; copying documents does not
 complete an integration milestone.
 
-The owner's first major milestone is a persistent First Builder running inside
-the framework, developing this repository and communicating through owner chat.
+The owner's first usable milestone is an [autonomous fantasy writer](fantasy-writer-milestone.md)
+with creation, continuing chat, visible sessions/actions/stories and cadence.
+The First Builder handoff follows, adding protected repository development.
 M0–M7 are retained as capability-group identifiers and Plane references, not a
-mandatory numerical delivery order. M7 is the first major handoff gate: it draws
+mandatory numerical delivery order. M7 is the subsequent self-bootstrap handoff gate: it draws
 on root-relevant M0/M1/M2 work and its own Builder isolation requirements. Full
 M3–M6 delivery follows that handoff. This changes delivery priority without
 marking any unfinished capability complete.
@@ -107,8 +108,9 @@ the first handoff to one root is not permission to bypass authority checks.
 ## M2 — One complete autonomous root
 
 **Depends on the M1 authority and operation boundaries for enabled root work.
-Outcome:** a purpose becomes useful work without a prompt queue. The First Builder
-is the first root used to prove this behavior and its M7 handoff.
+Outcome:** a purpose becomes useful work without a prompt queue. The fantasy writer
+is the first root used to prove the selected behavior; the First Builder reuses
+that foundation for its subsequent M7 handoff.
 
 - Creation atomically records an immediate coordination activation. Add interval
   cadence and one managed dispatcher with per-profile turn admission and global
@@ -145,9 +147,10 @@ without new growth work; uncertainty routes to the human for this root. Cancelli
 one assignment preserves but pauses independent work. None of these outcomes may
 weaken criteria, rewrite the soul or mistake a Done item for whole-purpose fulfillment.
 
-Deliver these root capabilities with the M7 First Builder handoff. Real control,
-result and purpose evaluation, and basic recovery are part of that first major
-milestone; a timer connected to chat does not meet it.
+Deliver the selected root capabilities first in the fantasy-writer milestone,
+then reuse and complete remaining root coverage for the M7 Builder handoff.
+Actual control, evaluation and basic recovery belong in the writer experience;
+a timer connected to chat does not meet it.
 
 ## M3 — Persistent teams and recursive control
 
@@ -368,26 +371,24 @@ evidence rather than marking a requirement done because a page or function exist
 
 ## Engineering sequence and evidence
 
-The first major delivery path is root-relevant M0/M1 boundaries → a managed
-Builder turn → durable owner chat → M2 continuity/evaluation/recovery → M7 proven
-handoff. M7's protected running-release and repository-workspace boundary is built
-before its first turn, not added at the end. Scoped Plane writes and uncertain-write
-recovery remain the next foundation work; prioritize subsequent integration around
-this handoff instead of completing every planning or multi-agent feature first.
+The current path is the [fantasy-writer cycle](fantasy-writer-milestone.md):
+create and observe a managed story run with actual stopping → durable owner chat
+and steering → detailed activity/artifacts → cadence, evaluation and recovery →
+real owner acceptance. Deliver UI and backend together through small tested slices.
+The service provisions the ordinary writer's planning home; Builder-specific
+repository privileges do not gate this path.
 
-After the handoff, extend the product through M3 teams, M4/M5 complete owner
-experience and progress assessment, and M6 broader operational readiness. M0–M7
-identifiers preserve coverage and history; their numbers do not require all groups
-to complete in order. UI polish and domain skills can proceed independently after
-authoritative operation contracts are stable. Access, lifecycle and transactional
-state must remain connected to the actual Builder path.
+Then reuse those foundations for the M7 Builder handoff, adding protected deployed
+soul/grants/running release and repository tools before its first development run.
+Full M3 teams, M4/M5 organization experience and progress assessment, and M6 broader
+operation follow. M0–M7 preserve capability coverage; their numbers do not dictate
+chronological completion. The [execution audit](hermes-execution-audit.md) remains
+the source map: enforce every enabled writer path and leave unused paths disabled.
+No requirement to integrate every inherited native feature before proving one root.
 
-The largest uncertainty is the cross-cutting change to Hermes run admission,
-trusted actors, persistent chat and sandbox cancellation. M0 should produce a
-file-level patch map, dependency boundaries and the next verifiable slices for
-those changes. Use ordered outcome-based cycles without planned date ranges or
-duration estimates. Move to the next ready slice as soon as acceptance evidence
-and dependencies permit it.
+Use ordered outcome-based cycles without planned date ranges or duration estimates.
+Advance on accepted evidence. Root timing and runtime-limit defaults remain open;
+select explicit trusted settings before dependent real activation.
 
 Use deterministic local checks for authority, scheduling and state transitions;
 real isolated processes/containers for lifecycle and recovery; and a small set of

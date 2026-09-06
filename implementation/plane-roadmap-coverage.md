@@ -15,20 +15,25 @@ context, not a mandate to implement every upstream feature or old plan.
 
 ## Milestones and modules
 
-Plane Community modules retain M0–M7 as capability groups. The owner selected
-the First Builder handoff as the first major milestone; M7 is brought forward
-using root-relevant M0/M1/M2 work and essential isolation/recovery. Completing the
-whole M3–M6 groups is not a prerequisite for that handoff.
-The First milestone module is an additive view of the same prerequisite records;
-original capability memberships are preserved. It creates no duplicate work.
-Descriptions define acceptance gates. Module percentages count records, not
-proven product completion; aggregate parent work items are not extra implementation
-work. Existing AN-1–AN-16 IDs, comments and acceptance history were retained.
-Near-term work is refined into smaller linked items; distant work stays coarser.
+Plane Community modules retain M0–M7 as capability groups. The owner now selects
+the earlier **Autonomous fantasy writer** milestone ([AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/)),
+before the M7 First Builder handoff. The writer uses scoped ordinary-root execution,
+Chat/Activity/Stories, Plane planning and continuing cadence. M7 then adds protected
+repository development and a real TDD improvement; full M3–M6 completion is not a
+blanket prerequisite for either narrow handoff.
+
+The new writer slices refine selected portions of existing broad capability items.
+They link their evidence back without completing unrelated acceptance or creating
+a second implementation of the same behavior. Existing IDs, module memberships,
+comments and completed evidence are preserved. Module percentages count records,
+not proven product completion; acceptance aggregates are not extra implementation.
+The initial full-spec mapping below remains useful; the writer section adds its
+narrow delivery mapping and takes precedence for current sequence.
 
 | Module / milestone | Outcome |
 | --- | --- |
-| [First milestone - Autonomous First Builder (M7)](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/38d8aafd-cc77-4d6a-bb98-e610c8a77acd/) | First major acceptance gate AN-16: the real managed Builder completes a bounded TDD improvement from the repository workspace, survives interruption and owner steering, and cannot grant itself deployment or soul-edit authority. |
+| [First usable milestone - Autonomous fantasy writer](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/283b8ac8-c4e0-4609-a9a6-3909c57eb469/) ([AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/)) | Create from purpose, real saved writing, persistent chat and owner steering, activity/session/story inspection, cadence and basic restart recovery. A single story is an intermediate checkpoint. |
+| [Next handoff - Autonomous First Builder (M7)](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/38d8aafd-cc77-4d6a-bb98-e610c8a77acd/) | Subsequent self-bootstrap acceptance gate AN-16: the real managed Builder completes a bounded TDD improvement from the repository workspace, survives interruption and owner steering, and cannot grant itself deployment or soul-edit authority. |
 | [M0 - Validate the Hermes foundation](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/f2e73bd1-3c26-44c2-8e01-1b638c6936c8/) | Gate: pinned baseline, maintained patch map and a real engine/tool/stop/restart proof. |
 | [M1 - Governed agents and Plane work](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/af3769db-cd94-4209-a6ae-f52ccea00b51/) | Gate: protected identity, scoped authority and planning, durable admission, private layers and readable state. |
 | [M2 - One autonomous root](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/e71a7b80-4ba5-4402-a14d-12aa3dee999e/) | Gate AN-12: create from purpose, plan, act, ask, evaluate results and continued need, then continue, wait or retire; basic chat, decisions, stopping and recovery work before unattended cadence. |
@@ -40,47 +45,63 @@ Near-term work is refined into smaller linked items; distant work stays coarser.
 
 ## Rolling cycles and priority
 
-The owner replaced calendar forecasts with ordered, undated cycles, and then
-prioritized the managed First Builder handoff. Live Plane start/end fields remain
-null. Advance on accepted exit evidence or explicit re-scoping, never elapsed time.
+The owner replaced calendar forecasts with ordered, undated cycles and has now
+moved the writer ahead of the Builder. Live cycle start/end fields remain null.
+Advance on accepted outcomes or explicit re-scope, never elapsed time.
 
-1. **Establish the Builder planning home — accepted:** setup/API and scoped-read
-   evidence passed. Retry-dependent recovery moved to sequence 2 with its history.
-2. **Scoped writes and recoverable planning — reviewed:** AN-20/22 and the bounded
-   AN-3 existing-Builder recovery are accepted. Carry AN-4 runtime integration to
-   sequence 3; general provisioning recovery remains AN-21 after the handoff.
-3. **One controlled Builder run — current:** reconcile source changes, enforce managed run
-   authority and protected layers, connect real Hermes/model/development tools,
-   record execution and verify actual stopping. Reuse the existing Plane project.
-4. **Persistent Builder chat and owner control:** trusted durable conversation,
-   proactive questions/answers, steering, pause/resume and basic visible work state.
-5. **Autonomous Builder continuity:** cadence, accepted results and purpose review,
-   outage handling, restart reconciliation and next-step selection without duplicate
-   work or repeated questions. Resolve only relevant open defaults before dependent work.
-6. **First Builder handoff proof:** complete a real framework improvement through
-   incremental TDD, retain evidence in Plane, demonstrate owner steering/browser
-   closure/restart and continue eligible work without repeated human prompts.
+1. **Establish the Builder planning home — accepted:** retain setup/API/scoped-read
+   evidence and its original stable records.
+2. **Scoped writes and recoverable planning — accepted host scope:** retain AN-20/22
+   and AN-3's bounded recovery evidence; runtime integration remains unfinished.
+3. **Fantasy writer: create, chat and observe — current:** [AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/)
+   aggregates [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/), [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/), [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/), [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/), [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/).
+   Preserve accepted AN-17 audit in the cycle. AN-66/70 record explicit first-use
+   timing and limit configuration; re-scoping does not approve their defaults.
+4. **First Builder setup and remaining owner-control work:** AN-57 moves here;
+   reuse writer execution/chat/continuity and add protected repository authority.
+   Existing broad chat/control records retain any remaining acceptance.
+5. **First Builder continuity and remaining root behavior:** reuse accepted writer
+   cadence/evaluation/recovery; implement outstanding full-root/development cases.
+6. **First Builder handoff proof:** a real hosted TDD improvement, owner steering,
+   browser closure/restart and another useful authorized step accept AN-16/58.
 
-Full teams, the complete monitoring/inbox interface, advanced progress heuristics,
-general new-project provisioning and broader deployment hardening remain in their
-existing backlog groups after the handoff. They are retained product requirements.
-Basic authority, stopping, root decisions, evaluation and recovery stay on the
-first-milestone path. Do not treat an aggregate backlog parent's incomplete status
-as a dependency on every deferred sibling; use the explicit scoped prerequisites.
+The previous cycle-03 controlled-Builder goal was not achieved; the owner explicitly
+re-scoped it. Unfinished broad AN-4/5/7/8/18/23/24/25/26/30/32 work returns to
+backlog outside that cycle. Writer-relevant portions are now in the new slices;
+AN-24's verified dispatch/revocation increment is retained, not undone or declared
+full completion. AN-57 moves to cycle 04. AN-66 moves from cycle 05 to cycle 03.
+AN-70 remains in 03 for writer-first configuration. All other original cycle
+membership and completed states are retained.
 
-One Builder has implementation WIP 1. At review, account for unfinished work by
-carrying, splitting, returning it to backlog or cancelling under lifecycle rules;
-preserve all history. No cycle duration estimates or calendar windows are used.
-Thinking cadence, actual activity timestamps and genuine external deadlines have
-different meanings and do not turn a cycle into a time estimate. Testing happens
-inside each increment, not at the end of a cycle.
+Minimal new-root Plane provisioning moves forward as part of [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/);
+it creates the writer's own planning home, not story tasks in framework development.
+Broad repair/team provisioning, full organization monitoring/Inbox, advanced
+progress detection and packaged Linux operation remain later capabilities.
 
-Original implementation path (AN-19 is now accepted): [AN-19](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/737877ea-91c6-4cc2-b1ab-31508dc47238/) scoped reads → [AN-20](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4baf9a5e-3df7-439d-8241-5733a83debac/) scoped writes → [AN-22](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2aaa9d8e-0311-4bc3-9c77-d0b85eadfad8/) uncertain-write recovery. Read live priorities before starting.
+One external Builder has implementation WIP 1. Runtime capacity is separately
+configured. Never infer a duration from cycle order, or treat broad capability
+parents as dependencies on every deferred sibling. Testing happens inside each
+small behavior; final real-model acceptance complements those tests.
+
+## Current writer delivery mapping
+
+| Record | Selected requirement | Shared capability references |
+| --- | --- | --- |
+| [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/) | Configured create, own planning home/discovery, protected actual run, visible result and Pause | AN-4/7/18/21/23/24/25/26/30/32/37; real launch uses AN-70 settings |
+| [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/) | Durable chat, question/answer, feedback, purpose edit/stop and owner steering | AN-8/10/25/28/29/30/31/41/43 |
+| [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/) | Activity/session history, truthful events, story versions and evaluations | AN-32/42/43/44/46/48 |
+| [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/) | Cadence, result/purpose review, fresh planning, browser/restart continuity, no duplicate work | AN-9/11/23/27/33/34/35/36/66/69 |
+| [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/) | Complete real-model owner journey | Earlier writer slices; [AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/) aggregates acceptance |
+
+Sources: [writer product specification](../design/14-first-writer-milestone.md)
+and [writer delivery plan](fantasy-writer-milestone.md). Those define the selected
+subset; existing records retain full-product acceptance and history.
 
 ## Product chapter mapping
 
 | Canonical specification | Representative delivery records |
 | --- | --- |
+| [14-first-writer-milestone.md](../design/14-first-writer-milestone.md) | [AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/), [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/), [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/), [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/), [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/), [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/) |
 | [README.md](../design/README.md) | [AN-12](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/ff2be107-80a4-4271-b234-f2cac434c510/), [AN-27](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/8f765bc9-70b9-4436-a40b-06db4409e832/), [AN-56](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/e35a45e1-df2c-46d1-aad8-25b678d735b3/), [AN-16](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/950ff1ab-7337-4f5b-a49d-a4731c4fddf0/) |
 | [01-agents.md](../design/01-agents.md) | [AN-24](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/b0df579f-b4f5-499b-b10b-3e2e1534d9ec/), [AN-25](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cc831c6a-7861-4d31-b699-b2100a9db1cd/), [AN-8](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/9e9435d9-cf72-4644-a85d-f7bf375941c1/), [AN-37](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/362e1e32-9a64-489e-958c-834c70fa9e7f/), [AN-41](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/231fb9b3-f101-481c-8fce-1f3f90cb8165/) |
 | [02-independent-work.md](../design/02-independent-work.md) | [AN-11](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/a40b50fd-864b-4ecc-95bb-09284ba84383/), [AN-26](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6f58d687-56a6-473a-ad5f-a1d1d8b99a44/), [AN-33](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/dd441efc-ed43-4a34-a4e3-904b0be1ebd0/), [AN-34](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/ce8e376a-3f05-4788-8080-9715353d5994/), [AN-35](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/22692c3e-b55f-4f3e-bea1-def47ccf1ef4/), [AN-51](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2f168877-3fd7-4fe3-a94b-152e423656e2/) |
@@ -153,16 +174,17 @@ evidence is recorded separately from deterministic model fixtures.
 | UX-19 | [AN-49](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6ad8a1b8-6881-442c-856c-179ef203f5b9/) |
 | UX-20 | [AN-21](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/3f765e57-ccca-4f1c-b095-a69d2ee8440c/), [AN-27](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/8f765bc9-70b9-4436-a40b-06db4409e832/), [AN-36](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cbf7c3bc-3ecf-465c-82cd-79dead9ce3ea/), [AN-47](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/96f2aac1-52b8-465c-8bd9-a4666dc64e55/), [AN-48](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/88fe7dfb-8d7c-4aa3-8b51-e877c68c4cf7/), [AN-49](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6ad8a1b8-6881-442c-856c-179ef203f5b9/), [AN-53](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/56387dba-c9fd-44e7-82cd-0e91800f7ef9/) |
 
-## Execution-audit handoff
+## Historical execution-audit handoff
 
 AN-17's [Hermes source audit](hermes-execution-audit.md) pins the inspected baseline,
 complete fork delta and license records, and distinguishes integrated operations
 from native paths still requiring enforcement. It closes discovery, not M0's live
-integration gate. AN-24 is the next ready implementation item in sequence 3;
+integration gate. At that audit handoff, AN-24 was next in sequence 3;
 accepted AN-61/62 decisions supply its policy. The audit assigns admission,
 tool/context assembly, stopping, events and real-run proof to existing AN-7/26/30/
 32/18/57 records. AN-23 remains independently ready; AN-70 runtime configuration
-remains open. No new work items, cycle dates or product defaults are introduced.
+remains open. That audit update introduced no new items or dates. Current writer
+implementation starts at AN-72 as described above; AN-24 retains its partial evidence.
 
 ## Purpose-based lifespan follow-through
 
@@ -195,9 +217,9 @@ AN-63 was then approved. The owner's latest revision resolves AN-64 with
 purpose-based lifespan and cancellation pause; it supersedes the earlier
 completion-by-role default. See [the current lifecycle decision](../design/07-open-decisions.md#resolved-purpose-based-lifespan-cancellation-and-replacement).
 AN-68 separately tracks retained-work operations. Six decisions remain open:
-AN-59, AN-65, AN-66, AN-67, AN-68 and AN-70. AN-70 separates the first Builder
-runtime limits from broad capacity/progress defaults. AN-66 and AN-70 are on the
-first handoff path; AN-65 governs later project/descendant controls. They gate only behavior needing that choice;
+AN-59, AN-65, AN-66, AN-67, AN-68 and AN-70. AN-70 now covers first-writer
+and subsequent Builder runtime configuration separately from broad capacity/progress
+defaults. AN-66 and AN-70 move forward for the writer; AN-65 governs later project/descendant controls. They gate only behavior needing that choice;
 record export/deletion and new transfer behavior do not block ordinary retirement
 with retained records. Creating an item does not approve its proposal.
 Parent notification after direct human direction is part of the accepted

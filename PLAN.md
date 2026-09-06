@@ -1,52 +1,36 @@
 # Current implementation work
 
-The owner selected the Hermes fork and Plane for project planning. The live
-[First Builder Plane project](first-builder/PLANE.md) now owns the actionable
-backlog, priorities, dependencies and cycles. Read its API state before choosing
-work; do not maintain a parallel checklist here.
+The owner selected the Hermes fork and Plane. The live
+[Plane project](first-builder/PLANE.md) owns actionable items, priorities,
+dependencies and cycles. Read it before selecting work; this is not another board.
 
-- Product requirements: [design/](design/README.md).
-- Engineering milestones: [delivery plan](implementation/delivery-plan.md).
-- Specification-to-work traceability: [Plane coverage](implementation/plane-roadmap-coverage.md).
-- Plane integration: [implementation plan](implementation/plane-project-management.md).
-- Session evidence and handoff: [Builder state](first-builder/STATE.md).
-- Local service operations: [Plane deployment](ops/plane/README.md).
+The current undated cycle 03 is **Fantasy writer — create, chat and observe**.
+The owner moved this earlier usable-agent milestone ahead of the First Builder:
+create an ordinary root from a purpose, see it write and save stories, chat and
+steer it, inspect activity/sessions, then observe useful continuation on cadence.
+The first saved story is a checkpoint; continuing conversation, real stopping,
+evaluation and basic recovery belong in the completed milestone.
 
-The first major milestone is the managed First Builder: it works in this repository
-on its own cadence and communicates with the owner through persistent chat. The
-full specification remains organized into M0–M7 capability modules and a product
-decision module in Plane. M7 is the early handoff gate, not a requirement to finish
-M3–M6 first. Existing AN-1–AN-16 retain their history; refined work covers the
-remaining specification. Ordered, undated cycles select small increments: scoped
-planning and recovery, a controlled Builder run, persistent chat and owner control,
-autonomous continuity, then a real TDD improvement demonstrating the handoff.
-Advance by accepted outcomes and dependencies; do not estimate cycle durations or
-assign calendar windows.
-Plane is the authority for item state; this overview is not a second task store.
-The latest owner lifecycle decision replaces fixed agent lifetime categories with
-[purpose evaluation](design/01-agents.md#lifetime-and-work-assignment); cancellation
-pauses the performing agent/subtree. The roadmap must implement these rules in
-the first autonomous root and then extend them to teams.
+- Product acceptance: [first writer](design/14-first-writer-milestone.md).
+- Delivery slices and scope: [writer implementation](implementation/fantasy-writer-milestone.md).
+- Full requirements: [design](design/README.md).
+- Capability roadmap: [delivery plan](implementation/delivery-plan.md).
+- Work traceability: [Plane coverage](implementation/plane-roadmap-coverage.md).
+- Session evidence: [Builder state](first-builder/STATE.md).
+- Local services: [Plane operations](ops/plane/README.md).
 
-Completed identity, authenticated creation UI, private provisioning, restricted
-Hermes environments and scoped Plane read/write boundaries are recorded in Git and
-Builder state. They do not
-yet establish autonomous managed agents.
+Reuse accepted identity, creation UI, private provisioning, restricted environments
+and Plane host read/write/recovery work. AN-24's verified inspection/revocation
+increment remains evidence, but broad remaining enforcement returns to backlog;
+the writer slices enforce all operations they actually expose. Minimal ordinary-root
+Plane provisioning comes forward; Builder repository privileges, broader native
+integration and full teams stay later. No completed evidence is reopened or erased.
 
-AN-20 scoped writes and AN-22 uncertain-write recovery are verified. Sequence 2
-is accepted for the host planning scope, including AN-3's existing-Builder recovery
-review. AN-4's unfinished managed-run transport acceptance is explicitly carried
-to sequence 3. AN-17's [execution audit](implementation/hermes-execution-audit.md)
-pins the Hermes baseline and maps native routes, current gaps and required managed
-controls. AN-24 is active: enforce trusted owner/run authority at real
-operation boundaries, including nested tools and alternate dispatch. AN-23 source
-freshness and AN-70 runtime limits still gate dependent execution work. Existing Plane
-resources are reused; general provisioning recovery remains AN-21 after the handoff.
-Use the live AN-16 milestone and AN-57/AN-58 execution/proof records for acceptance;
-plan changes do not establish a deployed Builder.
+The subsequent AN-16/M7 First Builder handoff adds protected repository development
+and demonstrates a real TDD improvement using the writer's run/chat/continuity
+foundation. The First Builder remains hosted by the external coding environment.
+No managed writer or Builder is launched by this planning update.
 
-The first AN-24 increment connects host-scoped Plane inspection to Hermes direct
-and nested tool dispatch and closes pre-delivery field-revocation checks. Its
-verified behavior and remaining scope are in [Builder state](first-builder/STATE.md). Write
-correlation, full native/auxiliary enforcement and actual run admission remain
-explicit follow-up work in the same Plane item and linked runtime records.
+Follow small TDD increments and the existing Playwright setup. Keep one active
+implementation slice, no cycle dates or duration estimates. Runtime cadence and
+finite limits must be explicitly configured before launch; open defaults remain open.

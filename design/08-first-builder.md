@@ -3,8 +3,10 @@
 The framework is intended to build and develop itself through a persistent
 **First Builder** agent. The First Builder is its architect and builder,
 responsible for evolving the framework under the human owner's direction.
-Running this agent inside the framework, with direct owner chat, is the first
-major delivery milestone. The owner should be able to continue developing the
+An earlier [fantasy-writer milestone](14-first-writer-milestone.md) first proves
+ordinary autonomous execution, chat and observation. Running the Builder inside
+the framework, with direct owner chat, is the subsequent self-bootstrap handoff.
+The owner should be able to continue developing the
 framework through that agent instead of supplying each step in an external coding
 conversation. The full recursive organization and complete control center follow
 this handoff; they are not prerequisites for proving it.
@@ -39,7 +41,7 @@ persistent agents. It starts and maintains a development plan, acts on its
 cadence, can delegate focused work, reports progress, and escalates unresolved
 questions through its parent chain, or directly to the human when parentless. Its work and context persist across periods of activity.
 
-## First major milestone: an autonomous Builder with chat
+## Self-bootstrap handoff: an autonomous Builder with chat
 
 The first handoff supports one First Builder working in this repository under the
 human's control. It uses its purpose, working instructions, memory and Plane plan

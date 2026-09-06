@@ -63,18 +63,17 @@ forwarded into managed sandboxes. The future adapter must enforce narrower scope
 
 The original AN-1 through AN-16 records remain, with native dependency links.
 The full design is mapped into capability modules and a product-decision module;
-see the [coverage index](../implementation/plane-roadmap-coverage.md). The first
-major handoff is [AN-16 — Run the First Builder inside the framework](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/950ff1ab-7337-4f5b-a49d-a4731c4fddf0/),
-tracked in the existing M7 module, now titled **First milestone - Autonomous First Builder**.
-M0–M7 IDs are capability references, not mandatory chronological release gates.
+see the [coverage index](../implementation/plane-roadmap-coverage.md). The current
+cycle 03 is **Fantasy writer — create, chat and observe**. Its acceptance is in the
+[writer specification](../design/14-first-writer-milestone.md), with the delivery
+sequence in [implementation](../implementation/fantasy-writer-milestone.md).
 
-The accepted first cycle retains AN-1, AN-2 and AN-19. The second cycle covers
-scoped writes and recovery. Subsequent undated cycles cover a controlled Builder
-run, persistent chat/owner control, autonomous continuity, and the handoff proof.
-General new-agent onboarding is deferred; the Builder reuses this project and its
-existing stable IDs. Read live records for exact membership, status and blockers.
-No planned duration or calendar forecast is used. Completed framework increments
-remain evidence in STATE.md and Git, not reopened tasks.
+Cycles 01/02 retain accepted evidence. Cycle 03 is explicitly re-scoped from the
+unachieved controlled-Builder goal to the earlier usable writer. The AN-16/M7
+Builder handoff follows and retains its history; later Builder cycles reuse accepted
+writer foundations. Full teams and broader operation remain backlog work. Use the
+live module/cycle/item descriptions for exact membership, state and dependencies.
+All cycles remain undated. No planning edit establishes a running managed agent.
 
 Plane does not schedule this external coding agent. These instructions support
 continuity across invocations; they do not claim an autonomous Builder cadence.

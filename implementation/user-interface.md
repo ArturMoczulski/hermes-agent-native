@@ -86,6 +86,14 @@ Human authority comes from the authenticated owner channel, not a frontend label
 
 ## Delivery and verification
 
+Current priority: the [fantasy-writer milestone](fantasy-writer-milestone.md).
+Deliver one agent detail page with Chat, Activity and Stories, plus the roster.
+The first execution slice already includes real status, result and Pause controls;
+durable chat, detailed inspection and continuity complete this earlier milestone.
+Reuse that foundation for the Builder. Full organization screens stay later.
+The framework browser test harness now exists in [web/e2e](../web/e2e/README.md);
+reuse it and the installed Chromium rather than creating another test stack.
+
 | Increment | Existing milestone | UX evidence |
 | --- | --- | --- |
 | Creation, purpose retention and basic agent list | M1–M2 | UX-01, initial UX-02/04; immediate durable activation distinguished from observed execution. |

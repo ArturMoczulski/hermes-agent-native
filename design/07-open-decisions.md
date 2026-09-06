@@ -25,10 +25,11 @@ behavior or introduce implementation choices.
 | Timing and interruptions | Which events prompt immediate reconsideration? How are missed check-ins and reminders handled? | Answers and results can enable prompt reconsideration; redundant timer reviews can be combined without losing messages. |
 | Capacity limits and progress detection settings | What existing resource controls apply, and what evidence and timing identify activity without progress? | Progress detection and review are required; exact thresholds and resource defaults remain open. |
 
-The first Builder handoff separates its local runtime limits into **AN-70**, an
-open decision needed before its managed admission (AN-7). Broad multi-agent
+The earlier writer milestone and subsequent Builder handoff use **AN-70** for
+explicit local runtime limits, required before real managed admission. This now
+includes the writer path; default values remain unapproved. Broad multi-agent
 capacity and progress thresholds remain AN-67. Root timing choices in AN-66 also
-remain open. AN-65 governs the later descendant/project-pause extension; ordinary
+remain open and move forward for the writer cadence. AN-65 governs the later descendant/project-pause extension; ordinary
 authorized root resume must preserve its own pause causes and reconcile work.
 Reprioritizing delivery does not adopt proposed defaults.
 

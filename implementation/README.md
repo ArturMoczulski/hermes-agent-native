@@ -18,8 +18,8 @@ interface. Add the persistent organization and human-control rules that make
 agent-native a distinct product.
 
 Start with Hermes as the only agent engine. OpenCode is optional future tooling
-for a demonstrated specialist need. Prove the first Builder on the existing local
-host with a persistent service, SQLite on local disk and Docker workspaces.
+for a demonstrated specialist need. Prove the first ordinary writer, then the
+Builder, on the existing local host with a persistent service, SQLite on local disk and Docker workspaces.
 A packaged always-on Linux deployment follows the first handoff. The human's
 browser is a client; closing it must not stop work; the runtime host must remain
 available.
@@ -33,6 +33,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 
 | Document | Purpose |
 | --- | --- |
+| [Fantasy-writer milestone](fantasy-writer-milestone.md) | Current cycle: create, chat, observe, save stories and continue; bounded delivery slices. |
 | [Specification coverage in Plane](plane-roadmap-coverage.md) | Milestone modules, rolling cycle policy and specification/scenario-to-work links; live Plane owns status. |
 | [Hermes execution audit](hermes-execution-audit.md) | Pinned upstream/fork baseline, exact patch inventory, native activation map and required managed gates. |
 | [Plane project management](plane-project-management.md) | Selected planning service, source ownership, provisioning and integration sequence. |
@@ -86,44 +87,24 @@ paths, and persistent-container cleanup need deliberate changes for this product
 The [evidence review](decisions-and-evidence.md#evidence-and-version-boundaries)
 separates documented features from the proposed additions.
 
-## The first major milestone: the Builder works inside the framework
+## First usable agent, then the Builder handoff
 
-The owner wants to continue development through an autonomous First Builder and
-its persistent web chat as the first major handoff. M0–M7 remain capability-group
-and Plane identifiers; they are not a required numerical delivery order. M7 is
-this first handoff gate, supplied by root-relevant M0/M1/M2 work and essential
-Builder isolation, without waiting for full M3–M6 delivery.
+The owner selected an earlier [fantasy-writer milestone](fantasy-writer-milestone.md).
+Create a purpose-driven ordinary root, see its real writing activity and saved
+stories, converse and steer, then observe it continue on cadence with local restart
+recovery. The current cycle delivers that complete narrow experience. The first
+saved story is an intermediate checkpoint, not the full milestone.
 
-The [delivery plan](delivery-plan.md#engineering-sequence-and-evidence) expands
-this ordered outcome sequence:
+The [delivery plan](delivery-plan.md#engineering-sequence-and-evidence) retains M0–M7
+as capability groups. Reuse the writer's run/chat/observability/planning foundations
+for the subsequent M7 First Builder handoff: protected repository development,
+a real TDD improvement and autonomous next work. Do not require Builder repository
+privileges, full teams or the complete control center before the writer runs.
 
-1. Finish scoped Plane planning operations and uncertain-write/retry recovery.
-2. Run one managed Builder turn with real model, repository-editing and test tools,
-   protected soul and running release, authenticated operations, events and Stop.
-3. Provide durable owner chat, proactive questions, answers and steering, with
-   visible current work and waiting; browser closure does not end the work.
-4. Add recurring review, explicit result and purpose evaluation, and basic restart
-   reconciliation so the Builder chooses useful work across bounded turns.
-5. Prove a real TDD framework improvement, owner steering, browser closure, service
-   restart and next authorized work without manually prompting each step.
-
-Then extend to recursive teams, the complete organization monitor and global
-inbox, advanced progress assessment, multi-root capacity and packaged Linux
-operation. The protected running service must not load changes directly from the
-Builder's writable checkout; source access cannot grant authority or deployment
-permission. The detailed handoff acceptance is in
-[M7](delivery-plan.md#m7--first-major-handoff-the-autonomous-first-builder-with-chat).
-These are requirements still to prove, not a claim that the Builder is running.
-
-Basic owner chat, pending decisions, stopping, recovery, result evaluation and
-whole-purpose evaluation belong in the first autonomous-root milestone. Completion
-of one item does not settle continuing delivery or monitoring obligations. The
-agent can initiate controlled retirement after clear whole-purpose fulfillment,
-applicable accountable acceptance and resolved obligations; uncertainty follows
-the parent chain, with unresolved root questions going to the human. This adds no
-blanket human approval requirement. M3 extends the same process to teams and M5
-deepens evidence and progress assessment. Later milestones are not permission to
-postpone the control foundations.
+Basic authority, actual stopping, root questions, evaluation and recovery belong
+in the writer milestone. Enable only its scoped tools and execution paths. The
+Builder later adds its protected running-release/repository boundary before it
+receives code-editing privileges. Neither milestone is claimed implemented.
 
 ## Keep the initial installation small
 
@@ -139,8 +120,8 @@ postpone the control foundations.
 
 Multiple roots, recursive teams, different models, and authorized communication
 between separately isolated workers remain part of the full product specification.
-They follow the first single-Builder handoff. Multiple physical worker hosts can
-follow later; neither the handoff nor the first release depends on them.
+They follow the writer and subsequent single-Builder handoff. Multiple physical
+worker hosts can follow later; neither the handoff nor the first release depends on them.
 
 ## Repository and First Builder workspace
 

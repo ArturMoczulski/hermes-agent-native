@@ -1,5 +1,8 @@
 # UX acceptance scenarios
 
+The current first delivery uses the [fantasy-writer acceptance journey](14-first-writer-milestone.md).
+It selects one-root coverage from the broader scenarios below.
+
 These scenarios make the [UX design](10-user-experience.md) reviewable and testable.
 They supplement the [24 product scenarios](06-product-scenarios.md), not replace
 them. They are completion targets, not claims that tests or features exist.
