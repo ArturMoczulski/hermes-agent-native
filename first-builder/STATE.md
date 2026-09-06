@@ -1,6 +1,6 @@
 # First Builder — current work and handoff
 
-Updated: 2026-09-06. Working branch: `codex/astra-capability-proof`.
+Updated: 2026-09-07. Working branch: `codex/astra-capability-proof`.
 Active repository: `/Users/arturmoczulski/Projects/hermes-agent-native`.
 
 ## Current focus
@@ -17,9 +17,10 @@ Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
 AN-77 is In Progress and urgent. Native Hermes chat now binds selected framework
 identity, protected purpose and retained conversations, with conversation-only
 scope. Native draft persistence and durable submission receipts now support
-renderer restart and explicit retries. Remaining acceptance covers hard host
-deadlines and full service-restart recovery; a live managed subscription exchange
-is verified below.
+renderer restart and explicit retries. Per-message native workers now enforce
+host deadlines, with immutable receipt checks at native persistence. Remaining
+acceptance covers full service-restart recovery and purpose-revision/transcript
+ordering; live subscription evidence is recorded below.
 The owner rejected a duplicate React conversation; the native TUI, gateway,
 AIAgent and SessionDB remain authoritative.
 
@@ -33,7 +34,78 @@ provisioning, environment and Plane boundary evidence remains; AN-24's broad
 remainder stays backlog. No managed writer or Builder run is established by this
 planning update. Earlier next-step entries are historical; this focus wins.
 
-## AN-77 draft and delivery recovery — current increment
+## AN-77 host deadline — current increment
+
+Each admitted managed owner message now runs in its own native ComputeHost.
+The parent keeps routing/receipt metadata; the worker reuses AIAgent, protected
+instructions and the same SessionDB transcript. Ordinary conversations retain
+their existing path. `agent_native.managed_chat_timeout_seconds` defaults to 90,
+is validated on admission, and includes startup. The native iteration/token
+limits remain in place; no unattended writer defaults were selected.
+
+The deadline kills/reaps only that worker before waiting for admission, event or
+SQLite locks. Its immutable attempt binds agent/revision, native session, UUID,
+receipt owner and deadline. Native lease acquisition/refresh and transcript
+appends check the same receipt transactionally, before and after their edits.
+Late callbacks cannot use a subsequent attempt or publish into another receipt.
+A timed-out UUID is terminal; an explicit new message uses a new worker and the
+same conversation. Managed-only IPC loss also exits the actual child process.
+
+Completion is visible only after confirmed death. Failed stop or cleanup keeps
+the conversation busy with an explanatory native status; the owner's interrupt
+retries cleanup without replaying model work. Close/reopen retains the controller
+until stopping is confirmed. Browser regression also exposed incomplete metadata
+when reopening an unsubmitted conversation: the native unpersisted-resume path
+now supplies the full managed SessionInfo, preventing a SessionPanel crash.
+
+TDD reproduced the missing host deadline, expiry during actual SQLite writes,
+late native persistence, cleanup failure, kill blocked by admission locks,
+unsubmitted-conversation metadata and discarded controllers after failed close.
+The provider fixture stalls real HTTP responses and observes real socket closure.
+Its hold marker matches the current prompt suffix because native request repair
+can merge adjacent user messages after a failed turn; canonical transcript and
+request-count assertions are retained.
+
+Native verification: 41 gateway/receipt/deadline/lifecycle checks passed
+(`/tmp/an77-host-final-managed.log`). Persistence verification: 84 checks passed
+across `test_managed_chat_attempt`, `test_managed_chat_attempt_policy`,
+`test_managed_chat_policy`, `test_session_turn_lease`,
+`test_append_messages_batch` and `test_cross_process_turn_lease`; their tool
+outputs are the evidence, with no separate stdout log saved. Existing ordinary
+ComputeHost regressions passed 29 checks (`/tmp/an77-deadline-ordinary-host.log`).
+
+All **14 distinct Playwright scenarios passed**: 13 in the final full run, and
+the renderer-recovery scenario in a focused recheck after updating its final
+assertion for the intentionally absent transcript of a never-submitted agent.
+The actual metadata crash was fixed in the native resume response. Exact restored
+user text, provider reply and no-replay counts remain asserted.
+Logs: `/tmp/an77-deadline-browser-final.log` and
+`/tmp/an77-deadline-recovery-final.log`. Earlier deadline/isolation checks also
+passed, verifying the affected PID/request stopped, another active request stayed
+alive, late output was excluded and the next worker kept the same system prompt.
+
+Together with 17 ordinary gateway close/routing checks
+(`/tmp/an77-deadline-gateway-final.log`), **171 focused Python checks passed**.
+Scoped Ruff/ESLint, whitespace and 27 local documentation link targets passed.
+No native TypeScript production changed, so the existing verified TUI bundle is
+reused. First red evidence: `/tmp/an77-deadline-browser-red.log`,
+`/tmp/an77-host-deadline-red.log`, `/tmp/an77-host-lock-red.log` and
+`/tmp/an77-host-close-metadata-red.log`.
+
+The preview is healthy on port 19221, PID **21206**, retaining all three agents,
+purpose revisions, databases and the approved subscription. One harmless prompt
+through the existing setup-preview agent returned the exact `gpt-6-astra` reply
+through the new worker path. Native storage confirmed the exchange and completed
+receipt, and the worker registry was removed. Conversation-only mode, zero tools
+and unchanged project execution/startup were verified. Evidence:
+`/tmp/an77-deadline-live-managed-chat-result.json` and
+`/tmp/an77-deadline-live-managed-chat.png`.
+
+AN-77 stays In Progress. Next is full service-restart recovery through the browser
+and remaining purpose-revision/transcript ordering. AN-72 writing/story/Pause
+follows. This increment does not establish autonomous writing or a hosted Builder.
+
+## AN-77 draft and delivery recovery — accepted checkpoint
 
 The existing native composer saves its text, buffered lines and paste payloads in
 private host storage, scoped by browser attachment and bound agent/revision.

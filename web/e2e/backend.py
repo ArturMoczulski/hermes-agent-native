@@ -86,14 +86,27 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
                                     and s.get('agent_ready') is not None and s['agent_ready'].is_set()
                                     and not s.get('agent_error')]
         ready = bool(native_ready_session_ids)
+        # Managed gateway sessions hold routing metadata. Their actual AIAgent
+        # lives only in the per-message ComputeHost, after owner submission.
         managed_ready_ids = [s['managed_chat'].agent_id for s in sessions
-                             if s.get('managed_chat') and s.get('agent') is not None and not s.get('agent_error')]
-        return {'ready': ready, 'native_ready_session_ids': native_ready_session_ids, 'managed_ready_ids': managed_ready_ids, 'model_requests': list(model.requests)}
+                             if s.get('managed_chat') and s.get('agent_ready') is not None
+                             and s['agent_ready'].is_set() and not s.get('agent_error')]
+        managed_workers = [{'agent_id': s['managed_chat'].agent_id,
+                            'message_id': s.get('_managed_receipt_id'),
+                            'pid': host.pid, 'running': host.is_running()}
+                           for s in sessions if s.get('managed_chat')
+                           and (host := s.get('_managed_host')) is not None]
+        return {'ready': ready, 'native_ready_session_ids': native_ready_session_ids,
+                'managed_ready_ids': managed_ready_ids, 'managed_workers': managed_workers,
+                'model_requests': list(model.requests)}
 
     app.router.routes.insert(0, app.router.routes.pop())
 
     from managed_delivery_fixture import install_delivery_fault_fixture
     install_delivery_fault_fixture(app, _require_token, home)
+
+    from managed_deadline_fixture import install_deadline_fixture
+    install_deadline_fixture(app, _require_token, home, model)
 
     import uvicorn
     uvicorn.run(app, host='127.0.0.1', port=19219, log_level='warning')

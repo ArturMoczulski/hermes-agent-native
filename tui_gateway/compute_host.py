@@ -231,8 +231,10 @@ class ComputeHost:
                 hermes_undo.on_user_message_appended(session["session_key"])
             with contextlib.suppress(Exception):
                 server._persist_branch_seed(session)
+            from tui_gateway.managed_chat import issue_turn_permit
             server._run_prompt_submit(
-                request_id, sid, session, text, display_kind=frame.get("display_kind") or None)
+                request_id, sid, session, text, display_kind=frame.get("display_kind") or None,
+                managed_permit=issue_turn_permit(session))
             run_thread = session.get("_run_thread")
             if run_thread is not None and hasattr(run_thread, "join"):
                 run_thread.join()
@@ -273,6 +275,9 @@ class ComputeHost:
 
     def _build_server_session(self, server: Any, frame: dict[str, Any], sid: str) -> dict:
         """Build the agent under the frame's profile scope and register the session."""
+        if frame.get("managed_attempt") is not None:
+            from tui_gateway.managed_host_worker import build_session
+            return build_session(server, self._transport, frame, sid)
         key = str(frame.get("session_key") or sid)
         history = frame.get("history") if isinstance(frame.get("history"), list) else []
         profile_home = str(frame.get("profile_home") or "")
@@ -504,6 +509,10 @@ def run_host(stdin: Any = None, stdout: Any = None) -> None:
             if not reader.is_alive():
                 break
     finally:
+        if os.environ.get("HERMES_MANAGED_COMPUTE_HOST") == "1":
+            # Native incremental writes are durable; no background finalizer may
+            # retain an orphaned managed model request after private IPC closes.
+            os._exit(0)
         host.shutdown(reason="stdin_closed", wait=2.0)
 
 

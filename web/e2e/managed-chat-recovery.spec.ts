@@ -83,6 +83,8 @@ test('unsent managed draft survives native renderer restart and remains with its
   const native = await (await request.get(`${backend}/api/sessions/${seen.get(roots[0].id)}/messages`, { headers })).json();
   expect(native.messages.filter((message: { role: string }) => message.role === 'user').map((message: { content: string }) => message.content)).toEqual([draft]);
   expect((await evidence()).model_requests).toHaveLength(before + 1);
-  const other = await (await request.get(`${backend}/api/sessions/${seen.get(roots[1].id)}/messages`, { headers })).json();
-  expect(other.messages.filter((message: { role: string }) => message.role === 'user')).toEqual([]);
+  // Merely opening the second agent creates routing metadata, not an engine
+  // or native transcript. Its unsubmitted conversation must remain absent.
+  const other = await request.get(`${backend}/api/sessions/${seen.get(roots[1].id)}/messages`, { headers });
+  expect(other.status()).toBe(404);
 });

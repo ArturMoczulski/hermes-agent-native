@@ -61,7 +61,7 @@ def _recover(conn, key, active_key):
     return receipt
 
 
-def claim(db, binding, message_id, text, *, runtime_busy=False):
+def claim(db, binding, message_id, text, *, runtime_busy=False, timeout_seconds=90.0):
     message_id = validate_id(message_id)
     if not isinstance(text, str) or not text.strip() or len(text) > 32000:
         raise ValueError("Managed message must contain at most 32000 characters")
@@ -87,6 +87,7 @@ def claim(db, binding, message_id, text, *, runtime_busy=False):
             "text": text,
             "hash": digest,
             "instance": _INSTANCE,
+            "deadline_monotonic": time.monotonic() + timeout_seconds,
             "created_at": time.time(),
             "updated_at": time.time(),
         }
@@ -115,14 +116,14 @@ def read(db, binding, message_id):
     return db._execute_write(load)
 
 
-def _update(db, binding, message_id, status, reason=None):
+def _update(db, binding, message_id, status, reason=None, *, instance=None):
     key, active_key = _keys(binding, message_id)
 
     def write(conn):
         receipt = _load(conn, key)
         if (
             not receipt
-            or receipt["instance"] != _INSTANCE
+            or receipt["instance"] != (instance or _INSTANCE)
             or receipt["status"] not in _PENDING
         ):
             return receipt
@@ -156,7 +157,8 @@ def update_for_session(server, session, status, reason=None):
     db = server["_get_db"]()
     if db is None:
         raise RuntimeError("Native chat storage is unavailable")
-    return _update(db, binding, message_id, status, reason)
+    return _update(db, binding, message_id, status, reason,
+                   instance=session.get("_managed_receipt_instance"))
 
 
 def _read_runtime_receipt(server, db, binding, session, message_id):
@@ -166,12 +168,11 @@ def _read_runtime_receipt(server, db, binding, session, message_id):
         # thread under _sessions_lock; do not mistake that handoff for a crash.
         with server["_sessions_lock"]:
             thread = session.get("_run_thread")
-            active = (
-                session.get("_managed_receipt_id") == message_id
-                and session.get("running")
-                and thread is not None
-                and thread.is_alive()
-            )
+            execution = session.get("_managed_execution")
+            live = (not execution.done.is_set()) if execution is not None else (
+                thread is not None and thread.is_alive())
+            active = (session.get("_managed_receipt_id") == message_id
+                      and session.get("running") and live)
         if not active:
             receipt = _update(
                 db,
@@ -202,8 +203,10 @@ def submit(server, rid, params, run_native):
             return server["_err"](rid, 5072, "Native chat storage is unavailable")
         try:
             _read_runtime_receipt(server, db, binding, session, message_id)
+            from tui_gateway.managed_chat_host import timeout_seconds
             receipt, created = claim(
-                db, binding, message_id, text, runtime_busy=bool(session.get("running"))
+                db, binding, message_id, text, runtime_busy=bool(session.get("running")),
+                timeout_seconds=timeout_seconds(server),
             )
         except RuntimeError as exc:
             return server["_err"](rid, 4091, str(exc))
@@ -215,7 +218,8 @@ def submit(server, rid, params, run_native):
             )
         session["_managed_receipt_id"] = message_id
         try:
-            response = run_native(rid, {**params, "text": text})
+            from tui_gateway.managed_chat_host import submit_managed
+            response = submit_managed(server, rid, params, session, receipt, db)
         except Exception as exc:
             update_for_session(server, session, "error", str(exc))
             raise
@@ -257,7 +261,13 @@ def record_completion(server, frame):
     session = server["_sessions"].get(params.get("session_id"))
     if not session or not session.get("managed_chat"):
         return
+    # A child may finish its loop before native finalization is done. Only its
+    # supervisor may publish the terminal receipt after confirming worker death.
+    if session.get("_managed_attempt"):
+        return
     payload = params.setdefault("payload", {})
+    if payload.get("receipt"):
+        return  # Supervisor already settled the captured attempt after process death.
     status = "complete" if payload.get("status") == "complete" else "error"
     reason = (
         None

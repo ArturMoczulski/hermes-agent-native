@@ -564,8 +564,12 @@ def _invoke_agent(
         "session.title", sid, {"session_id": _k, "title": t})
     _usage_stop, _usage_thread = _start_usage_ticker(sid, agent)
     try:
+        from contextlib import nullcontext
+        from agent.managed_chat_attempt import bind_managed_attempt
         from tui_gateway.managed_chat import construction_scope
-        with construction_scope(session.get("managed_chat")):
+        attempt = session.get("_managed_attempt")
+        attempt_scope = bind_managed_attempt(attempt, db=agent._session_db) if attempt else nullcontext()
+        with attempt_scope, construction_scope(session.get("managed_chat")):
             st.result = agent.run_conversation(run_message, **st.run_kwargs)
     finally:
         # Stop AND join before anything emits: a tick surviving past message.complete would

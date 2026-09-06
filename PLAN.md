@@ -31,9 +31,10 @@ protected purpose, private workspace and separate retained native conversations.
 See [managed conversation](implementation/native-agent-chat.md) for scope and
 verification. Conversation is available independently of Plane readiness and
 cannot start project work. Native drafts and submission receipts now support
-renderer restart and safe explicit retries. Remaining acceptance covers a hard
-host deadline and full service-restart recovery. A live managed subscription
-exchange is now verified. Reuse native conversation storage, composer and model
+renderer restart and safe explicit retries. Each message now runs in an isolated
+native worker with a hard host deadline and receipt checks at persistence.
+Remaining acceptance covers full service-restart recovery and purpose-revision/
+transcript ordering. A live managed subscription exchange is verified. Reuse native conversation storage, composer and model
 loop throughout; do not build a second chat implementation.
 
 AN-72 is Todo after AN-77. Its accepted creation/detail/initial-review and private

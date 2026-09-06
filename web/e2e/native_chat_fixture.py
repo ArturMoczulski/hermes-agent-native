@@ -1,9 +1,12 @@
 """Disposable external provider fixture for the real native Hermes chat stack."""
 from contextlib import contextmanager
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+import hashlib
 import json
 from pathlib import Path
-from threading import Thread
+import select
+import socket
+from threading import Event, Lock, Thread
 
 import yaml
 
@@ -19,6 +22,83 @@ def _text(message):
     content = message.get('content') or ''
     return content if isinstance(content, str) else '\n'.join(
         part.get('text', '') for part in content if isinstance(part, dict))
+
+
+class ModelHolds:
+    """External HTTP fault control; observations come from real provider sockets."""
+
+    def __init__(self):
+        self._lock = Lock()
+        self._holds = {}
+
+    def arm(self, marker):
+        with self._lock:
+            if marker in self._holds:
+                raise ValueError('This model hold marker already exists')
+            self._holds[marker] = {
+                'release': Event(), 'entered': False, 'client_disconnected': False,
+                'request_count': 0, 'late_reply': 'LATE_TIMEOUT_REPLY_' + marker,
+                'write_succeeded': False, 'write_failed': False, 'closed_before_write': False,
+            }
+        return self.evidence(marker)
+
+    def release(self, marker):
+        with self._lock:
+            self._holds[marker]['release'].set()
+        return self.evidence(marker)
+
+    def evidence(self, marker):
+        with self._lock:
+            hold = self._holds[marker]
+            return {**{key: value for key, value in hold.items() if key != 'release'},
+                    'released': hold['release'].is_set()}
+
+    def enter(self, text):
+        with self._lock:
+            # Native request repair can merge a previous failed user turn into
+            # the next one. Only the current prompt's trailing marker arms a
+            # hold; an earlier marker retained in history must not reactivate it.
+            matches = [marker for marker in self._holds if text.rstrip().endswith(marker)]
+            if not matches:
+                return None
+            if len(matches) > 1:
+                raise ValueError('A fixture request must contain only one hold marker')
+            marker = matches[0]
+            hold = self._holds[marker]
+            hold['entered'] = True
+            hold['request_count'] += 1
+            return marker
+
+    @staticmethod
+    def _peer_closed(connection, timeout):
+        try:
+            readable, _, exceptional = select.select([connection], [], [connection], timeout)
+            return bool(exceptional) or (bool(readable) and connection.recv(1, socket.MSG_PEEK) == b'')
+        except (OSError, ValueError):
+            return True
+
+    def wait(self, marker, connection):
+        with self._lock:
+            released = self._holds[marker]['release']
+        while not released.is_set():
+            if self._peer_closed(connection, 0.05):
+                with self._lock:
+                    self._holds[marker].update(client_disconnected=True, closed_before_write=True)
+                return False
+        if self._peer_closed(connection, 0):
+            with self._lock:
+                self._holds[marker].update(client_disconnected=True, closed_before_write=True)
+            return False
+        return True
+
+    def written(self, marker, succeeded):
+        with self._lock:
+            self._holds[marker]['write_succeeded' if succeeded else 'write_failed'] = True
+
+    def release_all(self):
+        with self._lock:
+            for hold in self._holds.values():
+                hold['release'].set()
 
 
 @contextmanager
@@ -40,12 +120,19 @@ def native_model_server():
             purposes = [p for p in MANAGED_PURPOSES if p in system_text]
             server.requests.append({'path': self.path, 'model': body.get('model'), 'last_user': last_user,
                                     'history_has_first_exchange': history_present,
+                                    'system_prompt_sha256': hashlib.sha256(system_text.encode()).hexdigest(),
                                     'managed_purposes': purposes,
                                     'tool_names': [t.get('function', {}).get('name') for t in body.get('tools', [])]})
             if self.path != '/v1/chat/completions' or body.get('model') != MODEL:
                 self._send({'error': {'message': 'Unexpected native test provider request'}}, status=400)
                 return
-            if 'Managed conversation test: what is your purpose?' in last_user and len(purposes) == 1:
+            hold_marker = server.holds.enter(last_user)
+            if hold_marker is not None:
+                # Deliberately send no status line, headers or body until release.
+                if not server.holds.wait(hold_marker, self.connection):
+                    return
+                answer = server.holds.evidence(hold_marker)['late_reply']
+            elif 'Managed conversation test: what is your purpose?' in last_user and len(purposes) == 1:
                 answer = 'My purpose: ' + purposes[0]
             elif ('Managed conversation test: remember our conversation?' in last_user and len(purposes) == 1
                   and any(m.get('role') == 'assistant' and _text(m) == 'My purpose: ' + purposes[0] for m in messages)):
@@ -68,24 +155,27 @@ def native_model_server():
                     'id': 'native-fixture', 'object': 'chat.completion.chunk', 'created': 1,
                     'model': MODEL, 'choices': [frame],
                 }) + '\n\n' for frame in frames) + 'data: [DONE]\n\n'
-                self._send(data.encode(), content_type='text/event-stream')
+                written = self._send(data.encode(), content_type='text/event-stream')
             else:
-                self._send({'id': 'native-fixture', 'object': 'chat.completion', 'created': 1,
+                written = self._send({'id': 'native-fixture', 'object': 'chat.completion', 'created': 1,
                             'model': MODEL, 'choices': [{'index': 0, 'finish_reason': 'stop',
                                 'message': {'role': 'assistant', 'content': answer}}],
                             'usage': {'prompt_tokens': 50, 'completion_tokens': 20, 'total_tokens': 70}})
+            if hold_marker is not None:
+                server.holds.written(hold_marker, written)
 
         def _send(self, body, *, status=200, content_type='application/json'):
             data = body if isinstance(body, bytes) else json.dumps(body).encode()
-            self.send_response(status)
-            self.send_header('Content-Type', content_type)
-            self.send_header('Content-Length', str(len(data)))
-            self.end_headers()
             try:
+                self.send_response(status)
+                self.send_header('Content-Type', content_type)
+                self.send_header('Content-Length', str(len(data)))
+                self.end_headers()
                 self.wfile.write(data)
                 self.wfile.flush()
+                return True
             except (BrokenPipeError, ConnectionResetError):
-                pass
+                return False
 
         def log_message(self, *args):
             pass
@@ -93,12 +183,14 @@ def native_model_server():
     server = ThreadingHTTPServer(('127.0.0.1', 0), Handler)
     server.daemon_threads = True
     server.requests = []
+    server.holds = ModelHolds()
     server.url = f'http://127.0.0.1:{server.server_port}/v1'
     thread = Thread(target=server.serve_forever, daemon=True)
     thread.start()
     try:
         yield server
     finally:
+        server.holds.release_all()
         server.shutdown()
         server.server_close()
         thread.join(timeout=5)
@@ -114,6 +206,7 @@ def configure_native_chat(home, model):
         'custom_providers': [{'name': 'browser-fixture', 'base_url': model.url,
                               'api_key': 'native-browser-fixture-only', 'model': MODEL}],
         'agent': {'max_turns': 3},
+        'agent_native': {'managed_chat_timeout_seconds': 90},
         'terminal': {'cwd': str(workspace)},
         'memory': {'memory_enabled': False, 'user_profile_enabled': False, 'nudge_interval': 0},
         'compression': {'enabled': False},

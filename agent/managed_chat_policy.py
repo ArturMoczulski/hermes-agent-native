@@ -31,7 +31,11 @@ def bind_managed_chat(binding):
 
 
 def assert_current(agent):
+    from agent.managed_chat_attempt import assert_active
+    attempt = assert_active(agent)
     binding = current_binding(agent)
+    if attempt is not None and binding is None:
+        raise PermissionError('Managed attempt requires a protected conversation binding')
     if binding is not None:
         binding.validate()
         if agent.session_id != binding.session_id:
@@ -59,6 +63,14 @@ def managed_turn(fn):
 
     @wraps(fn)
     def run(agent, *args, **kwargs):
+        from agent.managed_chat_attempt import current_attempt
+        if attempt := current_attempt():
+            previous = vars(agent).get('_managed_chat_attempt')
+            if previous is not None and previous != attempt:
+                raise PermissionError('Managed native agent cannot change attempts')
+            # Keep the exact host-issued attempt after this context unwinds. A
+            # delayed persistence callback must never borrow a later receipt.
+            agent._managed_chat_attempt = attempt
         binding = assert_current(agent)
         if binding is None:
             return fn(agent, *args, **kwargs)

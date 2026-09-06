@@ -479,11 +479,15 @@ class SessionCompressionMixin:
         now = time.time()
         expires_at = now + max(0.1, float(ttl_seconds))
         def _do(conn):
+            from agent.managed_chat_attempt import assert_write_allowed
+            assert_write_allowed(self, conn, session_id)
             conversation_id = self._session_turn_lease_key_on_conn(conn, session_id)
-            return _claim_lease_row(
+            acquired = _claim_lease_row(
                 conn, "session_turn_leases", "conversation_id", conversation_id, holder, now, expires_at,
                 lambda h, e: float(e) <= now or _compression_lock_holder_process_is_dead(h),
             )[0]
+            assert_write_allowed(self, conn, session_id)
+            return acquired
         return bool(self._execute_write(_do, patience_s=patience_s))
 
     def acquire_session_turn_lease(
@@ -537,11 +541,15 @@ class SessionCompressionMixin:
             return False
         expires_at = time.time() + max(0.1, float(ttl_seconds))
         def _do(conn):
+            from agent.managed_chat_attempt import assert_write_allowed
+            assert_write_allowed(self, conn, session_id)
             conversation_id = self._session_turn_lease_key_on_conn(conn, session_id)
-            return conn.execute(
+            refreshed = conn.execute(
                 "UPDATE session_turn_leases SET expires_at = ? "
                 "WHERE conversation_id = ? AND holder = ?", (expires_at, conversation_id, holder),
             ).rowcount > 0
+            assert_write_allowed(self, conn, session_id)
+            return refreshed
         return bool(self._execute_write(_do))
 
     def release_session_turn_lease(self, session_id: str, holder: str) -> None:

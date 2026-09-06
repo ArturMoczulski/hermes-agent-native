@@ -133,7 +133,8 @@ def test_native_managed_roundtrip_keeps_purpose_history_and_exact_session(bindin
     assert record['cwd'] == binding.workspace
     assert record['agent_ready'].wait(20)
     assert record['agent_error'] is None
-    assert record['agent'].tools == []
+    assert record['agent'] is None and record['_managed_host_ready']
+    assert server._session_info(None, record)['tools'] == {}
     sent = first.request(server, 'prompt.submit', {'session_id': sid, 'text': fixture.OPENER, 'client_message_id': str(uuid4())})
     assert sent['result']['status'] == 'streaming'
     with first.condition:
@@ -216,7 +217,8 @@ def test_managed_stream_drops_obsolete_reply_before_live_and_replay_delivery(bin
     assert len(failures) == 1
     assert failures[0]['payload']['status'] == 'error'
     assert 'purpose changed' in failures[0]['payload']['error'].lower()
-    assert record['agent']._interrupt_requested is True
+    assert record['agent'] is None  # No parent model process exists before admission.
+    assert record['_managed_chat_obsolete'] is True
     assert 'Obsolete' not in str(events_since(sid, 0))
     assert not model.requests
 
@@ -237,4 +239,19 @@ def test_managed_cold_resume_metadata_keeps_identity_and_private_workspace(bindi
     assert info['managed_agent']['id'] == binding.agent_id
     assert info['managed_agent']['purpose'] == binding.purpose
     assert info['cwd'] == binding.workspace
+    assert not model.requests
+
+
+def test_managed_unsent_draft_reopens_with_complete_native_session_info(binding, native):
+    server, db, model, _ = native
+    first = Transport(binding).request(server, 'session.create', {'cols': 80})['result']
+    sid = first['session_id']
+    assert db.get_session(binding.session_id) is None
+    reopened = Transport(binding).request(server, 'session.create', {'cols': 80})['result']
+    assert reopened['session_id'] == sid
+    info = reopened['info']
+    assert info['skills'] == {} and info['tools'] == {}
+    assert info['managed_agent']['id'] == binding.agent_id
+    assert info['managed_agent']['purpose'] == binding.purpose
+    assert info['stored_session_id'] == binding.session_id
     assert not model.requests

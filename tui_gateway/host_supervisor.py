@@ -141,6 +141,8 @@ class HostSupervisor:
         self.expected_hermes_home = (
             str(get_hermes_home()) if expected_hermes_home is None else expected_hermes_home)
         self._lock = threading.RLock()
+        self._spawn_guard = threading.Lock()
+        self._force_stopped = threading.Event()
         self._proc: subprocess.Popen[str] | None = None
         self._hello_event = threading.Event()
         self._hello: dict[str, Any] = {}
@@ -170,11 +172,35 @@ class HostSupervisor:
 
     def start(self) -> None:
         with self._lock:
+            if self._force_stopped.is_set():
+                raise RuntimeError("compute host was permanently stopped")
             if self.is_running():
                 return
             self._closing = False
             self.reconcile_startup_orphan()
             self._spawn_locked(reason="startup")
+
+    def force_stop(self, *, timeout: float = 2.0) -> bool:
+        """Irreversibly stop this host; return only confirmed OS process death.
+
+        Unlike graceful shutdown, this never waits for the RPC/startup lock or
+        a native Python handler. The spawn guard closes the before-Popen race.
+        """
+        self._force_stopped.set()
+        self._closing = True
+        self._hello_event.set()
+        with self._spawn_guard:
+            proc = self._proc
+        if proc is None:
+            return True
+        try:
+            if proc.poll() is None:
+                proc.kill()
+            proc.wait(timeout=timeout)
+        except (OSError, subprocess.TimeoutExpired):
+            return False
+        self._remove_registry()
+        return proc.poll() is not None
 
     def shutdown(self) -> None:
         with self._lock:
@@ -318,11 +344,14 @@ class HostSupervisor:
         if root not in env["PYTHONPATH"].split(os.pathsep):
             env["PYTHONPATH"] = root + os.pathsep + env["PYTHONPATH"]
         # Lossy UTF-8 decode: a locale-mismatched byte must not raise inside the drain threads.
-        proc = subprocess.Popen(
-            self.argv, cwd=str(self.cwd), env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-            stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace", bufsize=1,
-            start_new_session=True)
-        self._proc = proc
+        with self._spawn_guard:
+            if self._force_stopped.is_set():
+                raise RuntimeError("compute host was permanently stopped")
+            proc = subprocess.Popen(
+                self.argv, cwd=str(self.cwd), env=env, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE, text=True, encoding="utf-8", errors="replace", bufsize=1,
+                start_new_session=True)
+            self._proc = proc
         for target, name in ((self._drain_stdout, "compute-host-stdout"),
                              (self._drain_stderr, "compute-host-stderr"),
                              (self._wait_for_exit, "compute-host-wait")):
@@ -330,6 +359,8 @@ class HostSupervisor:
         if not self._hello_event.wait(timeout=10.0):
             self._terminate_process(proc)
             raise RuntimeError(f"compute host did not send hello; stderr={self._stderr_tail[-5:]}")
+        if self._force_stopped.is_set():
+            raise RuntimeError("compute host stopped during startup")
         self._validate_hello()
         self._persist_registry()
         logger.info("compute host started pid=%s reason=%s", proc.pid, reason)

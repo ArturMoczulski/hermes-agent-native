@@ -290,6 +290,8 @@ def _teardown_session(session: dict | None, *, end_reason: str = "tui_close") ->
     slash-worker is closed in ``_finalize_session`` (the single chokepoint), NOT here. Idempotent via ``_finalized``."""
     if not session:
         return
+    if execution := session.get("_managed_execution"):
+        execution.stop("Managed conversation closed")
     _finalize_session(session, end_reason=end_reason)
     _announce_session_reclaimed(session, end_reason)
     with contextlib.suppress(Exception):
@@ -314,6 +316,12 @@ def _pop_session_by_id(sid: str) -> dict | None:
     """Atomically detach one live session from the registry — the ownership claim for teardown (a concurrent
     close/reaper no-ops). Separate from ``_teardown_session``: slow finalization must not run under the resume lock."""
     with _sessions_lock:
+        current = _sessions.get(sid)
+        execution = current.get("_managed_execution") if current else None
+        if execution is not None and not execution.done.is_set():
+            # Keep the only controller reachable until managed death/cleanup is
+            # confirmed. Managed close preflight performs the stop outside locks.
+            return None
         session = _sessions.pop(sid, None)
         if session is not None:
             session["_closing"] = True
@@ -345,6 +353,10 @@ def _close_session_by_id(
     ``_session_resume_lock`` and call ``_teardown_popped_session`` after releasing it). Automatic reapers pass
     ``predicate`` to revalidate under ``_sessions_lock`` right before the claim, so a stale scan can't close a
     session that reattached."""
+    current = _sessions.get(sid)
+    if current is not None and current.get("managed_chat"):
+        from tui_gateway.managed_chat_host import close_managed
+        return close_managed(globals(), sid, current, end_reason=end_reason, predicate=predicate)
     with _sessions_lock:  # RLock: predicate + claim in one critical section
         current = _sessions.get(sid)
         if predicate is not None and (current is None or not predicate(current)):
@@ -366,6 +378,9 @@ def _ws_session_is_orphaned(session: dict | None) -> bool:
 def _interrupt_session_turn(sid: str, session: dict, *, request_id: str | None = None) -> bool:
     """Apply the shared ``session.interrupt`` contract to one claimed session; returns whether the compute-host control
     channel was used. The WS orphan reaper reuses this so a dead client gets the same partial-history/queue semantics."""
+    if execution := session.get("_managed_execution"):
+        execution.stop("Managed conversation interrupted by its owner")
+        return True
     use_compute_host = _session_uses_compute_host(session)
     should_interrupt = bool(session.get("running"))
     run_thread_alive = False

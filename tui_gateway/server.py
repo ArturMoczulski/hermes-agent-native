@@ -999,6 +999,13 @@ def _start_agent_build(sid: str, session: dict) -> None:
     command needing the agent) so the composer isn't blocked on tool discovery / model metadata;
     the ready/error event contract is unchanged."""
     ready = session.get("agent_ready")
+    if session.get("managed_chat") and not os.environ.get("HERMES_COMPUTE_HOST_CHILD"):
+        # Managed model execution belongs only to a deadline-bound native child.
+        session["_managed_host_ready"] = True
+        if ready is not None:
+            ready.set()
+        _emit("session.info", sid, _session_info(None, session))
+        return
     if ready is None:
         return
     # A lazy watch session spectating an in-flight child must stay lazy so the subagent live-mirror keeps
@@ -2056,11 +2063,14 @@ def _session_info(agent, session: dict | None = None) -> dict:
     if binding := sess.get("managed_chat"):
         from tui_gateway.managed_chat import metadata
         from hermes_cli import __version__
-        return {"model": getattr(agent, "model", ""), "provider": getattr(agent, "provider", ""),
+        managed_info = sess.get("_managed_info") or {}
+        return {"model": getattr(agent, "model", managed_info.get("model", "")),
+                "provider": getattr(agent, "provider", managed_info.get("provider", "")),
                 "tools": {}, "skills": {}, "cwd": binding.workspace, "branch": "", "project": None,
                 "title": binding.name, "stored_session_id": binding.session_id, "version": __version__,
                 "managed_agent": metadata(binding), "running": bool(sess.get("running")),
-                "usage": _session_usage_snapshot(session), "profile_name": "", "mcp_servers": []}
+                "usage": managed_info.get("usage", _session_usage_snapshot(session)),
+                "profile_name": "", "mcp_servers": []}
     mirror = _metadata_mirror(session)
     cwd = _display_session_cwd(session)
     session_key = str(sess.get("session_key") or getattr(agent, "session_id", "") or "")

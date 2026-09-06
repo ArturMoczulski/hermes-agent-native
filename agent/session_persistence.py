@@ -441,7 +441,10 @@ class SessionPersistenceMixin:
     def _save_session_log(self, messages: List[Dict[str, Any]] = None):
         """Optional per-session JSON snapshot (``sessions.write_json_snapshots``, default False) for external
         tooling; state.db is canonical. Rewrites the full list after every persistence point."""
-        if not getattr(self, "_session_json_enabled", False):
+        from agent.managed_chat_attempt import current_attempt
+        # Native SQLite owns managed transcript writes and checks the receipt in
+        # its transaction. Optional file snapshots have no equivalent fence.
+        if current_attempt(self) is not None or not getattr(self, "_session_json_enabled", False):
             return
         messages = messages or self._session_messages
         if not messages:

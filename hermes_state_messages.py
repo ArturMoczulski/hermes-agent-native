@@ -189,6 +189,8 @@ class SessionMessagesMixin:
         #74478 patience note below). User-initiated transcript mutations may opt in to rejecting an active
         unowned turn lease in that same transaction.
         """
+        from agent.managed_chat_attempt import assert_write_allowed
+        assert_write_allowed(self, conn, session_id)
         from hermes_state import SessionCompressionInProgressError
         from hermes_state_errors import CompressionSessionClosedError, SessionTurnLeaseLostError
         # NOTE (#75316 redesign): appends do NOT check compression_locks. The lock's job is to stop two
@@ -285,6 +287,8 @@ class SessionMessagesMixin:
                 turn_lease_holder=turn_lease_holder, turn_lease_ttl_seconds=turn_lease_ttl_seconds)
             msg_id = conn.execute(_INSERT_MESSAGE_SQL, params).lastrowid
             self._bump_session_counters(conn, session_id, 1, _tool_calls_count(tool_calls), unit=True)
+            from agent.managed_chat_attempt import assert_write_allowed
+            assert_write_allowed(self, conn, session_id)
             return msg_id
         # THE critical write (failure aborts the turn): long patience so a sibling legitimately
         # holding the lock for seconds (VACUUM, checkpoint) can't kill it.
@@ -311,6 +315,8 @@ class SessionMessagesMixin:
                 encode_content_fn=self._encode_content, decode_content_fn=self._decode_content)
             inserted, tool_calls_total = self._insert_message_rows(conn, session_id, inserted_rows)
             self._bump_session_counters(conn, session_id, inserted, tool_calls_total, unit=False)
+            from agent.managed_chat_attempt import assert_write_allowed
+            assert_write_allowed(self, conn, session_id)
             return inserted
         return self._execute_write(_do, patience_s=self._TRANSCRIPT_WRITE_PATIENCE_S)
 

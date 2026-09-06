@@ -43,9 +43,20 @@ Run just those native chat checks with:
 npm run test:e2e --workspace web -- native-chat.spec.ts
 ```
 
-The first review and setup are durable. Native Hermes owner chat works separately
-from managed-agent creation; managed purpose/workspace binding and cadence are not
-connected by these tests. These checks do not prove an autonomous writing agent.
+Managed conversation scenarios select two framework agents, verify their distinct
+protected purposes and private native transcripts, and check retained context after
+switching/reloading. The existing native composer is exercised for draft recovery,
+a lost admission acknowledgement and a real renderer restart. Receipt checks never
+automatically resend; exact stored messages and provider request counts catch replay.
+
+Deadline scenarios hold actual external HTTP requests before any response bytes.
+They require timeout to close the affected request, reject its late output, preserve
+the same protected prompt across replacement workers, and let a new explicit
+message finish. An overlapping second conversation must stay connected and finish
+successfully while the first times out. The test-only configuration endpoint writes
+the normal managed-chat timeout setting and restores it after the scenario.
+These checks do not establish autonomous writing, cadence or full service-restart
+recovery; see [managed chat scope](../../implementation/native-agent-chat.md).
 
 ## Reuse an installed Chromium
 

@@ -543,10 +543,11 @@ def _resume_live_unpersisted(ctx: _Resume, live_sid: str, live: dict) -> dict:
             live.setdefault("viewers", {})[transport] = time.time()
     _cancel_ws_orphan_reap(live_sid)
     history = live.get("history") or []
+    info = (_session_info(live.get("agent"), live) if live.get("managed_chat") else
+            {"model": _resolve_model(), "lazy": True, "profile_name": ctx.profile or ""})
     return _ok(ctx.rid, _attach_todo_state({
         "session_id": live_sid, "stored_session_id": str(live.get("session_key") or ""),
-        "message_count": len(history), "messages": ctx.messages(history),
-        "info": {"model": _resolve_model(), "lazy": True, "profile_name": ctx.profile or ""}}, live))
+        "message_count": len(history), "messages": ctx.messages(history), "info": info}, live))
 
 
 def _resume_adopt_stranded(ctx: _Resume) -> None:
@@ -1854,6 +1855,9 @@ def _(rid, params: dict, session: dict) -> dict:
 
 @method("session.close")
 def _(rid, params: dict) -> dict:
+    sid = params.get("session_id", "")
+    if (_sessions.get(sid) or {}).get("managed_chat"):
+        return _ok(rid, {"closed": _close_session_by_id(sid, end_reason="tui_close")})
     with _session_resume_lock:  # lock only the ownership claim; finalization must not block resumes
         session = _pop_session_by_id(params.get("session_id", ""))
     return _ok(rid, {"closed": _teardown_popped_session(session, end_reason="tui_close")})
