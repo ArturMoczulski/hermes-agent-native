@@ -153,6 +153,17 @@ evidence is recorded separately from deterministic model fixtures.
 | UX-19 | [AN-49](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6ad8a1b8-6881-442c-856c-179ef203f5b9/) |
 | UX-20 | [AN-21](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/3f765e57-ccca-4f1c-b095-a69d2ee8440c/), [AN-27](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/8f765bc9-70b9-4436-a40b-06db4409e832/), [AN-36](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cbf7c3bc-3ecf-465c-82cd-79dead9ce3ea/), [AN-47](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/96f2aac1-52b8-465c-8bd9-a4666dc64e55/), [AN-48](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/88fe7dfb-8d7c-4aa3-8b51-e877c68c4cf7/), [AN-49](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6ad8a1b8-6881-442c-856c-179ef203f5b9/), [AN-53](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/56387dba-c9fd-44e7-82cd-0e91800f7ef9/) |
 
+## Execution-audit handoff
+
+AN-17's [Hermes source audit](hermes-execution-audit.md) pins the inspected baseline,
+complete fork delta and license records, and distinguishes integrated operations
+from native paths still requiring enforcement. It closes discovery, not M0's live
+integration gate. AN-24 is the next ready implementation item in sequence 3;
+accepted AN-61/62 decisions supply its policy. The audit assigns admission,
+tool/context assembly, stopping, events and real-run proof to existing AN-7/26/30/
+32/18/57 records. AN-23 remains independently ready; AN-70 runtime configuration
+remains open. No new work items, cycle dates or product defaults are introduced.
+
 ## Purpose-based lifespan follow-through
 
 The latest owner clarification is reflected in the existing scenarios rather than

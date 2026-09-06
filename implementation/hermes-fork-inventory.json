@@ -1,0 +1,634 @@
+{
+  "purpose": "AN-17 immutable committed-source inventory; no executable launch or approval configuration",
+  "upstream_commit": "006b1beb00d9d25230571d14277aca3d70e5e11f",
+  "upstream_commit_url": "https://github.com/NousResearch/hermes-agent/commit/006b1beb00d9d25230571d14277aca3d70e5e11f",
+  "fork_commit": "f7c54d1452418bf63b110c98bdf40e50e002919d",
+  "fork_branch_at_review": "codex/astra-capability-proof",
+  "fork_origin": "git@github.com:ArturMoczulski/hermes-agent-native.git",
+  "fork_commits_since_base": 19,
+  "shallow_checkout": true,
+  "definition": "Complete git diff --name-status between the pinned commits; this inventory document and later commits are outside that comparison. Blob IDs pin exact Git content, not installed dependency/image state.",
+  "files": [
+    {
+      "status": "M",
+      "path": ".gitignore",
+      "before_blob": "7cf39fcfc9df8bd991c608a94153a77eb9c6d9a0",
+      "after_blob": "2af38e0fdaceaf74f99e7220fd12585e9972c4bc"
+    },
+    {
+      "status": "A",
+      "path": "PLAN.md",
+      "before_blob": null,
+      "after_blob": "7ccd47cf1b62951e3dfd6e7c82fc04e79ad1b0d9"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/README.md",
+      "before_blob": null,
+      "after_blob": "ec2d6acfdb7ed10a97d61263da65e0a65df2a81c"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/__init__.py",
+      "before_blob": null,
+      "after_blob": "69f24575aee3d2e1d979b15e707418bd789fd653"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/environment.py",
+      "before_blob": null,
+      "after_blob": "43fa9f7353055f8d9253a006f419067e7398825b"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/identity.py",
+      "before_blob": null,
+      "after_blob": "eb44c5bf3d59e844ff4d34f35667ac4bf9a41fe8"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_access.py",
+      "before_blob": null,
+      "after_blob": "bd5bd0da618a191938ffd134fa848895c45b7926"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_operation_lock.py",
+      "before_blob": null,
+      "after_blob": "93ee998468557397526c9ece8c5d808479457013"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_reads.py",
+      "before_blob": null,
+      "after_blob": "b8b96c24727644a3719cc79d1c34486d57a5aa7e"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_recovery.py",
+      "before_blob": null,
+      "after_blob": "92ccd39ba05afef3eef513e6a5f8ba47d0a9fec8"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_write_access.py",
+      "before_blob": null,
+      "after_blob": "24de89839f43a9adc9f018943d32e83145adf0c6"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_write_contracts.py",
+      "before_blob": null,
+      "after_blob": "34f189c7f0a38d2846537c0f8fd21ef4722d417e"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_write_journal.py",
+      "before_blob": null,
+      "after_blob": "12c7e5bfb912e4921c379eb67d6b214debf65272"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/plane_writes.py",
+      "before_blob": null,
+      "after_blob": "c229094130e0100f1ff4e7915d6ca031b3fe3e2a"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/provisioning.py",
+      "before_blob": null,
+      "after_blob": "0051bf8110bbef20769166e47244eb4a5aa11c5f"
+    },
+    {
+      "status": "A",
+      "path": "agent_native/schema.py",
+      "before_blob": null,
+      "after_blob": "06cd38424c0c0862f135ab78ccd82e1beda97c36"
+    },
+    {
+      "status": "A",
+      "path": "design/01-agents.md",
+      "before_blob": null,
+      "after_blob": "5f4546fee5c5437d632b018afedad35958605428"
+    },
+    {
+      "status": "A",
+      "path": "design/02-independent-work.md",
+      "before_blob": null,
+      "after_blob": "43a7f2880d196e68506d5c37202d5df93168a5b7"
+    },
+    {
+      "status": "A",
+      "path": "design/03-projects-and-delegation.md",
+      "before_blob": null,
+      "after_blob": "6135248e8a3aa0a86f47c4931c7e9cce6ed64018"
+    },
+    {
+      "status": "A",
+      "path": "design/04-workspaces-and-skills.md",
+      "before_blob": null,
+      "after_blob": "971f56d8206cee0dc713ec44daae761ee924b2ea"
+    },
+    {
+      "status": "A",
+      "path": "design/05-human-interaction.md",
+      "before_blob": null,
+      "after_blob": "9994f3c3fcedabda22e7bf70f754977f98964dce"
+    },
+    {
+      "status": "A",
+      "path": "design/06-product-scenarios.md",
+      "before_blob": null,
+      "after_blob": "6056b33ac2d28d40b34804d6cda5bfe2e159ea79"
+    },
+    {
+      "status": "A",
+      "path": "design/07-open-decisions.md",
+      "before_blob": null,
+      "after_blob": "9422173b8e0310518810b080c7532702e5cbb005"
+    },
+    {
+      "status": "A",
+      "path": "design/08-first-builder.md",
+      "before_blob": null,
+      "after_blob": "6c683247aa076a04d0054fa7d940dbe63063c733"
+    },
+    {
+      "status": "A",
+      "path": "design/09-observability.md",
+      "before_blob": null,
+      "after_blob": "007b35af01565aaa6e7d380aed1fb88280f2da92"
+    },
+    {
+      "status": "A",
+      "path": "design/10-user-experience.md",
+      "before_blob": null,
+      "after_blob": "a37adfd5c9f595e22f64c3679dd3311f60aa0dc4"
+    },
+    {
+      "status": "A",
+      "path": "design/11-ux-scenarios.md",
+      "before_blob": null,
+      "after_blob": "c13f56bb5444f91044409c68e31e3ca3c9b4cf78"
+    },
+    {
+      "status": "A",
+      "path": "design/12-control-center-screens.md",
+      "before_blob": null,
+      "after_blob": "70cb843da1bb3717f0bf84d9052597502498f424"
+    },
+    {
+      "status": "A",
+      "path": "design/13-project-management.md",
+      "before_blob": null,
+      "after_blob": "3f55665ac7c608c56e29914c01378a95ea5b109e"
+    },
+    {
+      "status": "A",
+      "path": "design/README.md",
+      "before_blob": null,
+      "after_blob": "ac5f58f82b68b2f7ab4b07dd40b4019a4b8ee7da"
+    },
+    {
+      "status": "A",
+      "path": "first-builder/INSTRUCTIONS.md",
+      "before_blob": null,
+      "after_blob": "3df1b39ff0291d21b7d00579e4b1c48f3c442048"
+    },
+    {
+      "status": "A",
+      "path": "first-builder/MEMORY.md",
+      "before_blob": null,
+      "after_blob": "b24319e48fdb64b86112b3db20e5a73e7dfa247a"
+    },
+    {
+      "status": "A",
+      "path": "first-builder/PLANE.md",
+      "before_blob": null,
+      "after_blob": "0850aacca964502436165f0b3b99e8f3d0a8dd39"
+    },
+    {
+      "status": "A",
+      "path": "first-builder/PRACTICES.md",
+      "before_blob": null,
+      "after_blob": "6d3c48db60f3594fdeba6aa4c8a6cd49d211f015"
+    },
+    {
+      "status": "A",
+      "path": "first-builder/SOUL.md",
+      "before_blob": null,
+      "after_blob": "c6372643ad957c1ceb15518f4899d223d8ef2a67"
+    },
+    {
+      "status": "A",
+      "path": "first-builder/STATE.md",
+      "before_blob": null,
+      "after_blob": "e954e3ea3382680f1d0e50f95c90053bb47cbc86"
+    },
+    {
+      "status": "M",
+      "path": "hermes_cli/cli_modal_mixin.py",
+      "before_blob": "b74c0bca1257495143992f740aa909b6f337fd9b",
+      "after_blob": "d7ec8fef2ce3501e240a1458fb46f8758aef6500"
+    },
+    {
+      "status": "M",
+      "path": "hermes_cli/kanban_db_connect.py",
+      "before_blob": "9067dfd0e571bc02cb02859c80fb4a551b8f55ce",
+      "after_blob": "b32352b8d2dc8540eac3b275e2054c74387e2a66"
+    },
+    {
+      "status": "A",
+      "path": "hermes_cli/web_routers/agent_native.py",
+      "before_blob": null,
+      "after_blob": "599fdb417391e4a9b3f1a22d852bd9841b15427e"
+    },
+    {
+      "status": "M",
+      "path": "hermes_cli/web_server.py",
+      "before_blob": "1ffe8c6d28975a1dcbb6c5ed661ce8252d9c263d",
+      "after_blob": "38af6176bf4b1aa9d23dca7cdb1be4e16b3a6c1f"
+    },
+    {
+      "status": "A",
+      "path": "implementation/README.md",
+      "before_blob": null,
+      "after_blob": "88bb4ddb3415af91025dfc67d2ade546a96e25ae"
+    },
+    {
+      "status": "A",
+      "path": "implementation/architecture.md",
+      "before_blob": null,
+      "after_blob": "e8007c00a53cbb35962bc3be541802ea26b6637a"
+    },
+    {
+      "status": "A",
+      "path": "implementation/astra-capability-proof.md",
+      "before_blob": null,
+      "after_blob": "a130685f9a0e1537939945a54673a706abd735bb"
+    },
+    {
+      "status": "A",
+      "path": "implementation/decisions-and-evidence.md",
+      "before_blob": null,
+      "after_blob": "221788e845a69fc35868f14232e128e0c01c5870"
+    },
+    {
+      "status": "A",
+      "path": "implementation/delivery-plan.md",
+      "before_blob": null,
+      "after_blob": "1f26c650d766a49bd8120220c45cc3a9eeca09da"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-api-validation.md",
+      "before_blob": null,
+      "after_blob": "1255c894abd428279ae6ff8d4944085d5d859bd3"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-project-management.md",
+      "before_blob": null,
+      "after_blob": "e8940ffb566861766931158f7648bb71de9882fc"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-recovery-validation.md",
+      "before_blob": null,
+      "after_blob": "d3ffa95204ab779a9a13c2b6ec1a30572dcf313d"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-roadmap-coverage.md",
+      "before_blob": null,
+      "after_blob": "e82069a32888db750a1a4fca4ebe30726ed92055"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-scoped-reads.md",
+      "before_blob": null,
+      "after_blob": "87c7a28416ce01a856dc94147d30a2043e51dbeb"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-scoped-writes.md",
+      "before_blob": null,
+      "after_blob": "fc1ffe0c04ea1effcd67a8d3c7453a3e1285fcd2"
+    },
+    {
+      "status": "A",
+      "path": "implementation/plane-write-recovery.md",
+      "before_blob": null,
+      "after_blob": "569b8ae622f04c870e59453ee9932b80ee4fbff8"
+    },
+    {
+      "status": "A",
+      "path": "implementation/user-interface.md",
+      "before_blob": null,
+      "after_blob": "4699441573700c5a73e583e04e982dbf919bf9b5"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/LICENSE.plane",
+      "before_blob": null,
+      "after_blob": "5087e61e24bce453516dd67d07aec21923271472"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/README.md",
+      "before_blob": null,
+      "after_blob": "9f28a7adc9744ad3d486f61334f5c28cd39ee5cf"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/compose.yaml",
+      "before_blob": null,
+      "after_blob": "14beb6857723ecafec3ec94cc18d152a8d74879b"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/images.lock.json",
+      "before_blob": null,
+      "after_blob": "e6c350f09b899865a512173ccca580cb6b8bf16a"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/probe_api.py",
+      "before_blob": null,
+      "after_blob": "e7f1e63fa4a7a699cf618cd4470c495a659d7626"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/probe_scoped_reads.py",
+      "before_blob": null,
+      "after_blob": "a9211d027f8e3b46b08589d31a2fe23c20b8e463"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/probe_scoped_writes.py",
+      "before_blob": null,
+      "after_blob": "33a230ce657a92eed178cab953f2d3408556dec9"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/probe_write_recovery.py",
+      "before_blob": null,
+      "after_blob": "68a91817297ec6e8af7cb3a45a39055a5d24a07b"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/smoke.cjs",
+      "before_blob": null,
+      "after_blob": "4b50daa583d534e90faa8fa7c48cbe15d3989ccd"
+    },
+    {
+      "status": "A",
+      "path": "ops/plane/verify_restore.py",
+      "before_blob": null,
+      "after_blob": "101b95a3f45c94536c01dc1d7fc19cc2ac651338"
+    },
+    {
+      "status": "M",
+      "path": "package-lock.json",
+      "before_blob": "5e1f45ced265188afa3e3d967505d8ea1a28254b",
+      "after_blob": "f8732b0049e20a348b30b127f68dd563f0303d59"
+    },
+    {
+      "status": "M",
+      "path": "pyproject.toml",
+      "before_blob": "12c672ff3cdacd9d045d60d1cc4248e0aeba6f72",
+      "after_blob": "517569d7b4cdee12addae465034e8c40506a0fd2"
+    },
+    {
+      "status": "A",
+      "path": "skills/productivity/plane-project-management/SKILL.md",
+      "before_blob": null,
+      "after_blob": "cd55db29b8eafbbfd523a465063e4d6000df7ddc"
+    },
+    {
+      "status": "A",
+      "path": "tests/cli/test_single_query_approval.py",
+      "before_blob": null,
+      "after_blob": "8927b517407a00a0f2b07b096b2db200a8db393a"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_api.py",
+      "before_blob": null,
+      "after_blob": "4d94d6e53753d2f4fca850d16e4f9e6b9d77778b"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_environment.py",
+      "before_blob": null,
+      "after_blob": "f9a1157f7c392ba8598dca1068402fe4f94f7b1d"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_identity.py",
+      "before_blob": null,
+      "after_blob": "57d22aab5f891ad2dc4e55b28ec422c6ba83147e"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_access.py",
+      "before_blob": null,
+      "after_blob": "b42cd8808a960afb0597a4402201c12334cae8f4"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_operation_lock.py",
+      "before_blob": null,
+      "after_blob": "f15141860fc17a54aa769b3651b558e3c924d7b8"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_reads.py",
+      "before_blob": null,
+      "after_blob": "d74dbb3eb29e7a7e0d7bb95c3bd827e8badf257b"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_recovery.py",
+      "before_blob": null,
+      "after_blob": "dd6a3a472475c0dd7bac9db02041d5521d411acd"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_recovery_failures.py",
+      "before_blob": null,
+      "after_blob": "10c452fd21cec416f2af25b03caaf72e194e4456"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_recovery_journal.py",
+      "before_blob": null,
+      "after_blob": "b3fba1b4e8b3903dc0ab3ad3ad73a0bd4e131e14"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_write_access.py",
+      "before_blob": null,
+      "after_blob": "e530126aeea88187d94d760b20683449bf32e2b5"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_write_contracts.py",
+      "before_blob": null,
+      "after_blob": "444021d20cd98da6ebc6086b3d3c7156c685b173"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_write_failures.py",
+      "before_blob": null,
+      "after_blob": "ba53e54c896a070140fa0c1489363a54bef1fe62"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_write_journal.py",
+      "before_blob": null,
+      "after_blob": "0a1c02a5c0d85e57641d53f389b3186fd9ecfe1f"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_plane_writes.py",
+      "before_blob": null,
+      "after_blob": "2a4f59f95cbfd0b3c2c7d5052305da5bdab67fdb"
+    },
+    {
+      "status": "A",
+      "path": "tests/hermes_cli/test_agent_native_provisioning.py",
+      "before_blob": null,
+      "after_blob": "889bc745e4487f8aa1a994d1fcb7e2f36a306ae7"
+    },
+    {
+      "status": "M",
+      "path": "tools/environments/docker.py",
+      "before_blob": "99761a52bcc5fc46cc71b7ceacabe3c5517d100f",
+      "after_blob": "02aaf2740ea56814ac12129d8111a41816ea7da2"
+    },
+    {
+      "status": "A",
+      "path": "web/e2e/README.md",
+      "before_blob": null,
+      "after_blob": "58f687a732d7adfc003b727f4401e3a0ae53ce12"
+    },
+    {
+      "status": "A",
+      "path": "web/e2e/agents.spec.ts",
+      "before_blob": null,
+      "after_blob": "f0717738553de8c00def377f8bee0fa313a6c408"
+    },
+    {
+      "status": "A",
+      "path": "web/e2e/backend.py",
+      "before_blob": null,
+      "after_blob": "983bf2200bd503ff0da1987cef92224024bf757a"
+    },
+    {
+      "status": "M",
+      "path": "web/package.json",
+      "before_blob": "74b5f3cb8b37ffac4db501259258ac3d72d67588",
+      "after_blob": "eeb97e2b730340688d7b6626b9fdea2fd20ca5d5"
+    },
+    {
+      "status": "A",
+      "path": "web/playwright.config.ts",
+      "before_blob": null,
+      "after_blob": "86547dba217c389456c35b5657d43a35bdf59442"
+    },
+    {
+      "status": "M",
+      "path": "web/src/App.tsx",
+      "before_blob": "bb79cb6a6a4d220fcd31339a4f3d5d08add7c9da",
+      "after_blob": "e9147749b3687ce322091c5dca2d161c7e94605f"
+    },
+    {
+      "status": "A",
+      "path": "web/src/pages/AgentsPage.tsx",
+      "before_blob": null,
+      "after_blob": "da7c9fd3463ee43b20d2941dfda4ac68a3fcdd8b"
+    }
+  ],
+  "dependency_and_deployment_records": [
+    {
+      "path": "pyproject.toml",
+      "blob": "517569d7b4cdee12addae465034e8c40506a0fd2"
+    },
+    {
+      "path": "uv.lock",
+      "blob": "ec0c477bd2c605a31ad4fd9926b42430bc8d30ac"
+    },
+    {
+      "path": "package-lock.json",
+      "blob": "f8732b0049e20a348b30b127f68dd563f0303d59"
+    },
+    {
+      "path": "flake.lock",
+      "blob": "5e59b460ce6adaf44e726c9ad57e8d491035543c"
+    },
+    {
+      "path": "ops/plane/compose.yaml",
+      "blob": "14beb6857723ecafec3ec94cc18d152a8d74879b"
+    },
+    {
+      "path": "ops/plane/images.lock.json",
+      "blob": "e6c350f09b899865a512173ccca580cb6b8bf16a"
+    }
+  ],
+  "license_and_notice_records": [
+    {
+      "path": "LICENSE",
+      "blob": "75410e73319c72cd3e991a501c5455eb78f38375"
+    },
+    {
+      "path": "skills/creative/humanizer/LICENSE",
+      "blob": "625297fb778f32eb39d3a5b97e3e3b611b7304d6"
+    },
+    {
+      "path": "skills/productivity/docx/LICENSE",
+      "blob": "0dddbf167070de3fd2f48f192feb198ac98d1f63"
+    },
+    {
+      "path": "skills/productivity/powerpoint/LICENSE",
+      "blob": "0dddbf167070de3fd2f48f192feb198ac98d1f63"
+    },
+    {
+      "path": "skills/productivity/xlsx/LICENSE",
+      "blob": "0dddbf167070de3fd2f48f192feb198ac98d1f63"
+    },
+    {
+      "path": "skills/productivity/pdf/LICENSE",
+      "blob": "0dddbf167070de3fd2f48f192feb198ac98d1f63"
+    },
+    {
+      "path": "apps/desktop/src/plugins/hermes-bots/LICENSE",
+      "blob": "5700b997827973cb0eb6d84a2782bb08a5872434"
+    },
+    {
+      "path": "plugins/hermes-achievements/LICENSE",
+      "blob": "2312b9235214767563d8618156d68ca78e23b766"
+    },
+    {
+      "path": "plugins/security-guidance/LICENSE",
+      "blob": "d645695673349e3947e8e5ae42332d0ac3164cd7"
+    },
+    {
+      "path": "plugins/security-guidance/NOTICE",
+      "blob": "cb5067c3d085089aec61cdc06d8f29c274df410f"
+    },
+    {
+      "path": "optional-skills/software-development/ast-grep/LICENSE",
+      "blob": "09aac3c3b7f6e26e8520b362eb048d4d8f9165c3"
+    },
+    {
+      "path": "ops/plane/LICENSE.plane",
+      "blob": "5087e61e24bce453516dd67d07aec21923271472"
+    }
+  ],
+  "preexisting_uncommitted_paths_excluded": [
+    "AGENTS.md",
+    "README.md",
+    "tests/tools/test_astra_capture_pipeline.py"
+  ]
+}

@@ -34,6 +34,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 | Document | Purpose |
 | --- | --- |
 | [Specification coverage in Plane](plane-roadmap-coverage.md) | Milestone modules, rolling cycle policy and specification/scenario-to-work links; live Plane owns status. |
+| [Hermes execution audit](hermes-execution-audit.md) | Pinned upstream/fork baseline, exact patch inventory, native activation map and required managed gates. |
 | [Plane project management](plane-project-management.md) | Selected planning service, source ownership, provisioning and integration sequence. |
 | [User interface](user-interface.md) | Browser console, Hermes reuse, shared state and incremental UX delivery. |
 | [Architecture](architecture.md) | Components, authoritative state, execution, permissions, communication, and recovery. |

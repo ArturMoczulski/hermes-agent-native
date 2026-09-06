@@ -36,9 +36,11 @@ yet establish autonomous managed agents.
 AN-20 scoped writes and AN-22 uncertain-write recovery are verified. Sequence 2
 is accepted for the host planning scope, including AN-3's existing-Builder recovery
 review. AN-4's unfinished managed-run transport acceptance is explicitly carried
-to sequence 3. The next ready item is AN-17: inventory the actual Hermes execution
-entry points before integrating one controlled Builder run. AN-23 source freshness
-and AN-70 runtime limits still gate dependent execution work. Existing Plane
+to sequence 3. AN-17's [execution audit](implementation/hermes-execution-audit.md)
+pins the Hermes baseline and maps native routes, current gaps and required managed
+controls. The next ready item is AN-24: enforce trusted owner/run authority at real
+operation boundaries, including nested tools and alternate dispatch. AN-23 source
+freshness and AN-70 runtime limits still gate dependent execution work. Existing Plane
 resources are reused; general provisioning recovery remains AN-21 after the handoff.
 Use the live AN-16 milestone and AN-57/AN-58 execution/proof records for acceptance;
 plan changes do not establish a deployed Builder.

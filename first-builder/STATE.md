@@ -16,8 +16,8 @@ operations. M7 is now the first handoff gate, using root-relevant M0/M1/M2 work.
 Use Plane through the Builder API account for current work and priorities. The
 full specification is now organized in milestone modules and rolling cycles; see
 [coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
-the latest review: AN-17 execution-entry inventory in sequence 3. AN-19, AN-20
-and AN-22 host planning operations/recovery are accepted. Sequence 2 is reviewed;
+the latest review: AN-24 owner/run authority in sequence 3, following the AN-17
+source audit. AN-19, AN-20 and AN-22 host planning operations/recovery are accepted. Sequence 2 is reviewed;
 AN-3's existing-Builder recovery scope is accepted, general provisioning recovery
 remains AN-21, and unfinished AN-4 runtime integration is carried to sequence 3.
 All cycles remain undated. No managed Builder has been launched.
@@ -416,3 +416,33 @@ all six cycles' null dates. The private cycle pointer now identifies sequence 3.
 Next: AN-17 records the exact Hermes baseline and execution-entry inventory.
 AN-70 remains an open runtime-limits decision. The preview is still inactive
 agent records; this increment adds no worker, cadence, chat or UI activation.
+
+## Latest increment — Hermes execution audit (AN-17)
+
+Recorded the [execution map](../implementation/hermes-execution-audit.md) and
+[complete committed delta](../implementation/hermes-fork-inventory.json) from
+upstream `006b1be` to fork `f7c54d1`: 19 commits, 90 files (nine inherited changes),
+six dependency/deployment records and 12 license/notice records. The snapshot
+excludes this audit and the three pre-existing uncommitted paths listed in the
+inventory. It does not change the engine version or execution behavior.
+
+Source review confirms that the model-free owner CRUD is integrated; native
+execution still lacks framework admission. Alternate TUI/API/session/compute-host,
+scheduler, detached child/review and recovery routes require routing or rejection.
+Auxiliary model calls and nested execute_code tool dispatch mean a chat/facade
+guard alone cannot enforce authority. Raw shell RPC and environment fallbacks also
+need boundaries. The first controlled run retains an embedded Hermes agent and
+approved development/Plane tools; unused native entry points must be rejected for
+managed use until integrated. Those rejections are not implemented by this audit.
+
+Verification: exact Git range/blob inventory, local links and pinned source
+references, two independent source reviews, whitespace checks and preservation of
+all 24 product/20 UX coverage mappings. No runtime tests, model calls, containers
+or browser workflows were run for this documentation increment. Existing proof
+remains evidence of the earlier limited capabilities, not a managed Builder launch.
+
+Next: AN-24, beginning with failing tests for missing/forged actor context at the
+actual boundary. AN-61/62 policy decisions are accepted. AN-23 source freshness is
+independently ready; AN-70 configured runtime limits remain open before admission.
+AN-7/26/30/32/18/57 retain implementation and live controlled-run proof. Cycle 3
+remains selected and undated; no autonomous Builder is running.

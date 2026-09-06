@@ -31,6 +31,11 @@ not establish the agent-native product rules.
 
 **Outcome:** an exact source baseline and a concrete, bounded change map.
 
+[AN-17 audit and inventory](hermes-execution-audit.md) records the selected source
+snapshot and required native-path dispositions. It completes that discovery
+slice; the controlled integration proof and actual denial/enforcement remain
+required below.
+
 - Select and record an immutable Hermes release/commit after checking the features
   used by this plan. Live documentation and moving `main` are research references,
   not a dependency lock.

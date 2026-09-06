@@ -87,6 +87,12 @@ source permalinks in the fork's decision record.
 | Storage | [SQLite WAL](https://sqlite.org/wal.html) explains local shared-memory coordination and concurrent-reader/single-writer behavior. | Use a local disk on one service host initially. Do not put the live database on a shared network filesystem or claim distributed scheduling. |
 | Fork rights and baseline | [Release v2026.8.31](https://github.com/NousResearch/hermes-agent/releases/tag/v2026.8.31) and its [MIT license](https://github.com/NousResearch/hermes-agent/blob/v2026.8.31/LICENSE). | Preserve applicable notices and check licenses of bundled assets and dependencies when producing our distribution. |
 
+The [AN-17 source audit](hermes-execution-audit.md) now pins upstream commit
+`006b1beb00d9d25230571d14277aca3d70e5e11f` and the inspected fork snapshot, with
+an exact file-level delta. It supersedes the open baseline-selection step above;
+release-tag links remain historical research. The audit distinguishes native
+entry points from the still-unimplemented managed admission and stop boundary.
+
 The highest uncertainty is integration breadth: whether every relevant tool,
 CLI, dashboard and background path can share actor context, admission and stop
 semantics with manageable changes. Profile isolation, durable chat, persistent
