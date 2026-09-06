@@ -545,6 +545,10 @@ def _invoke_agent(
         "stream_callback": _stream,
         "persist_user_message": (
             _build_persist_user_message(prompt, images, run_message) if images else prompt)}
+    if session.get("managed_chat") and session.get("_managed_receipt_id"):
+        from tui_gateway.managed_chat_receipts import update_for_session
+        update_for_session(globals(), session, "running")
+        run_kwargs["persist_user_platform_id"] = session["_managed_receipt_id"]
     try:
         run_params = inspect.signature(agent.run_conversation).parameters
     except (TypeError, ValueError):

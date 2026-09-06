@@ -30,9 +30,10 @@ AN-77 is active: selected agents now open the existing Hermes TUI with their
 protected purpose, private workspace and separate retained native conversations.
 See [managed conversation](implementation/native-agent-chat.md) for scope and
 verification. Conversation is available independently of Plane readiness and
-cannot start project work. Remaining acceptance covers durable drafts/idempotent
-message receipts, a hard host deadline, restart/retry recovery and live managed
-subscription verification. Reuse native conversation storage, composer and model
+cannot start project work. Native drafts and submission receipts now support
+renderer restart and safe explicit retries. Remaining acceptance covers a hard
+host deadline and full service-restart recovery. A live managed subscription
+exchange is now verified. Reuse native conversation storage, composer and model
 loop throughout; do not build a second chat implementation.
 
 AN-72 is Todo after AN-77. Its accepted creation/detail/initial-review and private

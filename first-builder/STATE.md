@@ -16,8 +16,10 @@ actual pause and basic restart recovery. One story is only an autonomous-work ch
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
 AN-77 is In Progress and urgent. Native Hermes chat now binds selected framework
 identity, protected purpose and retained conversations, with conversation-only
-scope. Remaining acceptance covers durable drafts/idempotent message receipts,
-hard host deadlines, restart/retry recovery and live managed verification.
+scope. Native draft persistence and durable submission receipts now support
+renderer restart and explicit retries. Remaining acceptance covers hard host
+deadlines and full service-restart recovery; a live managed subscription exchange
+is verified below.
 The owner rejected a duplicate React conversation; the native TUI, gateway,
 AIAgent and SessionDB remain authoritative.
 
@@ -31,7 +33,60 @@ provisioning, environment and Plane boundary evidence remains; AN-24's broad
 remainder stays backlog. No managed writer or Builder run is established by this
 planning update. Earlier next-step entries are historical; this focus wins.
 
-## AN-77 managed conversation — current increment
+## AN-77 draft and delivery recovery — current increment
+
+The existing native composer saves its text, buffered lines and paste payloads in
+private host storage, scoped by browser attachment and bound agent/revision.
+Submission atomically moves the draft into a saved UUID envelope before the model
+request. Native SessionDB metadata records admission and terminal receipts; a
+repeated ID cannot invoke a second model turn. Native transcript storage is unchanged.
+Recovery only checks receipts; it never automatically resends.
+
+Review reproduced and fixed late acknowledgements changing a newer turn, recovery
+cleanup erasing a human edit, and a crash between saving and clearing resurrecting
+already-sent text. Tests also cover corrupt/changed state files, uncertain outcomes,
+explicit acknowledgement, atomic transfer and the gateway's Unicode message limit.
+Busy rejection leaves a durable terminal receipt without affecting the active
+reply; the owner can edit and retry explicitly.
+The `/acknowledge` command closes only an uncertain local attempt without resending
+or deleting its stored history. Renderer restart is covered in the real browser;
+full service-restart UX and a hard execution deadline still need follow-up.
+
+Verification: all **12 distinct Playwright scenarios passed** (10 in the full
+regression and the remaining two in a focused recheck after fixture corrections).
+Browser fault injection drops only one outgoing acknowledgement after actual
+native dispatch; exact persisted messages and a single model request are asserted.
+An actual Node renderer restart verifies unsent-draft and completed-history
+recovery. Browser automation waits for the native process to consume typed text
+before a separate Enter and normalizes terminal control sequences for replay
+presentation checks; exact native transcript assertions remain unchanged.
+
+**54 focused Python checks** and **56 native unit checks** passed, plus 44 existing
+input-parser/burst checks. TypeScript, native TUI build, scoped Python/web/native
+lint and 26 local document link targets passed (one existing lifecycle hook lint
+warning remains). Red→green evidence covers receipt admission/restart, late
+responses, recovery-owned draft cleanup, Unicode limits and atomic transfer.
+Logs: `/tmp/an77-recovery-browser-full.log`,
+`/tmp/an77-recovery-browser-affected.log`, `/tmp/an77-recovery-native-final.log`,
+`/tmp/an77-receipts-final.log`, `/tmp/an77-recovery-host-final.log`.
+
+The preview restarted on port 19221 (PID 97313), preserving its three agent
+identities/purpose revisions, existing databases and approved `gpt-6-astra`
+subscription configuration. A live installed-Chromium check sent one harmless
+message through the existing setup-preview agent's native composer and received
+the exact requested `gpt-6-astra` reply. Native SessionDB verified the exact exchange;
+protected identity, conversation-only mode, zero tools and unchanged project
+execution/startup were confirmed. Evidence: `/tmp/an77-live-managed-chat-result.json`
+and `/tmp/an77-live-managed-chat.png`. The probe reads native session metadata
+on resume rather than assuming a fresh `session.info` event for an already-open
+conversation; it waits for the actual saved draft before pressing Enter.
+
+AN-77 remains In Progress for hard host deadlines and full service-restart UX.
+Strict atomic ordering between purpose validation and transcript append is still
+open. AN-72's managed writing/story/Pause follows; no autonomous writer or hosted
+First Builder is established by this increment.
+
+## AN-77 managed conversation — accepted checkpoint
 
 The agent detail page now opens **Chat with agent**, showing the protected name,
 purpose/revision and conversation-only scope around the existing embedded TUI.

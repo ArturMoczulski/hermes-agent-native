@@ -562,6 +562,8 @@ def write_json(obj: dict) -> bool:
     obj = filter_event(globals(), obj)
     if obj is None:
         return True
+    from tui_gateway.managed_chat_receipts import record_completion
+    record_completion(globals(), obj)
     from tui_gateway.event_replay import _stamp_event
     _stamp_event(obj)
     if obj.get("method") == "event":

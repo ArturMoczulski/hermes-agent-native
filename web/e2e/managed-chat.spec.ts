@@ -18,6 +18,13 @@ test('selected agents use their protected purpose and separate retained native c
     expect(response.status()).toBe(201);
     roots.push(await response.json());
   }
+  const waitForTypedDraft = async (agentId: string, text: string) => {
+    const attach = await page.evaluate(() => window.localStorage.getItem('hermes.pty.token.chat'));
+    await expect.poll(async () => {
+      const response = await request.get(`${backend}/__e2e__/managed-delivery/${agentId}?attach_token=${attach}`, { headers });
+      return (await response.json()).composer?.draft?.input;
+    }).toBe(text);
+  };
   const seen = new Map<string, string>();
   let terminalOutput = '';
   page.on('websocket', (socket) => {
@@ -48,6 +55,7 @@ test('selected agents use their protected purpose and separate retained native c
     terminalOutput = '';
     await page.locator('.xterm-helper-textarea').focus();
     await page.keyboard.type(prompt);
+    await waitForTypedDraft(root.id, prompt);
     await page.keyboard.press('Enter');
     await expect.poll(() => terminalOutput, { timeout: 45000 }).toContain(`My purpose: ${root.purpose}`);
     await expect.poll(() => seen.get(root.id)).toBeTruthy();
@@ -67,6 +75,7 @@ test('selected agents use their protected purpose and separate retained native c
   terminalOutput = '';
   await page.locator('.xterm-helper-textarea').focus();
   await page.keyboard.type(followup);
+  await waitForTypedDraft(roots[0].id, followup);
   await page.keyboard.press('Enter');
   await expect.poll(() => terminalOutput, { timeout: 45000 }).toContain('Our conversation is retained.');
   terminalOutput = '';
@@ -76,7 +85,7 @@ test('selected agents use their protected purpose and separate retained native c
   const retained = await (await request.get(`${backend}/api/sessions/${seen.get(roots[0].id)}/messages`, { headers })).json();
   expect(retained.messages.filter((m: { role: string }) => ['user', 'assistant'].includes(m.role)).map((m: { content: string }) => m.content)).toEqual([prompt, `My purpose: ${roots[0].purpose}`, followup, 'Our conversation is retained.']);
   const evidence = await (await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers })).json();
-  const managedRequests = evidence.model_requests.filter((r: { last_user: string }) => r.last_user.startsWith('Managed conversation test:'));
+  const managedRequests = evidence.model_requests.filter((r: { last_user: string }) => r.last_user === prompt || r.last_user === followup);
   expect(managedRequests).toHaveLength(3);
   for (const r of managedRequests) expect(r.tool_names).toEqual([]);
 });

@@ -15,6 +15,7 @@ import { useInputHistory } from '../hooks/useInputHistory.js'
 import { useQueue } from '../hooks/useQueue.js'
 import { isUsableClipboardText, readClipboardText } from '../lib/clipboard.js'
 import { resolveEditor } from '../lib/editor.js'
+import { managedChatState } from '../lib/managedChatState.js'
 import { readOsc52Clipboard } from '../lib/osc52.js'
 import { isRemoteShellSession } from '../lib/terminalSetup.js'
 import { pasteTokenLabel, stripTrailingPasteNewlines } from '../lib/text.js'
@@ -106,23 +107,71 @@ export function looksLikeDroppedPath(text: string): boolean {
 }
 
 export function useComposerState({ gw, submitRef, sys }: UseComposerStateOptions): UseComposerStateResult {
-  const [input, setInputState] = useState('')
-  const [inputBuf, setInputBuf] = useState<string[]>([])
-  const [tokens, setTokens] = useState<ComposerToken[]>([])
-  // Tokens and the input line are read from keystroke handlers that run several
-  // times before React re-renders, so the refs — not the state — are the source
-  // of truth for "what is in the composer right now".
-  const inputRef = useRef('')
-  const tokensRef = useRef<ComposerToken[]>([])
+  const [initial] = useState(() => managedChatState?.getDraft() ?? { input: '', inputBuf: [], tokens: [] })
+  const [input, setInputState] = useState(initial.input)
+  const [inputBuf, setInputBufState] = useState<string[]>(initial.inputBuf)
+  const [tokens, setTokens] = useState<ComposerToken[]>(initial.tokens)
+  // Input actions can precede React rendering; persist the synchronous refs.
+  const inputRef = useRef(initial.input)
+  const inputBufRef = useRef(initial.inputBuf)
+  const tokensRef = useRef<ComposerToken[]>(initial.tokens)
+  const draftErrorRef = useRef('')
+  const draftSysRef = useRef(sys)
+  draftSysRef.current = sys
 
-  const setInput = useCallback<StateSetter<string>>(next => {
-    inputRef.current = typeof next === 'function' ? next(inputRef.current) : next
-    setInputState(inputRef.current)
+  const persistDraft = useCallback(() => {
+    if (!managedChatState) {
+      return
+    }
+
+    try {
+      managedChatState.saveDraft({ input: inputRef.current, inputBuf: inputBufRef.current, tokens: tokensRef.current })
+      draftErrorRef.current = ''
+    } catch (error) {
+      const message = `Draft could not be saved: ${error instanceof Error ? error.message : String(error)}`
+
+      if (draftErrorRef.current !== message) {
+        draftSysRef.current(message)
+      }
+
+      draftErrorRef.current = message
+    }
   }, [])
 
-  const setComposerTokens = useCallback<StateSetter<ComposerToken[]>>(next => {
-    tokensRef.current = typeof next === 'function' ? next(tokensRef.current) : next
-    setTokens(tokensRef.current)
+  const setInput = useCallback<StateSetter<string>>(
+    next => {
+      inputRef.current = typeof next === 'function' ? next(inputRef.current) : next
+      persistDraft()
+      setInputState(inputRef.current)
+    },
+    [persistDraft]
+  )
+
+  const setInputBuf = useCallback<StateSetter<string[]>>(
+    next => {
+      inputBufRef.current = typeof next === 'function' ? next(inputBufRef.current) : next
+      persistDraft()
+      setInputBufState(inputBufRef.current)
+    },
+    [persistDraft]
+  )
+
+  const setComposerTokens = useCallback<StateSetter<ComposerToken[]>>(
+    next => {
+      tokensRef.current = typeof next === 'function' ? next(tokensRef.current) : next
+      persistDraft()
+      setTokens(tokensRef.current)
+    },
+    [persistDraft]
+  )
+
+  const restoreDraft = useCallback((draft: Pick<UseComposerStateResult['state'], 'input' | 'inputBuf' | 'tokens'>) => {
+    inputRef.current = draft.input
+    inputBufRef.current = draft.inputBuf
+    tokensRef.current = draft.tokens
+    setInputState(draft.input)
+    setInputBufState(draft.inputBuf)
+    setTokens(draft.tokens)
   }, [])
 
   const isBlocked = useStore($isBlocked)
@@ -145,13 +194,19 @@ export function useComposerState({ gw, submitRef, sys }: UseComposerStateOptions
   const { completions, compIdx, setCompIdx, compReplace } = useCompletion(input, isBlocked, gw)
 
   const clearIn = useCallback(() => {
-    setInput('')
-    setInputBuf([])
-    setComposerTokens([])
+    // Persist one complete snapshot; a restart must never observe old buffered
+    // lines or paste payloads between three separate clearing writes.
+    inputRef.current = ''
+    inputBufRef.current = []
+    tokensRef.current = []
+    persistDraft()
+    setInputState('')
+    setInputBufState([])
+    setTokens([])
     setQueueEdit(null)
     setHistoryIdx(null)
     historyDraftRef.current = ''
-  }, [historyDraftRef, setComposerTokens, setHistoryIdx, setInput, setQueueEdit])
+  }, [historyDraftRef, persistDraft, setHistoryIdx, setQueueEdit])
 
   /**
    * Deleting an `[[ Image N ]]` token IS how you unattach the image — there is
@@ -412,13 +467,21 @@ export function useComposerState({ gw, submitRef, sys }: UseComposerStateOptions
         return
       }
 
+      if (managedChatState) {
+        // Keep edited text as a visible, saved draft until explicit submission.
+        restoreDraft({ input: text, inputBuf: [], tokens: tokensRef.current })
+        persistDraft()
+
+        return
+      }
+
       setInput('')
       setInputBuf([])
       submitRef.current(text)
     } finally {
       rmSync(dir, { force: true, recursive: true })
     }
-  }, [input, inputBuf, setInput, submitRef])
+  }, [input, inputBuf, persistDraft, restoreDraft, setInput, setInputBuf, submitRef])
 
   const actions = useMemo(
     () => ({
@@ -432,6 +495,7 @@ export function useComposerState({ gw, submitRef, sys }: UseComposerStateOptions
       prependQueue: prependQ,
       pushHistory,
       removeQueue: removeQ,
+      restoreDraft,
       setCompIdx,
       setComposerTokens,
       setHistoryIdx,
@@ -452,10 +516,12 @@ export function useComposerState({ gw, submitRef, sys }: UseComposerStateOptions
       prependQ,
       pushHistory,
       removeQ,
+      restoreDraft,
       setCompIdx,
       setComposerTokens,
       setHistoryIdx,
       setInput,
+      setInputBuf,
       setQueueEdit,
       takeQ,
       syncTokens

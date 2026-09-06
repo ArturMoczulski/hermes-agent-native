@@ -17,6 +17,7 @@ import type {
   SessionTitleResponse,
   SetupStatusResponse
 } from '../gatewayTypes.js'
+import { managedChatState } from '../lib/managedChatState.js'
 import { asRpcResult } from '../lib/rpc.js'
 import type { Msg, PanelSection, SessionInfo, Usage } from '../types.js'
 
@@ -152,7 +153,8 @@ export function useSessionLifecycle(opts: UseSessionLifecycleOptions) {
     setHistoryItems([])
     setLastUserMsg('')
     setStickyPrompt('')
-    composerActions.setComposerTokens([])
+
+    if (!managedChatState) {composerActions.setComposerTokens([])}
     // Half-prune: new session has new keys, but keep a warm pool in case
     // the user resumes back to the prior session.
     evictInkCaches('half')
@@ -176,7 +178,8 @@ export function useSessionLifecycle(opts: UseSessionLifecycleOptions) {
       setHistoryItems(info ? [introMsg(info)] : [])
       setStickyPrompt('')
       setLastUserMsg('')
-      composerActions.setComposerTokens([])
+
+      if (!managedChatState) {composerActions.setComposerTokens([])}
       patchTurnState({ activity: [] })
       patchUiState({ info, usage: usageFrom(info) })
     },

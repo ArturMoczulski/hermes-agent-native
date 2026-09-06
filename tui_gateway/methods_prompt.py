@@ -531,8 +531,21 @@ def _lock_in_submit_turn(
     return None, fields
 
 
+@method("prompt.receipt")
+def _(rid, params: dict) -> dict:
+    from tui_gateway.managed_chat_receipts import receipt_rpc
+    return receipt_rpc(globals(), rid, params)
+
+
 @method("prompt.submit")
 def _(rid, params: dict) -> dict:
+    if getattr(current_transport(), "managed_chat", None):
+        from tui_gateway.managed_chat_receipts import submit
+        return submit(globals(), rid, params, _submit_native_prompt)
+    return _submit_native_prompt(rid, params)
+
+
+def _submit_native_prompt(rid, params: dict) -> dict:
     from hermes_cli.input_sanitize import sanitize_user_prompt_text
     sid = params.get("session_id", "")
     raw_text = params.get("text", "")

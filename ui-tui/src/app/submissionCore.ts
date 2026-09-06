@@ -1,5 +1,6 @@
 import type { GatewayClient } from '../gatewayClient.js'
 import type { InputDetectDropResponse, PromptSubmitResponse } from '../gatewayTypes.js'
+import { managedChatState } from '../lib/managedChatState.js'
 import type { Msg } from '../types.js'
 
 import { turnController } from './turnController.js'
@@ -50,7 +51,7 @@ export function submitPrompt(
   deps: SubmitPromptDeps,
   showUserMessage = true,
   displayOverride?: string,
-  opts: { skipDetectDrop?: boolean } = {}
+  opts: { skipDetectDrop?: boolean; clientMessageId?: string } = {}
 ): void {
   const sid = getUiState().sid
 
@@ -80,8 +81,36 @@ export function submitPrompt(
     turnController.interrupted = false
 
     deps.gw
-      .request<PromptSubmitResponse>('prompt.submit', { session_id: liveSid, text: submitText })
+      .request<PromptSubmitResponse>('prompt.submit', {
+        session_id: liveSid,
+        text: submitText,
+        ...(opts.clientMessageId ? { client_message_id: opts.clientMessageId } : {})
+      })
       .then(r => {
+        if (opts.clientMessageId) {
+          const pending = managedChatState?.getPending()
+
+          if (getUiState().sid !== liveSid || pending?.id !== opts.clientMessageId) {
+            return
+          }
+
+          if (r?.receipt?.id !== opts.clientMessageId) {
+            throw new Error('Message acknowledgement was not confirmed')
+          }
+
+          // Terminal receipts are reconciled against native history by the
+          // recovery hook before the local pending envelope is removed.
+          const advances =
+            (r.receipt.status === 'accepted' && pending.status === 'pending') ||
+            (r.receipt.status === 'running' && (pending.status === 'pending' || pending.status === 'accepted'))
+
+          if (advances) {
+            managedChatState?.receipt(r.receipt.id, r.receipt.status)
+          }
+
+          return
+        }
+
         // The gateway consumed a typed voice stop phrase server-side (voice
         // chat ended, no turn started) — release the busy latch; the
         // voice.transcript {stop_phrase} event handles the mode flags + notice.
@@ -90,6 +119,23 @@ export function submitPrompt(
         }
       })
       .catch((e: Error) => {
+        if (opts.clientMessageId) {
+          const pending = managedChatState?.getPending()
+
+          // A transport timeout is older evidence than receipt polling, and
+          // must never disturb a later message or a different native session.
+          if (getUiState().sid !== liveSid || pending?.id !== opts.clientMessageId || pending.status !== 'pending') {
+            return
+          }
+
+          deps.sys(
+            `Message acknowledgement was not confirmed. The saved message will be checked before retrying. ${e.message}`
+          )
+          patchUiState({ busy: false, status: 'checking message delivery…' })
+
+          return
+        }
+
         // Defensive: prompt.submit no longer rejects a mid-turn send with
         // "session busy" (the gateway queues it and returns success), but keep
         // the re-queue path as a safety net for any future/legacy gateway that

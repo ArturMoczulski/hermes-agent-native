@@ -1,5 +1,6 @@
 """Managed owner chat uses the real native dispatcher and session database."""
 import threading
+from uuid import uuid4
 
 import pytest
 
@@ -133,7 +134,7 @@ def test_native_managed_roundtrip_keeps_purpose_history_and_exact_session(bindin
     assert record['agent_ready'].wait(20)
     assert record['agent_error'] is None
     assert record['agent'].tools == []
-    sent = first.request(server, 'prompt.submit', {'session_id': sid, 'text': fixture.OPENER})
+    sent = first.request(server, 'prompt.submit', {'session_id': sid, 'text': fixture.OPENER, 'client_message_id': str(uuid4())})
     assert sent['result']['status'] == 'streaming'
     with first.condition:
         complete = lambda: next((f for f in first.frames if f.get('params', {}).get('type') == 'message.complete'), None)
@@ -146,7 +147,7 @@ def test_native_managed_roundtrip_keeps_purpose_history_and_exact_session(bindin
     assert 'error' not in resumed, resumed
     assert resumed['result']['session_key'] == binding.session_id
     sid = resumed['result']['session_id']
-    sent = second.request(server, 'prompt.submit', {'session_id': sid, 'text': fixture.FOLLOWUP})
+    sent = second.request(server, 'prompt.submit', {'session_id': sid, 'text': fixture.FOLLOWUP, 'client_message_id': str(uuid4())})
     assert 'error' not in sent, sent
     with second.condition:
         assert second.condition.wait_for(lambda: any(f.get('params', {}).get('type') == 'message.complete' for f in second.frames), timeout=20)

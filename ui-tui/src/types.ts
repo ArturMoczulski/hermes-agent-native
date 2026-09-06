@@ -188,6 +188,8 @@ export interface ProjectInfo {
 }
 
 export interface SessionInfo {
+  managed_agent?: { id: string; soul_revision: number; mode: 'conversation_only' }
+  stored_session_id?: string
   cwd?: string
   fast?: boolean
   install_warning?: string

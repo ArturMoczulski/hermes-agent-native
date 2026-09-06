@@ -1,10 +1,14 @@
 import { appendFileSync, existsSync, mkdirSync, readFileSync } from 'node:fs'
 import { homedir } from 'node:os'
-import { join } from 'node:path'
+import { dirname, join } from 'node:path'
 
 const MAX = 1000
-const dir = process.env.HERMES_HOME ?? join(homedir(), '.hermes')
-const file = join(dir, '.hermes_history')
+
+const file = process.env.HERMES_TUI_CHAT_STATE
+  ? `${process.env.HERMES_TUI_CHAT_STATE}.history`
+  : join(process.env.HERMES_HOME ?? join(homedir(), '.hermes'), '.hermes_history')
+
+const dir = dirname(file)
 
 let cache: string[] | null = null
 
@@ -75,7 +79,7 @@ export function append(line: string) {
       .map(l => `+${l}`)
       .join('\n')
 
-    appendFileSync(file, `\n# ${ts}\n${encoded}\n`)
+    appendFileSync(file, `\n# ${ts}\n${encoded}\n`, { mode: 0o600 })
   } catch {
     void 0
   }

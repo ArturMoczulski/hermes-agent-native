@@ -8,7 +8,7 @@ from tui_gateway.transport import current_transport
 _LOCKS = {}
 _LOCKS_GUARD = threading.Lock()
 _ALLOWED = frozenset({'session.create', 'session.resume', 'prompt.submit', 'session.history',
-                      'session.status', 'session.interrupt', 'session.close', 'session.events'})
+                      'session.status', 'session.interrupt', 'session.close', 'session.events', 'prompt.receipt'})
 
 
 def binding_for_transport():
@@ -76,14 +76,20 @@ def prepare_request(server, rid, method, params):
     if not target:
         raise PermissionError('Managed chat session is required')
     check_session(server, target)
-    if method == 'prompt.submit':
-        if set(params) - {'session_id', 'text', 'queued'}:
+    if method in {'prompt.submit', 'prompt.receipt'}:
+        from tui_gateway.managed_chat_receipts import validate_id
+        message_id = validate_id(params.get('client_message_id'))
+        if method == 'prompt.receipt':
+            if set(params) - {'session_id', 'client_message_id'}:
+                raise PermissionError('Managed receipt options are host-controlled')
+            return {'session_id': target, 'client_message_id': message_id}, None
+        if set(params) - {'session_id', 'text', 'queued', 'client_message_id'}:
             raise PermissionError('Managed chat accepts plain owner messages only')
         if not isinstance(params.get('text'), str) or not params['text'].strip():
             raise ValueError('Message must contain text')
         if len(params['text']) > 32000:
             raise ValueError('Message is too long for this early managed chat')
-        return {'session_id': target, 'text': params['text']}, None
+        return {'session_id': target, 'text': params['text'], 'client_message_id': message_id}, None
     return params, None
 
 

@@ -339,7 +339,15 @@ export interface SessionSteerResponse {
 
 // ── Prompt / submission ──────────────────────────────────────────────
 
+export interface ManagedMessageReceipt {
+  id: string
+  status: 'accepted' | 'running' | 'complete' | 'error' | 'unknown'
+  reason?: string
+  text?: string
+}
+
 export interface PromptSubmitResponse {
+  receipt?: ManagedMessageReceipt
   ok?: boolean
   /** Set when the submitted text was a bare voice stop phrase consumed
    *  server-side to end the voice chat instead of starting a turn. */

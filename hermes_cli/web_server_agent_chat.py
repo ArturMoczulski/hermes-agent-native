@@ -23,7 +23,9 @@ def resolve_chat_binding(query):
         raise HTTPException(409, str(exc)) from exc
 
 
-def bind_chat_renderer(env, binding):
+def bind_chat_renderer(env, binding, *, attachment=""):
+    from hashlib import sha256
+    from hermes_constants import get_hermes_home
     from hermes_cli.web_server_chat import _server_internal_ws_url
     binding.validate()
     gateway_url = _server_internal_ws_url('/api/ws', agent=binding.agent_id, purpose_revision=str(binding.soul_revision))
@@ -40,5 +42,13 @@ def bind_chat_renderer(env, binding):
             env['HERMES_TUI_RESUME'] = binding.session_id
     finally:
         db.close()
+    client_key = sha256((binding.session_id + '\0' + attachment).encode()).hexdigest()
+    state_root = get_hermes_home() / 'agent-native' / 'chat-clients'
+    for directory in (state_root, state_root / client_key):
+        if directory.is_symlink():
+            raise HTTPException(409, 'Conversation draft storage is unsafe')
+        directory.mkdir(mode=0o700, parents=True, exist_ok=True)
+        directory.chmod(0o700)
+    env['HERMES_TUI_CHAT_STATE'] = str(state_root / client_key / 'composer.json')
     env['HERMES_TUI_GATEWAY_URL'] = gateway_url
     return env

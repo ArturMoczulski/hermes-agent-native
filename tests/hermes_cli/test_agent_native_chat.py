@@ -42,3 +42,31 @@ def test_caller_data_cannot_issue_binding(tmp_path, actor):
     with pytest.raises(PermissionError):
         issue_binding(actor=actor, agent_id='anything', db_path=tmp_path / 'absent.db', storage_root=tmp_path / 'agents')
     assert not (tmp_path / 'absent.db').exists()
+
+
+def test_renderer_state_is_private_and_scoped_to_agent_revision_and_client(tmp_path, monkeypatch):
+    from pathlib import Path
+    from agent_native.chat import issue_binding
+    from hermes_cli.web_server_agent_chat import bind_chat_renderer
+    from hermes_cli import web_server_chat
+    home = tmp_path / 'home'
+    monkeypatch.setenv('HERMES_HOME', str(home))
+    monkeypatch.setenv('HERMES_KANBAN_DB', str(tmp_path / 'control.db'))
+    monkeypatch.setattr(web_server_chat, '_server_internal_ws_url', lambda path, **params: 'ws://127.0.0.1:19219' + path)
+    with connect_closing(board='default') as conn:
+        a = identity.create_root(conn, actor=identity.OWNER, request_id='a', name='Writer', purpose='Write fantasy')
+        b = identity.create_root(conn, actor=identity.OWNER, request_id='b', name='Composer', purpose='Compose music')
+    first = issue_binding(actor=identity.OWNER, agent_id=a['id'])
+    second = issue_binding(actor=identity.OWNER, agent_id=b['id'])
+    def state(binding, client='browser-a'):
+        return Path(bind_chat_renderer({}, binding, attachment=client)['HERMES_TUI_CHAT_STATE'])
+    path = state(first)
+    assert path == state(first)
+    assert path != state(second)
+    assert path != state(first, 'browser-b')
+    assert path.is_relative_to(home) and not path.is_relative_to(Path(first.workspace))
+    assert path.parent.stat().st_mode & 0o777 == 0o700
+    with connect_closing(board='default') as conn:
+        identity.revise_soul(conn, actor=identity.OWNER, agent_id=a['id'], expected_revision=1, purpose='Write mysteries')
+    revised = issue_binding(actor=identity.OWNER, agent_id=a['id'])
+    assert state(revised) != path

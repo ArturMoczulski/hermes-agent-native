@@ -6,6 +6,7 @@ import { completionToApplyOnSubmit, looksLikeSlashCommand, parseSlashCommand } f
 import type { GatewayClient } from '../gatewayClient.js'
 import type { SessionSteerResponse, ShellExecResponse } from '../gatewayTypes.js'
 import { queueItem, type QueueItem } from '../hooks/useQueue.js'
+import { managedChatState } from '../lib/managedChatState.js'
 import { asRpcResult } from '../lib/rpc.js'
 import { hasInterpolation, INTERPOLATION_RE } from '../protocol/interpolation.js'
 import type { Msg } from '../types.js'
@@ -102,7 +103,7 @@ export function useSubmission(opts: UseSubmissionOptions) {
       showUserMessage = true,
       displayText?: string,
       expandOverride?: (value: string) => string,
-      submitOpts: { skipDetectDrop?: boolean } = {}
+      submitOpts: { skipDetectDrop?: boolean; clientMessageId?: string } = {}
     ) => {
       // Read tokens off the ref, not render state: a paste immediately followed
       // by Enter submits before React has re-rendered with the new token.
@@ -263,6 +264,49 @@ export function useSubmission(opts: UseSubmissionOptions) {
       const submissionTokens = [...composerRefs.tokensRef.current]
       const submission = prepareSubmission(full, submissionTokens)
       const toHistory = submission.text
+
+      if (managedChatState) {
+        const live = getUiState()
+
+        if (!live.sid || !live.info?.managed_agent) {
+          return sys('Conversation is connecting; your draft is retained.')
+        }
+
+        if (live.busy) {
+          return sys('Wait for the current reply; your next message remains in the composer.')
+        }
+
+        try {
+          const previous = managedChatState.getPending()
+
+          if (submission.text.trim() === '/acknowledge') {
+            if (!previous || !managedChatState.acknowledgeUnknown(previous.id)) {
+              return sys('There is no uncertain message to acknowledge.')
+            }
+
+            composerActions.clearIn()
+            sys(
+              'Uncertain attempt acknowledged. Its saved history is retained; nothing was resent. You can write a new message.'
+            )
+
+            return
+          }
+
+          const pending = managedChatState.prepare(submission.text)
+          // Save the envelope before clearing the native composer. A retry of
+          // an unconfirmed send keeps its original UUID and cannot run twice.
+          composerActions.clearIn()
+          composerActions.pushHistory(toHistory)
+          send(submission.text, previous?.id !== pending.id, submission.display, value => value, {
+            skipDetectDrop: true,
+            clientMessageId: pending.id
+          })
+        } catch (error) {
+          sys(`Message not sent: ${error instanceof Error ? error.message : String(error)}`)
+        }
+
+        return
+      }
 
       if (looksLikeSlashCommand(full)) {
         const slash = prepareSlashSubmission(full, submissionTokens)

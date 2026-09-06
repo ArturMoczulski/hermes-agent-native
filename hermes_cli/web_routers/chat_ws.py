@@ -461,7 +461,7 @@ async def pty_ws(ws: WebSocket) -> None:
         argv, cwd, env = await _resolve_chat_argv_async(**resolve_kwargs)
         if managed_chat is not None:
             from hermes_cli.web_server_agent_chat import bind_chat_renderer
-            env = await asyncio.to_thread(bind_chat_renderer, env, managed_chat)
+            env = await asyncio.to_thread(bind_chat_renderer, env, managed_chat, attachment=ws.query_params.get('attach') or '')
     except HTTPException as exc:  # unknown/invalid profile
         await _pty_fail(ws, f"Chat unavailable: {exc.detail}")
         return

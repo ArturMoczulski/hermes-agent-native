@@ -62,6 +62,7 @@ import { useComposerState } from './useComposerState.js'
 import { useConfigSync } from './useConfigSync.js'
 import { shouldDetachEditedHistoryInput, useInputHandlers } from './useInputHandlers.js'
 import { useLongRunToolCharms } from './useLongRunToolCharms.js'
+import { useManagedChatRecovery } from './useManagedChatRecovery.js'
 import { useSessionLifecycle } from './useSessionLifecycle.js'
 import { useSubmission } from './useSubmission.js'
 
@@ -560,6 +561,8 @@ export function useMainApp(gw: GatewayClient) {
     setVoiceRecording,
     sys
   })
+
+  useManagedChatRecovery(gw, ui.sid, composerActions, setHistoryItems, sys)
 
   useEffect(() => {
     if (dashboardFreshSessionId) {

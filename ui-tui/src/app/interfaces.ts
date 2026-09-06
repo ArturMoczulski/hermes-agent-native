@@ -380,6 +380,8 @@ export interface ComposerActions {
   /** Attach an image by path in as a token. */
   attachImagePath: (path: string) => void
   clearIn: () => void
+  /** Apply an already persisted recovery snapshot without treating it as a user edit. */
+  restoreDraft: (draft: Pick<ComposerState, 'input' | 'inputBuf' | 'tokens'>) => void
   dequeue: () => string | undefined
   enqueue: (text: string, display?: string) => void
   handleTextPaste: (event: PasteEvent) => MaybePromise<ComposerPasteResult | null>

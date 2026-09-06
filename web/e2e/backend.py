@@ -57,6 +57,23 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
     # Register the test-only GET before the production SPA catch-all.
     app.router.routes.insert(0, app.router.routes.pop())
 
+    @app.post('/__e2e__/expire-managed-renderer')
+    async def expire_managed_renderer(request: Request, body: dict):
+        _require_token(request)
+        from agent_native.chat import issue_binding
+        from agent_native.identity import OWNER
+        from hermes_cli.web_server_chat import PTY_REGISTRY
+        binding = issue_binding(actor=OWNER, agent_id=body['agent_id'])
+        token = body.get('attach_token')
+        if not isinstance(token, str) or len(token) != 32 or any(c not in '0123456789abcdef' for c in token):
+            from fastapi import HTTPException
+            raise HTTPException(400, 'Invalid test browser attach token')
+        key = f'{token}\0agent\0{binding.session_id}'
+        session = PTY_REGISTRY._sessions.pop(key, None)
+        if session is not None:
+            await session.close()
+        return {'expired': int(session is not None)}
+
     @app.get('/__e2e__/native-chat-evidence')
     def native_chat_evidence(request: Request):
         _require_token(request)
@@ -74,6 +91,9 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         return {'ready': ready, 'native_ready_session_ids': native_ready_session_ids, 'managed_ready_ids': managed_ready_ids, 'model_requests': list(model.requests)}
 
     app.router.routes.insert(0, app.router.routes.pop())
+
+    from managed_delivery_fixture import install_delivery_fault_fixture
+    install_delivery_fault_fixture(app, _require_token, home)
 
     import uvicorn
     uvicorn.run(app, host='127.0.0.1', port=19219, log_level='warning')
