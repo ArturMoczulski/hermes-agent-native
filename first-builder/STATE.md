@@ -8,7 +8,10 @@ Active repository: `/Users/arturmoczulski/Projects/hermes-agent-native`.
 The owner selected Plane planning and a reusable sprint workflow skill. See the
 local Plane deployment entry below and [live planning context](PLANE.md). Earlier
 entries record completed increments and historical gaps, not the current inventory.
-Use Plane through the Builder API account for current work and priorities.
+Use Plane through the Builder API account for current work and priorities. The
+full specification is now organized in milestone modules and rolling cycles; see
+[coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
+this review: AN-19 scoped Plane reads (within AN-4), then AN-20 and AN-22.
 
 ## Initial identity increment
 
@@ -207,3 +210,31 @@ Next implementation slice: AN-4, with failing authorization tests before adapter
 Post-recovery Playwright Chromium board/cycle checks passed. Python syntax, changed
 relative documentation links and whitespace checks passed. No managed-run capability
 was added by this operational verification.
+
+## Full specification translated into Plane — 2026-09-06
+
+Owner requested full design-to-backlog coverage and removal of the unused default
+project. Reviewed all 14 design chapters/index, engineering plans/evidence and
+Builder workflow. Preserved AN-1–AN-16 and added AN-17–AN-67 with source references,
+acceptance, implementer/evaluator, native parent/dependency links and priorities.
+Eight M0–M7 milestone modules plus a product-decision module cover the work; all
+24 product scenarios and UX-01–20 have linked delivery records. The nine product
+choices remain undecided, not silently adopted through backlog wording.
+
+Current cycle retains setup/API evidence and blocked AN-3, adding AN-19 scoped
+reads. The next two weekly cycles are tentative: scoped writes/uncertain-write
+recovery, then root planning setup/source reconciliation. Each selects two slices;
+WIP 1, with explicit carry/split/return/cancel review rather than calendar promises.
+Distant milestones remain undated. See implementation/plane-roadmap-coverage.md;
+Plane owns live states and this document is only a handoff.
+
+Confirmed the separate agent-native project was Plane's demo with seven onboarding
+samples, deleted it under the owner's explicit instruction, and verified 404.
+The Agent Native Framework project remains the planning home. Owner-visible
+Chromium checks passed for modules, future cycles, current scoped-read work and
+product-decision items. No runtime feature was implemented in this planning turn.
+
+Final roadmap audit passed: 67 unique items, 51 additions, all module/cycle/parent
+assignments and native dependencies verified; no dependency cycle, including
+parent-completion edges. Original accepted setup/API work retained. Documentation
+links and all 44 scenario references checked. Plane remains the live priority source.

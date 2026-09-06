@@ -58,8 +58,12 @@ created. It is not an installation administrator. This is human-authorized local
 Builder planning, not proof of managed-agent isolation. No API credential is
 forwarded into managed sandboxes. The future adapter must enforce narrower scopes.
 
-The imported work is AN-1 through AN-16, with native dependency links. The first
-cycle selects AN-1, AN-2 and AN-3. Their live records own statuses and acceptance;
+The original AN-1 through AN-16 records remain, with native dependency links.
+The full design is now mapped into milestone modules, refined work items and a
+product-decision module; see the [coverage index](../implementation/plane-roadmap-coverage.md). The first
+cycle retains AN-1, AN-2 and AN-3 and adds the scoped-read slice. Two subsequent
+cycles are tentative forecasts, to be replanned against capacity and dependencies.
+The live records own statuses and acceptance;
 read them rather than inferring current state from this document. Existing completed
 framework increments remain evidence in STATE.md and Git, not reopened tasks.
 

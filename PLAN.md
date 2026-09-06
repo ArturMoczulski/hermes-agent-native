@@ -7,13 +7,15 @@ work; do not maintain a parallel checklist here.
 
 - Product requirements: [design/](design/README.md).
 - Engineering milestones: [delivery plan](implementation/delivery-plan.md).
+- Specification-to-work traceability: [Plane coverage](implementation/plane-roadmap-coverage.md).
 - Plane integration: [implementation plan](implementation/plane-project-management.md).
 - Session evidence and handoff: [Builder state](first-builder/STATE.md).
 - Local service operations: [Plane deployment](ops/plane/README.md).
 
-Imported backlog: AN-1–AN-16. The initial cycle covers the planning home, API
-boundary validation and recovery. Later items connect scoped work operations,
-managed runs, owner control, cadence, recursive teams and eventual self-bootstrap.
+The full specification is organized into M0–M7 milestone modules and a product
+decision module in Plane. Existing AN-1–AN-16 retain their history; refined work
+items cover the remaining specification. The current cycle and two tentative
+future cycles select small increments; distant milestones remain undated.
 Plane is the authority for item state; this overview is not a second task store.
 
 Completed identity, authenticated creation UI, private provisioning and restricted
