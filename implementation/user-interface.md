@@ -2,7 +2,9 @@
 
 Status: engineering proposal supporting the [UX specification](../design/10-user-experience.md),
 2026-09-05. The Hermes fork is selected; the following UI integration still needs
-implementation and validation. This review did not launch the application or run tests.
+implementation and validation. The original source review did not launch the
+application or run tests; subsequent native-chat repair and verification are
+recorded in [Builder state](../first-builder/STATE.md#an-77-native-chat-repair--current-verification).
 
 For screen contents, controls and interaction states, implement against the
 [control center screen specification](../design/12-control-center-screens.md).
@@ -15,10 +17,13 @@ Reuse its server, authentication, navigation, visual primitives, settings and ta
 integration. Add agent-native views and explicit domain operations for Chat,
 Monitor, Inbox and Work. Keep one authoritative backend state for all views.
 
-Reuse desktop Bot Mode's interaction patterns and selectively extract suitable
-presentation components for structured chat. Do not import the whole desktop
-application or add Electron as a prerequisite for using the framework. Inspect
-dependency boundaries before claiming that a component is portable.
+The owner selected the existing Hermes `/chat` experience for conversation.
+Repair and reuse its embedded TUI, transcript, composer, session persistence and
+model loop. Add framework identity, purpose, controls and monitoring around that
+surface, extending the TUI when conversation behavior needs to change. Do not
+build a duplicate React chat, a second transcript store or a separate model loop.
+Desktop Bot Mode remains a source of useful interaction patterns, not a required
+component extraction or Electron dependency.
 
 ## Source baseline and reusable pieces
 
@@ -31,9 +36,9 @@ Online documentation can differ; local source is the evidence for this checkout.
 | Shared web visual components | [Web package](../web/package.json) | Reuse current React components, styling and accessibility primitives; avoid a new design system. |
 | Profiles and creation | [Profiles page](../web/src/pages/ProfilesPage.tsx), [profile builder](../web/src/pages/ProfileBuilderPage.tsx) | Reuse form/settings pieces; bind creation and edits to stable framework agent identity and authorized operations. A profile picker is not the organization tree. |
 | Task board and activity transport | [Kanban plugin](../plugins/kanban/dashboard/manifest.json), [API](../plugins/kanban/dashboard/plugin_api.py) | Planning board reuse is superseded by [Plane](plane-project-management.md). Keep linked framework run/evaluation details and event transport where useful; board state cannot bypass acceptance. |
-| Agent roster and continuing chat | [Desktop Bot Mode](../apps/desktop/src/plugins/hermes-bots/plugin.tsx), [roster actions](../apps/desktop/src/plugins/hermes-bots/roster-actions.ts) | Reuse concepts and suitable presentation logic. Desktop host/plugin state needs adaptation. Bind to framework IDs, not display names or recent activity alone. |
-| Rich conversation rendering | [Desktop assistant messages](../apps/desktop/src/components/assistant-ui/thread/assistant-message.tsx) | Assess extraction of rendering pieces; replace desktop-specific state dependencies with the shared framework conversation contract. |
-| Existing terminal chat | [Chat page](../web/src/pages/ChatPage.tsx), [WebSocket handler](../hermes_cli/web_routers/chat_ws.py), [PTY registry](../hermes_cli/pty_session.py) | Keep as inherited tooling if useful. Terminal bytes and a reconnect token are not the new agent conversation or lifecycle authority. |
+| Agent roster and continuing chat | [Desktop Bot Mode](../apps/desktop/src/plugins/hermes-bots/plugin.tsx), [roster actions](../apps/desktop/src/plugins/hermes-bots/roster-actions.ts) | Reuse concepts where useful. Bind selection to framework IDs, not display names or recent activity alone; desktop extraction is not required. |
+| Conversation rendering and input | [TUI contributor guide](../tui_gateway/AGENTS.md), [web contributor guide](../web/AGENTS.md) | Reuse and extend the embedded TUI transcript/composer. React inspectors and controls may surround it; they must not become a second chat surface. |
+| Existing terminal chat | [Chat page](../web/src/pages/ChatPage.tsx), [WebSocket handler](../hermes_cli/web_routers/chat_ws.py), [PTY registry](../hermes_cli/pty_session.py) | Selected conversation UI. First repair native chat, then bind framework agent identity, protected purpose, retained sessions and owner controls. Terminal bytes or a reconnect token alone do not establish managed authority. |
 
 Useful upstream background: [dashboard](https://hermes-agent.nousresearch.com/docs/user-guide/features/web-dashboard),
 [dashboard extension](https://hermes-agent.nousresearch.com/docs/user-guide/features/extending-the-dashboard),
@@ -52,18 +57,34 @@ Our requirement remains stronger: framework execution must survive client closur
 and have durable identity, admission, cancellation and restart behavior. Its
 lifetime cannot be owned by terminal retention or a browser subscription.
 
-## Deliberate fork-specific chat design
+## Selected chat integration
 
-The inherited [web contributor guide](../web/AGENTS.md) favors the embedded TUI
-and prohibits a second React chat surface in upstream Hermes. The agent-native
-proposal deliberately introduces a structured managed-agent conversation view,
-reusing suitable desktop components, because identity, durable decision cards,
-artifact review and connected monitoring are central to this product.
+The owner chose existing Hermes chat instead of the earlier proposed structured
+React conversation. Follow the inherited [web contributor guide](../web/AGENTS.md):
+extend the embedded TUI for transcript and composer behavior. The previously
+proposed fork exception is withdrawn. Framework status, questions, artifacts and
+controls can use surrounding panels linked to the selected agent and session.
 
-When implementing that view, update the area guide to describe this scoped fork
-exception. Preserve useful upstream engineering rules. Do not create two separate
-authoritative chat stores, task stores, agent loops or permission systems. This
-document does not itself change the runtime or the area guide.
+Deliver this in two observable steps. First make `/chat` load, accept input and
+show a real reply through the configured Hermes connection. This is a native-chat
+repair checkpoint, not proof of a managed framework agent. Then map selection to
+one stable framework identity and its retained Hermes conversation/session, load
+its current protected purpose, and enforce the same owner authority and controls
+used elsewhere. Show native versus managed context accurately until that binding
+is implemented and verified; a title or profile name is not sufficient evidence.
+
+Use existing durable Hermes session/message records as the conversation source,
+with framework identity and delivery/control metadata linked to those records.
+Do not maintain another editable transcript or model loop. Verify authenticated
+origins, retry deduplication, reconnect and service-restart continuity through the
+actual native integration. A PTY reconnect token is only attachment state.
+
+The early managed conversation is available even when Plane setup is pending or
+unavailable. It can discuss purpose and answer the owner using the configured
+model, but it must not launch autonomous planning/writing, enable project tools,
+clear a pause or rewrite purpose through conversational text. Missing provider
+configuration and failures remain visible. AN-73 later integrates proactive
+questions, feedback during work and purpose-change stopping with this same chat.
 
 ## Shared contracts before screens
 
@@ -87,10 +108,12 @@ Human authority comes from the authenticated owner channel, not a frontend label
 ## Delivery and verification
 
 Current priority: the [fantasy-writer milestone](fantasy-writer-milestone.md).
-Deliver one agent detail page with Chat, Activity and Stories, plus the roster.
-The first execution slice already includes real status, result and Pause controls;
-durable chat, detailed inspection and continuity complete this earlier milestone.
-Reuse that foundation for the Builder. Full organization screens stay later.
+Deliver a roster and agent details linked to the existing `/chat`, with Activity
+and Stories views around the same identity. AN-77 first repairs native chat and
+binds managed conversation; AN-72 then connects actual writing, results and Pause.
+AN-73 adds ongoing-work communication; detailed inspection and continuity complete
+the earlier writer milestone. Reuse that foundation for the Builder. Full
+organization screens stay later.
 The framework browser test harness now exists in [web/e2e](../web/e2e/README.md);
 reuse it and the installed Chromium rather than creating another test stack.
 

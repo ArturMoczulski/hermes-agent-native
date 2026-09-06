@@ -293,10 +293,12 @@ alongside a legacy disconnect-and-kill path. That is not the required framework
 lifecycle: managed-agent conversation connects to service-owned runs and durable
 messages. Leaving a page, switching agents or losing a WebSocket must not terminate
 work or create another writer. The [UI implementation plan](user-interface.md)
-describes structured chat, component reuse and the terminal-lifetime distinction.
+describes reuse of native Hermes chat and the terminal-lifetime distinction.
 
-Build messages and decisions into the same control database. The model-facing
-tools identify their authenticated sender automatically. Native peer messaging
+Reuse Hermes SessionDB for conversation transcripts; keep framework agent/session
+bindings, authenticated communication events and decisions in control state. Do not
+maintain a second editable transcript. The model-facing tools identify their
+authenticated sender automatically. Native peer messaging
 must call these operations or be disabled. Sibling and cross-tree communication
 is allowed when granted, without ownership or private-memory access being implied.
 

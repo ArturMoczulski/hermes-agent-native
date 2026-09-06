@@ -23,11 +23,12 @@ export const isActionMod = (key: { ctrl: boolean; meta: boolean; super?: boolean
  *   - Ctrl+K (kill-to-end) and Ctrl+W (delete-word-back) are standard readline
  *     bindings that users expect to work regardless of platform, even though
  *     no terminal rewrites Cmd into them.
+ *   - Ctrl+L is the terminal redraw request, including dashboard PTY reattach.
  */
 export const isMacActionFallback = (
   key: { ctrl: boolean; meta: boolean; super?: boolean },
   ch: string,
-  target: 'a' | 'e' | 'u' | 'k' | 'w'
+  target: 'a' | 'e' | 'u' | 'k' | 'w' | 'l'
 ): boolean => isMac && key.ctrl && !key.meta && key.super !== true && ch.toLowerCase() === target
 
 /** Match action-modifier + a single character (case-insensitive). */

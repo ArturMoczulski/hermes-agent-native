@@ -16,12 +16,19 @@ for key in list(os.environ):
 
 from tests.hermes_cli.test_agent_native_plane_setup import plane_server
 
-with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_server() as plane:
+from native_chat_fixture import configure_native_chat, native_model_server
+
+with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_server() as plane, native_model_server() as model:
     os.environ.update(HERMES_HOME=home, HERMES_KANBAN_HOME=home,
                       HERMES_KANBAN_DB=str(Path(home) / 'kanban.db'),
                       HERMES_DASHBOARD_SESSION_TOKEN='agent-native-local-e2e-only')
+    configure_native_chat(home, model)
     from fastapi import Request
     from hermes_cli.web_server import app, _require_token
+    # Match dashboard launch metadata: native TUI attaches to this service's
+    # existing gateway instead of spawning an unrelated stdio gateway.
+    app.state.bound_host = '127.0.0.1'
+    app.state.bound_port = 19219
 
     @app.put('/__e2e__/plane-config')
     def configure_plane(request: Request, body: dict):
@@ -48,6 +55,18 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
                 'discovery_count': len(items), 'discovery_id': items[0]['id'] if len(items) == 1 else None}
 
     # Register the test-only GET before the production SPA catch-all.
+    app.router.routes.insert(0, app.router.routes.pop())
+
+    @app.get('/__e2e__/native-chat-evidence')
+    def native_chat_evidence(request: Request):
+        _require_token(request)
+        from tui_gateway import server
+        with server._sessions_lock:
+            sessions = list(server._sessions.values())
+        ready = any(s.get('agent') is not None and s.get('agent_ready') is not None
+                    and s['agent_ready'].is_set() and not s.get('agent_error') for s in sessions)
+        return {'ready': ready, 'model_requests': list(model.requests)}
+
     app.router.routes.insert(0, app.router.routes.pop())
 
     import uvicorn

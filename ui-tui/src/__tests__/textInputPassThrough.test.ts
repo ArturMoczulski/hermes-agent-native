@@ -39,12 +39,14 @@ describe('shouldPassThroughToGlobalHandler', () => {
   it('does not swallow ordinary typing keys', () => {
     expect(shouldPassThroughToGlobalHandler('h', key(), parseVoiceRecordKey('ctrl+o'))).toBe(false)
     expect(shouldPassThroughToGlobalHandler('o', key(), parseVoiceRecordKey('ctrl+o'))).toBe(false)
+    expect(shouldPassThroughToGlobalHandler('l', key())).toBe(false)
   })
 
   it('always passes through non-voice global control keys', () => {
     expect(shouldPassThroughToGlobalHandler('c', key({ ctrl: true }))).toBe(true)
     expect(shouldPassThroughToGlobalHandler('x', key({ ctrl: true }))).toBe(true)
     expect(shouldPassThroughToGlobalHandler('o', key({ ctrl: true }))).toBe(true)
+    expect(shouldPassThroughToGlobalHandler('l', key({ ctrl: true }))).toBe(true)
     expect(shouldPassThroughToGlobalHandler('', key({ escape: true }))).toBe(true)
     expect(shouldPassThroughToGlobalHandler('', key({ tab: true }))).toBe(true)
     expect(shouldPassThroughToGlobalHandler('', key({ pageUp: true }))).toBe(true)

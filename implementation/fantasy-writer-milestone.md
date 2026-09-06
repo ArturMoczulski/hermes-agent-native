@@ -18,10 +18,13 @@ not the complete managed planning tool set. No managed framework agent is runnin
 Extend `web/src/pages/AgentsPage.tsx`, `hermes_cli/web_routers/agent_native.py`
 and `agent_native/`. Reuse Hermes's model loop and callbacks, existing owner
 authentication, web components, persistence and suitable session/tool rendering.
-Keep the service responsible for runs; inherited terminal chat/PTY retention is
-not the managed conversation contract. Follow the structured-chat fork exception
-in [UI implementation](user-interface.md), updating the web area instructions when
-implementing it. Do not add another frontend, model loop or task board.
+Keep the service responsible for runs. The owner selected the existing Hermes
+`/chat`, embedded TUI and retained session/message records. Repair that path first,
+then bind the selected framework identity, protected purpose and owner controls.
+Follow [UI implementation](user-interface.md) and the inherited web/TUI guidance;
+the earlier structured React chat exception is withdrawn. PTY retention alone is
+not managed lifetime or authority. Do not add another transcript, composer,
+frontend, model loop or task board.
 
 The writer uses ordinary private files and scoped Plane operations. Reuse the
 existing protected profile/environment and planning adapters; connect the few
@@ -38,17 +41,19 @@ the first execution slice and retain it as every later slice is added.
 
 | Order | Deliverable | Required evidence |
 | --- | --- | --- |
-| 1 | Create → first managed story → visible result and Pause | Configure model/cadence/finite run limits; provision one ordinary root's private and Plane home retry-safely; save immediate activation; bind protected purpose, current scoped plan, skills, authority and allowed tools to one service-owned Hermes run. Persist actions and a story artifact. Existing Agents UI opens a real activity/result view. Actual Pause terminates active execution. |
-| 2 | Continuing Chat and owner steering | Persistent conversation keyed by agent, retained owner messages/replies, explicit handling states, proactive question/answer, root pending list, purpose revision stopping/replanning and pause-preserving conversation. Reconnect does not duplicate messages or runs. |
-| 3 | Inspect Activity, Sessions and Stories | Agent detail views backed by the same event/run/artifact records: current work, cadence and freshness, activation cause, session history, expandable tools/results/errors, story versions and evaluations, Plane links. No synthetic telemetry or hidden-reasoning promise. |
-| 4 | Continue purpose across bounded turns | Configured cadence and one active work attempt; load fresh Plane context, evaluate results and whole purpose, choose a new clear step or wait/ask/retire. Survive browser closure, model/Plane failure and service restart; reconcile before retry, retain questions, never wake paused work. |
-| 5 | Demonstrate the complete owner journey | Run the product acceptance with a real configured model and isolated writer data: create, first story, chat/feedback, question/answer, another autonomous step, activity/artifacts, actual pause/resume, purpose edit and restart. Record evidence and limits; distinguish model quality from integration checks. |
+| 1 | Talk through existing Hermes chat before autonomous work (AN-77) | Repair `/chat` and verify native input/reply. Then bind stable framework agent identity, current protected purpose and retained Hermes session; enforce authenticated, idempotent submission and visible pending/reply/failure. Reconnect/restart preserve conversation. Managed conversation works without Plane readiness and cannot start project work or expose project tools. No duplicate React chat or model loop. |
+| 2 | Create → first managed story → visible result and Pause (AN-72) | Retain accepted identity/private filesystem/Plane setup. Configure model/cadence/finite run limits; bind protected purpose, current scoped plan, skills, authority and allowed tools to one service-owned Hermes run. Persist actions and a story artifact. Existing Agents UI opens a real activity/result view. Actual Pause terminates active execution. |
+| 3 | Continuing Chat and owner steering (AN-73) | Extend the same conversation across work runs: explicit handling states, proactive question/answer, root pending list, feedback, purpose revision stopping/replanning and pause-preserving conversation. Reconnect does not duplicate messages or runs. |
+| 4 | Inspect Activity, Sessions and Stories (AN-74) | Agent detail views backed by the same event/run/artifact records: current work, cadence and freshness, activation cause, session history, expandable tools/results/errors, story versions and evaluations, Plane links. No synthetic telemetry or hidden-reasoning promise. |
+| 5 | Continue purpose across bounded turns (AN-75) | Configured cadence and one active work attempt; load fresh Plane context, evaluate results and whole purpose, choose a new clear step or wait/ask/retire. Survive browser closure, model/Plane failure and service restart; reconcile before retry, retain questions, never wake paused work. |
+| 6 | Demonstrate the complete owner journey (AN-76) | Run the product acceptance with a real configured model and isolated writer data: create, first story, chat/feedback, question/answer, another autonomous step, activity/artifacts, actual pause/resume, purpose edit and restart. Record evidence and limits; distinguish model quality from integration checks. |
 
-The first behavior to drive with Playwright is: **creating a configured writer
-opens that identity's detail page and records exactly one initial activation**.
-Keep the complete first-story acceptance as the integration target while smaller
-storage, provisioning, authority, worker and cancellation tests drive its internals.
-Do not call a UI state transition proof that a real model wrote a story.
+The creation/detail/initial activation and setup increments are already accepted
+as partial AN-72 evidence. The next Playwright target is a working native `/chat`;
+then prove that selecting a framework agent attaches the correct protected purpose
+and retained conversation with no autonomous project activation. Native chat repair
+alone does not satisfy managed identity/control acceptance. The first saved story
+remains the first autonomous-work checkpoint and the larger milestone stays intact.
 
 ## Plane delivery records
 
@@ -57,16 +62,21 @@ outcomes, not additional parallel copies of the broad capability backlog.
 
 | Record | Outcome |
 | --- | --- |
+| [AN-77](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/f6c3b3a6-3b7b-424e-9e9b-a75da73f0425/) | Repair existing Hermes chat, then bind managed-agent conversation before autonomous work |
 | [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/) | Create a writer and show its first managed story with Pause |
 | [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/) | Chat with the writer and steer its ongoing work |
 | [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/) | Inspect writer activity, sessions and saved story versions |
 | [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/) | Continue the writer purpose on cadence and recover interrupted work |
 | [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/) | Demonstrate a real autonomous writer through the owner interface |
 
-Chat and detailed inspection both build on the first run; continuity uses both.
-The real-model journey accepts the milestone. Configuration records AN-70 and
-AN-66 remain open gates for actual launch/cadence, not a ban on test-first work
-with explicitly isolated fixture settings.
+AN-77 is the active urgent slice; AN-72 is Todo and depends on it. AN-72's
+accepted setup evidence and unfinished story/Pause acceptance are preserved.
+AN-73 retains broader communication during work after AN-72; detailed inspection
+also builds on that first run, and continuity uses both. Early conversation is
+independent of Plane setup and does not admit project work. The real-model journey
+accepts the full milestone. AN-70 and AN-66 remain open for unattended runtime
+limits/cadence; model connection and bounded conversation execution must still be
+explicitly configured. Isolated fixture settings support test-first implementation.
 
 ## Minimum execution contract
 
@@ -92,9 +102,12 @@ with explicitly isolated fixture settings.
   configuration. AN-70/AN-66 stay open for defaults; do not silently turn existing
   prototype literals into policy. Setup must display effective values before
   activation. Credentials come from the configured provider connection, not chat.
-- Durable conversation independent of engine context windows; bounded turns recover
-  purpose, working memory, planning state and relevant messages. Store message
-  origins and delivery/handling evidence, not authority inferred from text.
+- Reuse durable Hermes conversation/session records independently of engine context
+  windows and link them to the stable framework agent. Bounded turns recover current
+  protected purpose and relevant messages; work turns also recover authorized memory
+  and fresh planning state. Store authenticated origins and delivery/handling
+  evidence, not authority inferred from text. Early conversation has no project
+  tools and needs no Plane assignment; project execution still requires admission.
 - Correlate service events, model/tool actions, work, run/session and artifact
   versions. Render safe text/Markdown and protect artifact paths; content is not
   a control command. Preserve failures and distinguish reported from observed state.
@@ -116,9 +129,9 @@ broad item Done merely because the writer subset works, and do not make its full
 multi-agent acceptance an artificial dependency of this milestone.
 
 AN-24's accepted inspection/revocation increment remains valid; its broad remaining
-work returns to backlog, with enabled writer-path enforcement delivered in slice 1.
-AN-21's minimal ordinary-root provisioning moves forward in that slice; broad
-repair/team provisioning stays later. Existing source-freshness requirements still
+work returns to backlog, with exposed conversation boundaries enforced in AN-77
+and writing-path enforcement in AN-72. AN-21's minimal ordinary-root provisioning
+has accepted evidence in AN-72; broad repair/team provisioning stays later. Existing source-freshness requirements still
 apply to admitted work. Any unsupported operation stays disabled.
 
 AN-16/57/58 and M7 remain the subsequent Builder milestone. Later Builder cycles

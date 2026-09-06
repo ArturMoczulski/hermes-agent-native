@@ -546,6 +546,7 @@ describe('isMacActionFallback', () => {
 
     expect(isMacActionFallback({ ctrl: true, meta: false, super: false }, 'k', 'k')).toBe(true)
     expect(isMacActionFallback({ ctrl: true, meta: false, super: false }, 'w', 'w')).toBe(true)
+    expect(isMacActionFallback({ ctrl: true, meta: false, super: false }, 'l', 'l')).toBe(true)
     // Must not fire when Cmd (meta/super) is held — those are distinct chords.
     expect(isMacActionFallback({ ctrl: true, meta: true, super: false }, 'k', 'k')).toBe(false)
     expect(isMacActionFallback({ ctrl: true, meta: false, super: true }, 'w', 'w')).toBe(false)

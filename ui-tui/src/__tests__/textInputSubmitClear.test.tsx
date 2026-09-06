@@ -105,3 +105,52 @@ describe('TextInput submit clearing', () => {
     expect(changes).not.toContain(`${full}x`)
   })
 })
+
+
+describe('TextInput terminal redraw', () => {
+  it.each(['', 'A retained draft'])('does not insert Ctrl+L into draft %j', async draft => {
+    const streams = makeStreams()
+    const changes: string[] = []
+    const submits: string[] = []
+
+    function Harness() {
+      const [value, setValue] = useState(draft)
+
+      return (
+        <TextInput
+          columns={80}
+          onChange={next => {
+            changes.push(next)
+            setValue(next)
+          }}
+          onSubmit={text => submits.push(text)}
+          value={value}
+        />
+      )
+    }
+
+    const instance = renderSync(React.createElement(Harness), {
+      patchConsole: false,
+      stderr: streams.stderr as NodeJS.WriteStream,
+      stdin: streams.stdin as unknown as NodeJS.ReadStream,
+      stdout: streams.stdout as NodeJS.WriteStream
+    })
+
+    try {
+      await settle()
+      // The dashboard sends this exact byte to repaint a reattached PTY.
+      streams.stdin.send('\x0c')
+      await settle(25)
+      expect(changes).toEqual([])
+
+      streams.stdin.send('l')
+      await settle(25)
+      streams.stdin.send('\r')
+      await settle(25)
+      expect(submits).toEqual([draft + 'l'])
+    } finally {
+      instance.unmount()
+      instance.cleanup()
+    }
+  })
+})

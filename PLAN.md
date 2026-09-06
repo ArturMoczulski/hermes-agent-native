@@ -6,8 +6,8 @@ dependencies and cycles. Read it before selecting work; this is not another boar
 
 The current undated cycle 03 is **Fantasy writer — create, chat and observe**.
 The owner moved this earlier usable-agent milestone ahead of the First Builder:
-create an ordinary root from a purpose, see it write and save stories, chat and
-steer it, inspect activity/sessions, then observe useful continuation on cadence.
+create an ordinary root from a purpose, talk to it, see it write and save stories,
+steer its work, inspect activity/sessions, then observe useful continuation on cadence.
 The first saved story is a checkpoint; continuing conversation, real stopping,
 evaluation and basic recovery belong in the completed milestone.
 
@@ -17,7 +17,7 @@ evaluation and basic recovery belong in the completed milestone.
 - Capability roadmap: [delivery plan](implementation/delivery-plan.md).
 - Work traceability: [Plane coverage](implementation/plane-roadmap-coverage.md).
 - Session evidence: [Builder state](first-builder/STATE.md).
-- Local services: [Plane operations](ops/plane/README.md).
+- Local services: [Plane operations](ops/plane/README.md), [dashboard operations](ops/dashboard/README.md).
 
 Reuse accepted identity, creation UI, private provisioning, restricted environments
 and Plane host read/write/recovery work. AN-24's verified inspection/revocation
@@ -26,12 +26,19 @@ the writer slices enforce all operations they actually expose. Minimal ordinary-
 Plane provisioning comes forward; Builder repository privileges, broader native
 integration and full teams stay later. No completed evidence is reopened or erased.
 
-AN-72 is active. Its first verified increment opens an agent detail after creation
-and atomically retains one initial-review intent, including lost-response/reload
-retries. This remains distinct from configured run admission. Creation now also
-connects private files, a private Plane planning home and discovery task, with
-visible setup/retry/recovery. Next connect the real managed run/artifact/stop path; see
-[Builder state](first-builder/STATE.md) for evidence and the exact handoff.
+AN-77 is active: restore the existing Hermes `/chat` experience, then connect it
+to the selected framework agent's protected purpose, persistent session and owner
+controls. Reuse the embedded TUI, transcript, composer and Hermes model loop; do not
+build a second React conversation. An ordinary native chat working again is a
+useful checkpoint, but managed-agent identity and control still need verification.
+Conversation must be available before autonomous writing and independently of
+Plane setup. Sending a message must not activate project work.
+
+AN-72 is Todo after AN-77. Its accepted creation/detail/initial-review and private
+filesystem/Plane setup evidence remains intact at `82241f4`. The managed writing
+run, saved story and actual Pause remain unfinished. AN-73 retains later proactive
+questions and steering during work; AN-74–76 cover inspection, continuity and full
+acceptance. See [Builder state](first-builder/STATE.md) for the exact handoff.
 
 The subsequent AN-16/M7 First Builder handoff adds protected repository development
 and demonstrates a real TDD improvement using the writer's run/chat/continuity

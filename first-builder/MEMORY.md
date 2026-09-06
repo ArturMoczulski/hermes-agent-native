@@ -94,3 +94,10 @@ contradictory instructions or store secrets here.
   is an intermediate checkpoint. The Builder handoff remains next, reusing these
   foundations. This supersedes the earlier choice to prove the Builder first.
   Source: owner request to switch the current cycle; design/14-first-writer-milestone.md.
+
+- **Native chat reuse — owner decision (2026-09-06):** use existing Hermes `/chat`
+  and extend its native TUI/session/engine integration. Do not build a duplicate
+  React composer, transcript store or one-shot model wrapper. Framework identity,
+  protected purpose and lifecycle still need explicit server binding; a native
+  profile alone does not establish managed authority. Source: owner approved the
+  native-chat repair and reuse recommendation.

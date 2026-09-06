@@ -11,14 +11,76 @@ create, chat and observe**, before the First Builder handoff. The
 [delivery plan](../implementation/fantasy-writer-milestone.md) define its complete
 acceptance: ordinary root creation and immediate work, real saved stories,
 durable chat/questions/steering, activity/session inspection, cadence, evaluation,
-actual pause and basic restart recovery. One story alone is only the first checkpoint.
+actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
-Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone,
-AN-72 is In Progress. Creation/detail/initial review and protected filesystem/Plane
-setup are now connected and verified below. AN-73–76 retain chat, inspection, continuity and real acceptance.
-Existing identity, owner auth, provisioning, environment and Plane boundary work
-remain evidence; AN-24's broad remainder stays backlog. No managed writer or
-Builder runs. Earlier entries retain historical next steps; this focus wins.
+Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
+AN-77 is In Progress and urgent: repair and reuse existing Hermes `/chat`, then bind
+selected framework identity, protected purpose, retained native sessions and owner
+controls. The owner rejected a duplicate React conversation; the uncommitted
+managed-conversation exception in `web/AGENTS.md` is withdrawn. Native chat repair
+is an initial checkpoint and must not be reported as managed-agent completion.
+
+AN-72 is Todo after AN-77. Creation/detail/initial review and protected filesystem/
+Plane setup are accepted at `82241f4` and verified below. Writing, story artifacts
+and Pause remain unfinished. AN-73 retains later proactive questions and steering
+during work; AN-74–76 retain inspection, continuity and full acceptance. Early
+managed conversation must work independently of Plane readiness and cannot admit
+autonomous project work or expose project tools. Existing identity, owner auth,
+provisioning, environment and Plane boundary evidence remains; AN-24's broad
+remainder stays backlog. No managed writer or Builder run is established by this
+planning update. Earlier next-step entries are historical; this focus wins.
+
+## AN-77 native chat repair — current verification
+
+The owner approved reusing native Hermes `/chat`; the unfinished custom React
+conversation and one-shot model wrapper were removed from the working tree, with
+a local draft backup under `/tmp/agent-native-custom-chat-draft`. No custom chat
+schema, dispatcher or endpoint was deployed. The inherited web/TUI guidance
+applies without the withdrawn exception.
+
+The preview's failed TUI dependency installation was caused by inherited Node
+24.3.0, rejected by the root package engine constraint. Installed the TUI workspace
+dependencies and built its existing bundle using already-installed Node 24.19.0.
+Restarted only the identified dashboard on port 19221 with the original
+`~/.hermes-agent-native-preview` home and `kanban.db`; the new process has compatible
+Node first on PATH and an explicit HERMES_NODE. See
+[dashboard operations](../ops/dashboard/README.md) for the launch procedure.
+
+An installed-Chromium readiness check observed a mounted native terminal, 43 PTY
+frames, an open socket, no unavailable banner and no Reconnect control. This is
+connection evidence, not a model reply. Logs: `/tmp/hermes-native-chat-install.log`,
+`/tmp/hermes-native-chat-build.log`, `/tmp/an77-preview-server.log`.
+
+The real native browser test caught a macOS reconnect defect: PTY reattachment
+sends Ctrl+L to redraw, but the composer inserted it as a literal `l`. Two actual
+Ink input tests reproduced corruption of empty and existing drafts. The fix
+reuses the macOS action fallback and existing global redraw handler; the composer
+passes the redraw chord through and ordinary `l` remains ordinary typing.
+
+Verification now passes: **9 Playwright scenarios**, including native send/reply,
+exact transcript/history and the same session after reload, rejected unauthenticated
+WebSocket, plus all 7 existing agent setup scenarios; **78 focused TUI unit tests**;
+native TUI build and TypeScript check; scoped Ruff/ESLint and whitespace. ESLint
+retains one pre-existing TextInput hook warning. Logs: `/tmp/an77-redraw-red.log`,
+`/tmp/an77-redraw-green.log`, `/tmp/an77-native-all-browser-green.log`,
+`/tmp/an77-tui-build.log`, `/tmp/an77-tui-typecheck.log`. Tests replace only the
+external model with a disposable HTTP fixture; TUI/gateway/AIAgent/SessionDB stay
+real. This establishes integration, not real-model quality or managed authority.
+
+The rebuilt bundle is available to the preview. Replaced its two old renderer
+processes without restarting the dashboard or its sign-in worker. A fresh browser
+check received 49 PTY frames with no unavailable/reconnect state. Existing stored
+sessions and managed setup data remain intact; use a new native terminal session
+if a previously open tab still shows its old renderer as ended.
+
+Live subscription verification awaits the owner's completion of the preview's
+normal Hermes device sign-in, started after the owner continued. Automatic review
+rejected an earlier directory alias exposing the authenticated private profile;
+no alias was created and no credentials were copied. The approved normal sign-in
+uses Hermes's existing endpoint and a separate provider session. Do not retry the
+rejected directory link or automatically start another device flow on expiry.
+Managed agent-to-session binding, protected execution and lifecycle controls
+remain AN-77 work after native chat verification; no managed agent is running.
 
 ## AN-72 setup increment — private files and Plane planning home
 
@@ -80,11 +142,12 @@ Plane project and discovery task; all previous agents remain. It explicitly show
 - Preview process session for this harness: 90109.
 - Production browser rendering verified; screenshot `/tmp/an72-writer-setup.png`.
 
-Next within AN-72: explicit model/finite-limit configuration, narrow managed
-Hermes tool/schema dispatch, one service-owned writing run, durable story artifact
-and actual Pause. Reuse the setup/discovery receipt, but revalidate current purpose,
-planning freshness and authority at admission. Hermes run budgets are advisory;
-the host must enforce displayed limits. Chat/inspection/cadence follow in AN-73–76.
+Remaining AN-72 work after the newly prioritized AN-77 conversation: explicit
+model/finite-limit configuration, narrow managed Hermes tool/schema dispatch, one
+service-owned writing run, durable story artifact and actual Pause. Reuse the
+setup/discovery receipt, but revalidate current purpose, planning freshness and
+authority at admission. Hermes run budgets are advisory; the host must enforce
+displayed limits. Broader work-time chat/inspection/cadence follow in AN-73–76.
 No setup result completes AN-72 or the broader writer milestone.
 
 ## AN-72 first increment — startup intent and agent detail
