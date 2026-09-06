@@ -31,6 +31,7 @@ For any agent, the human can inspect:
 | Identity and responsibility | Which agent this is, its parent, purpose, and children. |
 | Current work | The project and assignment it is advancing, the current action or stage, when it started, and available progress or results. |
 | Delegated work | What its children are doing, who owns each assignment, and what results it is waiting for. |
+| Purpose evaluation | Latest review of whether the agent is still needed: accepted outcomes, remaining obligations, useful growth, recurring delivery or monitoring, relevant evidence, uncertainty, and the decision to continue, wait, clarify, pause or retire. |
 | Last activity | When it last checked in, performed work, and completed work; these are distinct facts. An agent that has never worked is identified as such. |
 | Thinking cadence | Its configured cadence, most recent check-in, and next scheduled check-in when applicable. |
 | Reason for inactivity | Whether it has no useful next action, is waiting for an answer or result, is paused, is retired, or has failed. |
@@ -40,6 +41,14 @@ For any agent, the human can inspect:
 A check-in that decides to wait must not appear as completed project work.
 Cadence changes and suspended schedules must be visible. Paused or retired
 agents must not appear to have an ordinary upcoming work activation.
+
+Accepting an assignment is distinct from fulfilling the agent's whole purpose.
+Show why recurring operations or monitoring remain necessary even when no action
+is due now. Retirement records identify the initiator and affected subtree and
+link the purpose evaluation and accountable acceptance where applicable;
+a self-assessment is distinguishable
+from the framework completing retirement. Agent survival or activity volume is
+not a measure of success.
 
 ## Events across the system
 
@@ -52,6 +61,9 @@ The framework tracks all system events it observes and produces, including:
 - Work creation, assignment, progress, completion, cancellation, and failure.
 - Concerns about activity without progress, their supporting evidence, and the
   response to review; explicit result evaluations and acceptance outcomes.
+- Purpose evaluations, remaining obligations, continued relevance, retirement
+  decisions and related escalation. Cancellation records link the abandoned
+  assignment to the resulting agent/subtree pause and retained independent work.
 - Delegation, child results, questions, escalation, and answers.
 - Human-owner and agent messages, keeping their origins distinguishable.
 - Permission requests, approvals, denials, and actions taken under them, including

@@ -47,7 +47,7 @@ Its primary question is: **What should this agent exist to do?**
 | Purpose | Required multiline text. Example: “Develop an original metal music career: compose, produce and improve a body of work.” This is the main field, not an initial chat message. |
 | Name | Suggested from the purpose, editable before submission. Names need not be unique. |
 | Parent | Explicitly “No parent — root agent” or a selected agent with its ancestor path. Creating a child from an agent's details preselects that parent visibly. |
-| Role duration | For children: ongoing specialist or bounded assignment. An ongoing child continues finding projects within its purpose; a bounded child becomes idle after accepted completion, retaining its records. |
+| Outcomes and continuing obligations | Optional details of what fulfillment means and what delivery, monitoring or growth should continue. Discovery clarifies missing details; no lifetime type is required. |
 | Thinking cadence | Show the actual configured interval and allow editing. Explain that it is a review interval, not a deadline or a guarantee of continuous execution. No arbitrary hardcoded default. |
 | Fundamental rules | Optional owner-defined rules, kept with the purpose in the soul. |
 | Capabilities summary | Plain-language summary of the permissions and tools this agent will receive. A broad purpose does not expand permissions. |
@@ -67,6 +67,8 @@ to create tasks or send a second “start” message.
 If creation fails, retain the form. If the response is uncertain, reconcile the
 original request before retrying. A child created by an agent appears in the same
 tree and conversation picker without requiring human creation of a separate chat.
+Lifetime follows evaluation of the purpose and remaining obligations. Do not add
+a mandatory temporary/permanent or bounded/ongoing selector.
 
 ## 3. Chat
 
@@ -148,12 +150,13 @@ The header always identifies the agent and parent path. Sections:
 
 | Section | Contents and controls |
 | --- | --- |
-| Overview | Purpose, direct parent, human ownership, ongoing/bounded role, lifecycle, own activity, descendant summary, current assignments and blockers. **Open chat**, **View work**, **Create child**. |
+| Overview | Purpose, expected outcomes, continuing obligations, direct parent, human ownership, lifecycle, own activity, descendant summary, current assignments and blockers. **Open chat**, **View work**, **Create child**. |
+| Purpose evaluation | Latest review, evidence and applicable accountable acceptance; remaining obligations and the reason to continue, wait, clarify, pause or retire. Distinguish growth from recurring delivery/monitoring and assignment completion from whole-purpose fulfillment. Link related work, escalations and any retirement operation. |
 | Cadence | Interval, last check-in and its recorded outcome, next eligible check-in, last actual work and last accepted result as separate facts. **Edit cadence**. Show suspension causes; a paused agent has no ordinary upcoming activation. |
 | Soul | Purpose and fundamental rules, current revision and change history. **Edit purpose and rules** for the owner; never describe agent-authored memory as a soul change. |
 | Practices and memory | Separate readable sections, with last-change attribution, owner **Edit**, **Save** and **Cancel**. Preserve revisions and warn of concurrent changes. These edits cannot grant capabilities or override the soul. |
 | Capabilities | Configured model/provider, skills, workspace and effective permissions, including where a restriction comes from. Owner **Edit** controls with explicit changes and their effective status. |
-| Children | Direct children with role, activity and work links; expand into deeper levels through Monitor. |
+| Children | Direct children with purpose, latest purpose-evaluation outcome, activity and work links; expand into deeper levels through Monitor. |
 | History | Agent-scoped event history and related communication. |
 
 Runtime state is an observed record with named actions, not a generic editable
@@ -206,7 +209,9 @@ provides a connected overview with **Open in Plane** links and source freshness;
 it need not duplicate Plane’s full editor. Add assignment and Edit plan route to
 the appropriate Plane surface or the same scoped integration operations. Show
 cycle goal/dates, remaining work and the last cycle review alongside run state.
-Framework evaluation and stop controls remain authoritative.
+Framework evaluation and stop controls remain authoritative. A completed cycle
+or empty board does not establish whole-purpose completion or end a continuing
+service. Link the coordinating agent's purpose evaluation and remaining obligations.
 
 The default is a project list with outcome, coordinating agent, current stage,
 active assignments, blocked assignments, pending reviews and latest accepted
@@ -257,10 +262,20 @@ not create a mandatory human approval for every task. A new result version or
 changed criteria invalidates a stale review submission. Editing criteria preserves
 their history and does not silently turn an old result into accepted work.
 
-**Cancel assignment** is separate from pause and retirement. Its confirmation
-identifies the work being abandoned, dependent work that cannot continue, and
-retained results. Do not imply that cancelling one assignment retires its agent
-or cancels independent assignments. Disposition after cancelling bounded work remains open; accepted completion follows the role-duration rule.
+**Cancel assignment and pause agent** identifies the work being abandoned, its
+performing agent and descendant subtree, dependent work and retained results.
+Submitting immediately stops the assignment and durably pauses that subtree.
+Independent assignments remain recorded but paused, rather than being cancelled;
+the agent is not automatically retired. Show stopping and unknown effects honestly,
+and do not let a later cadence or answer remove the pause.
+
+Link the agent's whole-purpose evaluation separately from this assignment's
+acceptance. When whole-purpose completion is established with applicable
+accountable acceptance and no unresolved obligations, the agent can initiate
+framework retirement. Show the evidence and affected subtree without an extra
+blanket owner approval. Uncertain relevance or commitments follow the existing
+parent escalation chain; unresolved root questions appear in Inbox. Retirement
+is a normal outcome, not a failure or a reason to invent further assignments.
 
 ## 9. Event history
 
@@ -270,8 +285,12 @@ project, assignment, time-range and event-type filters.
 
 Every event shows time, actor, readable action, target, outcome and related
 records. Include agent creation and lifecycle changes, cadence reviews and their
-outcomes, work changes, artifacts, evaluations, progress concerns, human decisions,
-and all agent-to-agent communication. Expand an event for recorded details.
+outcomes, work changes, artifacts, assignment acceptance, whole-purpose
+evaluations, progress concerns, human decisions, and all agent-to-agent
+communication. Cancellation links the abandoned work to the resulting subtree
+pause. Retirement identifies its initiator and affected subtree, linking purpose
+evaluation and acceptance where applicable. A request is distinct from observed
+retirement. Expand an event for recorded details.
 
 Message details show actual sender, recipient, content or linked artifact,
 origin attribution, correlation to the exchange and observed delivery stages.
@@ -305,7 +324,7 @@ multiple-owner administration or a separate infrastructure dashboard to v1.
 | Pause agent and children | Begin interruption immediately, without a confirmation delay. Show **Stopping**, the affected subtree and any execution still stopping. Show **Paused** only when supported by observed state. Conversation and inspection stay available. |
 | Resume agent and children | Show affected agents and outstanding independent pause causes according to the adopted policy. Show the recorded resume operation, then actual eligibility/execution; do not label everything working as soon as the button is pressed. |
 | Edit purpose and rules | Show current and proposed soul, affected work and the consequence of saving. Label the submit action **Save and stop affected work**. Saving starts interruption immediately; show stopping and pending replanning distinctly. |
-| Retire agent and children | Confirm with the named agent, descendant count/tree and unfinished work. **Retire this agent and its children** ends the whole subtree's ongoing roles; history/results remain inspectable. Show unconfirmed stopping honestly. |
+| Retire agent and children | For an owner action, confirm with the named agent, descendant count/tree and unfinished work. **Retire this agent and its children** ends the whole subtree's roles; history/results remain inspectable. Agent-initiated retirement follows purpose evaluation without a new blanket confirmation gate. Both show unconfirmed stopping honestly. |
 | Replace agent | No ambiguous one-click action in v1. Show the old subtree that will retire and the selected context, artifacts and unfinished work for handoff. Use the approved lifecycle policy: immediate stopping, retained records and a distinct replacement identity. |
 
 Show **Requested**, **In progress**, **Completed**, **Failed**, or **Outcome
@@ -352,9 +371,10 @@ Use [UX-01–UX-20](11-ux-scenarios.md) as acceptance targets for those incremen
 Do not build every screen as an empty shell and defer functional verification.
 
 The [open decisions](07-open-decisions.md) still govern general resume handling,
-cancelled bounded-child disposition, timing and progress thresholds. Purpose-change
-restart, replacement handoff and completed-child roles follow the approved
-[lifecycle rules](05-human-interaction.md#steering-active-work). Do not invent these in frontend code. Parent permission
+timing and progress thresholds. Purpose-based lifespan evaluation, cancellation
+with agent/subtree pause, purpose-change restart and replacement handoff follow
+the approved [lifecycle rules](05-human-interaction.md#steering-active-work).
+Do not invent these in frontend code. Parent permission
 administration follows the approved [permission rules](05-human-interaction.md#applying-ownership-to-permissions).
 Project-wide pause, automatic request expiry, reminder timing, graph editing and
 history replay are not required controls for this first interface. Their absence

@@ -1,7 +1,8 @@
 # agent-native — product specification
 
 agent-native is a framework for creating persistent agents that take responsibility
-for ongoing purposes. A human gives an agent a purpose, equips it to work, and can
+for purposes with finite outcomes, continuing responsibilities, or both. A human
+gives an agent a purpose, equips it to work, and can
 then guide it through conversation while it independently plans, acts, delegates,
 and revisits what to do next.
 
@@ -24,7 +25,7 @@ behavior; they do not require a particular profession, workflow, or application.
 
 | Document | What it answers |
 | --- | --- |
-| [Agents and their layers](01-agents.md) | What is an agent, and what can it change about itself? |
+| [Agents and their layers](01-agents.md) | What is an agent, what can it change, and when is it no longer needed? |
 | [Independent work and thinking cadence](02-independent-work.md) | How does an agent keep making useful progress without repeated prompts? |
 | [Projects and delegation](03-projects-and-delegation.md) | How is work organized, and how do agent relationships differ from project boundaries? |
 | [Project management with Plane](13-project-management.md) | How do agents organize most work through shared backlogs, boards and planning cycles? |
@@ -46,7 +47,8 @@ of prompts to keep an agent moving.
 The agent periodically considers its purpose and circumstances, looks for useful
 work, and takes the next clear step within its authority. It asks when it needs
 clarification, proposes a direction when none is apparent, and waits when waiting
-is appropriate.
+is appropriate. It also evaluates whether its purpose still requires an agent
+and can retire when that purpose is fulfilled; continued existence is not a goal.
 
 The human owner has ultimate authority over every agent and can change any
 agent's direction, purpose, or rules through designated trusted owner channels. The agent also initiates

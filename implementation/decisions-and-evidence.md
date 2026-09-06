@@ -111,8 +111,9 @@ required independently of a product decision.
 | Default creation experience | **Accepted, AN-61.** Follow [default capabilities](../design/04-workspaces-and-skills.md#default-capabilities). |
 | Purpose changes | **Accepted, AN-63.** Follow [lifecycle control](../design/05-human-interaction.md#steering-active-work), including automatic eligible replanning and parent notification. |
 | Child replacement | **Accepted, AN-63.** Follow [replacement and selected handoff](../design/05-human-interaction.md#steering-active-work). |
-| Finished or cancelled bounded assignment | **Completion accepted; cancellation open, AN-64.** Follow [role duration](../design/01-agents.md#lifetime-and-work-assignment): ongoing children continue; completed bounded children idle. Do not infer cancellation disposition from completion. |
-| Retirement and retention | Retirement preserves the subtree history and results without automatic reassignment. Replacement handoff is **accepted in AN-63**; general retention periods, export/deletion and other transfers remain separate operational choices. |
+| Purpose fulfillment and assignment completion | **Accepted owner revision, AN-64.** Follow [purpose evaluation](../design/01-agents.md#lifetime-and-work-assignment): every agent evaluates accepted work against its whole purpose and continuing obligations. No fixed ongoing/bounded type; a clearly fulfilled or no-longer-needed purpose with applicable accountable acceptance/disposition and no unresolved obligations permits controlled agent-initiated retirement. Escalate uncertainty without requiring human approval for every retirement. |
+| Assignment cancellation | **Accepted, AN-64.** Stop the selected assignment and durably pause its performing agent and subtree; preserve independent assignments in paused state. Cancellation does not establish whole-purpose fulfillment. |
+| Retirement and retention | Retirement preserves the subtree history and results without automatic reassignment. Replacement handoff is **accepted in AN-63**; general retention periods, export/deletion and other transfers remain separate operational choices in AN-68. |
 | Resume | Remove the selected pause cause, preserve independent descendant pauses, and review changed instructions and outcomes before execution. An answer or timer does not remove a pause. |
 | Project pause | Stop that project's assignments and work that depends on them. Do not pause an entire agent with independent work in other projects unless the owner explicitly pauses that agent. |
 | Wakeups and downtime | Creation, owner messages, relevant answers/results and cadence can request reconsideration. Coalesce redundant ticks; retain every message. After downtime, perform one current-state review rather than replaying every missed tick. |
@@ -121,8 +122,11 @@ required independently of a product decision.
 | Progress concerns | Use configurable signals such as repeated failed attempts or replanning without new evidence. Record one linked concern and require responsible review. Waiting time alone is insufficient, and a concern never automatically retires an agent or rewrites its purpose. |
 
 Manual-only agents, replay/branching and multiple human chat channels stay outside
-the initial release. Structured skills, multiple model providers, ongoing and
-bounded children, evaluation, the human inbox, and the First Builder stay inside.
+the initial release. Structured skills, multiple model providers, recursive
+children, evaluation-driven lifespans, the human inbox, and the First Builder stay
+inside. Purpose fulfillment includes continuing delivery and monitoring obligations
+and distinguishes useful growth from established operations. Self-preservation,
+busywork, weakened criteria and soul rewriting cannot justify continuation or retirement.
 
 ## Keeping the fork maintainable
 

@@ -82,14 +82,23 @@ are not resolved by assigning a Plane role.
    Explicitly carry unfinished work forward, return it to backlog, split it with
    traceable links, or cancel it with a reason. Preserve earlier cycle history.
    Record a useful process adjustment when supported by evidence.
-7. **Continue.** Select the next clear work within purpose and permissions. Ask
-   the parent about unresolved direction; roots ask the human. A task-scoped child
-   reports completion rather than inventing an unrelated mission.
+7. **Review continued need.** Use accepted results to evaluate the whole purpose,
+   including growth opportunities, recurring delivery, monitoring and descendant
+   obligations. Record whether to continue, operate, wait, ask or retire under
+   [purpose evaluation](01-agents.md#lifetime-and-work-assignment). Select clear
+   authorized work when useful; do not fabricate a new cycle to keep an agent alive.
+   Ask the parent about unresolved relevance or direction; roots ask the human.
 
 Scope can change during a cycle. Record the source, reason and displaced work;
 re-evaluate affected active attempts rather than blindly continuing an obsolete
 brief. Human purpose changes, replacement, subtree pause and retirement retain
 their immediate-stop behavior independently of the board or sprint schedule.
+
+Cancelling an assigned item follows [assignment cancellation](05-human-interaction.md#assignment-cancellation):
+stop the selected work and pause its agent/subtree. A cycle review cannot bypass
+that pause by immediately pulling another item. Unassigned backlog cancellation has no direct performer to pause; still stop
+invalid dependent execution. Only work without affected dependencies is a record-only
+cancellation.
 
 Thinking cadence and planning-cycle duration are separate. A minute-by-minute
 check-in can observe a week-long cycle without replanning it every minute. A

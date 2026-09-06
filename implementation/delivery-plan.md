@@ -99,8 +99,16 @@ Do not enable unattended operational work before these controls are in place.
   jobs for long operations so coordination can continue while a job is active.
 - Connect basic owner chat, steering, Stop, pause/resume, root questions and a
   simple durable human decision list. A blocker affects its dependent work only.
-- Require explicit result evaluation before task acceptance. Retain a root's
-  ongoing purpose after a milestone finishes.
+- Require explicit result evaluation before task acceptance, then a distinct
+  assessment of whole-purpose fulfillment. Include finite criteria, continuing
+  delivery/monitoring obligations, useful growth and established operations.
+- Implement the basic lifecycle decision for the root: continue useful work,
+  wait, ask about uncertainty, or initiate controlled retirement when the whole
+  purpose is fulfilled with applicable acceptance and no unresolved obligations.
+  Do not require human approval for every retirement or generate work for self-preservation.
+- Assignment cancellation stops selected work and durably pauses its performing
+  root; independent assignments are preserved but paused. A ready backlog item
+  or cadence tick cannot remove that pause.
 - Persist agent/session/run mappings, messages and pending dispatch. Reconcile
   restart during launch, execution and result recording without blind replay.
 
@@ -109,6 +117,11 @@ it immediately plans, performs one authorized branch while another awaits an
 answer, evaluates an artifact, and chooses a next step. A minute cadence does
 not duplicate active work or unanswered questions. Closing the browser does not
 stop work. Pause blocks subsequent actions; the owner can still communicate.
+An accepted finite-purpose result permits recorded controlled retirement when no
+obligations remain. An established service with monitoring duties continues even
+without new growth work; uncertainty routes to the human for this root. Cancelling
+one assignment preserves but pauses independent work. None of these outcomes may
+weaken criteria, rewrite the soul or mistake a Done item for whole-purpose fulfillment.
 
 This is the first useful product increment. It includes real control and basic
 recovery, not merely a timer connected to chat.
@@ -117,8 +130,8 @@ recovery, not merely a timer connected to chat.
 
 **Depends on M2. Outcome:** agents build and supervise a continuing organization.
 
-- Add scoped child creation with an explicit ongoing/bounded role, purpose,
-  capabilities, model, workspace and cadence. A parent can delegate only grants
+- Add scoped child creation with purpose, capabilities, model, workspace and
+  cadence, without a fixed lifetime classification. A parent can delegate only grants
   it is authorized to delegate.
 - Create the child's initial work automatically; reuse admission and discovery
   rather than requiring a separate human bootstrap for every child.
@@ -131,15 +144,24 @@ recovery, not merely a timer connected to chat.
   jobs; do not claim an uncertain action has stopped.
 - Add authorized sibling and cross-tree messaging across separately isolated
   workspaces. Give projects scope within the tree without reparenting agents.
-- Preserve independently paused descendants, ongoing children after milestones,
-  bounded children awaiting disposition, and retired records.
+- Extend M2 purpose evaluation to the whole team: inspect child obligations and
+  handoffs, preserve accountable parent acceptance, and route uncertainty up the
+  parent chain. Retain retired records and avoid purposeless continuation.
+- Cancellation durably pauses the performing child and its entire subtree while
+  retaining independent assignments. Keep separately proposed resume handling
+  distinct from this approved cancellation behavior.
 
 **Completion evidence:** an artist creates a composer, which creates researcher
 and producer children; a descendant delegates again. The parent reviews active
 child work and starts an independent branch. A question travels upward and an
 answer returns without human relaying. A subtree retirement stops all its
 descendants and cannot be reversed by a timer or stale answer. Other roots keep
-working. A grandparent cannot directly acquire a grandchild's soul-edit rights.
+working. A child with fully accepted purpose fulfillment and no unresolved
+obligations can initiate retirement of itself and its descendants; an accepted
+campaign alone does not retire an agent that still has marketing responsibilities.
+Uncertain handoffs escalate instead of abandoning work. Cancellation pauses the
+performing child subtree, preserving its independent assignments. A grandparent
+cannot directly acquire a grandchild's soul-edit rights.
 
 ## M4 — Complete the owner experience and event views
 
@@ -182,15 +204,21 @@ there is no second independent frontend application or chat state store.
   continuation, changed approach, investigation or escalation.
 - Deduplicate recurring concerns and exclude known waiting states from simple
   failure rules. Make timing and thresholds configurable.
-- Complete domain-appropriate evaluation: accepted, needs revision, or not met;
-  criteria revision, artifact references and uncertainty remain inspectable.
+- Deepen the assignment and purpose evaluation introduced in M2–M3 with
+  domain-appropriate evidence: accepted, needs revision, or not met; criteria
+  revisions, artifact references, ongoing obligations and uncertainty remain
+  inspectable. Test growth opportunities separately from established operations.
+  This milestone improves evaluation quality; it does not defer the basic
+  purpose-fulfillment and lifecycle decision until after the first root.
 - Route upstream automatic human-triage/review behavior through the ownership and
   escalation rules. Do not mechanically apply software-review criteria to music.
 
 **Completion evidence:** repeated unproductive research produces one linked
 concern and a response; a legitimate long recording job does not automatically
 fail. A composition missing a required section returns for revision, and later
-acceptance records the evidence. No heuristic retires an agent or changes its soul.
+acceptance records the evidence. Purpose review distinguishes a fulfilled finite
+objective, useful ongoing operations, unsupported busywork and an uncertain handoff.
+No progress heuristic alone retires an agent or changes its soul.
 
 ## M6 — Recovery and operation that can be relied on
 
@@ -299,5 +327,6 @@ budgets and the other unselected brainstorm features are not added by this plan.
 General-purpose agents use granted skills and integrations. The framework does
 not promise that installing it alone supplies every business service or music
 production capability; a missing capability becomes visible work or an escalated
-request. The core still supports arbitrary purposes and both ongoing and bounded
-children, rather than a fixed catalog of professions.
+request. The core supports arbitrary purposes and recursive children whose
+lifespans follow purpose evaluation, without a fixed catalog of professions or
+creation-time lifetime types.

@@ -70,10 +70,10 @@ strategy. Agents make those judgments through Hermes's model/tool loop.
 | File, shell, browser, domain tools | Hermes and approved MCP integrations | Scope access and credentials; track consequential actions. |
 | Sandboxes | Hermes Docker backend | Bind lifetime to framework work, including actual stopping of background processes. |
 | Projects, backlog, cycles and board | Plane Community Edition | Provision scoped workspaces and integrate planning operations. |
-| Claims, runs, results and evaluations | Framework control module; reuse suitable Hermes primitives | Link Plane items, enforce authority and distinguish submission from acceptance. |
+| Claims, runs, results and evaluations | Framework control module; reuse suitable Hermes primitives | Link Plane items, enforce authority and distinguish submission, assignment acceptance and whole-purpose fulfillment. |
 | Recurring activation and dispatch | Hermes gateway and scheduling machinery | Add purpose check-ins; send every activation through one eligibility check. |
 | Chat, profile/settings views, task-board UI | Hermes web application | Add agent tree, purpose editor, decision inbox, and connected activity views. |
-| Agent ownership and lifecycle | Custom control module | Parent tree, soul revisions, permissions, pause, retirement, replacement. |
+| Agent ownership and lifecycle | Custom control module | Parent tree, soul revisions, permissions, cancellation with subtree pause, evaluated retirement and replacement; no fixed lifetime types. |
 | Clarification and decision routing | Custom records and workflow using existing transports | Parent-by-parent escalation, human-origin authentication, durable returning answers. |
 | Observability and progress assessment | Existing execution/task events plus custom records | Unified history, delivery states, freshness, evaluations, and progress concerns. |
 
@@ -87,15 +87,22 @@ separates documented features from the proposed additions.
 
 1. Establish the fork and prove its integration and access boundaries.
 2. Add protected identity, authoritative operations, work records, and events.
-3. Deliver one complete autonomous root: create, plan, act, ask, evaluate, continue.
+3. Deliver one complete autonomous root: create, plan, act, ask, evaluate results
+   and whole purpose, then continue, wait or retire when fulfillment is established.
 4. Add persistent children, escalation, and recursive lifecycle controls.
 5. Complete the human inbox, system observability, and progress review.
 6. Complete restart recovery, deployment, and operation away from the laptop.
 7. Run the First Builder inside the framework against its repository workspace.
 
-Basic owner chat, pending decisions, stopping, recovery, and result evaluation
-belong in the first autonomous-root milestone. Later milestones complete breadth
-and robustness; they are not permission to postpone the control foundations.
+Basic owner chat, pending decisions, stopping, recovery, result evaluation and
+whole-purpose evaluation belong in the first autonomous-root milestone. Completion
+of one item does not settle continuing delivery or monitoring obligations. The
+agent can initiate controlled retirement after clear whole-purpose fulfillment,
+applicable accountable acceptance and resolved obligations; uncertainty follows
+the parent chain, with unresolved root questions going to the human. This adds no
+blanket human approval requirement. M3 extends the same process to teams and M5
+deepens evidence and progress assessment. Later milestones are not permission to
+postpone the control foundations.
 
 ## Keep the initial installation small
 

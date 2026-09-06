@@ -177,12 +177,43 @@ and dependencies. It does not blindly repeat interrupted work, and descendants
 that were separately paused remain paused. Cancellation is distinct from pause.
 Retirement follows the subtree rule below.
 
+## Assignment cancellation
+
+Cancelling an assignment abandons that piece of work. Stop its execution and
+cancel dependent work that is no longer valid; immediately pause the agent
+performing the assignment and its subtree. Preserve independent assignments as
+unfinished work under that pause, rather than cancelling them or allowing them
+to keep running. Unassigned backlog work has no direct performing agent to pause, but any invalid
+dependent execution must still stop through its authorized lifecycle controls.
+The control identifies the affected assignment and agent subtree before submission.
+
+Cancellation does not automatically retire the agent. It is put on hold with its
+identity, memory, results and work history retained. A later authorized resume
+does not revive the cancelled assignment; it reconsiders remaining work and
+purpose under applicable resume rules. Routine cadence, a late result or an old
+answer cannot clear this pause. Framework stopping remains effective without Plane.
+
 ## Retirement
 
 Retiring an agent ends its ongoing role and retires all its descendants,
 recursively. Children do not remain active or get reassigned automatically when
 their parent retires. Retired agents cease autonomous work; later scheduled
 check-ins do not reactivate them. This is distinct from a temporary pause.
+
+An agent can initiate its own retirement when
+[purpose evaluation](01-agents.md#lifetime-and-work-assignment) establishes that
+it is no longer needed. The framework records and applies that lifecycle action;
+a model saying “I am done” or exiting its session does not retire it. Check current
+purpose, accepted evidence and subtree obligations before applying the action;
+a stale assessment must not retire work under a changed purpose. Notify the
+parent, or the human for a root, and retain the reasoning and outcome as events.
+Uncertain relevance or unresolved obligations use the normal escalation chain.
+This does not add a blanket approval gate for clear fulfilled purposes.
+
+Owner-directed or authorized parent retirement can deliberately end unfinished
+work; record that disposition rather than pretending the work was accepted.
+Self-evaluation cannot delay an authorized stop. Confirmed retirement and work
+still stopping must remain distinguishable, including uncertain external effects.
 
 Retirement preserves results, history and the record of unfinished work without
 keeping the retired subtree active. Replacement uses the explicit selected
@@ -220,7 +251,7 @@ expose separate commands with these names.
 | --- | --- | --- | --- |
 | Pause | Stop working for now, keeping the possibility of continuing. | “Put composition on hold while I review the direction.” | Agent pause includes its subtree; questions and work are retained. |
 | Resume | Let paused work continue. | “You can continue composing now.” | Recheck new direction first; handling children separately paused beforehand is still proposed. |
-| Cancel an assignment | Abandon this piece of work rather than resume it later. | “We are dropping this song.” | Cancellation of a bounded assignment still needs a disposition decision; finishing an assignment follows the role-duration rule. |
+| Cancel an assignment | Abandon this piece of work rather than resume it later. | “We are dropping this song.” | Stop the assignment and pause its performing agent and subtree; independent assignments remain recorded but paused. Retirement is evaluated separately. |
 | Retire an agent | End its ongoing role, rather than temporarily pause it. | “We no longer need a dedicated artwork agent.” | All descendants retire; retain history, results and unfinished-work records without automatic reassignment. |
 | Replace an agent | Put a new agent in charge of an existing responsibility. | “Use a new producer for this album.” | Stop and retire the old subtree; preserve its records and create a distinct replacement with a selected explicit handoff. |
 

@@ -52,9 +52,19 @@ contradictory instructions or store secrets here.
   sounds good" to those three defaults. Canonical rules: design/04 and design/05;
   remaining lifecycle, timing and capacity choices were not approved by that reply.
 
-- **Child duration and lifecycle — subsequent owner clarification:** ongoing
+- **Child duration and lifecycle — historical, superseded by the lifespan entry below:** ongoing
   marketing/sales children independently find new projects within their purposes;
   bounded children idle after accepted completion. Owner approved purpose-change
   stop/reconcile/eligible automatic replan and parent notification, plus replacement
   retiring the old subtree with retained history/new identity/selected handoff
   (AN-63). AN-64 cancellation disposition was not explicitly settled by that reply.
+
+- **Purpose-based lifespan — latest owner clarification (2026-09-06):** replace
+  fixed ongoing/bounded agent types with review of whole-purpose fulfillment,
+  accepted results, relevance and continuing/subtree obligations. Clear fulfillment
+  permits self-retirement through framework lifecycle controls; uncertainty follows
+  parent escalation. Growth, recurring delivery and legitimate waiting are distinct
+  useful outcomes. No self-preservation or invented work to stay alive. Cancellation
+  stops the assignment and pauses its agent/subtree, retaining independent work
+  under the pause. This supersedes the prior bounded-completion idle default;
+  AN-63 replacement remains accepted. Canonical rules: design/01 and design/05.

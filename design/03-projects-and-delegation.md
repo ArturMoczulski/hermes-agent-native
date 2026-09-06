@@ -68,8 +68,9 @@ A child reports blockers and failures as well as successes. Unresolved questions
 follow [the parent escalation chain](05-human-interaction.md); delegation does
 not require the human to answer questions that an ancestor can resolve.
 
-An agent can work with an ongoing specialist or create a child for a bounded
-assignment. Creating more agents is a planning choice; it is not the required
+A child's purpose can describe a finite outcome, continuing responsibilities, or
+both. Its evaluated purpose determines how long it is needed; no fixed lifetime
+category is required. Creating more agents is a planning choice; it is not the required
 response to every task or every cadence tick.
 
 ## Explicit evaluation of results
@@ -96,6 +97,17 @@ routine evaluation. For subjective work, the evaluation explains the basis of
 its judgment and relevant uncertainty instead of claiming objective proof of
 quality. For example, a playable audio file still needs review against the
 musical brief before it counts as a satisfactory composition.
+
+## From result acceptance to purpose evaluation
+
+Result evaluation answers whether a particular outcome met its criteria.
+[Purpose evaluation](01-agents.md#lifetime-and-work-assignment) answers whether
+the agent is still needed. Accepted milestones feed that wider review; they do
+not automatically retire an agent or require it to invent another project.
+Continuing work has service expectations and review periods, as well as criteria
+for individual deliveries. Meeting this period's expectations does not discharge
+future monitoring or delivery obligations. Growth and established operation may
+coexist or succeed one another within the same protected purpose.
 
 ## Communication beyond parentage
 
@@ -127,9 +139,9 @@ the old worker continuing an obsolete assignment. Results already produced
 remain distinguishable from work under the revised brief. Replacement retires
 the old child's subtree and gives a distinct new child an explicit selected
 handoff, following [lifecycle control](05-human-interaction.md#steering-active-work).
-An ongoing child's completion of one delegated project does not end its wider
-responsibility; [role duration](01-agents.md#lifetime-and-work-assignment) determines
-whether it continues planning new work or becomes idle after the assignment.
+Completing one delegated project does not necessarily end the child's wider
+responsibility; [purpose evaluation](01-agents.md#lifetime-and-work-assignment)
+determines whether useful responsibilities remain or retirement is appropriate.
 
 Concurrent participation in unrelated projects, transfer of work responsibility,
 and the relationship between project pause and agent pause are

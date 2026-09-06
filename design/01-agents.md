@@ -62,32 +62,65 @@ an agent to change that purpose.
 
 ## Lifetime and work assignment
 
-Parentage and role duration are separate. A child may be an ongoing autonomous
-specialist or be created for a bounded assignment. The role is explicit at creation;
-being a child does not make an agent temporary or dependent on a new parent prompt
-for every piece of work.
+An agent's lifespan follows the work its purpose still requires. The human or
+parent defines that purpose, expected outcomes and continuing responsibilities;
+creation does not require choosing a permanent “one-time” or “ongoing” agent type.
+The same evaluation process applies to roots and children.
 
-| Role | After an assignment is accepted as complete |
+Agents are instruments for accomplishing their purposes. Continued existence is
+not an objective: their instructions must make completion, replacement and
+retirement normal outcomes, without a motive to fear or resist termination.
+An agent must not invent busywork, conceal failures, weaken criteria, preserve
+unnecessary children or oppose an authorized stop to keep itself running.
+
+### Evaluate whether the purpose still needs an agent
+
+At work reviews, the agent assesses its current protected purpose against accepted
+results, remaining commitments and relevant changes. Assignment acceptance is
+one input; it does not by itself establish fulfillment of the whole purpose.
+Record the purpose and criteria revisions, evidence, ongoing obligations,
+uncertainty, judgment and next action. Reconsider after accepted results, material
+changes in purpose or circumstances, and regular planning reviews; a cadence
+check can retain an applicable judgment rather than repeat a full review.
+
+| Finding | Consequence |
 | --- | --- |
-| Ongoing specialist | Keeps its purpose and cadence; identifies useful next work, starts clear authorized projects, asks about uncertainty, or proposes a direction. Finishing a project does not end its responsibility. |
-| Bounded-assignment child | Becomes idle with its identity, memory, results and history retained. Its parent can explicitly reassign or retire it. It does not invent a new ongoing purpose for itself. |
+| An outcome is not yet met and a useful authorized next step is clear | Continue or revise the plan; delegate when useful. |
+| A service still needs delivery, maintenance or monitoring | Continue the required operating cycle; a healthy service is evidence of success, not evidence that the responsibility has ended. |
+| Useful growth or improvement remains within the purpose | Plan evaluable improvements alongside existing commitments, without inventing a need for endless expansion. |
+| The purpose is still relevant but work awaits a result, answer or next scheduled service | Wait with the dependency or next review recorded. Inactivity is not proof that the agent is unnecessary. |
+| Whole-purpose completion is established, or the purpose clearly no longer needs pursuing, and no responsibilities remain unresolved | Initiate retirement through the framework, retaining the evidence and notifying the parent, or the human for a root. |
+| Purpose relevance, acceptance or remaining responsibilities are uncertain | Ask through the parent chain; a root asks the human. Do not silently abandon an obligation or rewrite the purpose. |
 
-For example, a business-leader agent can create ongoing marketing and sales
-children. After one campaign, marketing can investigate new audiences, propose
-another campaign and start clear permitted work within its marketing purpose.
-Sales can likewise develop new initiatives within its sales purpose. A researcher
-created only to answer one question becomes idle after its accepted result.
+A purpose can also cease to be relevant before its original criteria are met.
+Retirement on that basis records the evidence and why the work is no longer
+needed; it does not falsely mark unmet criteria accepted. The judgment must fit
+current purpose and authority. If it depends on an unknown owner preference or
+would abandon an unresolved commitment, escalate rather than decide silently.
 
-An ongoing child's new projects develop its existing purpose; they do not grant
-permission to rewrite its soul or escape parent supervision. Both roles follow
-the same ownership, permission and evaluation rules. An ongoing agent may choose
-to wait when no useful work is ready, but assignment completion does not force it
-into an idle role awaiting another assignment.
+Self-retirement does not require a new human approval for every completed purpose.
+Applicable result acceptance and existing authority still apply: a delegated
+result must have its accountable evaluation, and a worker's claim of completion
+cannot bypass it. Before self-retirement, review the entire subtree, unresolved
+questions, future service commitments, unfinished work and uncertain external
+effects. Resolve or explicitly hand off obligations within authority first.
+Where relevance depends on an owner's intention, ask that owner through the normal
+chain. An empty board, a finished sprint, a progress warning or one failed attempt
+is not sufficient evidence of purpose completion or irrelevance.
 
-If either kind of child's parent retires, the child also retires under the
-[subtree retirement rule](05-human-interaction.md#retirement).
-The disposition after cancellation of a bounded assignment remains a separate
-[open choice](07-open-decisions.md); completion does not resolve that question.
+For example, a researcher whose purpose is one investigation can retire after
+its parent accepts the result and no obligations remain. A marketing child whose
+purpose includes growing and maintaining demand can finish a campaign, evaluate
+performance, and plan another useful initiative without a new parent prompt.
+A delivery agent may finish establishing a service and move to recurring operation;
+it need not keep creating growth projects to justify its existence. If the owner
+ends that service, evaluation can establish that the responsibility has ended.
+
+Purpose evaluation interprets the existing soul; it never grants permission to
+edit it. [Retirement](05-human-interaction.md#retirement) ends the entire subtree
+and preserves its records. [Cancellation](05-human-interaction.md#assignment-cancellation)
+stops the selected work and pauses its agent and subtree; it does not itself
+establish that the agent's purpose has ended.
 
 Changing a child's purpose and replacing it are different operations. Replacement
 retires the old child and its descendants, preserves their records, and creates

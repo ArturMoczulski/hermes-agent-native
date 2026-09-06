@@ -62,6 +62,9 @@ Opening a view never creates an agent, changes ownership or starts work.
 Capability defaults are owner-configured; describing a purpose does not grant
 new permissions. Child creation always makes the parent explicit. The same agent
 appears in Chat and Monitor once created, including children created by agents.
+The human does not have to choose a lifetime type. Expected outcomes and continuing
+obligations can be described with the purpose; discovery clarifies missing details.
+The agent evaluates whether that purpose is fulfilled or still needs its work.
 
 ## Chat view
 
@@ -142,6 +145,9 @@ time and known delivery state. Mark redactions, failures and gaps explicitly.
 
 Paused and retired agents remain inspectable through explicit filters. Hiding a
 row is presentation only and never stops work. Unreachable is not retired or done.
+The inspector shows the latest purpose evaluation and its evidence: why the agent
+continues, waits, seeks clarification or retires. Distinguish growth work from
+recurring delivery and monitoring; quiet operation can still be necessary.
 A node graph is optional later; arbitrary-depth trees, keyboard expansion and
 search must already work without needing a graph canvas.
 
@@ -182,6 +188,15 @@ accepting it, and requesting revision. Preserve prior attempts and criteria hist
 The accountable evaluator follows the delegation rules; do not send every routine
 result to the human. An explicit human decision can be made from the same record.
 
+Show whole-purpose evaluation separately from assignment acceptance. Established
+purpose completion, with applicable accountable acceptance and no unresolved
+obligations, can lead to agent-initiated retirement through the framework. Show
+its evidence, affected subtree and actual stopping state; do not add a mandatory
+human confirmation to that path. Uncertain relevance or commitments follow the
+parent escalation chain, reaching the human for an unresolved root question.
+Retirement preserves records and does not mean that the agent or its work failed.
+The interface must not frame continued existence as an agent objective.
+
 Preview supported artifacts; provide a usable download/open action when preview is
 unavailable. Start with common text, image and audio results so the interface is
 not coding-only. Show unavailable or access-denied artifacts honestly. A progress
@@ -197,9 +212,9 @@ sometimes cancels a task and sometimes retires an organization.
 | --- | --- |
 | Pause agent and children | Acts immediately; show stopping until affected execution is known to end. Keep conversation/inspection available. Do not insert a confirmation delay. |
 | Resume agent and children | Show remaining independent pause causes according to the adopted resume policy; reconsider pending direction before execution. |
-| Cancel assignment | Identify the assignment and dependent work being cancelled, keeping independent assignments distinct. |
+| Cancel assignment and pause agent | Identify the abandoned assignment, dependent work and performing agent/subtree. Once submitted, stop the assignment and pause that subtree immediately. Independent assignments remain recorded but paused; cancellation does not retire the agent. |
 | Edit purpose | Show current/proposed purpose and affected work; Save applies the explicit owner change and starts interruption immediately. Do not silently edit purpose from routine discussion. |
-| Retire agent and children | Preview the subtree and preserve records. Confirm this deliberate retirement operation; it is separate from immediate pause. |
+| Retire agent and children | For owner-initiated retirement, preview the subtree and preserve records before confirmation. Agent-initiated retirement follows the purpose-evaluation rules and is visible in the same history without an extra blanket owner approval. |
 
 Do not report stopped while external work is still stopping or uncertain. Identify
 the unresolved action and conflicting work that cannot proceed. Purpose changes,

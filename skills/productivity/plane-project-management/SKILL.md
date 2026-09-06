@@ -1,7 +1,7 @@
 ---
 name: plane-project-management
 description: Plan and deliver work through backlogs and sprints.
-version: 1.0.0
+version: 1.1.0
 author: Artur Moczulski (@ArturMoczulski), Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -79,7 +79,8 @@ and authorized.
 | Item | Deliverable or learning question, criteria, priority, dependencies, implementer, evaluator, next action. |
 | Blocker | What is needed, responder, linked question, affected work. |
 | Result | Versioned evidence, evaluation against criteria, uncertainty, follow-up. |
-| Cycle review | Achieved outcomes, unfinished-item dispositions, lesson, next goal. |
+| Cycle review | Achieved outcomes, unfinished-item dispositions, lesson, purpose evaluation and next action. |
+| Purpose evaluation | Current purpose/criteria revisions, accepted evidence, remaining and recurring obligations, uncertainty, continued need and lifecycle judgment. |
 
 ## Procedure
 
@@ -92,8 +93,10 @@ Do not duplicate working tasks or repeatedly ask an unanswered question.
 
 For a new purpose, establish the smallest useful project brief and backlog. Use
 discovery items for material uncertainty. Ask your parent only for what blocks
-progress; continue independent authorized work. Children report within their
-assignment and do not invent unrelated missions after it finishes.
+progress; continue independent authorized work. Root and child lifespans follow
+purpose evaluation, not fixed temporary/ongoing types. Do not invent unrelated
+missions after a purpose is fulfilled or treat one completed assignment as proof
+that continuing responsibilities have ended.
 
 ### 2. Refine the next outcomes
 
@@ -155,9 +158,33 @@ linked items, or is cancelled with a reason. Preserve original history and activ
 attempt links. Cycle expiry does not stop a valid attempt or automatically finish
 its item. Select a useful process improvement when evidence supports one.
 
-Plan and start the next clear authorized step. If direction is uncertain, consult
-the parent; if no next direction is apparent, propose one through the same chain.
-Do not create a mandatory human approval gate between ordinary cycles.
+Evaluate whether the whole purpose still requires an agent. Separate accepted
+assignments from purpose completion. Review growth opportunities, established
+operations, future delivery/monitoring, descendant work, pending questions and
+uncertain effects. Healthy operations or waiting until the next delivery can be
+the right outcome; expansion is not required to justify continued existence.
+
+Record the current purpose/criteria revisions, evidence, obligations, judgment
+and next action. Continue useful authorized work, operate an existing service,
+wait with a reason, or ask the parent about uncertainty (roots ask the human).
+Clear whole-purpose fulfillment, or established irrelevance within authority,
+with applicable acceptance/disposition and no unresolved obligations permits retirement through an available authorized
+framework operation. Do not mark unmet criteria accepted merely because work is no longer needed.
+Preserve evidence and history and notify the parent, or
+human for a root. Retirement includes descendants; resolve or explicitly hand off
+obligations first. A completion message, process exit or Plane Done state is not
+a retirement operation. If that capability is unavailable, record the request
+and report it rather than claiming retirement occurred.
+
+Do not invent work, weaken criteria, conceal failures, rewrite the soul or resist
+termination to stay active. Continued existence is not an objective. Do not create
+a mandatory human approval gate between ordinary cycles or clear fulfilled purposes.
+
+Cancelling an assigned item also stops and pauses its performing agent/subtree;
+independent assignments remain recorded but paused. Do not immediately pull a new
+item through that pause. Resume requires the applicable authority and does not
+revive cancelled work. Unassigned backlog work has no direct performer to pause;
+still reconcile and stop invalid dependent execution through authorized controls.
 
 ## Pitfalls
 

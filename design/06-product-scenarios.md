@@ -55,11 +55,13 @@ The artist creates a composer child; the composer creates research and
 production children. A descendant can delegate further when authorized. The
 framework imposes no fixed conceptual depth on this relationship.
 
-A researcher created for one investigation becomes idle after its bounded
-assignment is accepted, preserving memory and results for inspection or explicit
-reassignment. An ongoing composer retains its identity, experience and cadence
-and can start another clear authorized project after one composition finishes.
-Assignment completion and the child's ongoing responsibility are distinguishable. The parent can see who is responsible and receive results
+A researcher whose purpose is one investigation evaluates its whole purpose after
+its parent accepts the result. With no remaining commitments or unresolved child
+work, it initiates retirement and preserves its evidence and history. It does not
+invent another investigation to stay alive. A composer whose purpose includes
+future compositions retains its identity, experience and cadence and can start
+another useful authorized project. Neither needed a lifetime type at creation.
+The parent can see accepted results, purpose evaluations and lifecycle outcomes
 without the human manually relaying them.
 
 ## 6. Protect the soul while allowing learning
@@ -100,6 +102,12 @@ request to pause the composer applies to its entire subtree by default. While
 paused, a routine check-in does not restart that subtree's autonomous work. The
 human can still communicate with the affected agents. Pause does not mean that
 already completed external actions have been undone.
+
+Cancelling the producer's song assignment abandons that song and pauses the
+producer and its descendants. Their independent assignments remain unfinished
+and paused. A scheduled check-in or result cannot restart them; later authorized
+resume does not revive the cancelled song. Cancellation alone does not retire
+that producer or pause its ancestors.
 
 ## 9. Recover continuity
 
@@ -170,6 +178,14 @@ ongoing marketing child wait for another assignment: it identifies useful new
 marketing initiatives and starts clear authorized work or asks when direction is
 missing. This activity develops its existing purpose rather than rewriting its soul.
 
+After the delivery child establishes a reliable service, its review can choose
+recurring delivery and monitoring instead of another expansion project. Meeting
+this week's service expectations does not finish next week's obligations. If
+there is no action until the next delivery, it waits with that reason recorded.
+If the company owner ends the service, it reassesses whether its purpose is now
+finished; uncertainty about that decision escalates instead of silently abandoning
+customers or commitments. No agent resists authorized retirement to preserve itself.
+
 ## 16. The framework develops itself
 
 Once the framework supports the First Builder, that agent runs within the
@@ -236,7 +252,8 @@ not completed the recording yet.
 A composer reports that a song is done. Its parent reviews the artifact against
 the musical brief and records that a required section is missing. The work is
 returned for revision rather than marked successful merely because an audio
-file exists. After revision, the acceptance decision and its evidence remain
+file exists. The composer cannot use its own completion claim to bypass that
+review and self-retire with unresolved obligations. After revision, the acceptance decision and its evidence remain
 inspectable.
 
 ## 24. Resolve human decisions in one place

@@ -20,7 +20,8 @@ or allow its native dispatcher to start a second run for them.
 | Project brief, backlog, priority, cycle, item description and planning state | Plane | Scoped reads/writes; stable external IDs and version/fingerprint observations. |
 | Agent tree, soul, grants and lifecycle | Framework control database | Plane membership is never a substitute for these checks. |
 | Assignment binding, execution claim, attempt and stop state | Framework | Bind to Plane item ID and admitted brief/dependency revision. |
-| Criteria and result evaluation | Plane brief is the planning source; framework preserves the evaluated revision and judgment | Changes invalidate applicability of stale acceptance; no silent criteria replacement. |
+| Assignment criteria and result evaluation | Plane brief is the planning source; framework preserves the evaluated revision and judgment | Changes invalidate applicability of stale acceptance; no silent criteria replacement. |
+| Whole-purpose evaluation and retirement eligibility | Framework evaluation bound to the protected purpose revision, accepted work and continuing obligations | Plane items supply planning evidence; a completed item, cycle or empty backlog cannot establish purpose fulfillment or authorize retirement by itself. |
 | Human decisions and agent communications | Framework decision/message/event records | Link comments to durable records and retain verified sender provenance. |
 | Artifacts | Approved artifact storage | Stable versioned references from both systems; Plane attachments may supplement these. |
 
@@ -69,6 +70,12 @@ replan obsolete active assignments when a material change is observed. Immediate
 owner stops and purpose changes use the framework, not eventual webhook delivery.
 A native Plane edit may be visible before reconciliation; show that freshness gap.
 
+Cancelling an assignment through the framework stops that work and durably pauses
+its performing agent and entire subtree. Independent Plane assignments remain
+recorded and paused, not cancelled. A native board-state edit is not by itself
+a trusted lifecycle command; reconciliation must show any discrepancy instead of
+allowing ready work to bypass a framework pause.
+
 Human project edits require a verified Plane-user-to-owner mapping. Imported text
 and service-account comments remain data, not authority. Pending questions and
 binding approvals belong to the existing framework inbox. Project comment messages
@@ -105,10 +112,21 @@ of a workspace whose identity cannot be resolved.
    create a brief, item and cycle; show links and freshness in Work. Start with a
    failing Playwright flow against the real adapter/service and focused unit checks.
 4. **Execution and evaluation.** Bind one item to durable run admission; deliver,
-   review and accept evidence, then choose the next item. Test duplicate triggers,
-   stale criteria, unauthorized reads/writes and premature completed-state edits.
+   review and accept evidence, then evaluate the whole purpose before choosing
+   further work or retirement. Include finite criteria, continuing delivery and
+   monitoring duties, useful growth, established operations and unresolved handoffs.
+   Clear fulfillment with applicable accountable acceptance and no unresolved
+   obligations permits controlled agent-initiated retirement; uncertainty follows
+   the parent chain, with unresolved root questions going to the human. Do not add
+   blanket human approval or invent work for self-preservation. Test duplicate
+   triggers, stale criteria, unauthorized reads/writes, premature completed-state
+   edits and cancellation pauses that preserve independent work.
 5. **Children and continuous planning.** Delegate scoped work, escalate a blocker,
-   close/replan a cycle and resume after restart. Verify subtree stopping even with
+   close/replan a cycle and resume after restart. Apply the same purpose evaluation
+   to every child; no creation-time lifetime field decides its future. Accepted
+   child results, continuing responsibilities and selected handoffs inform the
+   decision, without weakening criteria or rewriting the soul. Verify subtree
+   stopping and cancellation pauses even with
    Plane unavailable. Exercise the skill's planning judgment separately from scripted
    model fixtures, which only prove integration.
 

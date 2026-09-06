@@ -36,10 +36,13 @@ a day. At each check-in, it considers:
 2. New messages, answers, results, and relevant changes.
 3. Progress of its projects and delegated work.
 4. Work already underway and dependencies still outstanding.
-5. Useful next actions, including independent work that can proceed in parallel.
+5. Whether its purpose still needs work, including recurring obligations and
+   the current [purpose evaluation](01-agents.md#lifetime-and-work-assignment).
+6. Useful next actions, including independent work that can proceed in parallel.
 
 It then chooses to continue, start work, delegate, revise a plan, ask a question,
-propose a direction, or wait. Its decision and resulting work state must remain
+propose a direction, wait, or initiate retirement when purpose evaluation supports
+that outcome. Its decision and resulting work state must remain
 available for the next check-in.
 
 The cadence creates an opportunity to think. It does not require a new task,
@@ -56,9 +59,11 @@ authorized step does not create an approval requirement. See
 [questions and permissions](05-human-interaction.md#questions-proposals-and-permission).
 
 Finishing a task or milestone does not automatically finish an ongoing purpose.
-This applies to ongoing children as well as roots: a marketing child can initiate
-new campaigns without waiting for its parent to assign each one. Bounded children
-follow the distinct [completion rule](01-agents.md#lifetime-and-work-assignment).
+This applies to children as well as roots: a marketing child can initiate new
+campaigns without waiting for its parent to assign each one. Every agent uses
+[purpose evaluation](01-agents.md#lifetime-and-work-assignment) to distinguish
+useful next work, continuing operations, waiting and a fulfilled purpose. It need
+not propose more projects when its purpose has been fulfilled.
 An enduring purpose does not justify busywork. The agent should connect
 its proposed work to the purpose and explain why that work is worth doing.
 

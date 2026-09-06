@@ -239,7 +239,7 @@ assignments and native dependencies verified; no dependency cycle, including
 parent-completion edges. Original accepted setup/API work retained. Documentation
 links and all 44 scenario references checked. Plane remains the live priority source.
 
-## Owner decision — autonomy and permissions
+## Owner decision — autonomy and permissions (historical next-action note)
 
 Owner approved the three presented defaults, resolving AN-60, AN-61 and AN-62.
 Canonical design/02, /04, /05 and the resolved section of /07 now specify clear
@@ -249,7 +249,7 @@ engineering/UX caveats; no runtime enforcement or remaining policy adoption is
 claimed. Next decision discussion: completed bounded children and replacement
 handoff. AN-3 still requires retry implementation evidence, not an owner decision.
 
-## Owner lifecycle clarification
+## Historical owner lifecycle clarification — superseded below
 
 Ongoing children remain autonomous after milestones and can initiate projects
 within their purposes. Only bounded-assignment children idle after accepted
@@ -259,3 +259,20 @@ change; parent notification without veto; replacement retires old subtree and
 uses a distinct identity plus selected explicit handoff. AN-64 is partially
 resolved; cancellation disposition remains for the next question. No runtime
 behavior was changed or claimed by this documentation update.
+
+## Latest design update — purpose-based lifespan
+
+The owner replaced creation-time ongoing/bounded lifetime types with purpose
+review using acceptance evidence and continuing obligations. Updated canonical
+lifecycle, cadence, evaluation, scenarios, UI requirements and the Plane skill.
+Cancellation now pauses the performing agent/subtree while preserving independent
+assignments; retirement is separate. Earlier completion-by-role notes above are
+historical and superseded. General retention/export/deletion remains separate.
+This is specification and planning work; runtime enforcement is not implemented.
+AN-64 is accepted in Plane. AN-68 holds the separate open retention decision;
+AN-69 implements purpose evaluation in M2 under AN-11 and gates AN-12. Updated
+existing planning, evaluation, cancellation, children, instructions and UI items,
+plus M2/M3/decision modules; API readback verified the changes and dependencies.
+Checked 146 local documentation links/anchors and preserved 24 product plus 20 UX
+scenarios. No runtime tests were needed for this documentation-only increment.
+The next implementation selection still comes from live Plane.

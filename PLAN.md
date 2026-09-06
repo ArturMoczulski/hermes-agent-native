@@ -17,6 +17,10 @@ decision module in Plane. Existing AN-1–AN-16 retain their history; refined wo
 items cover the remaining specification. The current cycle and two tentative
 future cycles select small increments; distant milestones remain undated.
 Plane is the authority for item state; this overview is not a second task store.
+The latest owner lifecycle decision replaces fixed agent lifetime categories with
+[purpose evaluation](design/01-agents.md#lifetime-and-work-assignment); cancellation
+pauses the performing agent/subtree. The roadmap must implement these rules in
+the first autonomous root and then extend them to teams.
 
 Completed identity, authenticated creation UI, private provisioning and restricted
 Hermes environment increments are recorded in Git and Builder state. They do not

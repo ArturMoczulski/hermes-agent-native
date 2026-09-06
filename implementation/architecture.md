@@ -74,7 +74,7 @@ database server solely for the new module. Keep new tables clearly namespaced.
 
 | Record | Required information |
 | --- | --- |
-| Agent | Immutable ID, display name, parent ID, ongoing/bounded role, lifecycle, profile mapping, model configuration, cadence and last activity. |
+| Agent | Immutable ID, display name, parent ID, lifecycle, profile mapping, model configuration, cadence and last activity; no fixed lifetime type. |
 | Soul revision | Purpose, fundamental rules, authorizing actor, revision and effective time. |
 | Grant | Who can perform/delegate which operation on which resource, with conditions. |
 | Project binding | Plane project ID, coordinator/responsibility boundary and observed planning revision; planning content stays in Plane. |
@@ -82,7 +82,7 @@ database server solely for the new module. Keep new tables clearly namespaced.
 | Run and external job | Managed run plus agent, purpose/assignment revision, engine session, worker/sandbox identity, observations and outcome. |
 | Message and delivery | Sender, recipient, content/reference, request/work correlation and distinct delivery/handling observations. |
 | Decision and escalation hop | Origin, current responder, affected work, request type, scope, response provenance and applicability. |
-| Evaluation and progress concern | Criteria, evidence, judgment, uncertainty, response and related attempts. |
+| Evaluation and progress concern | Assignment or whole-purpose scope, applicable purpose/criteria revision, evidence, accountable acceptance, continuing obligations, judgment, uncertainty, response and related attempts. |
 | Activation and event | Cause, deduplication key, scheduling/processing state, monotonic event sequence and correlation IDs. |
 
 Human-readable names may repeat. Use a generated stable profile identifier for
@@ -226,12 +226,17 @@ which directs the agent to:
 2. Inspect existing assignments and evidence before creating more work.
 3. Start authorized independent work or delegate when useful.
 4. Ask a focused question about a blocked branch; keep other branches eligible.
-5. Submit results with evidence, evaluate them, and choose the next useful step.
-6. Record a wait reason when there is no useful action.
+5. Submit results with evidence and obtain the applicable accountable evaluation.
+6. Assess accepted results against the whole purpose, outstanding obligations and
+   useful next work; continue, wait, escalate uncertainty or initiate justified retirement.
+7. Record the evaluation and its next action rather than create work merely to stay active.
 
 The skill teaches judgment; the control module enforces mutations. A cadence
-review is not a completed project task. An enduring purpose stays open across
-milestones. A bounded child does not invent unrelated work when its assignment ends.
+review is not a completed project task. Agent lifetime follows the
+[purpose-evaluation rule](../design/01-agents.md#lifetime-and-work-assignment),
+not a creation-time ongoing/bounded classification. A completed campaign may leave
+marketing delivery and monitoring obligations; an accepted finite investigation
+may fulfill its entire purpose. Both use the same evaluation process.
 
 ## 5. Tasks, evaluation and progress
 
@@ -247,6 +252,22 @@ upstream review reassignment must not erase who performed or owns the assignment
 Do not automatically use a coding-review skill for music or business work. Keep
 criteria and their revisions in the brief, including subjective criteria and
 uncertainty. A successful process exit is an execution observation, not acceptance.
+
+Record assignment acceptance separately from whole-purpose fulfillment. The latter
+examines finite completion criteria, continuing delivery and monitoring obligations,
+useful growth opportunities and established operations that still need stewardship.
+Maturity or fewer new initiatives does not by itself mean the purpose is fulfilled.
+Bind the assessment to current purpose and evidence; an empty backlog, a Plane Done
+state or one accepted artifact is insufficient.
+
+When the entire purpose is clearly fulfilled or its pursuit is clearly no longer
+needed within existing authority, and applicable acceptance or disposition is
+recorded with no unresolved obligations or handoffs, the agent can initiate
+controlled retirement through the lifecycle operation. No blanket human approval
+is added. Uncertain continuing relevance or handoff needs follow the parent chain,
+with unresolved root questions going to the human. Do not manufacture busywork for
+self-preservation, weaken completion criteria or rewrite the soul to justify either
+continuation or retirement.
 
 Reuse existing repeated-failure and blocked-loop signals as evidence. Add linked
 concerns for repeated attempts, plan changes and delegation without new outcomes
@@ -327,14 +348,21 @@ record and block conflicting replacement work. Already completed effects remain.
 - **Purpose change:** increment the purpose revision; stop that agent's obsolete
   runs and dependent descendant assignments. Follow recorded assignment provenance
   to determine scope. Preserve unrelated work and descendants' souls.
-- **Assignment cancellation:** stop that assignment and dependent execution;
-  retain results and records. It does not automatically retire an ongoing worker.
+- **Assignment cancellation:** stop the selected assignment and dependent execution,
+  and durably pause its performing agent and that agent's entire subtree. Preserve
+  results and independent assignments; those assignments are paused, not cancelled.
+  Cadence or another ready item cannot bypass this pause. Cancellation alone is
+  not whole-purpose fulfillment or retirement.
 - **Retirement:** disable the entire agent subtree permanently for dispatch,
   withdraw obsolete pending requests, and stop every owned run/job recursively.
+  Agent-initiated retirement requires the recorded whole-purpose evaluation,
+  applicable accountable acceptance and resolved obligations described above. Retain
+  history, results and unfinished-work records. Exact retention/export/deletion
+  operations remain separate open choices.
 - **Replacement:** use a new agent ID and an explicit brief/artifact handoff.
   Retire the old subtree under the owner-approved replacement policy; never
-  silently reparent descendants. Ongoing and bounded children follow the distinct
-  [role-duration rules](../design/01-agents.md#lifetime-and-work-assignment).
+  silently reparent descendants. Each agent follows the same
+  [purpose-evaluation rule](../design/01-agents.md#lifetime-and-work-assignment).
 
 Late results from obsolete runs can be retained as historical evidence but cannot
 complete the successor assignment or authorize new actions. Purpose and assignment

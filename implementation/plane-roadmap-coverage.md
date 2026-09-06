@@ -25,8 +25,8 @@ Near-term work is refined into smaller linked items; distant work stays coarser.
 | --- | --- |
 | [M0 - Validate the Hermes foundation](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/f2e73bd1-3c26-44c2-8e01-1b638c6936c8/) | Gate: pinned baseline, maintained patch map and a real engine/tool/stop/restart proof. |
 | [M1 - Governed agents and Plane work](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/af3769db-cd94-4209-a6ae-f52ccea00b51/) | Gate: protected identity, scoped authority and planning, durable admission, private layers and readable state. |
-| [M2 - One autonomous root](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/e71a7b80-4ba5-4402-a14d-12aa3dee999e/) | Gate AN-12: create from purpose, plan, act, ask, evaluate and continue; basic chat, decisions, stopping and recovery work before unattended cadence. |
-| [M3 - Persistent recursive teams](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/e0af2be9-04d3-4ded-9e0d-00ddfdc18f82/) | Gate AN-13: ongoing and bounded children, recursive delegation, accountable results, parent-chain questions, subtree control and authorized lateral communication. |
+| [M2 - One autonomous root](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/e71a7b80-4ba5-4402-a14d-12aa3dee999e/) | Gate AN-12: create from purpose, plan, act, ask, evaluate results and continued need, then continue, wait or retire; basic chat, decisions, stopping and recovery work before unattended cadence. |
+| [M3 - Persistent recursive teams](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/e0af2be9-04d3-4ded-9e0d-00ddfdc18f82/) | Gate AN-13: children with purpose-based lifespans, recursive delegation, accountable results, parent-chain questions, subtree control and authorized lateral communication. |
 | [M4 - Complete owner control center](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/2d24874b-89c0-452c-8d97-676a85519cde/) | Gate AN-14: connected Chat, Monitor, Inbox, Work, Settings and durable history; truthful freshness/delivery, accessible navigation and complete UX evidence. |
 | [M5 - Evaluate outcomes and detect stalled work](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/a758b594-f81b-4343-898b-bbff2e623a98/) | Gate: domain-appropriate result review and one evidence-linked concern per recurring no-progress pattern. |
 | [M6 - Reliable always-on operation](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/95e8fc96-2b57-4679-b0dd-ac52def9c32f/) | Gate AN-15: failure-tested recovery, consistent backups, revocation/cancellation, measured capacity and a documented Linux deployment independent of the personal computer. |
@@ -124,14 +124,39 @@ evidence is recorded separately from deterministic model fixtures.
 | UX-19 | [AN-49](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6ad8a1b8-6881-442c-856c-179ef203f5b9/) |
 | UX-20 | [AN-21](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/3f765e57-ccca-4f1c-b095-a69d2ee8440c/), [AN-27](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/8f765bc9-70b9-4436-a40b-06db4409e832/), [AN-36](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cbf7c3bc-3ecf-465c-82cd-79dead9ce3ea/), [AN-47](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/96f2aac1-52b8-465c-8bd9-a4666dc64e55/), [AN-48](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/88fe7dfb-8d7c-4aa3-8b51-e877c68c4cf7/), [AN-49](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6ad8a1b8-6881-442c-856c-179ef203f5b9/), [AN-53](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/56387dba-c9fd-44e7-82cd-0e91800f7ef9/) |
 
+## Purpose-based lifespan follow-through
+
+The latest owner clarification is reflected in the existing scenarios rather than
+adding parallel scenario IDs. AN-64 records the accepted policy; AN-68 separates
+unresolved retention/export/deletion/transfer details from core lifecycle behavior.
+AN-69 is an M2 implementation item under AN-11 and a dependency of root gate AN-12.
+It covers evidence-based continued need, growth versus recurring operation,
+legitimate waiting, uncertain relevance and controlled self-retirement. AN-9 supplies
+applicable result acceptance; AN-24 and AN-30 supply authority and actual stopping.
+M3 applies the same rules to recursive children and parent accountability.
+
+| Updated scope | Plane work |
+| --- | --- |
+| Purpose evaluation, retirement evidence and rejected stale assessments (product 2, 5, 15, 17, 23; UX-11/15) | AN-69, AN-9, AN-11, AN-12, AN-37, AN-40 |
+| Cancellation pauses the performing agent/subtree and preserves independent assignments (product 8; UX-10) | AN-30, AN-40, AN-47 |
+| Planning and instructions distinguish growth, operation, waiting and completion (product 1, 2, 7, 15; UX-14) | AN-26, AN-35, AN-69 |
+| Purpose/outcomes/obligations replace the mandatory lifetime selector; expose evaluation and reason (UX-01/11/15) | AN-37, AN-47, AN-69 |
+
+These changes refine the roadmap without adding work to the already selected
+near-term cycles or claiming implementation evidence. Live item links and states
+are available through the project board; this table is a coverage index.
+
 ## Decision and evidence boundaries
 
 The original nine chapter-07 choices have decision items. AN-60–62 were subsequently
 approved by the owner; see the [decision record](../design/07-open-decisions.md#resolved-autonomy-and-permissions).
-AN-63 was then approved, and the completion portion of AN-64 clarified; see
-[ongoing children and replacement](../design/07-open-decisions.md#resolved-ongoing-children-and-replacement).
-Five decision items retain open scope, including AN-64 cancellation disposition. Their dependencies gate only
-behavior that needs that choice; creating an item does not approve its proposal.
+AN-63 was then approved. The owner's latest revision resolves AN-64 with
+purpose-based lifespan and cancellation pause; it supersedes the earlier
+completion-by-role default. See [the current lifecycle decision](../design/07-open-decisions.md#resolved-purpose-based-lifespan-cancellation-and-replacement).
+AN-68 separately tracks retained-work operations. Five decisions remain open:
+AN-59, AN-65, AN-66, AN-67 and AN-68. They gate only behavior needing that choice;
+record export/deletion and new transfer behavior do not block ordinary retirement
+with retained records. Creating an item does not approve its proposal.
 Parent notification after direct human direction is part of the accepted
 handoff decision. Required immediate stopping is already settled and is part of
 the first root, not deferred to team replacement.
