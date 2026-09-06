@@ -8,7 +8,7 @@ an independently maintained task board.
 - Local service: [http://localhost:19230](http://localhost:19230).
 - Workspace: `agent-native` (`34f36591-6596-40c9-bf66-564529b2c4df`).
 - Project: [Agent Native Framework](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/), identifier `AN`, ID `0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897`.
-- Initial cycle: [01 — Establish the Builder planning home](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/cycles/29a92720-d45b-49eb-8939-9c779427dd01/), September 6–12, 2026.
+- Initial cycle: [01 — Establish the Builder planning home](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/cycles/29a92720-d45b-49eb-8939-9c779427dd01/). The numbered cycle sequence is undated; advance on accepted outcomes, not calendar time.
 - Builder Plane user ID: `be4115f9-e7c5-47fb-863d-daeae60347cd`. This is a planning account, not a framework agent identity.
 - Human login: `owner@agent-native.test`; Builder login: `builder@agent-native.test`.
 - Credentials: `~/.local/share/agent-native/plane/accounts.json` (private local file).
@@ -23,7 +23,9 @@ an independently maintained task board.
    and work-item descriptions. Never use the owner credential for routine planning.
 3. Read current cycles, work items, dependencies and recent comments. The initial
    cycle above is a stable reference, not a claim that it remains active forever.
-   Review expired cycles and select/create the next cycle according to the skill.
+   Determine current focus from the ordered sequence, recorded cycle review and
+   unfinished outcomes. Do not infer it from today's date. Select the next cycle
+   when prerequisites are accepted; never fill planned dates or duration estimates.
 4. Check active work and blockers before selecting an item. WIP starts at one
    implementation item for this external Builder. Read acceptance criteria, update
    the selected item, and perform the next authorized small increment using TDD.
@@ -42,7 +44,8 @@ Paths verified in Plane Community v1.4.2 (prefix below is project-relative):
 | Read/update an item | `GET` / `PATCH work-items/{item_id}/` |
 | Read/create dependencies | `GET` / `POST work-items/{item_id}/relations/`; creation uses relation_type and issues |
 | Read states | `GET states/` |
-| Read/create cycles | `GET` / `POST cycles/` |
+| Read/create cycles | `GET` / `POST cycles/`; omit planned dates or set them to null |
+| Update a cycle | `PATCH cycles/{cycle_id}/`; null start_date/end_date is verified for this release |
 | Read/assign cycle work | `GET` / `POST cycles/{cycle_id}/cycle-issues/`; creation uses issues |
 | Work comments | `GET` / `POST work-items/{item_id}/comments/`; check current schema before writing |
 
@@ -62,7 +65,9 @@ The original AN-1 through AN-16 records remain, with native dependency links.
 The full design is now mapped into milestone modules, refined work items and a
 product-decision module; see the [coverage index](../implementation/plane-roadmap-coverage.md). The first
 cycle retains AN-1, AN-2 and AN-3 and adds the scoped-read slice. Two subsequent
-cycles are tentative forecasts, to be replanned against capacity and dependencies.
+cycles are the next ordered outcome groups, refined against actual capacity and
+dependencies. All three have null start/end dates. Sequence and exit evidence
+define progression; no planned duration or calendar forecast is used.
 The live records own statuses and acceptance;
 read them rather than inferring current state from this document. Existing completed
 framework increments remain evidence in STATE.md and Git, not reopened tasks.

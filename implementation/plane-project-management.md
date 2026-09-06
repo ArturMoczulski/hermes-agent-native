@@ -41,6 +41,19 @@ scoped projects for its descendants. Reuse native Plane work items, cycles, stat
 and project UI. Use links and framework metadata for deeper logical relationships;
 do not depend on paid epics, approval workflows or custom properties.
 
+Planning cycles are ordered outcome groups with a goal, scoped items, dependencies,
+exit criteria and accepted evidence, plus a WIP limit. Store no estimated calendar
+dates, date ranges or durations. Advance on accepted outcomes or an explicit
+re-scope with unfinished-work dispositions; never wait for a scheduled cycle end.
+Actual activity timestamps, thinking cadence and genuine external deadlines remain
+distinct. Record the source and affected work for a real deadline.
+
+Live verification of Plane Community v1.4.2 confirmed that PATCH requests with
+`start_date: null` and `end_date: null` persist on readback for all three existing
+cycles, preserving their IDs and item membership. Use these native undated cycles;
+no alternate grouping or fabricated calendar values are needed. Record goal,
+sequence and exit criteria on the cycle; its acceptance remains evidence-based.
+
 Implement one narrow Plane adapter behind framework work operations. Agents receive
 only scoped operations; installation credentials stay in the trusted service.
 Derive agent identity from the run, never from caller-supplied owner/agent labels.
@@ -109,8 +122,11 @@ of a workspace whose identity cannot be resolved.
    and project, restart, and retry setup without duplicates. Demonstrate failure and
    recovery plus backups/restore. No live owner workspace used as a test fixture.
 3. **One vertical planning slice.** Through scoped work operations and the skill,
-   create a brief, item and cycle; show links and freshness in Work. Start with a
-   failing Playwright flow against the real adapter/service and focused unit checks.
+   create a brief, item and native undated cycle with order and exit criteria;
+   show its links and freshness in Work. Verify accepted
+   outcome progression and explicit re-scoping without calendar estimates or
+   placeholder dates. Start with a failing Playwright flow against the real
+   adapter/service and focused unit checks.
 4. **Execution and evaluation.** Bind one item to durable run admission; deliver,
    review and accept evidence, then evaluate the whole purpose before choosing
    further work or retirement. Include finite criteria, continuing delivery and
@@ -122,7 +138,8 @@ of a workspace whose identity cannot be resolved.
    triggers, stale criteria, unauthorized reads/writes, premature completed-state
    edits and cancellation pauses that preserve independent work.
 5. **Children and continuous planning.** Delegate scoped work, escalate a blocker,
-   close/replan a cycle and resume after restart. Apply the same purpose evaluation
+   accept or explicitly re-scope a cycle and resume after restart. Preserve
+   unfinished-work dispositions and dependency order. Apply the same purpose evaluation
    to every child; no creation-time lifetime field decides its future. Accepted
    child results, continuing responsibilities and selected handoffs inform the
    decision, without weakening criteria or rewriting the soul. Verify subtree

@@ -297,7 +297,7 @@ evidence rather than marking a requirement done because a page or function exist
 | 23. Evaluate results before accepting them | M2, M5 |
 | 24. Resolve human decisions in one place | M2, M4 |
 
-## Engineering sequence and estimates
+## Engineering sequence and evidence
 
 The critical path is M0 → M1 → M2 → M3 → M4/M5 → M6 → M7. UI polish and domain
 skills can proceed independently after the authoritative operation contracts are
@@ -306,8 +306,10 @@ unconnected parallel implementations.
 
 The largest uncertainty is the cross-cutting change to Hermes run admission,
 trusted actors, persistent chat and sandbox cancellation. M0 should produce a
-file-level patch map and effort estimate for those changes. A calendar promise
-before that would not be supported by the current source-only review.
+file-level patch map, dependency boundaries and the next verifiable slices for
+those changes. Use ordered outcome-based cycles without planned date ranges or
+duration estimates. Move to the next ready slice as soon as acceptance evidence
+and dependencies permit it.
 
 Use deterministic local checks for authority, scheduling and state transitions;
 real isolated processes/containers for lifecycle and recovery; and a small set of

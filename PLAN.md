@@ -14,8 +14,9 @@ work; do not maintain a parallel checklist here.
 
 The full specification is organized into M0–M7 milestone modules and a product
 decision module in Plane. Existing AN-1–AN-16 retain their history; refined work
-items cover the remaining specification. The current cycle and two tentative
-future cycles select small increments; distant milestones remain undated.
+items cover the remaining specification. Three ordered, undated cycles select
+small increments. Advance by accepted outcomes and dependencies; do not estimate
+cycle durations or assign calendar windows.
 Plane is the authority for item state; this overview is not a second task store.
 The latest owner lifecycle decision replaces fixed agent lifetime categories with
 [purpose evaluation](design/01-agents.md#lifetime-and-work-assignment); cancellation

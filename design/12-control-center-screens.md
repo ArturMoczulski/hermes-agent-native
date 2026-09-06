@@ -208,7 +208,9 @@ Plane supplies detailed backlog, board and cycle editing under
 provides a connected overview with **Open in Plane** links and source freshness;
 it need not duplicate Plane’s full editor. Add assignment and Edit plan route to
 the appropriate Plane surface or the same scoped integration operations. Show
-cycle goal/dates, remaining work and the last cycle review alongside run state.
+cycle order, goal, exit criteria, remaining work and the last cycle review
+alongside run state. Do not require planned dates or display invented duration
+estimates; current focus follows accepted outcomes and the recorded sequence.
 Framework evaluation and stop controls remain authoritative. A completed cycle
 or empty board does not establish whole-purpose completion or end a continuing
 service. Link the coordinating agent's purpose evaluation and remaining obligations.

@@ -1,7 +1,7 @@
 ---
 name: plane-project-management
-description: Plan and deliver work through backlogs and sprints.
-version: 1.1.0
+description: Plan work through backlogs and cycles defined by outcomes.
+version: 1.2.0
 author: Artur Moczulski (@ArturMoczulski), Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -75,7 +75,7 @@ and authorized.
 | Record | Minimum useful content |
 | --- | --- |
 | Project brief | Outcome, coordinator, scope, constraints, success criteria. |
-| Cycle | Goal, dates, selected items, capacity/WIP assumptions. |
+| Cycle | Goal, sequence/order, selected items, dependencies, exit criteria/evidence and WIP limit. |
 | Item | Deliverable or learning question, criteria, priority, dependencies, implementer, evaluator, next action. |
 | Blocker | What is needed, responder, linked question, affected work. |
 | Result | Versioned evidence, evaluation against criteria, uncertainty, follow-up. |
@@ -107,16 +107,21 @@ Use priorities that reflect the purpose, dependencies and learning value.
 
 ### 3. Plan a small cycle
 
-Choose a bounded goal, start/end and realistic scope. Use the existing project
-cycle when appropriate, rather than creating one for each request. Select a
-manageable amount of ready work and record capacity assumptions. As a starting
-heuristic, keep one implementation item active per executing agent; allow parallel
-child work when independent and within granted capacity. This is adjustable, not
-a new resource entitlement. Do not spawn children simply to make the board busy.
+Choose a bounded goal, its place in the sequence, scoped items and dependencies.
+Define exit criteria and the evidence required to accept the outcome. Reuse the
+existing project cycle when appropriate. Select manageable ready work and record
+a WIP limit. As a starting heuristic, keep one implementation item active per
+executing agent; allow parallel child work when independent and within granted
+capacity. This is adjustable, not a new resource entitlement.
 
-Choose cycle length for the work and record it; do not ask the human to schedule
-ceremonies. Revisit at the boundary or after a material change, not every cadence
-tick. A sprint is not a requirement to delay useful delivery until its last day.
+Use native Plane cycles with no planned start/end dates. Do not estimate cycle
+date ranges or durations in days or weeks, or invent placeholder dates. Keep
+actual activity timestamps, thinking cadence and genuine externally required
+deadlines separately; record a deadline's source on the affected work.
+
+Review when exit evidence is available or material direction changes. Proceed as
+soon as the accepted outcome is achieved or the scope is explicitly revised,
+without waiting for a date. Do not spawn children merely to fill a cycle.
 
 ### 4. Deliver and keep the record useful
 
@@ -152,11 +157,15 @@ report and reconcile the discrepancy through authorized operations.
 
 ### 6. Review the cycle and continue
 
-Compare the goal with accepted outcomes and learning. For every unfinished item,
-record whether it continues in the next cycle, returns to backlog, splits into
-linked items, or is cancelled with a reason. Preserve original history and active
-attempt links. Cycle expiry does not stop a valid attempt or automatically finish
-its item. Select a useful process improvement when evidence supports one.
+Compare the goal and exit criteria with accepted outcomes and learning. Advance
+when the outcome is accepted; otherwise continue useful work or explicitly
+re-scope with the reason and changed exit criteria recorded. Never mark an unmet
+original goal accepted just to move on. For every unfinished item, record whether
+it continues in the next cycle, returns to backlog, splits into linked items, or
+is cancelled with a reason under the lifecycle rules below. Preserve original
+history and active attempt links. A cycle transition does not stop a valid attempt
+or accept unfinished work. Select a useful process improvement when evidence
+supports one.
 
 Evaluate whether the whole purpose still requires an agent. Separate accepted
 assignments from purpose completion. Review growth opportunities, established
@@ -204,5 +213,6 @@ still reconcile and stop invalid dependent execution through authorized controls
 Before claiming the increment complete, read back the affected records. Confirm
 correct project/item IDs, current state, evidence and evaluation, no duplicate work,
 and a clear next action or linked blocker. At cycle closure, account for unfinished
-items and preserve the next cycle's goal. Report only writes and checks that actually
-succeeded; say when planning updates are pending or the service is unavailable.
+items and preserve the next cycle's goal, order and exit criteria. Confirm that
+no calendar estimates or placeholder dates were introduced. Report only writes
+and checks that actually succeeded; say when planning updates are pending or the service is unavailable.

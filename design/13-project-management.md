@@ -12,7 +12,9 @@ Use a Scrum-like loop: choose a useful outcome, plan a small cycle, deliver and
 evaluate increments, review the outcome, improve the approach, and plan again.
 This applies to software, research, music and business work. It does not require
 meetings, a dedicated Scrum-master agent, story points, or human approval at each
-ceremony. The agent performs planning and review as part of its own work.
+ceremony. The agent performs planning and review as part of its own work. Cycles
+are ordered by intended outcome and dependencies, without calendar estimates,
+date ranges or durations in days or weeks.
 
 A direct answer or trivial action need not create a new project or sprint. Record
 meaningful changes to existing work on the relevant item. Small substantive tasks
@@ -28,7 +30,7 @@ regular review when a finite sprint would be artificial.
 | Workspace | Shared planning area for a root agent and its tree, visible to the human owner. |
 | Project | Outcome, coordinating agent, constraints, success criteria, scope and current plan. |
 | Milestone or workstream | Useful grouping of outcomes; optional, not another agent ownership boundary. |
-| Cycle / sprint | A bounded goal, start/end, selected work, capacity assumptions and review. |
+| Cycle / sprint | Goal, sequence/order, scoped work, dependencies, accepted exit criteria and evidence, work-in-progress limit and review. |
 | Work item | Deliverable or discovery question, acceptance criteria, priority, dependencies, implementer, accountable evaluator, state and next action. |
 | Attempt and result | Actual execution, versioned evidence, evaluation and follow-up linked to the item. |
 
@@ -67,10 +69,10 @@ are not resolved by assigning a Plane role.
 2. **Refine.** Turn the next useful outcomes into small, evaluable items. Record
    uncertainty, dependencies and explicit non-goals where needed. Prioritize by
    contribution to the purpose and what must be learned next.
-3. **Plan a cycle.** Choose a goal, dates, a small feasible set of items and a
-   work-in-progress limit appropriate to actual capacity. Record assumptions.
-   Cycle length is configurable by the responsible agent within owner constraints;
-   no universal sprint length is required. Dates express plans, not guarantees.
+3. **Plan a cycle.** Choose a goal, its place in the sequence, a small feasible set
+   of items, dependencies and a work-in-progress limit appropriate to actual
+   capacity. Define exit criteria and the evidence needed to accept the outcome.
+   Do not add calendar estimates, start/end date ranges or duration estimates.
 4. **Deliver incrementally.** Pull ready work, verify authority and dependencies,
    delegate where useful, and produce evidence. Keep state and next actions current.
    Inspect active work before admitting more; avoid duplicate execution. A blocker
@@ -78,10 +80,12 @@ are not resolved by assigning a Plane role.
 5. **Evaluate.** Submit results against the brief, then record acceptance, revision
    needed, or failure and the reasons. Parent accountability and human approval
    rules follow [Projects and delegation](03-projects-and-delegation.md).
-6. **Review and improve.** Compare outcomes and learning with the cycle goal.
-   Explicitly carry unfinished work forward, return it to backlog, split it with
-   traceable links, or cancel it with a reason. Preserve earlier cycle history.
-   Record a useful process adjustment when supported by evidence.
+6. **Review and improve.** Advance when the cycle outcome meets its accepted exit
+   criteria, or explicitly re-scope when new evidence or direction changes the
+   plan. Do not wait for a date or claim an unmet goal complete. Carry unfinished
+   work forward, return it to backlog, split it with traceable links, or cancel it
+   with a reason under the lifecycle rules. Preserve the earlier goal, evidence
+   and disposition. Record a useful process adjustment when supported by evidence.
 7. **Review continued need.** Use accepted results to evaluate the whole purpose,
    including growth opportunities, recurring delivery, monitoring and descendant
    obligations. Record whether to continue, operate, wait, ask or retire under
@@ -92,7 +96,7 @@ are not resolved by assigning a Plane role.
 Scope can change during a cycle. Record the source, reason and displaced work;
 re-evaluate affected active attempts rather than blindly continuing an obsolete
 brief. Human purpose changes, replacement, subtree pause and retirement retain
-their immediate-stop behavior independently of the board or sprint schedule.
+their immediate-stop behavior independently of the board or cycle sequence.
 
 Cancelling an assigned item follows [assignment cancellation](05-human-interaction.md#assignment-cancellation):
 stop the selected work and pause its agent/subtree. A cycle review cannot bypass
@@ -100,10 +104,15 @@ that pause by immediately pulling another item. Unassigned backlog cancellation 
 invalid dependent execution. Only work without affected dependencies is a record-only
 cancellation.
 
-Thinking cadence and planning-cycle duration are separate. A minute-by-minute
-check-in can observe a week-long cycle without replanning it every minute. A
-cycle ending does not accept unfinished results, kill valid active work, retire
-children or terminate an enduring purpose. Review active work before rollover.
+Thinking cadence determines when an agent reviews work; it does not estimate
+cycle duration. Preserve actual activity and acceptance timestamps. A genuine
+externally required deadline belongs to the affected work with its source and
+constraint, separately from cycle order; it does not create an estimated sprint
+duration. Cycle transition does not accept unfinished results, kill valid active
+work, retire children or terminate a purpose. Review active work before proceeding.
+
+Use native Plane cycles without planned start/end dates. Their goals, order,
+items and exit evidence define progression; do not fabricate calendar values.
 
 ## Board, evidence and progress
 
@@ -124,9 +133,9 @@ escalation; it must not generate an endless stream of identical questions.
 
 ## Human experience and communication
 
-The control center's Work view shows project/cycle goals, current assignments,
-blockers, reviews, last meaningful progress and links into the relevant Plane
-workspace, project and board. Plane supplies detailed backlog and cycle editing.
+The control center's Work view shows project/cycle goals, sequence, exit criteria,
+current assignments, blockers, reviews, last meaningful progress and links into
+the relevant Plane workspace, project and board. Plane supplies detailed backlog and cycle editing.
 Chat, agent tree, execution monitoring, stopping and the unified decision inbox
 remain framework surfaces, linked to the same work IDs.
 

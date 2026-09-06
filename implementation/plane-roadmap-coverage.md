@@ -35,16 +35,25 @@ Near-term work is refined into smaller linked items; distant work stays coarser.
 
 ## Rolling cycles and priority
 
-The existing September 6–12 cycle retains its completed setup/API work and AN-3's
-partial recovery history, adding only the scoped-read slice as the next ready
-implementation. AN-3 is blocked on retry evidence, not falsely completed.
+The owner replaced the original weekly forecasts with three ordered, undated
+cycles. Live Plane start/end fields are null; the cycle names retain their sequence.
+Advance when exit evidence is accepted or an explicit review changes scope, never
+because a day arrives or elapsed time matches an estimate.
 
-The September 13–19 and September 20–26 cycles are **tentative forecasts**, each
-with two selected implementation slices. Re-plan at review using actual capacity,
-accepted evidence and dependencies; dates are not completion promises. One Builder
-has implementation WIP 1. Unfinished work must be explicitly carried, split, returned
-to backlog or cancelled without losing history. No dates are invented for distant
-milestones. Testing happens inside each increment, not at the end of a cycle.
+1. **Establish the Builder planning home:** retain setup/API evidence and complete
+   scoped reads. Recovery storage checks have passed; explicitly carry the remaining
+   retry-dependent recovery acceptance into sequence 2 without claiming it complete.
+2. **Scoped writes and recoverable planning:** implement scoped writes, then durable
+   mutation intents and safe retries; finish the carried recovery verification.
+3. **Planning setup and source reconciliation:** provision stable planning resources
+   and reconcile source changes after the preceding outcomes are accepted.
+
+One Builder has implementation WIP 1. At review, account for unfinished work by
+carrying, splitting, returning it to backlog or cancelling under lifecycle rules;
+preserve all history. No cycle duration estimates or calendar windows are used.
+Thinking cadence, actual activity timestamps and genuine external deadlines have
+different meanings and do not turn a cycle into a time estimate. Testing happens
+inside each increment, not at the end of a cycle.
 
 Next implementation path at this review: [AN-19](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/737877ea-91c6-4cc2-b1ab-31508dc47238/) scoped reads → [AN-20](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4baf9a5e-3df7-439d-8241-5733a83debac/) scoped writes → [AN-22](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2aaa9d8e-0311-4bc3-9c77-d0b85eadfad8/) uncertain-write recovery. Read live priorities before starting.
 

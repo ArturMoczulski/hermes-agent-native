@@ -104,7 +104,17 @@ integration, background work, or deployment that has not actually happened.
 ## Planning and sprint delivery
 
 Apply the [Plane project-management skill](../skills/productivity/plane-project-management/SKILL.md)
-to most substantive work. Place small verified increments inside project cycles;
-sprint boundaries never postpone tests or delivery. Link work items to commits,
-red/green evidence and evaluations. Once Plane is connected, PLAN.md is a roadmap
-and STATE.md a handoff pointing to authoritative Plane IDs, not duplicate boards.
+to most substantive work. Organize small verified increments into ordered cycles
+with a goal, scoped items, dependencies, accepted exit criteria/evidence and a WIP
+limit. Advance when the outcome is accepted or explicitly re-scope with a reason
+and a disposition for unfinished work. Never wait for a calendar boundary to
+continue, test or deliver.
+
+Use native Plane cycles without planned start/end dates. Do not add cycle date
+ranges, duration estimates in days or weeks, or placeholder dates. Retain actual
+activity timestamps and thinking cadence. Record genuine externally required deadlines separately on affected work
+with their source; they are constraints, not cycle estimates.
+
+Link work items to commits, red/green evidence and evaluations. Once Plane is
+connected, PLAN.md is a roadmap and STATE.md a handoff pointing to authoritative
+Plane IDs, not duplicate boards.

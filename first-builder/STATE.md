@@ -222,7 +222,8 @@ Eight M0–M7 milestone modules plus a product-decision module cover the work; a
 choices were undecided at that review; subsequent decisions are recorded below.
 
 Current cycle retains setup/API evidence and blocked AN-3, adding AN-19 scoped
-reads. The next two weekly cycles are tentative: scoped writes/uncertain-write
+reads. The next two weekly cycles were tentative at that historical review
+(superseded by the undated-cycle decision below): scoped writes/uncertain-write
 recovery, then root planning setup/source reconciliation. Each selects two slices;
 WIP 1, with explicit carry/split/return/cancel review rather than calendar promises.
 Distant milestones remain undated. See implementation/plane-roadmap-coverage.md;
@@ -276,3 +277,20 @@ plus M2/M3/decision modules; API readback verified the changes and dependencies.
 Checked 146 local documentation links/anchors and preserved 24 product plus 20 UX
 scenarios. No runtime tests were needed for this documentation-only increment.
 The next implementation selection still comes from live Plane.
+
+## Latest planning correction — undated outcome sequence
+
+The owner removed calendar estimates from cycle planning. All three existing
+Plane cycles now have null start/end dates and ordered outcome briefs, verified
+through API readback. Scope, dependencies and acceptance evidence determine
+progression: scoped reads; scoped writes and retry/recovery evidence; then planning
+setup and reconciliation. Existing item IDs, states and cycle membership are
+preserved. Explicitly carry retry-dependent recovery acceptance into the second
+sequence at review, without falsely marking it done or blocking scoped-read progress.
+Updated the canonical planning design, skill, UI requirements and Builder startup
+references so future cycles do not regain invented dates or duration estimates.
+This is a planning/documentation change; no runtime behavior or tests are claimed.
+
+Verified null dates and preserved member counts in all three cycles, plus the
+updated cadence/cycle work-item requirements. Checked 61 local documentation
+links/anchors and diff whitespace; the native Hermes skill authoring checks passed.

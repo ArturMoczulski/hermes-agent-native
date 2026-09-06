@@ -68,3 +68,10 @@ contradictory instructions or store secrets here.
   stops the assignment and pauses its agent/subtree, retaining independent work
   under the pause. This supersedes the prior bounded-completion idle default;
   AN-63 replacement remains accepted. Canonical rules: design/01 and design/05.
+
+- **Undated planning sequence — owner correction (2026-09-06):** remove cycle
+  start/end dates and duration estimates. Plan ordered outcome groups with scope,
+  dependencies, exit evidence and WIP limits. Advance as soon as accepted results
+  allow; no weekly forecasts or waiting for a calendar window. Actual event times,
+  thinking cadence and real externally required deadlines remain separate concepts.
+  This supersedes earlier calendar-based cycle planning. Source: owner conversation.
