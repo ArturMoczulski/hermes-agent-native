@@ -14,7 +14,13 @@ this list tracks completed increments rather than claiming whole milestones done
 - [x] Integrate the mount plan with a restricted Hermes tool environment; prevent
   inherited credentials, mounts, environment, network or container reuse from
   broadening the managed agent's access.
-- [ ] Bind that environment to durable run admission and the Hermes model loop.
+- [x] Specify Plane planning and the default backlog/sprint skill for agents and Builder.
+- [ ] Validate a pinned Plane Community release and its API/access boundaries; follow
+  [the Plane integration sequence](implementation/plane-project-management.md).
+- [ ] Provision the planning service and connect the Builder project/skill; reconcile
+  bootstrap work once, without maintaining duplicate task boards.
+- [ ] Bind that environment to durable run admission and the Hermes model loop,
+  linking Plane work items according to the agreed source-of-truth boundary.
 - [ ] Record provisioning/activation state and expose it through the owner UI.
 - [ ] Add protected revision refresh and revalidation at admission.
 - [ ] Connect initial planning, task persistence, pause/cancellation and cadence.
