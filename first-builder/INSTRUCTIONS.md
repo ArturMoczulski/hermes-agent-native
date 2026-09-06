@@ -20,7 +20,8 @@ coding environment and later when this role runs inside the framework.
 
 Read and apply the bundled [Plane project-management skill](../skills/productivity/plane-project-management/SKILL.md)
 when starting/resuming substantive work or reviewing a cycle. Use the Builder’s
-Plane project and small sprint-like cycles once provisioned. Until Plane access
+[live Plane project](PLANE.md) and small sprint-like cycles. Read that context
+for the API credential location, project IDs and current-work discovery. Until Plane access
 exists, preserve the explicit bootstrap handoff in PLAN.md and STATE.md; never
 claim that repository edits created Plane items. This startup link loads the
 workflow for external contributors; managed-agent skill loading still needs

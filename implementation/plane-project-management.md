@@ -2,8 +2,10 @@
 
 Status: selected planning direction by the owner, 2026-09-06. Plane replaces the
 earlier Hermes-only task-board recommendation. The [product contract](../design/13-project-management.md)
-is authoritative. No Plane service, credentials, adapter or live workspace is
-established by this document. Existing identity and sandbox increments remain useful.
+is authoritative. The owner subsequently authorized local setup: Plane Community v1.4.2 is now
+running in Docker, with a [live Builder workspace](../first-builder/PLANE.md).
+The managed-agent adapter remains unimplemented. Existing identity and sandbox
+increments remain useful.
 
 ## Reuse and boundary
 
@@ -108,9 +110,11 @@ of a workspace whose identity cannot be resolved.
 
 Each step uses small test-first increments, not a large implementation followed by
 tests. Use the existing cached Playwright Chromium; no browser download is required.
-The First Builder uses the same skill and then its own Plane project once the
-integration exists. Until then its explicit bootstrap handoff remains in repository
-files, with a one-time reconciled import rather than parallel ongoing boards.
+The external First Builder now uses this skill and its live Plane project through
+a separate local API account. The one-time repository backlog import is complete;
+repository files retain evidence and connection pointers. Managed agents still
+require the scoped integration, and this local API account must not be copied
+into their workers.
 
 ## Official evidence reviewed 2026-09-06
 

@@ -6,8 +6,9 @@ Active repository: `/Users/arturmoczulski/Projects/hermes-agent-native`.
 ## Current focus
 
 The owner selected Plane planning and a reusable sprint workflow skill. See the
-2026-09-06 planning increment below and PLAN.md. Earlier entries record completed
-implementation slices, not the current capability inventory. Plane is not deployed.
+local Plane deployment entry below and [live planning context](PLANE.md). Earlier
+entries record completed increments and historical gaps, not the current inventory.
+Use Plane through the Builder API account for current work and priorities.
 
 ## Initial identity increment
 
@@ -140,8 +141,9 @@ Owner redirected work to Plane planning specifications and a reusable agent skil
 Added design/13-project-management.md, implementation/plane-project-management.md
 and skills/productivity/plane-project-management/SKILL.md; reconciled the previous
 Hermes-only board recommendation and linked the skill from Builder startup/practices.
-No Plane service, token, project, runtime adapter or automatic skill loading exists
-yet. Next: validate a pinned Plane Community release and its scoped integration
+At that specification-only point no Plane service or token existed; the deployment
+entry below supersedes that operational status. The managed runtime adapter is
+still absent. Next at that point: validate a pinned Plane Community release and its scoped integration
 capabilities before binding work records to the managed execution loop.
 Verification: all relative Markdown file targets across design/, implementation/,
 first-builder/, PLAN.md and the new skill resolve (28 files). The existing Hermes
@@ -153,3 +155,30 @@ An independent scenario walk-through covered bootstrap, sprint rollover with
 active children, premature Done, and task-size handling. It found an ambiguous
 bootstrap exception and a host-specific file-tool assumption; both were clarified.
 No runtime integration or autonomous planning quality has been verified.
+
+## Local Plane deployment — 2026-09-06
+
+Plane Community v1.4.2 now runs in local Docker Compose on localhost:19230.
+The owner authorized setup and API-first Builder planning. Applied the bundled
+planning skill to establish the Agent Native Framework project, AN-1–AN-16 backlog,
+22 native dependency links and initial September 6–12 cycle (AN-1–AN-3, WIP 1).
+See [PLANE.md](PLANE.md) for durable IDs, private credential locations and API use.
+The Builder is a distinct workspace member/project administrator, not an instance
+admin. The human owner was explicitly added as project administrator.
+
+Verification: Compose config validates; proxy binds only 127.0.0.1:19230; API
+read-back found 16 unique imported records. Full stop/start retained all item IDs,
+sampled dependency links and Builder authentication. `ops/plane/smoke.cjs` passed
+owner-visible backlog and first-cycle checks using existing Chromium before/after
+restart. The initial browser failure exposed missing owner project membership,
+which was fixed through Plane’s project membership API. No browser downloaded.
+
+AN-1 now includes explicit self-evaluation/evidence and is accepted in Plane.
+AN-2 and AN-3 carry partial findings and remain open; read live states before
+choosing further work. Full API isolation/reconciliation and backup/restore remain
+unverified. The managed-agent adapter and autonomous Builder cadence are absent.
+PLAN.md now points to the live backlog instead of mirroring its status.
+
+Final checks: 6 focused Hermes skill-authoring tests passed; relative file links
+resolve across 30 documentation files; Compose validates and the expected one-shot
+migrator exited successfully while 12 services remain running.

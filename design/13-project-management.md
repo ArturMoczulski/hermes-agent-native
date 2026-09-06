@@ -137,7 +137,8 @@ project comments are also recorded as framework communication events.
 
 The framework provides the planning service, establishes workspace/project access
 and supplies agents with a [project-management skill](../skills/productivity/plane-project-management/SKILL.md).
-Agents use scoped capabilities; they do not receive installation administrator
+Agents primarily use Plane through API-backed planning operations; the web UI
+is the human planning surface. Agents use scoped capabilities; they do not receive installation administrator
 credentials or direct database access. Workspace setup is retry-safe and exposes
 pending, ready and failed states, including a recoverable explanation.
 

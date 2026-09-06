@@ -34,5 +34,11 @@ contradictory instructions or store secrets here.
 - **2026-09-06 — Planning workflow:** the owner selected Plane workspaces/projects
   and Scrum-like cycles for the vast majority of agent tasks, including the First
   Builder. The reusable skill is `skills/productivity/plane-project-management/SKILL.md`.
-  This supersedes the earlier Hermes-only board recommendation. Plane is not yet
-  provisioned; repository handoff files are the explicit bootstrap fallback.
+  This supersedes the earlier Hermes-only board recommendation. At this design-only
+  stage Plane was not yet provisioned; the deployment entry below supersedes that
+  bootstrap fallback.
+
+- **2026-09-06 — Local Plane and API-first work:** the owner authorized local
+  Docker deployment and using Plane for the Builder's ongoing work. Live references
+  and private API credential location are in PLANE.md. Use the separate Builder
+  account through Plane's API. PLAN.md is now a pointer, not a duplicate backlog.

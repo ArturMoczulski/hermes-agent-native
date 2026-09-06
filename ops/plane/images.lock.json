@@ -1,0 +1,82 @@
+[
+  {
+    "reference": "makeplane/plane-admin:v1.4.2",
+    "id": "sha256:14ef9c83660caf2f0a182d99057512adb1da91c14ea31cc56676f47d800a5baa",
+    "architecture": "arm64",
+    "digests": [
+      "makeplane/plane-admin@sha256:6e1bb1d800d3c7ce84a09f810d5588db8613b35d4464e722a1bec12556ca0ebb"
+    ]
+  },
+  {
+    "reference": "makeplane/plane-backend:v1.4.2",
+    "id": "sha256:7ac58601262e5b2f88e5b0eebab856642488def302c88c6d4f2cb947b7d9dcf9",
+    "architecture": "arm64",
+    "digests": [
+      "makeplane/plane-backend@sha256:90032ce088708889b60c00d491897916f4deb882facda27db59fd10fb68729ef"
+    ]
+  },
+  {
+    "reference": "makeplane/plane-frontend:v1.4.2",
+    "id": "sha256:7b5fef8c3b32dfc82bbb8a00e98377a4a854744a8ac462b6cfd045b90e40cea9",
+    "architecture": "arm64",
+    "digests": [
+      "makeplane/plane-frontend@sha256:22fd2434fb8d6658439f669ab72f999ce0773abe587663da21a77d70bd63ff61"
+    ]
+  },
+  {
+    "reference": "makeplane/plane-live:v1.4.2",
+    "id": "sha256:cb6ca0e3d055b24e12e3e10cbd3eb05cba7446b26e37118d40adc8d513289dba",
+    "architecture": "arm64",
+    "digests": [
+      "makeplane/plane-live@sha256:cbb630ccaea24bb9998040cb45c11619a7501e8b6c75d449df2f8fd9b9cddbd0"
+    ]
+  },
+  {
+    "reference": "makeplane/plane-proxy:v1.4.2",
+    "id": "sha256:d049ac9164ce34d874c61c0a5b44e48992a3e7b7f944b3a9d25224b5057a6959",
+    "architecture": "arm64",
+    "digests": [
+      "makeplane/plane-proxy@sha256:47e651c56749c287710cc26f82dc5d1046a2af76a332aa048ab7adb881cc4cd0"
+    ]
+  },
+  {
+    "reference": "makeplane/plane-space:v1.4.2",
+    "id": "sha256:fef863faa2eab473973027ab76666d546ce9b6780a4a3b54e9cf711e89e43ae0",
+    "architecture": "arm64",
+    "digests": [
+      "makeplane/plane-space@sha256:f8f842f05f41a16e9fe8c4f5e17a3bb175338ccdc094620e58ae49764ffbd671"
+    ]
+  },
+  {
+    "reference": "minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e",
+    "id": "sha256:8f08aee614800a237906bd48114d733e5ac5bfac4ccdf731f141b0e880d7a253",
+    "architecture": "arm64",
+    "digests": [
+      "minio/minio@sha256:14cea493d9a34af32f524e538b8346cf79f3321eff8e708c1e2960462bd8936e"
+    ]
+  },
+  {
+    "reference": "postgres:15.7-alpine",
+    "id": "sha256:455832411d236a3bc44d4f39e789cfd3d7b321838662351a46bead0ef1dafd15",
+    "architecture": "arm64",
+    "digests": [
+      "postgres@sha256:468d34fefd6338031787c7b8e94078975b3aaf4d66c7ead25c39cd3ba46a15c6"
+    ]
+  },
+  {
+    "reference": "rabbitmq:3.13.6-management-alpine",
+    "id": "sha256:6eb0fef83321e5ec7d48488d68ead7b5d592f429ad6974e1cc47eb8e28f53600",
+    "architecture": "arm64",
+    "digests": [
+      "rabbitmq@sha256:611107e29cce05c2acd968325d5dcbde7e2fee404970f1ead75fdb22be2821b3"
+    ]
+  },
+  {
+    "reference": "valkey/valkey:7.2.11-alpine",
+    "id": "sha256:a13829236220c2c44636ca643ab5762032184036655f0c39504688622a04aab0",
+    "architecture": "arm64",
+    "digests": [
+      "valkey/valkey@sha256:10328d00120dc14fbc87b2ed61b7677ddbb0d011e705361b4788329a0ec69a93"
+    ]
+  }
+]

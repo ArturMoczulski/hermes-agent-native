@@ -50,6 +50,16 @@ for managed agents to bypass admission during a service outage.
 
 ## How to Run
 
+Use Plane’s API as the primary planning interface: read projects and cycles, create
+and update work items, manage dependencies, and record progress through API-backed
+operations. The browser is for human inspection or a demonstrated API gap, not
+the default mechanism for routine agent planning. Managed agents use the scoped
+framework adapter; externally hosted Builder setup uses an explicitly authorized
+local API credential kept outside the repository and task content. Discover the
+actual API schema, handle pagination and rate limits, and reconcile uncertain
+writes before retrying. Use current work-item endpoints for the installed release.
+
+
 Use the available scoped planning operations to inspect and update records. Use
 the available file-reading operation for local evidence and handoff files. Do not give yourself direct
 administrator credentials, issue raw database writes, or use another account to

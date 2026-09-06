@@ -1,0 +1,67 @@
+# First Builder — live Plane planning context
+
+Plane is the ongoing source of truth for this project's backlog and planning
+cycles. Read this file and apply the [planning skill](../skills/productivity/plane-project-management/SKILL.md)
+at the start of substantive work. This file contains connection references, not
+an independently maintained task board.
+
+- Local service: [http://localhost:19230](http://localhost:19230).
+- Workspace: `agent-native` (`34f36591-6596-40c9-bf66-564529b2c4df`).
+- Project: [Agent Native Framework](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/), identifier `AN`, ID `0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897`.
+- Initial cycle: [01 — Establish the Builder planning home](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/cycles/29a92720-d45b-49eb-8939-9c779427dd01/), September 6–12, 2026.
+- Builder Plane user ID: `be4115f9-e7c5-47fb-863d-daeae60347cd`. This is a planning account, not a framework agent identity.
+- Human login: `owner@agent-native.test`; Builder login: `builder@agent-native.test`.
+- Credentials: `~/.local/share/agent-native/plane/accounts.json` (private local file).
+- Builder API configuration: `~/.local/share/agent-native/plane/builder-api.json`.
+- Operation/restart instructions: [local deployment](../ops/plane/README.md).
+
+## Resume through the API
+
+1. Read the skill, current human instruction and this connection context.
+2. Load the Builder credential from the private configuration using the available
+   file/HTTP capability. Keep the key out of command arguments, output, logs, Git
+   and work-item descriptions. Never use the owner credential for routine planning.
+3. Read current cycles, work items, dependencies and recent comments. The initial
+   cycle above is a stable reference, not a claim that it remains active forever.
+   Review expired cycles and select/create the next cycle according to the skill.
+4. Check active work and blockers before selecting an item. WIP starts at one
+   implementation item for this external Builder. Read acceptance criteria, update
+   the selected item, and perform the next authorized small increment using TDD.
+5. Record evidence, evaluation and next action in Plane. Keep STATE.md as a brief
+   session handoff with item IDs; do not duplicate the backlog in repository files.
+
+Base API: `http://localhost:19230/api/v1/`, authenticated with `X-API-Key`.
+Paths verified in Plane Community v1.4.2 (prefix below is project-relative):
+
+`workspaces/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/`
+
+| Operation | Method and suffix |
+| --- | --- |
+| Read work | `GET work-items/?per_page=100` (follow pagination when needed) |
+| Create item | `POST work-items/` with name, description_html, priority, state and assignees |
+| Read/update an item | `GET` / `PATCH work-items/{item_id}/` |
+| Read/create dependencies | `GET` / `POST work-items/{item_id}/relations/`; creation uses relation_type and issues |
+| Read states | `GET states/` |
+| Read/create cycles | `GET` / `POST cycles/` |
+| Read/assign cycle work | `GET` / `POST cycles/{cycle_id}/cycle-issues/`; creation uses issues |
+| Work comments | `GET` / `POST work-items/{item_id}/comments/`; check current schema before writing |
+
+Use `relation_type: "blocked_by"` for an item's prerequisites. Keep existing stable
+IDs; reconcile before retrying uncertain creates. Item `external_source` and
+`external_id` identify this bootstrap import but are not a universal API guarantee
+of idempotency. Respect 429 and Retry-After, and discover endpoint-specific schemas.
+
+## Scope and bootstrap status
+
+The API account is a member of the local workspace and administers the project it
+created. It is not an installation administrator. This is human-authorized local
+Builder planning, not proof of managed-agent isolation. No API credential is
+forwarded into managed sandboxes. The future adapter must enforce narrower scopes.
+
+The imported work is AN-1 through AN-16, with native dependency links. The first
+cycle selects AN-1, AN-2 and AN-3. Their live records own statuses and acceptance;
+read them rather than inferring current state from this document. Existing completed
+framework increments remain evidence in STATE.md and Git, not reopened tasks.
+
+Plane does not schedule this external coding agent. These instructions support
+continuity across invocations; they do not claim an autonomous Builder cadence.
