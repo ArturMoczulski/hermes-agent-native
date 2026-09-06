@@ -33,12 +33,48 @@ for managed agents; this local setup does not implement the framework adapter.
 
 ## Recovery
 
-A routine restart retains named volumes. Back up the Plane PostgreSQL database and
-uploads volume together with framework mappings before upgrades or destructive
-operations. A database backup alone does not preserve attachment files. Keep
-backups private and restore to isolated storage for verification. Full automated
-backup/restore and integration reconciliation are tracked in the Builder backlog;
-do not infer recovery certification merely from successful startup.
+A routine restart retains named volumes. Before upgrades or destructive operations,
+create and verify a private database and uploads snapshot:
+
+```sh
+.venv/bin/python ops/plane/verify_restore.py --output-dir "$HOME/.local/share/agent-native/plane/backups/unique-snapshot-name"
+```
+
+This operator command targets the local `agent-native-plane` installation. It
+requires Docker, existing pinned images (plus an already installed Alpine image),
+and the private Builder API configuration. It refuses an existing output directory.
+It briefly stops the proxy, application writers and MinIO to capture a consistent
+database/object snapshot, then restarts the original service. Run it during a
+maintenance window without other operators writing directly to the database.
+
+The directory contains `database.dump`, `uploads.tgz`, private `plane.env`, Compose
+configuration, image lock, restore-only MinIO environment and `report.json`.
+Treat the entire directory as secret: database rows and configuration include
+credentials. It is mode 0700; backup files are mode 0600. Preserve the matching
+configuration, including encryption/signing and object-store keys. Store a separate
+protected copy outside this computer for protection against disk loss; this command
+does not create off-machine backups or a scheduled backup policy.
+
+Verification restores PostgreSQL and uploads into **new disposable volumes**, with
+no restored application, worker or dispatcher running. It checks this project's
+work-item IDs, retrieves a verification object through the restored S3 API, and
+reconnects to the original API. Original volumes are never restore targets. The
+script removes its temporary resources and source verification object; the backup
+remains. Read `result`, `checks` and `cleanup` in the private report. A process failure
+or any cleanup error requires investigation. If interrupted before normal cleanup,
+use the report's exact temporary resource names; restart the original service with
+the normal Compose command above. Never remove original volumes to clean a probe.
+
+For operator recovery, restore the database dump with `pg_restore` into an empty
+PostgreSQL database and unpack uploads into a new MinIO volume, using the matching
+private configuration and pinned images. The verifier demonstrates these commands
+without cutting over the live installation. Keep application writers stopped while
+restoring both stores. Validate the restored data before deciding to replace the
+original deployment. A production cutover, credential rotation, whole-framework
+mapping recovery and replay of pending integration writes are separate work.
+
+See [recovery evidence and limitations](../../implementation/plane-recovery-validation.md).
+A successful storage restore is not proof that agent retries are duplicate-safe.
 
 ## Browser verification
 

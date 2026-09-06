@@ -192,3 +192,18 @@ webhook delivery IDs change on retries and HTTP error responses are not retried.
 See implementation/plane-api-validation.md for precise evidence and limits.
 Probe created and cleaned its own workspace and accounts, leaving the real backlog
 unchanged. Next priority is AN-3 isolated database/attachment backup and restore.
+
+## AN-3 — storage restore verified, 2026-09-06
+
+Added ops/plane/verify_restore.py and the operator recovery procedure. The first
+export failed safely; corrected container-authenticated pg_dump and reran. The
+isolated restore recovered all 16 project item IDs and matching S3 object bytes.
+Original API reconnected; temporary restore resources were removed. Private backup
+includes database, uploads, deployment secrets/configuration and checksums.
+See implementation/plane-recovery-validation.md for limits. AN-3 remains incomplete:
+partial-failure/retry guarantees require AN-4 scoped operations and AN-5 reconciliation.
+Next implementation slice: AN-4, with failing authorization tests before adapter code.
+
+Post-recovery Playwright Chromium board/cycle checks passed. Python syntax, changed
+relative documentation links and whitespace checks passed. No managed-run capability
+was added by this operational verification.
