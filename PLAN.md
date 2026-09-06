@@ -11,9 +11,10 @@ this list tracks completed increments rather than claiming whole milestones done
 - [x] Add authenticated dashboard creation/listing with real-backend Playwright tests.
 - [x] Add private profile/workspace provisioning and explicit data mount plans.
 - [x] Verify purpose immutability and mutable storage with a real local container.
-- [ ] Integrate the mount plan with a restricted Hermes worker launch path; prevent
+- [x] Integrate the mount plan with a restricted Hermes tool environment; prevent
   inherited credentials, mounts, environment, network or container reuse from
   broadening the managed agent's access.
+- [ ] Bind that environment to durable run admission and the Hermes model loop.
 - [ ] Record provisioning/activation state and expose it through the owner UI.
 - [ ] Add protected revision refresh and revalidation at admission.
 - [ ] Connect initial planning, task persistence, pause/cancellation and cadence.

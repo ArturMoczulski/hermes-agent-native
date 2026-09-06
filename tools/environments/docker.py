@@ -527,7 +527,7 @@ class DockerEnvironment(BaseEnvironment):
 
         resource_args = self._resource_args(image, cpu, memory, disk, network, shm_size, extra_args)
         volume_args, writable_args = self._mount_args(volumes, host_cwd, auto_mount_cwd, task_id)
-        volume_args.extend(_readonly_skill_mount_args())
+        volume_args.extend(self._automatic_mount_args())
         egress_label, egress_volume_args, egress_host_args, env_args, validated_extra = (
             self._egress_and_env_args(extra_args))
         volume_args.extend(egress_volume_args)
@@ -583,6 +583,10 @@ class DockerEnvironment(BaseEnvironment):
         self.init_session()
 
     # --- __init__ helpers ---
+    def _automatic_mount_args(self) -> list[str]:
+        """Host integration mounts; restricted hosts may disable implicit access."""
+        return _readonly_skill_mount_args()
+
     def _egress_and_env_args(self, extra_args) -> tuple[str, list[str], list[str], list[str], list[str]]:
         """Egress credential-injection proxy plumbing (CA mount + HTTPS_PROXY/CA-bundle env so
         outbound traffic routes through the host-side proxy and the sandbox receives proxy tokens

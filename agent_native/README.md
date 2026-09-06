@@ -64,3 +64,35 @@ credential/skill/cache mounts, environment forwarding, container reuse and any
 other options that widen these grants. That integration is still pending. The
 current provisioning module is not exposed as a worker tool or a dashboard action,
 and purpose changes require an explicit refresh workflow before startup.
+
+## Restricted Hermes execution environment
+
+`environment.open_environment` now constructs a restricted subclass of Hermes'
+Docker environment from the validated mount plan. It reuses Hermes' Bash session
+and command execution, but does not accept caller-selected Docker flags, mounts,
+environment forwarding or container reuse. Inherited credential/skills/cache and
+egress proxy hooks are excluded. Upstream behavior is unchanged for ordinary
+Hermes environments.
+
+The owner-selected image must already exist locally, is resolved to its immutable
+image ID, and must not declare extra volumes. The container uses no network, a
+read-only root, no Linux capabilities, no-new-privileges, host UID/GID, bounded
+resources and a private temporary directory. Its image remains trusted software;
+the host engine and database must stay outside generated-code access.
+
+Every instance gets a fresh container. A missing container fails instead of being
+silently recreated. Cleanup checks removal synchronously; failure retains the
+container ID on the environment and raised exception for host reconciliation.
+
+```sh
+HERMES_TEST_IMAGE=agent-native/dev:latest scripts/run_tests.sh tests/hermes_cli/test_agent_native_environment.py tests/tools/test_docker_environment.py
+```
+
+On the development machine, 69 checks passed, including real execution, exact
+mount inspection, blocked soul writes/chmod, absent host credentials, distinct
+containers, failure after removal, and confirmed cleanup. No image was downloaded.
+The real-container case is opt-in; the fixture image must contain Bash.
+
+This is the tool environment only. Managed run admission, cancellation records,
+purpose-revision revalidation at launch, model-loop integration and scheduling are
+still pending. Creating an agent in the dashboard does not start this environment.
