@@ -2,8 +2,9 @@
 
 Plane Community v1.4.2, local Compose project `agent-native-plane`. AN-3 covers
 storage recovery and reconnect behavior. Its final acceptance criterion also covers
-partial failures and retry safety; **that criterion remains open** until the managed
-adapter and reconciliation work in AN-4/AN-5 provide an implementation to test.
+partial failures and retry safety. The later AN-22 acceptance below completes the
+bounded existing-Builder scope. General new-project/workspace provisioning
+recovery remains explicitly in AN-21; it has not been verified.
 
 ## Observed results
 
@@ -39,11 +40,29 @@ The current verifier intentionally requires one page (at most 100 project items)
 and fails rather than silently accepting an incomplete item inventory.
 
 AN-2 demonstrated sequential duplicate external-ID requests return the original ID,
-but no atomic concurrency guarantee. AN-3's broader partial-failure/retry criterion
-remains unverified. AN-4 introduces scoped operations; AN-5 must persist mutation
-intents and reconcile ambiguous results without blindly creating new projects or
-items. Retain AN-3 as incomplete until that evidence exists; do not equate recovery
-of storage with acceptance of the entire integration.
+but no atomic concurrency guarantee. At the storage-only review, AN-3's partial-failure/retry criterion remained
+unverified. AN-22 subsequently added protected mutation preparations and explicit
+recovery; the acceptance below supersedes that blocker for the existing Builder
+planning home. Storage recovery alone still does not accept the entire integration.
 
 See [operator procedure](../ops/plane/README.md#recovery) and
 [API boundary findings](plane-api-validation.md).
+
+
+## Existing-Builder retry acceptance — 2026-09-06
+
+[AN-22](plane-write-recovery.md) recovered all ten planning operation types after
+successful native responses were discarded. Fresh host connections recovered
+the same item IDs and retained existing project IDs/bindings. Repeated recovery
+and repeated execution of the consumed operation UUID created nothing new.
+Thirteen native responses were lost; ten effects were confirmed and three
+ambiguous creations remained unresolved, with zero automatic resends. Separate
+real-process tests cover abrupt client death and concurrent delivery/recovery.
+Fixture cleanup passed; the previous storage/attachment evidence remains valid.
+
+AN-3 is accepted for that bounded existing-Builder scope after explicit review.
+The original broader requirement to recover new workspace/project creation from
+partial failures is retained in AN-21, already deferred after the handoff under
+the owner's priority. No project-provisioning implementation or lost-project-create
+proof exists yet. Source notifications/freshness (AN-23), managed-run restart
+reconciliation and service disaster cutover remain their own unfinished gates.

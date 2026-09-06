@@ -166,8 +166,17 @@ then its confirmed/rejected/unknown outcome. Stored receipts contain hashes and
 identifiers, not work text or credentials. Reusing an operation UUID is denied;
 using a new UUID does not deduplicate an earlier semantic request. Missing final
 receipts remain pending, including after journal-write failure. Pending or unknown
-effects require reconciliation, not automatic replay. AN-22 remains necessary for
-retry recovery and AN-23 for source reconciliation before managed planning.
+effects require reconciliation, not automatic replay.
+
+`PlaneWrites.recover` now investigates the original operation using protected
+prepared arguments and scoped reads. A durable attempt marker survives crashes;
+a local operation lock prevents overlapping delivery and recovery. Matching
+results preserve their observation provenance, and recovered creates acquire no
+editable-field grants. Ambiguous evidence remains unresolved without resending.
+The separate preparation table contains planning text and must remain protected
+with the control database; public receipts/events still contain only hashes and
+identifiers. See [recovery semantics and evidence](../implementation/plane-write-recovery.md).
+AN-23 source reconciliation and managed-run integration remain separate.
 
 Read the [operation boundary and evidence](../implementation/plane-scoped-writes.md)
 for the supported surface, focused checks and remaining runtime integration.

@@ -6,7 +6,8 @@ is authoritative. The owner subsequently authorized local setup: Plane Community
 running in Docker, with a [live Builder workspace](../first-builder/PLANE.md).
 The [trusted-host read boundary](plane-scoped-reads.md) and
 [scoped planning writes](plane-scoped-writes.md) are implemented and verified.
-Uncertain-write recovery and managed launch/transport integration remain pending.
+[Uncertain-write recovery](plane-write-recovery.md) is implemented as an explicit
+trusted-host operation. Managed launch/transport integration remains pending.
 Existing identity and sandbox increments remain useful.
 
 ## Reuse and boundary
@@ -116,9 +117,9 @@ of a workspace whose identity cannot be resolved.
 ## Delivery sequence and evidence
 
 The owner prioritizes the first managed Builder handoff. Reuse its existing
-workspace/project and stable IDs: scoped reads/writes are verified; retry recovery
-is next, then
-source reconciliation and managed execution. General root onboarding (AN-21)
+workspace/project and stable IDs: scoped reads/writes and outcome recovery form
+the host planning boundary. Source reconciliation and managed execution connect
+that boundary to an actual Builder run. General root onboarding (AN-21)
 follows the handoff; existing bindings still require validation and safe recovery.
 The stages below describe full integration coverage, not a requirement to finish
 all onboarding or child features before one Builder can run. Native Plane cycles

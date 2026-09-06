@@ -51,6 +51,15 @@ CREATE TABLE IF NOT EXISTS agent_native_plane_mutations (
     created_at TEXT NOT NULL,
     finished_at TEXT
 );
+CREATE TABLE IF NOT EXISTS agent_native_plane_preparations (
+    operation_id TEXT PRIMARY KEY REFERENCES agent_native_plane_mutations(operation_id),
+    arguments_json TEXT NOT NULL,
+    prepared_json TEXT NOT NULL,
+    prepared_sha256 TEXT NOT NULL,
+    attempted INTEGER NOT NULL DEFAULT 0 CHECK(attempted IN (0, 1)),
+    prepared_at TEXT NOT NULL,
+    attempted_at TEXT
+);
 CREATE TABLE IF NOT EXISTS agent_native_plane_mutation_events (
     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
     operation_id TEXT NOT NULL,

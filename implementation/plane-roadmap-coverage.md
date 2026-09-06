@@ -46,9 +46,10 @@ null. Advance on accepted exit evidence or explicit re-scoping, never elapsed ti
 
 1. **Establish the Builder planning home — accepted:** setup/API and scoped-read
    evidence passed. Retry-dependent recovery moved to sequence 2 with its history.
-2. **Scoped writes and recoverable planning — current:** implement scoped writes,
-   mutation intents and safe retries; finish the carried recovery verification.
-3. **One controlled Builder run:** reconcile source changes, enforce managed run
+2. **Scoped writes and recoverable planning — reviewed:** AN-20/22 and the bounded
+   AN-3 existing-Builder recovery are accepted. Carry AN-4 runtime integration to
+   sequence 3; general provisioning recovery remains AN-21 after the handoff.
+3. **One controlled Builder run — current:** reconcile source changes, enforce managed run
    authority and protected layers, connect real Hermes/model/development tools,
    record execution and verify actual stopping. Reuse the existing Plane project.
 4. **Persistent Builder chat and owner control:** trusted durable conversation,
@@ -261,3 +262,23 @@ uncertain-write/retry recovery is verified; the passing storage restore evidence
 is preserved. This acceptance covers the trusted-host adapter, schemas and
 receipts. Managed-run authentication, execution, source reconciliation and the
 first Builder handoff remain separate work. Cycles remain ordered and undated.
+
+
+## Recovery acceptance and sequence-3 carry review
+
+[AN-22 evidence](plane-write-recovery.md) records 452 passing regressions and the
+isolated live ten-operation recovery proof with zero resends and verified cleanup.
+AN-22 and the bounded existing-Builder AN-3 recovery scope are accepted; prior
+storage evidence remains in [the AN-3 report](plane-recovery-validation.md).
+General new-project/workspace creation recovery is explicitly retained in AN-21.
+
+AN-4 carries unfinished from sequence 2 to sequence 3: host adapters do not prove
+run-derived authority or skill/tool transport. It now explicitly requires AN-7
+and AN-26, retaining AN-2 and child acceptance. AN-5 instead requires the accepted
+host boundary AN-20, preserving AN-22/23 and all source-freshness requirements.
+AN-7 still requires AN-5. This removes the aggregate/runtime dependency deadlock
+without dropping the freshness gate. AN-17 is Todo and next; AN-70 remains open.
+
+Readback confirmed AN-3/22 Done, AN-17 Todo, other states unchanged, sequence 2
+containing AN-3/20/22, sequence 3 with carried AN-4, and all six cycles undated.
+These planning outcomes do not establish a managed run or autonomous handoff.

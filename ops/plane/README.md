@@ -116,3 +116,21 @@ manifest, SQLite journal and a redacted report. Read both `result` and `cleanup`
 success requires deletion of its fixture workspace, token revocation and account
 deactivation. These are logical Plane operations, not physical database erasure.
 No owner/Builder project, credentials, model or managed worker is used by the probe.
+
+
+## Uncertain write verification
+
+The [AN-22 recovery proof](../../implementation/plane-write-recovery.md) discards
+successful native responses through a loopback relay, then reopens the host
+journal and recovers through GETs. It covers all ten planning operations and
+ambiguous creation evidence without automatically resending mutations:
+
+```sh
+.venv/bin/python ops/plane/probe_write_recovery.py --base-url http://localhost:19230 --output-dir /absolute/private/new-write-recovery-probe
+```
+
+The same disposable-account and private-output rules above apply. Require a
+completed report, zero recovery mutation attempts and successful cleanup.
+Protected preparations contain planning text; protect the control database and
+its backups along with the private fixture credentials. Keep operation lock files
+in place while that database can be used; do not replace an open database.

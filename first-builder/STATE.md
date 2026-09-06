@@ -16,8 +16,11 @@ operations. M7 is now the first handoff gate, using root-relevant M0/M1/M2 work.
 Use Plane through the Builder API account for current work and priorities. The
 full specification is now organized in milestone modules and rolling cycles; see
 [coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
-the latest review: AN-22 retry recovery (within AN-4). AN-19 scoped reads and
-AN-20 scoped writes are accepted; sequence 2 is current and remains undated.
+the latest review: AN-17 execution-entry inventory in sequence 3. AN-19, AN-20
+and AN-22 host planning operations/recovery are accepted. Sequence 2 is reviewed;
+AN-3's existing-Builder recovery scope is accepted, general provisioning recovery
+remains AN-21, and unfinished AN-4 runtime integration is carried to sequence 3.
+All cycles remain undated. No managed Builder has been launched.
 
 ## Initial identity increment
 
@@ -373,9 +376,43 @@ cycle movement, scope/ownership denials, journal attribution and independent
 readback. Its workspace was deleted, tokens revoked and accounts deactivated.
 Commands, evidence location and limits: [AN-20 validation](../implementation/plane-scoped-writes.md).
 
-Next: AN-22. Start with a committed Plane creation whose response is lost, reopen
+Next at the AN-20 review: AN-22. Start with a committed Plane creation whose response is lost, reopen
 the local journal and recover the original item ID without a second creation.
-Current receipts are hash-only and one-shot; they do not recover uncertain writes
+AN-20 receipts were hash-only and one-shot; they did not recover uncertain writes
 or deduplicate equivalent requests with new UUIDs. AN-3 remains Blocked on that
 proof. Fingerprints are not atomic remote compare-and-swap. No managed-agent tool
 transport, activation, autonomous work or new UI was enabled by AN-20.
+
+
+## Latest increment — uncertain Plane write recovery (2026-09-06)
+
+AN-22 persists protected delivery preparations and an irreversible attempt marker
+before dispatch. Delivery and recovery share a private POSIX operation lock;
+process death releases it without authorizing another write. Explicit recovery
+uses scoped GETs to investigate all ten operations. Confirmed observations retain
+matching-effect provenance; missing, changed or duplicated evidence stays
+uncertain. Recovered creation never installs editable-field grants.
+
+TDD progressed through small red/green storage, HTTP and process increments.
+Final regression: 452 tests passed, zero failures/skips; Ruff and documentation
+checks passed. An abrupt-process-death test preserved the original native effect
+and journal across restart without another POST. The isolated live Plane v1.4.2
+probe recovered ten operation types and left three ambiguous creates unresolved:
+13 successful native responses discarded, zero recovery resends. All fixture
+cleanup passed. Early probe assertions confused a membership ID with the item ID and assumed
+only two projects existed despite native workspace seeding. Both assumptions
+were corrected before the fresh full probe passed. See
+[recovery behavior and evidence](../implementation/plane-write-recovery.md).
+
+Plane review accepted AN-22 and the bounded existing-Builder AN-3 recovery scope,
+preserving prior storage evidence. General new-project/workspace provisioning
+recovery remains explicitly in AN-21. Sequence 2 now retains accepted AN-3/20/22;
+AN-4 carries to sequence 3 for actual run-derived actors and skill/tool transport.
+AN-5 now depends on host operations AN-20 rather than aggregate AN-4, eliminating
+the runtime dependency deadlock while keeping AN-23 freshness before AN-7 admission.
+AN-4 explicitly requires AN-7/26. API readback verified states, memberships and
+all six cycles' null dates. The private cycle pointer now identifies sequence 3.
+
+Next: AN-17 records the exact Hermes baseline and execution-entry inventory.
+AN-70 remains an open runtime-limits decision. The preview is still inactive
+agent records; this increment adds no worker, cadence, chat or UI activation.

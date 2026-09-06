@@ -1,7 +1,7 @@
 """Scoped host planning writes with explicit grants and one-shot mutation records.
 
-The host retains the credential, authority, journal and opaque contexts. This is
-not worker authentication, run admission, evaluation, or retry reconciliation.
+The host retains the credential, authority, journal and opaque contexts. Explicit outcome recovery is
+GET-only. This is not worker authentication, run admission or result evaluation.
 """
 
 import html
@@ -425,7 +425,18 @@ class PlaneWrites:
         )
 
     def _result(
-        self, context, scope, operation, args, kind, resource_id, raw, method, payload
+        self,
+        context,
+        scope,
+        operation,
+        args,
+        kind,
+        resource_id,
+        raw,
+        method,
+        payload,
+        *,
+        grant_created=True,
     ):
         if kind == "membership":
             if not isinstance(raw, list) or len(raw) != 1:
@@ -491,7 +502,7 @@ class PlaneWrites:
                 "Plane update attribution does not match the service identity"
             )
         _verify_applied(raw, payload)
-        if created_resource:
+        if created_resource and grant_created:
             self.authority.record_created_resource(context, operation, record["id"])
         return record
 
@@ -562,7 +573,22 @@ class PlaneWrites:
         self._check(context, operation, requirements)
         return scope, result
 
+    def recover(self, context, operation_id):
+        from agent_native.plane_recovery import recover
+        from agent_native.plane_operation_lock import operation_lock
+
+        operation_id = _uuid(operation_id)
+        with operation_lock(self.journal._conn, operation_id):
+            return recover(self, context, operation_id)
+
     def execute(self, context, operation_id, operation, arguments):
+        from agent_native.plane_operation_lock import operation_lock
+
+        operation_id = _uuid(operation_id)
+        with operation_lock(self.journal._conn, operation_id):
+            return self._execute(context, operation_id, operation, arguments)
+
+    def _execute(self, context, operation_id, operation, arguments):
         # Context and correlation are injected by the trusted caller, never model arguments.
         operation_id = _uuid(operation_id)
         scope = None
@@ -592,11 +618,25 @@ class PlaneWrites:
 
         def mark_attempted():
             nonlocal attempted
+            self.journal.mark_attempted(scope, operation_id)
             attempted = True
 
         try:
             method, suffix, payload, status, kind, resource_id = self._prepare(
                 context, operation, args, operation_id
+            )
+            self.journal.prepare(
+                scope,
+                operation_id,
+                args,
+                {
+                    "method": method,
+                    "suffix": suffix,
+                    "payload": payload,
+                    "expected": status,
+                    "kind": kind,
+                    "resource_id": resource_id,
+                },
             )
             current_scope, raw = self._send(
                 context,
@@ -628,7 +668,12 @@ class PlaneWrites:
                 "resource": record,
                 "fingerprint": fingerprint(record),
             }
-            self.journal.finish(operation_id, "confirmed", resource_id=record["id"])
+            self.journal.finish(
+                operation_id,
+                "confirmed",
+                resource_id=record["id"],
+                authorize=lambda: self._check(context, operation, requirements),
+            )
             return result
         except Exception as error:
             outcome = "unknown" if attempted else "rejected"

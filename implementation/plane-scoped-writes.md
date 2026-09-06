@@ -133,13 +133,13 @@ confirmed result.
 A new UUID is a new attempt and is not semantically deduplicated against an earlier
 request. Creating a new UUID to retry uncertain work can create duplicates.
 `external_source`/`external_id` support correlation where the endpoint accepts
-them; they are not a remote uniqueness or exactly-once guarantee. The hash-only
-journal cannot reconstruct a complete lost request by itself.
+them; they are not a remote uniqueness or exactly-once guarantee. The original
+AN-20 hash-only journal could not reconstruct a complete lost request by itself.
 
-AN-22 must add durable retry/reconciliation policy and recover uncertain outcomes
-before unattended planning is enabled. This increment does not complete the
-carried AN-3 retry-recovery acceptance. It does not add a worker authentication
-mechanism or a general framework event stream.
+[AN-22 recovery](plane-write-recovery.md) now adds protected preparations, durable
+attempt markers and explicit read-only investigation of uncertain outcomes.
+Its evidence and limitations are separate from the AN-20 results below. Neither
+increment supplies managed-run authentication or a general framework event stream.
 
 ## Verification
 

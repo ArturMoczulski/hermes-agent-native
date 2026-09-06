@@ -4,7 +4,7 @@ import json
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from threading import Thread
 from types import SimpleNamespace
-from urllib.parse import urlsplit
+from urllib.parse import parse_qs, urlsplit
 from uuid import uuid4
 
 import pytest
@@ -39,6 +39,7 @@ def upstream():
             entry = {
                 "method": self.command,
                 "path": urlsplit(self.path).path,
+                "query": parse_qs(urlsplit(self.path).query),
                 "body": payload,
                 "headers": dict(self.headers),
             }
