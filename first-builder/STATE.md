@@ -73,12 +73,26 @@ check received 49 PTY frames with no unavailable/reconnect state. Existing store
 sessions and managed setup data remain intact; use a new native terminal session
 if a previously open tab still shows its old renderer as ended.
 
-Live subscription verification awaits the owner's completion of the preview's
-normal Hermes device sign-in, started after the owner continued. Automatic review
-rejected an earlier directory alias exposing the authenticated private profile;
-no alias was created and no credentials were copied. The approved normal sign-in
-uses Hermes's existing endpoint and a separate provider session. Do not retry the
-rejected directory link or automatically start another device flow on expiry.
+The owner completed the refreshed normal Hermes device sign-in. The preview
+reports approved authentication and selects `openai-codex` / `gpt-6-astra`.
+A fresh installed-Chromium native chat sent one harmless connection-test prompt;
+the real subscription returned the exact requested response, and the native
+messages API confirmed both the exact user message and assistant reply in saved
+session `20260906_222222_e5b524`. Evidence: `/tmp/an77-live-chat-result.json`.
+No project tools or autonomous managed work were requested. Real subscription
+send/reply/persistence is now verified; reload/history remains covered by the
+isolated browser regression, not by this single live exchange.
+
+For live verification, runtime session IDs differ from persistent SessionDB keys.
+Use the channel-scoped `session.info` payload's `stored_session_id` when reading
+saved messages. The first probe used the runtime ID and received 404; exact-match
+lookup of only its own test prompt resolved the saved session and verified the
+successful exchange. No unrelated conversation contents were logged.
+
+Automatic review rejected an earlier directory alias exposing the authenticated
+private profile; no alias was created and no credentials were copied. The normal
+Hermes sign-in is now complete. Do not retry that alias or start another device
+flow unless a fresh sign-in is needed and requested.
 Managed agent-to-session binding, protected execution and lifecycle controls
 remain AN-77 work after native chat verification; no managed agent is running.
 

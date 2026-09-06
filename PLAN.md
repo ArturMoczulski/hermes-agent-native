@@ -26,9 +26,10 @@ the writer slices enforce all operations they actually expose. Minimal ordinary-
 Plane provisioning comes forward; Builder repository privileges, broader native
 integration and full teams stay later. No completed evidence is reopened or erased.
 
-AN-77 is active: restore the existing Hermes `/chat` experience, then connect it
-to the selected framework agent's protected purpose, persistent session and owner
-controls. Reuse the embedded TUI, transcript, composer and Hermes model loop; do not
+AN-77 is active: the existing Hermes `/chat` now connects and has verified a real
+Astra reply through the owner's ChatGPT subscription, saved in native SessionDB.
+Next connect it to the selected framework agent's protected purpose, persistent
+session and owner controls. Reuse the embedded TUI, transcript, composer and Hermes model loop; do not
 build a second React conversation. An ordinary native chat working again is a
 useful checkpoint, but managed-agent identity and control still need verification.
 Conversation must be available before autonomous writing and independently of
