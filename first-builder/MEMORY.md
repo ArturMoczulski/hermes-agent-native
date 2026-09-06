@@ -75,3 +75,14 @@ contradictory instructions or store secrets here.
   allow; no weekly forecasts or waiting for a calendar window. Actual event times,
   thinking cadence and real externally required deadlines remain separate concepts.
   This supersedes earlier calendar-based cycle planning. Source: owner conversation.
+
+- **First major milestone — owner reprioritization (2026-09-06):** run the First
+  Builder as a persistent autonomous framework agent with repository development
+  tools, trusted two-way chat, proactive questions, owner steering/stop, scoped
+  Plane planning, evidence-based evaluation and basic restart recovery. Demonstrate
+  a real TDD improvement and another eligible step without repeated human prompts.
+  This supersedes the M0-through-M7 chronological plan: indispensable Builder
+  isolation joins the first autonomous root; full recursive teams, the complete
+  control center and broader operation hardening follow the handoff. Preserve the
+  protected deployed soul/grants/running release outside the editable repository.
+  Source: owner explicitly requested reprioritizing Plane around this milestone.

@@ -8,6 +8,11 @@ Active repository: `/Users/arturmoczulski/Projects/hermes-agent-native`.
 The owner selected Plane planning and a reusable sprint workflow skill. See the
 local Plane deployment entry below and [live planning context](PLANE.md). Earlier
 entries record completed increments and historical gaps, not the current inventory.
+The first major milestone is a real autonomous First Builder with persistent owner
+chat, repository development, scoped Plane planning, evaluation and basic recovery.
+The owner moved this handoff ahead of complete teams, monitoring and Linux
+operations. M7 is now the first handoff gate, using root-relevant M0/M1/M2 work.
+
 Use Plane through the Builder API account for current work and priorities. The
 full specification is now organized in milestone modules and rolling cycles; see
 [coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
@@ -318,3 +323,33 @@ sequence 2 with its prior cycle history retained in comments/briefs. Scoped writ
 (AN-20) are Todo and next, then AN-22; no dates or duration estimates were added.
 The private planning-context cycle pointer now identifies sequence 2. This does not
 complete M1 or establish a managed autonomous agent.
+
+## First major milestone reprioritized — 2026-09-06
+
+The owner directed the first major handoff to be the First Builder running inside
+this framework with persistent chat and autonomous repository development. Updated
+39 existing Plane items without changing their states, retained all accepted
+evidence, and added the focused open runtime-limits decision AN-70. Broad capacity
+and progress defaults remain AN-67; root timing remains AN-66. Root resume is AN-31;
+unresolved descendant/project pause choices stay AN-65 before AN-40.
+
+The existing M7 module is now **First milestone - Autonomous First Builder**, first
+in module order. It aggregates 39 existing/new prerequisite records, preserving
+all original capability memberships. AN-16 now depends on the root and real Builder
+proof gates; complete teams, organization UI and Linux operations no longer block
+it. AN-57 includes the actual Hermes/model/repository/test connection and protected
+installed release; AN-58 proves TDD, owner steering, browser closure, service restart
+and subsequent independent work. Planning edits do not establish runtime completion.
+
+Six native cycles remain undated. Sequence 1 stays accepted; sequence 2 remains
+current (AN-20 next, then AN-22 and carried AN-3). Sequence 3 now delivers one
+controlled Builder run; 4 chat and owner control; 5 autonomous continuity; 6 the
+handoff proof. General onboarding AN-21 is returned to the post-handoff backlog.
+
+Verification: API readback confirmed all 70 unique items, the 14 revised native
+dependency sets, six exact cycle memberships/null dates, module ordering and all
+original states/memberships. The dependency graph including aggregate completion
+is acyclic and the handoff has no deferred-feature blockers. Independent document
+review checked 71 local links/anchors and all 24 product plus 20 UX scenario rows.
+No runtime tests were needed for this planning/documentation change. Current live
+scope remains in Plane; this entry is handoff evidence rather than a second board.

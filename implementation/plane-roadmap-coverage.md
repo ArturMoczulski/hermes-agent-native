@@ -15,14 +15,20 @@ context, not a mandate to implement every upstream feature or old plan.
 
 ## Milestones and modules
 
-Plane Community modules represent the M0–M7 delivery milestones as outcome groups.
-Their descriptions define acceptance gates. Module percentages count records, not
+Plane Community modules retain M0–M7 as capability groups. The owner selected
+the First Builder handoff as the first major milestone; M7 is brought forward
+using root-relevant M0/M1/M2 work and essential isolation/recovery. Completing the
+whole M3–M6 groups is not a prerequisite for that handoff.
+The First milestone module is an additive view of the same prerequisite records;
+original capability memberships are preserved. It creates no duplicate work.
+Descriptions define acceptance gates. Module percentages count records, not
 proven product completion; aggregate parent work items are not extra implementation
 work. Existing AN-1–AN-16 IDs, comments and acceptance history were retained.
 Near-term work is refined into smaller linked items; distant work stays coarser.
 
 | Module / milestone | Outcome |
 | --- | --- |
+| [First milestone - Autonomous First Builder (M7)](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/38d8aafd-cc77-4d6a-bb98-e610c8a77acd/) | First major acceptance gate AN-16: the real managed Builder completes a bounded TDD improvement from the repository workspace, survives interruption and owner steering, and cannot grant itself deployment or soul-edit authority. |
 | [M0 - Validate the Hermes foundation](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/f2e73bd1-3c26-44c2-8e01-1b638c6936c8/) | Gate: pinned baseline, maintained patch map and a real engine/tool/stop/restart proof. |
 | [M1 - Governed agents and Plane work](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/af3769db-cd94-4209-a6ae-f52ccea00b51/) | Gate: protected identity, scoped authority and planning, durable admission, private layers and readable state. |
 | [M2 - One autonomous root](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/e71a7b80-4ba5-4402-a14d-12aa3dee999e/) | Gate AN-12: create from purpose, plan, act, ask, evaluate results and continued need, then continue, wait or retire; basic chat, decisions, stopping and recovery work before unattended cadence. |
@@ -30,23 +36,36 @@ Near-term work is refined into smaller linked items; distant work stays coarser.
 | [M4 - Complete owner control center](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/2d24874b-89c0-452c-8d97-676a85519cde/) | Gate AN-14: connected Chat, Monitor, Inbox, Work, Settings and durable history; truthful freshness/delivery, accessible navigation and complete UX evidence. |
 | [M5 - Evaluate outcomes and detect stalled work](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/a758b594-f81b-4343-898b-bbff2e623a98/) | Gate: domain-appropriate result review and one evidence-linked concern per recurring no-progress pattern. |
 | [M6 - Reliable always-on operation](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/95e8fc96-2b57-4679-b0dd-ac52def9c32f/) | Gate AN-15: failure-tested recovery, consistent backups, revocation/cancellation, measured capacity and a documented Linux deployment independent of the personal computer. |
-| [M7 - First Builder self-bootstrap](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/38d8aafd-cc77-4d6a-bb98-e610c8a77acd/) | Gate AN-16: the real managed Builder completes a bounded TDD improvement from the repository workspace, survives interruption and owner steering, and cannot grant itself deployment or soul-edit authority. |
 | [Product decisions - resolve before dependent behavior](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/3ceeb4bd-b69d-4543-8d4c-9be5684b9011/) | Product policy choices from design/07-open-decisions. |
 
 ## Rolling cycles and priority
 
-The owner replaced the original weekly forecasts with three ordered, undated
-cycles. Live Plane start/end fields are null; the cycle names retain their sequence.
-Advance when exit evidence is accepted or an explicit review changes scope, never
-because a day arrives or elapsed time matches an estimate.
+The owner replaced calendar forecasts with ordered, undated cycles, and then
+prioritized the managed First Builder handoff. Live Plane start/end fields remain
+null. Advance on accepted exit evidence or explicit re-scoping, never elapsed time.
 
 1. **Establish the Builder planning home — accepted:** setup/API and scoped-read
-   evidence passed. The remaining retry-dependent recovery acceptance was explicitly
-   carried into sequence 2, with its earlier evidence/history retained.
-2. **Scoped writes and recoverable planning:** implement scoped writes, then durable
+   evidence passed. Retry-dependent recovery moved to sequence 2 with its history.
+2. **Scoped writes and recoverable planning — current:** implement scoped writes,
    mutation intents and safe retries; finish the carried recovery verification.
-3. **Planning setup and source reconciliation:** provision stable planning resources
-   and reconcile source changes after the preceding outcomes are accepted.
+3. **One controlled Builder run:** reconcile source changes, enforce managed run
+   authority and protected layers, connect real Hermes/model/development tools,
+   record execution and verify actual stopping. Reuse the existing Plane project.
+4. **Persistent Builder chat and owner control:** trusted durable conversation,
+   proactive questions/answers, steering, pause/resume and basic visible work state.
+5. **Autonomous Builder continuity:** cadence, accepted results and purpose review,
+   outage handling, restart reconciliation and next-step selection without duplicate
+   work or repeated questions. Resolve only relevant open defaults before dependent work.
+6. **First Builder handoff proof:** complete a real framework improvement through
+   incremental TDD, retain evidence in Plane, demonstrate owner steering/browser
+   closure/restart and continue eligible work without repeated human prompts.
+
+Full teams, the complete monitoring/inbox interface, advanced progress heuristics,
+general new-project provisioning and broader deployment hardening remain in their
+existing backlog groups after the handoff. They are retained product requirements.
+Basic authority, stopping, root decisions, evaluation and recovery stay on the
+first-milestone path. Do not treat an aggregate backlog parent's incomplete status
+as a dependency on every deferred sibling; use the explicit scoped prerequisites.
 
 One Builder has implementation WIP 1. At review, account for unfinished work by
 carrying, splitting, returning it to backlog or cancelling under lifecycle rules;
@@ -151,8 +170,9 @@ M3 applies the same rules to recursive children and parent accountability.
 | Planning and instructions distinguish growth, operation, waiting and completion (product 1, 2, 7, 15; UX-14) | AN-26, AN-35, AN-69 |
 | Purpose/outcomes/obligations replace the mandatory lifetime selector; expose evaluation and reason (UX-01/11/15) | AN-37, AN-47, AN-69 |
 
-These changes refine the roadmap without adding work to the already selected
-near-term cycles or claiming implementation evidence. Live item links and states
+At the time of that lifespan update, these changes refined the roadmap without
+adding work to the selected near-term cycles or claiming implementation evidence.
+The later First Builder priority update reorganizes those cycles. Live item links and states
 are available through the project board; this table is a coverage index.
 
 ## Decision and evidence boundaries
@@ -162,8 +182,10 @@ approved by the owner; see the [decision record](../design/07-open-decisions.md#
 AN-63 was then approved. The owner's latest revision resolves AN-64 with
 purpose-based lifespan and cancellation pause; it supersedes the earlier
 completion-by-role default. See [the current lifecycle decision](../design/07-open-decisions.md#resolved-purpose-based-lifespan-cancellation-and-replacement).
-AN-68 separately tracks retained-work operations. Five decisions remain open:
-AN-59, AN-65, AN-66, AN-67 and AN-68. They gate only behavior needing that choice;
+AN-68 separately tracks retained-work operations. Six decisions remain open:
+AN-59, AN-65, AN-66, AN-67, AN-68 and AN-70. AN-70 separates the first Builder
+runtime limits from broad capacity/progress defaults. AN-66 and AN-70 are on the
+first handoff path; AN-65 governs later project/descendant controls. They gate only behavior needing that choice;
 record export/deletion and new transfer behavior do not block ordinary retirement
 with retained records. Creating an item does not approve its proposal.
 Parent notification after direct human direction is part of the accepted
@@ -185,7 +207,7 @@ identity and seven Plane onboarding samples were verified, then the project was
 deleted through the owner API and returned 404 on read-back. The Agent Native
 Framework project is the retained planning home.
 
-## Verification of this planning update
+## Verification of the original planning import
 
 Read-back verified all 67 unique items, including the 51 additions, original accepted
 states, source references and parent links. Every item belongs to exactly its
@@ -205,3 +227,26 @@ recovery. AN-3 remains blocked on that evidence and was explicitly carried from
 sequence 1 into sequence 2. Native cycle membership and item states were read back;
 sequence 1 retains three accepted items, and all cycles remain undated. This update
 does not establish managed run authentication, agent activation or M1 completion.
+
+## First Builder priority update
+
+The owner moved the managed Builder with persistent chat to the first major
+milestone. The existing M7 module now appears first and aggregates 39 records while
+preserving their original capability memberships. AN-16 is the acceptance gate;
+AN-57 connects the protected Builder run and AN-58 proves real TDD development,
+owner steering and independent continuation. The first handoff reuses one existing
+Plane project and one configured model; general onboarding and model switching
+remain AN-21/AN-27 after it.
+
+AN-70 records the still-open first Builder runtime-limit decision. Broader capacity
+and progress thresholds remain AN-67. Root timing AN-66 remains on the early path;
+AN-65 gates the later descendant/project-pause extension, with root resume in AN-31.
+These changes set priority and scope; they do not approve unresolved defaults.
+
+Readback verified 70 unique work items, 39 updated existing items with their states
+preserved, 14 revised dependency sets, six exact undated cycle memberships and
+preserved original module memberships. The graph including aggregate completion
+remains acyclic; the first handoff has no prerequisite in deferred teams, complete
+UI, multi-model switching or broad operation hardening. AN-20 remains the next
+implementation slice in sequence 2. The completed first cycle and accepted evidence
+remain intact. Documentation checks preserve all 24 product and 20 UX mappings.

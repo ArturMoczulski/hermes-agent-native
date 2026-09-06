@@ -62,15 +62,19 @@ Builder planning, not proof of managed-agent isolation. No API credential is
 forwarded into managed sandboxes. The future adapter must enforce narrower scopes.
 
 The original AN-1 through AN-16 records remain, with native dependency links.
-The full design is now mapped into milestone modules, refined work items and a
-product-decision module; see the [coverage index](../implementation/plane-roadmap-coverage.md). The first
-cycle retains AN-1, AN-2 and AN-3 and adds the scoped-read slice. Two subsequent
-cycles are the next ordered outcome groups, refined against actual capacity and
-dependencies. All three have null start/end dates. Sequence and exit evidence
-define progression; no planned duration or calendar forecast is used.
-The live records own statuses and acceptance;
-read them rather than inferring current state from this document. Existing completed
-framework increments remain evidence in STATE.md and Git, not reopened tasks.
+The full design is mapped into capability modules and a product-decision module;
+see the [coverage index](../implementation/plane-roadmap-coverage.md). The first
+major handoff is [AN-16 — Run the First Builder inside the framework](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/950ff1ab-7337-4f5b-a49d-a4731c4fddf0/),
+tracked in the existing M7 module, now titled **First milestone - Autonomous First Builder**.
+M0–M7 IDs are capability references, not mandatory chronological release gates.
+
+The accepted first cycle retains AN-1, AN-2 and AN-19. The second cycle covers
+scoped writes and recovery. Subsequent undated cycles cover a controlled Builder
+run, persistent chat/owner control, autonomous continuity, and the handoff proof.
+General new-agent onboarding is deferred; the Builder reuses this project and its
+existing stable IDs. Read live records for exact membership, status and blockers.
+No planned duration or calendar forecast is used. Completed framework increments
+remain evidence in STATE.md and Git, not reopened tasks.
 
 Plane does not schedule this external coding agent. These instructions support
 continuity across invocations; they do not claim an autonomous Builder cadence.

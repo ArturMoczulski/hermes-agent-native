@@ -49,9 +49,10 @@ re-scope with unfinished-work dispositions; never wait for a scheduled cycle end
 Actual activity timestamps, thinking cadence and genuine external deadlines remain
 distinct. Record the source and affected work for a real deadline.
 
-Live verification of Plane Community v1.4.2 confirmed that PATCH requests with
-`start_date: null` and `end_date: null` persist on readback for all three existing
-cycles, preserving their IDs and item membership. Use these native undated cycles;
+The original three-cycle verification of Plane Community v1.4.2 confirmed that
+PATCH requests with `start_date: null` and `end_date: null` persist on readback
+without replacing the cycles or their membership. Later priority reviews may
+explicitly change scope and add undated cycles. Use these native undated cycles;
 no alternate grouping or fabricated calendar values are needed. Record goal,
 sequence and exit criteria on the cycle; its acceptance remains evidence-based.
 
@@ -112,6 +113,14 @@ connection failures in the control center. No automatic destructive recreation
 of a workspace whose identity cannot be resolved.
 
 ## Delivery sequence and evidence
+
+The owner prioritizes the first managed Builder handoff. Reuse its existing
+workspace/project and stable IDs: scoped writes and retry recovery are next, then
+source reconciliation and managed execution. General root onboarding (AN-21)
+follows the handoff; existing bindings still require validation and safe recovery.
+The stages below describe full integration coverage, not a requirement to finish
+all onboarding or child features before one Builder can run. Native Plane cycles
+now follow the [Builder handoff sequence](delivery-plan.md#engineering-sequence-and-evidence).
 
 1. **Capability check against a pinned Community release.** Verify workspace/project
    provisioning, credentials and scoped reads/writes, states, dependencies, cycles,

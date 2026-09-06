@@ -1,9 +1,17 @@
-# Proposed delivery plan
+# Delivery plan
 
 The owner selected the [Hermes product-fork direction](architecture.md), created
 the fork, and copied the specification and plan into it. The completion checks
 below describe engineering work still to perform; copying documents does not
 complete an integration milestone.
+
+The owner's first major milestone is a persistent First Builder running inside
+the framework, developing this repository and communicating through owner chat.
+M0–M7 are retained as capability-group identifiers and Plane references, not a
+mandatory numerical delivery order. M7 is the first major handoff gate: it draws
+on root-relevant M0/M1/M2 work and its own Builder isolation requirements. Full
+M3–M6 delivery follows that handoff. This changes delivery priority without
+marking any unfinished capability complete.
 
 Every milestone uses the [First Builder's continuous TDD workflow](../first-builder/PRACTICES.md):
 choose one behavior, write and observe a failing test, implement the minimum,
@@ -51,18 +59,23 @@ calls use an explicitly configured test account; they are not required for every
 local check.
 
 **Decision gate:** if a required boundary cannot be enforced, name the exact
-upstream path and estimate its replacement. A fork permits focused source fixes;
+upstream path and describe its replacement scope. A fork permits focused source fixes;
 it does not justify an unlimited rewrite. Reconsider only the incompatible
 subsystem before expanding scope. Do not build OpenCode support in parallel.
 
 ## M1 — Protected identity and authoritative operations
 
-**Depends on M0. Outcome:** agents and work can be safely represented and managed.
+**Uses M0 integration evidence. Outcome:** agents and work can be safely
+represented and managed. Deliver the single-Builder identity, grants, scoped
+operations and event boundary before M7; multiple-root and parent-specific
+completion cases remain part of full M1 coverage.
 
 - Extend the Kanban control database with stable agent IDs, parentage, lifecycle,
   soul revisions, grants, project ownership, activation intents and global events.
-- Follow the [Plane delivery sequence](plane-project-management.md#delivery-sequence-and-evidence)
-  before coupling planning to execution. Bind Plane items to framework attempts,
+- Complete the root-relevant [Plane delivery sequence](plane-project-management.md#delivery-sequence-and-evidence)
+  needed by the Builder before coupling its planning to execution. Full multi-agent
+  onboarding can follow. Source freshness and reconciliation needed for safe
+  admission remain on the Builder path. Bind Plane items to framework attempts,
   evaluations and artifacts; add actor, purpose revision and expected-run checks.
   Do not adopt inherited Hermes tasks as a competing planning store.
 - Add trusted owner authentication and scoped agent actors. Cover read access,
@@ -82,11 +95,15 @@ and parent soul edits obey their different rights; unauthorized reads/writes and
 owner impersonation are rejected through every exposed path. Each accepted
 mutation has a durable event and agent-readable representation.
 
-Do not enable unattended operational work before these controls are in place.
+Do not enable unattended Builder work before its exposed operations and execution
+paths enforce these controls. Disable unsupported managed entry paths; narrowing
+the first handoff to one root is not permission to bypass authority checks.
 
 ## M2 — One complete autonomous root
 
-**Depends on M1. Outcome:** a purpose becomes useful work without a prompt queue.
+**Depends on the M1 authority and operation boundaries for enabled root work.
+Outcome:** a purpose becomes useful work without a prompt queue. The First Builder
+is the first root used to prove this behavior and its M7 handoff.
 
 - Creation atomically records an immediate coordination activation. Add interval
   cadence and one managed dispatcher with per-profile turn admission and global
@@ -123,12 +140,14 @@ without new growth work; uncertainty routes to the human for this root. Cancelli
 one assignment preserves but pauses independent work. None of these outcomes may
 weaken criteria, rewrite the soul or mistake a Done item for whole-purpose fulfillment.
 
-This is the first useful product increment. It includes real control and basic
-recovery, not merely a timer connected to chat.
+Deliver these root capabilities with the M7 First Builder handoff. Real control,
+result and purpose evaluation, and basic recovery are part of that first major
+milestone; a timer connected to chat does not meet it.
 
 ## M3 — Persistent teams and recursive control
 
-**Depends on M2. Outcome:** agents build and supervise a continuing organization.
+**Follows the M7 handoff and builds on M2. Outcome:** agents build and supervise
+a continuing organization. Full recursive teams do not gate the first Builder.
 
 - Add scoped child creation with purpose, capabilities, model, workspace and
   cadence, without a fixed lifetime classification. A parent can delegate only grants
@@ -245,24 +264,69 @@ agents retain purpose, tasks, questions and memory; work with unknown effects is
 not duplicated. A restored backup resumes through reconciliation. Engine stop and
 sandbox stop are distinguishable in records. No UI connection owns the cadence.
 
-## M7 — The First Builder runs inside the product
+## M7 — First major handoff: the autonomous First Builder with chat
 
-**Depends on M1–M6. Outcome:** the framework develops itself under owner control.
+**Depends on root-relevant M0/M1/M2 behavior and the Builder isolation below,
+not full M3–M6 completion. Outcome:** the owner continues framework development
+through a persistent Builder agent and its web conversation. The external coding
+conversation is no longer needed to prompt each development step.
 
-- Create the First Builder as a real persistent agent with the implementation
-  repository root as its named workspace exception.
-- Keep its soul, grants and the running release outside the editable repository.
-  Prevent source edits from changing active policy through hot reload or update.
-- Supply framework-development/project-management skills and explicitly scoped
-  tooling for edits, verification, version control and optional child delegation.
-- Give it a bounded improvement which it plans, performs, evaluates and records
-  without the human prompting each step. Exercise owner steering during the work.
-- Use a controlled release workflow for deployment; repository write permission
-  is not authorization to replace the authority service or broaden access.
+Deliver the following outcomes in small test-driven increments. These are scope
+and evidence gates, not duration estimates or calendar windows.
 
-**Completion evidence:** the First Builder completes a real framework improvement
-while running on the framework, retains progress across inactivity, accepts
-redirection, and cannot edit its own soul or grant itself deployment authority.
+1. **Scoped planning and retry handling.** Complete the Builder's scoped Plane
+   reads/writes and durable uncertain-write handling; connect its existing project,
+   current cycle and project-management skill. Preserve work, evidence and decisions
+   across turns, and reconcile failures before retrying an effect. Complete the
+   applicable planning recovery checks before unattended planning depends on them.
+2. **One managed Builder turn.** Admit a real Hermes model/tool run under the current
+   Builder identity, soul revision and grants. Provide explicitly scoped repository
+   editing, test execution and version-control tools. Persist run/session/assignment
+   identity and relevant model/tool events; enforce authenticated operations, owner
+   Stop and purpose/permission changes. Verify actual sandbox process stopping and
+   keep unknown outcomes visible. Keep the canonical soul, grants, credentials and
+   protected installed running release outside the editable repository; no hot reload
+   or source edit may change active authority. Repository access does not grant a
+   Docker socket, arbitrary host access or permission to deploy.
+3. **Durable chat, questions and steering.** Connect the trusted owner channel to
+   that persistent Builder in the existing web application. Retain messages,
+   proactive questions and answers; show queued versus handled input and current
+   work, waiting and uncertain status. Support direct conversation, redirection,
+   Stop and pause/resume while work is running. Closing, reopening or refreshing
+   the browser must neither terminate work nor duplicate a run or lose history.
+4. **Cadence, evaluation and basic recovery.** Use one dispatcher and durable
+   activation intents, including immediate start and interval review, with one
+   mutating turn per Builder profile. Load the current purpose, memory and Plane
+   work; choose useful authorized work, record explicit result evaluation, and
+   separately assess whole-purpose fulfillment and continuing obligations. Continue,
+   wait, ask or retire through the applicable lifecycle controls. Cancellation
+   pauses the performing agent; cadence cannot clear that pause. Reconcile restart
+   during launch, tool execution and result recording without blindly replaying
+   effects, dropping owner input or falsely claiming completion.
+5. **Proven self-bootstrap.** Give the hosted Builder a real bounded framework
+   improvement. Observe it choose the work, demonstrate the relevant test failing,
+   implement the change, pass appropriate checks and record result/evaluation
+   evidence in Plane. Exercise owner chat and steering during the work, browser
+   closure, service restart and later independent next-step selection. The owner
+   does not supply each development step. Missing direction or authorization causes
+   a focused question; an explicit pause remains in force.
+
+**Completion evidence:** a recorded end-to-end run through all five outcomes,
+including real model-driven coding and verification, owner conversation, actual
+interruption, continued work without an open browser, restart reconciliation and
+an unprompted next authorized step. Pair deterministic Playwright and process/
+storage checks with this live acceptance; scripted model responses alone do not
+prove autonomous development. Demonstrate that the Builder cannot edit its own
+soul, grant itself authority or activate repository changes as the running release.
+Deployment remains an owner-authorized controlled operation.
+
+Keep the first handoff to one Builder without child delegation if necessary.
+Full recursive teams and cross-tree communication, the complete organization
+monitor and global inbox, advanced progress-concern analysis, multi-root capacity
+fairness, and the packaged Linux release remain subsequent M3–M6 work. Basic
+visibility, decisions, control, evaluation, isolation and recovery listed above
+are not deferred. Completing M7 does not automatically complete those groups or
+all multi-agent cases in M0–M2.
 
 ## Coverage of the full product specification
 
@@ -299,10 +363,19 @@ evidence rather than marking a requirement done because a page or function exist
 
 ## Engineering sequence and evidence
 
-The critical path is M0 → M1 → M2 → M3 → M4/M5 → M6 → M7. UI polish and domain
-skills can proceed independently after the authoritative operation contracts are
-stable. Access, lifecycle and transactional-state work should not be developed as
-unconnected parallel implementations.
+The first major delivery path is root-relevant M0/M1 boundaries → a managed
+Builder turn → durable owner chat → M2 continuity/evaluation/recovery → M7 proven
+handoff. M7's protected running-release and repository-workspace boundary is built
+before its first turn, not added at the end. Scoped Plane writes and uncertain-write
+recovery remain the next foundation work; prioritize subsequent integration around
+this handoff instead of completing every planning or multi-agent feature first.
+
+After the handoff, extend the product through M3 teams, M4/M5 complete owner
+experience and progress assessment, and M6 broader operational readiness. M0–M7
+identifiers preserve coverage and history; their numbers do not require all groups
+to complete in order. UI polish and domain skills can proceed independently after
+authoritative operation contracts are stable. Access, lifecycle and transactional
+state must remain connected to the actual Builder path.
 
 The largest uncertainty is the cross-cutting change to Hermes run admission,
 trusted actors, persistent chat and sandbox cancellation. M0 should produce a

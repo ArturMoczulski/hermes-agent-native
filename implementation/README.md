@@ -18,9 +18,11 @@ interface. Add the persistent organization and human-control rules that make
 agent-native a distinct product.
 
 Start with Hermes as the only agent engine. OpenCode is optional future tooling
-for a demonstrated specialist need. Use one always-on Linux host, SQLite on local
-disk, and Docker workspaces initially. The human's browser is a client; closing it
-must not stop work.
+for a demonstrated specialist need. Prove the first Builder on the existing local
+host with a persistent service, SQLite on local disk and Docker workspaces.
+A packaged always-on Linux deployment follows the first handoff. The human's
+browser is a client; closing it must not stop work; the runtime host must remain
+available.
 
 Allowing a fork makes this simpler than the earlier external-supervisor proposal:
 we can change Hermes's execution boundaries directly. Plane supplies planning;
@@ -35,7 +37,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 | [Plane project management](plane-project-management.md) | Selected planning service, source ownership, provisioning and integration sequence. |
 | [User interface](user-interface.md) | Browser console, Hermes reuse, shared state and incremental UX delivery. |
 | [Architecture](architecture.md) | Components, authoritative state, execution, permissions, communication, and recovery. |
-| [Delivery plan](delivery-plan.md) | Ordered milestones, deliverables, completion evidence, and all 24 product scenarios. |
+| [Delivery plan](delivery-plan.md) | First Builder handoff sequence, M0–M7 capability groups, completion evidence, and all 24 product scenarios. |
 | [Decisions and evidence](decisions-and-evidence.md) | Reuse choices, proposed product defaults, source references, and fork maintenance. |
 
 ## The application we would build
@@ -83,16 +85,34 @@ paths, and persistent-container cleanup need deliberate changes for this product
 The [evidence review](decisions-and-evidence.md#evidence-and-version-boundaries)
 separates documented features from the proposed additions.
 
-## The shortest useful delivery sequence
+## The first major milestone: the Builder works inside the framework
 
-1. Establish the fork and prove its integration and access boundaries.
-2. Add protected identity, authoritative operations, work records, and events.
-3. Deliver one complete autonomous root: create, plan, act, ask, evaluate results
-   and whole purpose, then continue, wait or retire when fulfillment is established.
-4. Add persistent children, escalation, and recursive lifecycle controls.
-5. Complete the human inbox, system observability, and progress review.
-6. Complete restart recovery, deployment, and operation away from the laptop.
-7. Run the First Builder inside the framework against its repository workspace.
+The owner wants to continue development through an autonomous First Builder and
+its persistent web chat as the first major handoff. M0–M7 remain capability-group
+and Plane identifiers; they are not a required numerical delivery order. M7 is
+this first handoff gate, supplied by root-relevant M0/M1/M2 work and essential
+Builder isolation, without waiting for full M3–M6 delivery.
+
+The [delivery plan](delivery-plan.md#engineering-sequence-and-evidence) expands
+this ordered outcome sequence:
+
+1. Finish scoped Plane planning operations and uncertain-write/retry recovery.
+2. Run one managed Builder turn with real model, repository-editing and test tools,
+   protected soul and running release, authenticated operations, events and Stop.
+3. Provide durable owner chat, proactive questions, answers and steering, with
+   visible current work and waiting; browser closure does not end the work.
+4. Add recurring review, explicit result and purpose evaluation, and basic restart
+   reconciliation so the Builder chooses useful work across bounded turns.
+5. Prove a real TDD framework improvement, owner steering, browser closure, service
+   restart and next authorized work without manually prompting each step.
+
+Then extend to recursive teams, the complete organization monitor and global
+inbox, advanced progress assessment, multi-root capacity and packaged Linux
+operation. The protected running service must not load changes directly from the
+Builder's writable checkout; source access cannot grant authority or deployment
+permission. The detailed handoff acceptance is in
+[M7](delivery-plan.md#m7--first-major-handoff-the-autonomous-first-builder-with-chat).
+These are requirements still to prove, not a claim that the Builder is running.
 
 Basic owner chat, pending decisions, stopping, recovery, result evaluation and
 whole-purpose evaluation belong in the first autonomous-root milestone. Completion
@@ -117,8 +137,9 @@ postpone the control foundations.
   integrate it with framework control records; do not duplicate a Hermes board.
 
 Multiple roots, recursive teams, different models, and authorized communication
-between separately isolated workers are part of the initial product. Multiple
-physical worker hosts can follow; the first release must not depend on them.
+between separately isolated workers remain part of the full product specification.
+They follow the first single-Builder handoff. Multiple physical worker hosts can
+follow later; neither the handoff nor the first release depends on them.
 
 ## Repository and First Builder workspace
 
