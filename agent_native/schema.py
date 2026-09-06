@@ -10,6 +10,16 @@ CREATE TABLE IF NOT EXISTS agent_native_agents (
     execution TEXT NOT NULL CHECK(execution = 'not_started'),
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_plane_access (
+    id TEXT PRIMARY KEY,
+    agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
+    workspace_slug TEXT NOT NULL,
+    workspace_id TEXT NOT NULL,
+    project_id TEXT NOT NULL,
+    revision INTEGER NOT NULL CHECK(revision > 0),
+    active INTEGER NOT NULL CHECK(active IN (0, 1)),
+    UNIQUE(agent_id, workspace_slug, project_id)
+);
 CREATE TABLE IF NOT EXISTS agent_native_events (
     sequence INTEGER PRIMARY KEY AUTOINCREMENT,
     agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),

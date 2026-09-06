@@ -23,6 +23,7 @@ The latest owner lifecycle decision replaces fixed agent lifetime categories wit
 pauses the performing agent/subtree. The roadmap must implement these rules in
 the first autonomous root and then extend them to teams.
 
-Completed identity, authenticated creation UI, private provisioning and restricted
-Hermes environment increments are recorded in Git and Builder state. They do not
+Completed identity, authenticated creation UI, private provisioning, restricted
+Hermes environments and the scoped Plane read boundary are recorded in Git and
+Builder state. They do not
 yet establish autonomous managed agents.

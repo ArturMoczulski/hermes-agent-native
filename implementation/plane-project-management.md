@@ -4,8 +4,9 @@ Status: selected planning direction by the owner, 2026-09-06. Plane replaces the
 earlier Hermes-only task-board recommendation. The [product contract](../design/13-project-management.md)
 is authoritative. The owner subsequently authorized local setup: Plane Community v1.4.2 is now
 running in Docker, with a [live Builder workspace](../first-builder/PLANE.md).
-The managed-agent adapter remains unimplemented. Existing identity and sandbox
-increments remain useful.
+The [trusted-host read boundary](plane-scoped-reads.md) is implemented and verified.
+Managed launch/transport integration and scoped writes remain pending. Existing
+identity and sandbox increments remain useful.
 
 ## Reuse and boundary
 

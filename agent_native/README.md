@@ -96,3 +96,42 @@ The real-container case is opt-in; the fixture image must contain Bash.
 This is the tool environment only. Managed run admission, cancellation records,
 purpose-revision revalidation at launch, model-loop integration and scheduling are
 still pending. Creating an agent in the dashboard does not start this environment.
+
+## Scoped Plane reads
+
+`plane_access` stores owner-managed project read bindings in the existing control
+schema. A trusted host issues an opaque context for one agent and project;
+`plane_reads.PlaneReads` derives the workspace/project from that context. Caller
+text cannot select an actor, substitute a context, or expand the project scope.
+Each use rechecks the current grant and purpose revision, including while reading
+multiple pages. Revocation survives restart, and regranting does not revive old
+contexts. Identical repeated grants preserve a valid context.
+
+The host supplies the Plane service credential directly. It is not stored in the
+control binding, agent workspace, returned records or context. The existing
+restricted Docker environment retains its no-network and explicit-mount boundary.
+The read service must never be handed to generated code as a Python object.
+
+The read surface covers bound project details, work items, comments, attachment
+metadata, cycles and states. Attachment downloads and signed storage URLs are not
+part of this increment. Reads use fixed resource paths and validate returned
+workspace/project/item identities. HTTP errors, pagination and external responses
+must remain distinct from accepted work or valid owner direction.
+
+These are trusted-host operations, like the initial identity operations. A context
+is not a serialized agent token or proof of an admitted run. The future managed
+launch/transport boundary must associate it with the authenticated invoking run,
+keep it private, and enforce run lifecycle. No new dashboard endpoint, worker tool,
+model loop, managed launch or planning write is introduced by this slice. General
+parent-grant policy and unified authorization events remain separate work.
+
+Focused internal checks:
+
+```sh
+scripts/run_tests.sh tests/hermes_cli/test_agent_native_plane_access.py tests/hermes_cli/test_agent_native_plane_reads.py
+```
+
+The tests use isolated SQLite and a real loopback HTTP server. They require no
+browser, model credential or existing Plane account. The separate live Plane
+probe uses its own disposable accounts and workspace; see the scoped-read
+[validation report](../implementation/plane-scoped-reads.md) for observed results.

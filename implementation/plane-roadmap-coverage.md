@@ -40,9 +40,9 @@ cycles. Live Plane start/end fields are null; the cycle names retain their seque
 Advance when exit evidence is accepted or an explicit review changes scope, never
 because a day arrives or elapsed time matches an estimate.
 
-1. **Establish the Builder planning home:** retain setup/API evidence and complete
-   scoped reads. Recovery storage checks have passed; explicitly carry the remaining
-   retry-dependent recovery acceptance into sequence 2 without claiming it complete.
+1. **Establish the Builder planning home — accepted:** setup/API and scoped-read
+   evidence passed. The remaining retry-dependent recovery acceptance was explicitly
+   carried into sequence 2, with its earlier evidence/history retained.
 2. **Scoped writes and recoverable planning:** implement scoped writes, then durable
    mutation intents and safe retries; finish the carried recovery verification.
 3. **Planning setup and source reconciliation:** provision stable planning resources
@@ -55,7 +55,7 @@ Thinking cadence, actual activity timestamps and genuine external deadlines have
 different meanings and do not turn a cycle into a time estimate. Testing happens
 inside each increment, not at the end of a cycle.
 
-Next implementation path at this review: [AN-19](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/737877ea-91c6-4cc2-b1ab-31508dc47238/) scoped reads → [AN-20](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4baf9a5e-3df7-439d-8241-5733a83debac/) scoped writes → [AN-22](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2aaa9d8e-0311-4bc3-9c77-d0b85eadfad8/) uncertain-write recovery. Read live priorities before starting.
+Original implementation path (AN-19 is now accepted): [AN-19](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/737877ea-91c6-4cc2-b1ab-31508dc47238/) scoped reads → [AN-20](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4baf9a5e-3df7-439d-8241-5733a83debac/) scoped writes → [AN-22](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2aaa9d8e-0311-4bc3-9c77-d0b85eadfad8/) uncertain-write recovery. Read live priorities before starting.
 
 ## Product chapter mapping
 
@@ -195,3 +195,13 @@ Owner-session Playwright Chromium checks passed for modules, future cycles, the
 current scoped-read item and policy-decision work. Documentation links and all
 44 scenario rows were checked. These checks validate planning records and their
 presentation, not completion of the scheduled product features.
+
+## Scoped-read acceptance update
+
+[AN-19 validation](plane-scoped-reads.md) records the trusted-host read boundary,
+122 passing focused tests and the isolated live Plane proof. AN-19 is accepted;
+AN-20 scoped writes is the next ready slice in sequence 2, followed by AN-22 retry
+recovery. AN-3 remains blocked on that evidence and was explicitly carried from
+sequence 1 into sequence 2. Native cycle membership and item states were read back;
+sequence 1 retains three accepted items, and all cycles remain undated. This update
+does not establish managed run authentication, agent activation or M1 completion.

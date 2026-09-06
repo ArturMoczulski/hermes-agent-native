@@ -11,7 +11,8 @@ entries record completed increments and historical gaps, not the current invento
 Use Plane through the Builder API account for current work and priorities. The
 full specification is now organized in milestone modules and rolling cycles; see
 [coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
-this review: AN-19 scoped Plane reads (within AN-4), then AN-20 and AN-22.
+the latest review: AN-20 scoped writes (within AN-4), then AN-22 retry recovery.
+AN-19 scoped reads are accepted; sequence 2 is current and remains undated.
 
 ## Initial identity increment
 
@@ -294,3 +295,26 @@ This is a planning/documentation change; no runtime behavior or tests are claime
 Verified null dates and preserved member counts in all three cycles, plus the
 updated cadence/cycle work-item requirements. Checked 61 local documentation
 links/anchors and diff whitespace; the native Hermes skill authoring checks passed.
+
+## Latest implementation — scoped Plane read boundary accepted
+
+AN-19 is complete as a trusted-host read boundary. Added persistent owner-managed
+project bindings and opaque contexts revalidated against grant and purpose revisions.
+The reader covers project/items/comments/attachment metadata/cycles/states, validates
+nested parents and returned scope, rejects unsafe pagination/redirects and limits
+streamed data. It does not expose a managed worker tool, launch transport or new UI.
+Service credentials remain outside worker state; sandbox rules are unchanged.
+
+TDD progressed from failing authority/resource/security cases to green increments.
+Final canonical runner: 122 tests passed across new access/HTTP tests and existing
+identity, owner API and schema regressions. Independent review found no actionable
+issues. The isolated live Plane probe passed with real attachments and two private
+projects; exact objects were verified erased and the test workspace/accounts/tokens
+cleaned up. See [the evidence report](../implementation/plane-scoped-reads.md).
+
+Plane readback confirmed AN-19 Done. Sequence 1's three remaining items are accepted;
+AN-3's still-blocked retry-dependent recovery acceptance was explicitly carried to
+sequence 2 with its prior cycle history retained in comments/briefs. Scoped writes
+(AN-20) are Todo and next, then AN-22; no dates or duration estimates were added.
+The private planning-context cycle pointer now identifies sequence 2. This does not
+complete M1 or establish a managed autonomous agent.
