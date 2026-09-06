@@ -182,3 +182,13 @@ PLAN.md now points to the live backlog instead of mirroring its status.
 Final checks: 6 focused Hermes skill-authoring tests passed; relative file links
 resolve across 30 documentation files; Compose validates and the expected one-shot
 migrator exited successfully while 12 services remain running.
+
+## AN-2 — API boundary characterization, 2026-09-06
+
+Accepted live characterization: pagination, sequential external-ID conflict,
+private-project denial, deletion and API-key rate limiting. Stale If-Match PATCH
+was accepted, so no atomic conditional-write guarantee. Pinned-source review found
+webhook delivery IDs change on retries and HTTP error responses are not retried.
+See implementation/plane-api-validation.md for precise evidence and limits.
+Probe created and cleaned its own workspace and accounts, leaving the real backlog
+unchanged. Next priority is AN-3 isolated database/attachment backup and restore.

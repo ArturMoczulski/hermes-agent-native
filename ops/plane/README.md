@@ -56,3 +56,9 @@ owner project membership. The current owner is a project administrator.
 
 `images.lock.json` records the image IDs, repository digests and architectures
 actually pulled. The Compose file pins application tags and the MinIO digest.
+
+## API characterization
+
+See [AN-2 validation](../../implementation/plane-api-validation.md) for the isolated
+`probe_api.py` command, observations and remaining gaps. It creates disposable
+accounts/workspace and checks cleanup; it does not use the Builder's API quota.

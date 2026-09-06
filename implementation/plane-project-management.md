@@ -29,6 +29,10 @@ initializer. Database location does not make inherited Hermes tasks authoritativ
 for managed projects. The records listed in architecture.md must follow the field
 ownership above rather than create competing writable project/assignment copies.
 
+The [AN-2 validation report](plane-api-validation.md) records live permission,
+pagination, duplicate, stale-write, deletion and quota checks plus pinned-source
+webhook findings. Use those observed boundaries when implementing the adapter.
+
 ## Smallest useful integration
 
 One operator-managed Compose deployment, one workspace per root portfolio, shared
