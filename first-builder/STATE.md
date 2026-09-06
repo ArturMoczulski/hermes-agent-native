@@ -248,3 +248,14 @@ by silence, and bounded parent-to-child permission delegation. Reconciled the
 engineering/UX caveats; no runtime enforcement or remaining policy adoption is
 claimed. Next decision discussion: completed bounded children and replacement
 handoff. AN-3 still requires retry implementation evidence, not an owner decision.
+
+## Owner lifecycle clarification
+
+Ongoing children remain autonomous after milestones and can initiate projects
+within their purposes. Only bounded-assignment children idle after accepted
+completion. Updated canonical role and scenario wording. AN-63 is approved:
+immediate stopping, reconciliation and eligible automatic replanning after purpose
+change; parent notification without veto; replacement retires old subtree and
+uses a distinct identity plus selected explicit handoff. AN-64 is partially
+resolved; cancellation disposition remains for the next question. No runtime
+behavior was changed or claimed by this documentation update.

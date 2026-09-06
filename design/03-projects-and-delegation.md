@@ -124,8 +124,12 @@ rewrite the entire tree.
 Purpose changes and child replacement follow the
 [immediate-stop rule](05-human-interaction.md). The new direction must not leave
 the old worker continuing an obsolete assignment. Results already produced
-remain distinguishable from work under the revised brief. Disposition of children
-and unfinished work after replacement remains a lifecycle decision.
+remain distinguishable from work under the revised brief. Replacement retires
+the old child's subtree and gives a distinct new child an explicit selected
+handoff, following [lifecycle control](05-human-interaction.md#steering-active-work).
+An ongoing child's completion of one delegated project does not end its wider
+responsibility; [role duration](01-agents.md#lifetime-and-work-assignment) determines
+whether it continues planning new work or becomes idle after the assignment.
 
 Concurrent participation in unrelated projects, transfer of work responsibility,
 and the relationship between project pause and agent pause are

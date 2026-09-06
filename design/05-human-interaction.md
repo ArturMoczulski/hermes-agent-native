@@ -140,13 +140,27 @@ work in other responsibility areas is not implicitly cancelled.
 
 The framework initiates interruption immediately and makes any action that has
 not yet stopped visible. Already completed effects are not undone by calling
-this a stop. A revised agent replans against the new purpose; a replacement
-receives an explicit handoff rather than continuing the old worker unnoticed.
-Exactly when new work starts after that interruption remains to be specified.
+this a stop. It checks the outcomes of prior actions before starting conflicting
+new work; an uncertain previous effect remains visible and blocks conflicting
+actions until reconciled.
 
-**Proposed:** the responsible parent is informed when direct human direction
-changes delegated work, so it does not rely on the old plan. This notification
-is not a request for the parent's permission to obey the human.
+After that reconciliation, an agent with a changed purpose automatically replans
+and starts clear authorized work under the new purpose when it is not paused.
+Missing direction or permission follows the normal clarification route. A purpose
+edit does not remove a pause or require a second human "start" message once the
+agent is otherwise eligible. This specific rule does not settle the remaining
+subtree-resume policy.
+
+Replacing a child retires the old child and all its descendants. Their identity,
+history, artifacts and unfinished-work records remain available. The replacement
+has a new identity and receives an explicit parent-selected handoff of relevant
+context, artifacts and unfinished assignments; it is not the old worker continuing
+unnoticed. Descendants are not automatically reparented and private memory is not
+copied wholesale. Handover remains within the recipient's authorized access.
+
+The direct parent is informed when human direction changes delegated work so it
+does not rely on the old plan. This notification never gives the parent a veto
+or delays obeying the human.
 
 ## Pause and continuation
 
@@ -170,9 +184,11 @@ recursively. Children do not remain active or get reassigned automatically when
 their parent retires. Retired agents cease autonomous work; later scheduled
 check-ins do not reactivate them. This is distinct from a temporary pause.
 
-Retirement must not silently discard results or the record of unfinished work.
-Retention of those records and any later deliberate transfer of unfinished work
-remain separate decisions; they do not keep the retired subtree active.
+Retirement preserves results, history and the record of unfinished work without
+keeping the retired subtree active. Replacement uses the explicit selected
+handoff described above. No automatic reassignment or erasure occurs. General
+retention periods, export/deletion and transfer outside that replacement workflow
+remain separate operational choices.
 
 ## Observing the system
 
@@ -204,9 +220,9 @@ expose separate commands with these names.
 | --- | --- | --- | --- |
 | Pause | Stop working for now, keeping the possibility of continuing. | “Put composition on hold while I review the direction.” | Agent pause includes its subtree; questions and work are retained. |
 | Resume | Let paused work continue. | “You can continue composing now.” | Recheck new direction first; handling children separately paused beforehand is still proposed. |
-| Cancel an assignment | Abandon this piece of work rather than resume it later. | “We are dropping this song.” | Whether a child assigned only to that song becomes idle or is retired needs agreement. |
-| Retire an agent | End its ongoing role, rather than temporarily pause it. | “We no longer need a dedicated artwork agent.” | All descendants retire as well. Handling retained records and unfinished work remains to be specified. |
-| Replace an agent | Put a new agent in charge of an existing responsibility. | “Use a new producer for this album.” | The old active work stops immediately; handoff and disposition of its children need agreement. |
+| Cancel an assignment | Abandon this piece of work rather than resume it later. | “We are dropping this song.” | Cancellation of a bounded assignment still needs a disposition decision; finishing an assignment follows the role-duration rule. |
+| Retire an agent | End its ongoing role, rather than temporarily pause it. | “We no longer need a dedicated artwork agent.” | All descendants retire; retain history, results and unfinished-work records without automatic reassignment. |
+| Replace an agent | Put a new agent in charge of an existing responsibility. | “Use a new producer for this album.” | Stop and retire the old subtree; preserve its records and create a distinct replacement with a selected explicit handoff. |
 
 These remaining choices concern what happens after work stops. They do not
 weaken immediate interruption on purpose changes or replacement.

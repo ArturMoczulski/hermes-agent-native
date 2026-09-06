@@ -47,7 +47,7 @@ Its primary question is: **What should this agent exist to do?**
 | Purpose | Required multiline text. Example: “Develop an original metal music career: compose, produce and improve a body of work.” This is the main field, not an initial chat message. |
 | Name | Suggested from the purpose, editable before submission. Names need not be unique. |
 | Parent | Explicitly “No parent — root agent” or a selected agent with its ancestor path. Creating a child from an agent's details preselects that parent visibly. |
-| Role duration | For children: ongoing specialist or bounded assignment. Bounded work includes an intended outcome; finishing it does not silently imply retirement. |
+| Role duration | For children: ongoing specialist or bounded assignment. An ongoing child continues finding projects within its purpose; a bounded child becomes idle after accepted completion, retaining its records. |
 | Thinking cadence | Show the actual configured interval and allow editing. Explain that it is a review interval, not a deadline or a guarantee of continuous execution. No arbitrary hardcoded default. |
 | Fundamental rules | Optional owner-defined rules, kept with the purpose in the soul. |
 | Capabilities summary | Plain-language summary of the permissions and tools this agent will receive. A broad purpose does not expand permissions. |
@@ -260,7 +260,7 @@ their history and does not silently turn an old result into accepted work.
 **Cancel assignment** is separate from pause and retirement. Its confirmation
 identifies the work being abandoned, dependent work that cannot continue, and
 retained results. Do not imply that cancelling one assignment retires its agent
-or cancels independent assignments. Child disposition remains an open policy.
+or cancels independent assignments. Disposition after cancelling bounded work remains open; accepted completion follows the role-duration rule.
 
 ## 9. Event history
 
@@ -306,7 +306,7 @@ multiple-owner administration or a separate infrastructure dashboard to v1.
 | Resume agent and children | Show affected agents and outstanding independent pause causes according to the adopted policy. Show the recorded resume operation, then actual eligibility/execution; do not label everything working as soon as the button is pressed. |
 | Edit purpose and rules | Show current and proposed soul, affected work and the consequence of saving. Label the submit action **Save and stop affected work**. Saving starts interruption immediately; show stopping and pending replanning distinctly. |
 | Retire agent and children | Confirm with the named agent, descendant count/tree and unfinished work. **Retire this agent and its children** ends the whole subtree's ongoing roles; history/results remain inspectable. Show unconfirmed stopping honestly. |
-| Replace agent | No ambiguous one-click action in v1. Before exposing a replacement workflow, settle the handoff and descendant disposition policy. A replacement is a different identity and the old affected work stops immediately. |
+| Replace agent | No ambiguous one-click action in v1. Show the old subtree that will retire and the selected context, artifacts and unfinished work for handoff. Use the approved lifecycle policy: immediate stopping, retained records and a distinct replacement identity. |
 
 Show **Requested**, **In progress**, **Completed**, **Failed**, or **Outcome
 unknown** as applicable to the operation, separately from agent/work status.
@@ -351,9 +351,10 @@ Build complete small workflows, following [continuous TDD](../first-builder/PRAC
 Use [UX-01–UX-20](11-ux-scenarios.md) as acceptance targets for those increments.
 Do not build every screen as an empty shell and defer functional verification.
 
-The [open decisions](07-open-decisions.md) still govern resume handling,
-post-purpose-change restart, replacement handoff, bounded-child disposition,
-and progress thresholds. Do not invent these in frontend code. Parent permission
+The [open decisions](07-open-decisions.md) still govern general resume handling,
+cancelled bounded-child disposition, timing and progress thresholds. Purpose-change
+restart, replacement handoff and completed-child roles follow the approved
+[lifecycle rules](05-human-interaction.md#steering-active-work). Do not invent these in frontend code. Parent permission
 administration follows the approved [permission rules](05-human-interaction.md#applying-ownership-to-permissions).
 Project-wide pause, automatic request expiry, reminder timing, graph editing and
 history replay are not required controls for this first interface. Their absence

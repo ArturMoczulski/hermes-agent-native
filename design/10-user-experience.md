@@ -203,8 +203,8 @@ sometimes cancels a task and sometimes retires an organization.
 
 Do not report stopped while external work is still stopping or uncertain. Identify
 the unresolved action and conflicting work that cannot proceed. Purpose changes,
-replacement and stale decisions use the existing lifecycle rules, including the
-open handoff details in the product specification. Show operation failures rather
+replacement and stale decisions use the existing lifecycle rules, including
+the approved handoff policy in the product specification. Show operation failures rather
 than optimistically leaving a false completed state on screen.
 
 ## Usability and failure states

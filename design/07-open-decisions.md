@@ -20,8 +20,7 @@ behavior or introduce implementation choices.
 | Decision | Question to settle | Current proposal |
 | --- | --- | --- |
 | Participation across projects | Can an agent work on unrelated projects concurrently, and who resolves competing priorities? | No default adopted. |
-| After a purpose change or replacement | When does new work start after the immediate stop, and what context and unfinished work are handed over? | Stop affected active work immediately; retain existing results and replan or hand over explicitly. |
-| Cancelled or finished assignments and retained work | Does a child become idle or retire after a bounded assignment ends? How are records and unfinished work retained or deliberately transferred after retirement? | Parent retirement retires all descendants. Assignment completion is separate, and results are preserved. |
+| Cancelled bounded assignments and other retained-work operations | After cancellation, should a bounded child become idle or retire? General retention/export/deletion and transfers outside replacement need operational definition. | Completed bounded children idle; ongoing specialists continue. Replacement and its selected handoff are settled below; cancellation disposition is still open. |
 | Resume and project pause | How does subtree resume treat separately paused descendants? Does project pause stop only work belonging to that project? | Preserve separate descendant pauses; project pause scope remains open. |
 | Timing and interruptions | Which events prompt immediate reconsideration? How are missed check-ins and reminders handled? | Answers and results can enable prompt reconsideration; redundant timer reviews can be combined without losing messages. |
 | Capacity limits and progress detection settings | What existing resource controls apply, and what evidence and timing identify activity without progress? | Progress detection and review are required; exact thresholds and resource defaults remain open. |
@@ -53,6 +52,25 @@ presented defaults, not the remaining lifecycle or timing proposals above.
 Canonical behavior lives in [Human interaction](05-human-interaction.md#questions-proposals-and-permission)
 and [Default capabilities](04-workspaces-and-skills.md#default-capabilities).
 These are settled product rules; their enforcement still needs implementation.
+
+## Resolved: ongoing children and replacement
+
+The owner clarified that ongoing children, such as marketing and sales agents,
+should independently find new projects within their purposes. Only a child created
+for bounded work becomes idle after accepted completion. Both retain their work
+and identity until an explicit lifecycle action changes them. This settles the
+completion portion of AN-64; cancellation disposition remains open above.
+
+The owner also approved AN-63: purpose changes stop affected work immediately;
+reconcile prior effects, then automatically replan when clear and not paused.
+Inform the direct parent of human redirection without a veto. Replacement retires
+the old child and its descendants, retains history, and gives a distinct new agent
+a selected explicit handoff of context, artifacts and unfinished work.
+
+Canonical behavior is in [role duration](01-agents.md#lifetime-and-work-assignment)
+and [lifecycle control](05-human-interaction.md#steering-active-work). These decisions
+do not approve general resume, project participation, wakeup timing, or capacity
+and progress thresholds. Runtime enforcement remains implementation work.
 
 ## Optional scope to decide explicitly
 

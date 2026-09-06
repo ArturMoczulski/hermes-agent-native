@@ -51,3 +51,10 @@ contradictory instructions or store secrets here.
   permissions; owner can prohibit delegation. Source: owner reply "Yes, this all
   sounds good" to those three defaults. Canonical rules: design/04 and design/05;
   remaining lifecycle, timing and capacity choices were not approved by that reply.
+
+- **Child duration and lifecycle — subsequent owner clarification:** ongoing
+  marketing/sales children independently find new projects within their purposes;
+  bounded children idle after accepted completion. Owner approved purpose-change
+  stop/reconcile/eligible automatic replan and parent notification, plus replacement
+  retiring the old subtree with retained history/new identity/selected handoff
+  (AN-63). AN-64 cancellation disposition was not explicitly settled by that reply.

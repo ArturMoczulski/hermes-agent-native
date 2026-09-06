@@ -55,10 +55,11 @@ The artist creates a composer child; the composer creates research and
 production children. A descendant can delegate further when authorized. The
 framework imposes no fixed conceptual depth on this relationship.
 
-A researcher created for one investigation can finish its bounded assignment.
-An ongoing composer can retain its identity, experience, and cadence after one
-composition finishes. Assignment completion and the child's continued existence
-are distinguishable. The parent can see who is responsible and receive results
+A researcher created for one investigation becomes idle after its bounded
+assignment is accepted, preserving memory and results for inspection or explicit
+reassignment. An ongoing composer retains its identity, experience and cadence
+and can start another clear authorized project after one composition finishes.
+Assignment completion and the child's ongoing responsibility are distinguishable. The parent can see who is responsible and receive results
 without the human manually relaying them.
 
 ## 6. Protect the soul while allowing learning
@@ -89,7 +90,10 @@ plan unexamined. It can choose to adapt an existing child or create a replacemen
 a child's direct parent or the human owner can revise that child's soul. If a
 purpose is changed or a child replaced, the affected active work stops immediately
 rather than running until the next check-in. Any action not yet stopped is
-visible; a stop does not undo completed effects.
+visible; a stop does not undo completed effects. After reconciling those effects,
+an unpaused revised agent automatically replans and starts clear authorized work;
+it does not require another start prompt. Unknown prior effects block conflicting
+new actions. The direct parent is informed of human redirection without a veto.
 
 The human can also address a descendant directly and interrupt its work. A
 request to pause the composer applies to its entire subtree by default. While
@@ -161,7 +165,10 @@ planning immediately, identifies useful ongoing responsibilities, and can create
 marketing, sales, delivery, or strategy children within its authority. Those
 children develop plans for their own areas, can delegate further, and escalate
 questions through their parents. The human does not need to design the team
-before the agent can start working.
+before the agent can start working. Finishing one campaign does not make the
+ongoing marketing child wait for another assignment: it identifies useful new
+marketing initiatives and starts clear authorized work or asks when direction is
+missing. This activity develops its existing purpose rather than rewriting its soul.
 
 ## 16. The framework develops itself
 
@@ -178,6 +185,9 @@ child of its own. When the composer retires, all these descendants retire too.
 None continues autonomous work or wakes back into active work on its cadence.
 The artist and unrelated branches remain unaffected. Results and the record of
 unfinished work are retained; the children are not automatically reassigned.
+Replacing that composer follows the same old-subtree retirement, with a distinct
+new composer and a selected explicit handoff of relevant context and unfinished
+work. The new composer does not inherit the old worker's active execution.
 
 ## 18. See current work and cadence
 

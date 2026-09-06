@@ -62,17 +62,34 @@ an agent to change that purpose.
 
 ## Lifetime and work assignment
 
-Children may be ongoing specialists with their own thinking cadence or agents
-assigned bounded work. Both have the same identity and ownership rules.
+Parentage and role duration are separate. A child may be an ongoing autonomous
+specialist or be created for a bounded assignment. The role is explicit at creation;
+being a child does not make an agent temporary or dependent on a new parent prompt
+for every piece of work.
 
-Completing an assignment is distinct from ending an agent's existence. An ongoing
-composer can finish one album and later work on another. A child assigned only
-to research one question can report its result without being required to invent
-an ongoing purpose. Whether such a child is retired automatically after assignment completion
-remains to be specified; completion must not silently discard its results.
-If its parent retires, it also retires under the
-[subtree retirement rule](05-human-interaction.md).
+| Role | After an assignment is accepted as complete |
+| --- | --- |
+| Ongoing specialist | Keeps its purpose and cadence; identifies useful next work, starts clear authorized projects, asks about uncertainty, or proposes a direction. Finishing a project does not end its responsibility. |
+| Bounded-assignment child | Becomes idle with its identity, memory, results and history retained. Its parent can explicitly reassign or retire it. It does not invent a new ongoing purpose for itself. |
 
-Changing a child's purpose and replacing it with a new child are different
-decisions. A replacement must be identifiable as a different agent; its inherited
-context and unfinished assignments must be made explicit.
+For example, a business-leader agent can create ongoing marketing and sales
+children. After one campaign, marketing can investigate new audiences, propose
+another campaign and start clear permitted work within its marketing purpose.
+Sales can likewise develop new initiatives within its sales purpose. A researcher
+created only to answer one question becomes idle after its accepted result.
+
+An ongoing child's new projects develop its existing purpose; they do not grant
+permission to rewrite its soul or escape parent supervision. Both roles follow
+the same ownership, permission and evaluation rules. An ongoing agent may choose
+to wait when no useful work is ready, but assignment completion does not force it
+into an idle role awaiting another assignment.
+
+If either kind of child's parent retires, the child also retires under the
+[subtree retirement rule](05-human-interaction.md#retirement).
+The disposition after cancellation of a bounded assignment remains a separate
+[open choice](07-open-decisions.md); completion does not resolve that question.
+
+Changing a child's purpose and replacing it are different operations. Replacement
+retires the old child and its descendants, preserves their records, and creates
+a distinct agent with a selected explicit handoff of context, artifacts and
+unfinished work. Follow [lifecycle control](05-human-interaction.md#steering-active-work).

@@ -332,7 +332,9 @@ record and block conflicting replacement work. Already completed effects remain.
 - **Retirement:** disable the entire agent subtree permanently for dispatch,
   withdraw obsolete pending requests, and stop every owned run/job recursively.
 - **Replacement:** use a new agent ID and an explicit brief/artifact handoff.
-  Proposed default is retirement of the old subtree; never silently reparent it.
+  Retire the old subtree under the owner-approved replacement policy; never
+  silently reparent descendants. Ongoing and bounded children follow the distinct
+  [role-duration rules](../design/01-agents.md#lifetime-and-work-assignment).
 
 Late results from obsolete runs can be retained as historical evidence but cannot
 complete the successor assignment or authorize new actions. Purpose and assignment

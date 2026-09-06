@@ -56,7 +56,10 @@ authorized step does not create an approval requirement. See
 [questions and permissions](05-human-interaction.md#questions-proposals-and-permission).
 
 Finishing a task or milestone does not automatically finish an ongoing purpose.
-Equally, an enduring purpose does not justify busywork. The agent should connect
+This applies to ongoing children as well as roots: a marketing child can initiate
+new campaigns without waiting for its parent to assign each one. Bounded children
+follow the distinct [completion rule](01-agents.md#lifetime-and-work-assignment).
+An enduring purpose does not justify busywork. The agent should connect
 its proposed work to the purpose and explain why that work is worth doing.
 
 ## Active and blocked work

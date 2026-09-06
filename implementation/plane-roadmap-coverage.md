@@ -128,9 +128,11 @@ evidence is recorded separately from deterministic model fixtures.
 
 The original nine chapter-07 choices have decision items. AN-60–62 were subsequently
 approved by the owner; see the [decision record](../design/07-open-decisions.md#resolved-autonomy-and-permissions).
-The remaining six remain open. Their dependencies gate only
+AN-63 was then approved, and the completion portion of AN-64 clarified; see
+[ongoing children and replacement](../design/07-open-decisions.md#resolved-ongoing-children-and-replacement).
+Five decision items retain open scope, including AN-64 cancellation disposition. Their dependencies gate only
 behavior that needs that choice; creating an item does not approve its proposal.
-Parent notification after direct human direction remains proposed, within the
+Parent notification after direct human direction is part of the accepted
 handoff decision. Required immediate stopping is already settled and is part of
 the first root, not deferred to team replacement.
 
