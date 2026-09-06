@@ -48,3 +48,16 @@ def read_agent(agent_id: str, actor=Depends(owner_session)):
             return identity.get_root(conn, actor=actor, agent_id=agent_id)
         except KeyError as exc:
             raise HTTPException(status_code=404, detail='Agent not found') from exc
+
+
+@router.post('/{agent_id}/setup/retry')
+def retry_agent_setup(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.startup import retry_setup
+    from agent_native.plane_operation_lock import OperationBusy
+    with connect_closing(board='default') as conn:
+        try:
+            return retry_setup(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except (identity.ConflictError, OperationBusy) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc

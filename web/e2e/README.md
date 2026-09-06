@@ -19,8 +19,15 @@ and rejected unauthenticated reads/writes. API/domain tests cover concurrent
 retries, atomic rollback, older records without intents, stale-purpose retry,
 conflict responses, validation and forged actor fields.
 
-The first review request is durable; actual model execution, planning provisioning,
-chat and cadence are not connected yet. These checks do not prove a writing agent.
+The suite also covers automatic private-file setup, missing Plane configuration,
+retry/reload, a configured private Plane project with exactly one discovery task,
+and visible disconnection while retaining the last confirmed setup state. Plane
+is replaced only at its external HTTP boundary with disposable credentials; the
+application setup service, routes and database remain real. Test configuration
+and evidence endpoints are installed solely by the test backend entry point.
+
+The first review and setup are durable. Model execution, chat and cadence are
+not connected yet. These checks do not prove an autonomous writing agent.
 
 ## Reuse an installed Chromium
 

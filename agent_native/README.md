@@ -28,9 +28,12 @@ reload in tab session storage until confirmation, including a lost POST response
 No write is sent if that envelope cannot be retained. The detail page shows
 unknown/loading/error states and identifies a superseded request revision.
 
-Private provisioning, restricted tool environments and host Plane grants are
-not yet connected to startup. No dispatcher, managed run, chat, cadence, story
-artifact or Pause control is enabled by this increment.
+Private files and a private Plane planning home are now connected to new creation
+through `startup.py`, `startup_service.py` and `plane_setup.py`. The detail page
+shows setup progress/history, failures, Retry setup and a planning-project link.
+See [setup behavior and protected configuration](../implementation/writer-startup-setup.md).
+This adds no model run, chat, cadence, story artifact or Pause control; readiness
+is separate from admission and does not install a model's Plane grants.
 
 Verification:
 
@@ -75,9 +78,9 @@ failed soul writes/chmod, absent neighbor/control paths and persisted mutable wo
 
 The restricted Hermes environment below excludes automatic credential/skill/cache
 mounts, environment forwarding and container reuse that would widen these grants.
-Managed startup integration remains pending. The provisioning module is not exposed
-as a worker tool or a dashboard action, and purpose changes still require an
-explicit refresh workflow before startup.
+Private provisioning now runs through the host setup service, never as a worker
+tool. Purpose changes supersede the original setup; a refresh/replanning workflow
+for a new purpose remains to be connected before execution.
 
 ## Restricted Hermes execution environment
 

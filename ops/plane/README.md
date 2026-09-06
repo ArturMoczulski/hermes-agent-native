@@ -134,3 +134,12 @@ completed report, zero recovery mutation attempts and successful cleanup.
 Protected preparations contain planning text; protect the control database and
 its backups along with the private fixture credentials. Keep operation lock files
 in place while that database can be used; do not replace an open database.
+
+
+## Ordinary agent planning homes
+
+The dashboard now provisions a separate private planning home and initial discovery
+task for new ordinary roots. It uses a protected, explicitly configured host
+connection; routine Builder project-management credentials are not reused by agents.
+See [writer setup](../../implementation/writer-startup-setup.md) for the exact
+configuration, current human-account requirement, recovery behavior and limits.

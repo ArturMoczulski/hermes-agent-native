@@ -9,8 +9,9 @@ This plan does not launch a writer or claim that the milestone is implemented.
 ## Starting point and reuse
 
 The `/agents` page persists inactive records; creation is not wired to execution.
-Protected profile/workspace provisioning and a restricted Docker environment are
-implemented internal pieces. Plane host reads/writes and uncertain-write recovery
+New creation now connects protected private files and a Plane planning home to
+a visible setup status; see [current setup](writer-startup-setup.md). A restricted
+Docker environment is also implemented as an internal piece. Plane host reads/writes and uncertain-write recovery
 have evidence. The first AN-24 bridge exposes Plane inspection through Hermes,
 not the complete managed planning tool set. No managed framework agent is running.
 

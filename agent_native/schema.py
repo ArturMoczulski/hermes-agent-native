@@ -17,6 +17,30 @@ CREATE TABLE IF NOT EXISTS agent_native_initial_activations (
     soul_revision INTEGER NOT NULL CHECK(soul_revision > 0),
     requested_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_setup (
+    activation_id TEXT PRIMARY KEY REFERENCES agent_native_initial_activations(id),
+    agent_id TEXT NOT NULL UNIQUE REFERENCES agent_native_agents(id),
+    status TEXT NOT NULL CHECK(status IN ('queued', 'preparing', 'blocked', 'failed', 'unresolved', 'ready', 'superseded')),
+    phase TEXT NOT NULL CHECK(phase IN ('files', 'workspace', 'project', 'discovery', 'ready')),
+    attempted INTEGER NOT NULL DEFAULT 0 CHECK(attempted IN (0, 1)),
+    files_ready INTEGER NOT NULL DEFAULT 0 CHECK(files_ready IN (0, 1)),
+    plane_origin TEXT,
+    plane_user_id TEXT,
+    workspace_slug TEXT,
+    workspace_id TEXT,
+    project_id TEXT,
+    discovery_item_id TEXT,
+    message TEXT NOT NULL,
+    updated_at TEXT NOT NULL
+);
+CREATE TABLE IF NOT EXISTS agent_native_setup_events (
+    sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+    activation_id TEXT NOT NULL REFERENCES agent_native_setup(activation_id),
+    status TEXT NOT NULL,
+    phase TEXT NOT NULL,
+    message TEXT NOT NULL,
+    created_at TEXT NOT NULL
+);
 CREATE TABLE IF NOT EXISTS agent_native_plane_access (
     id TEXT PRIMARY KEY,
     agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),

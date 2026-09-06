@@ -4,6 +4,7 @@ from fastapi.testclient import TestClient
 
 @pytest.fixture
 def client(monkeypatch, tmp_path):
+    monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'home'))
     monkeypatch.setenv('HERMES_KANBAN_DB', str(tmp_path / 'control.db'))
     from hermes_cli.web_server import app, _SESSION_TOKEN
     with TestClient(app, base_url='http://127.0.0.1') as client:
@@ -18,8 +19,8 @@ def test_create_list_and_read(client):
     assert response.status_code == 201
     agent = response.json()
     assert client.post(URL, json=BODY).json()['id'] == agent['id']
-    assert client.get(URL).json() == [agent]
-    assert client.get(URL + '/' + agent['id']).json() == agent
+    for current in (client.get(URL).json()[0], client.get(URL + '/' + agent['id']).json()):
+        assert {key: value for key, value in current.items() if key != 'setup'} == {key: value for key, value in agent.items() if key != 'setup'}
     assert agent['execution'] == 'not_started'
 
 

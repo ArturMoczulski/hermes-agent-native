@@ -10,6 +10,9 @@ type LoadedAgent = { key: string; agent?: Agent; error?: string };
 export default function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
   const { setTitle } = usePageHeader();
+  const [retryError, setRetryError] = useState<string | null>(null);
+  const [retrying, setRetrying] = useState(false);
+  const [refreshError, setRefreshError] = useState(false);
   const [reload, setReload] = useState(0);
   const [loaded, setLoaded] = useState<LoadedAgent>({ key: "" });
   const key = `${agentId}:${reload}`;
@@ -18,12 +21,21 @@ export default function AgentDetailPage() {
 
   useEffect(() => {
     let active = true;
-    void fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agentId ?? "")}`)
-      .then((result) => { if (active) setLoaded({ key, agent: result }); })
+    const fetchAgent = () => fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agentId ?? "")}`)
+      .then((result) => { if (active) { setLoaded({ key, agent: result }); setRefreshError(false); } })
       .catch(() => {
-        if (active) setLoaded({ key, error: "Could not load this agent. Check the link, your connection and sign-in, then retry." });
+        if (active) {
+          setRefreshError(true);
+          setLoaded((previous) => previous.key === key && previous.agent ? previous : { key, error: "Could not load this agent. Check the link, your connection and sign-in, then retry." });
+        }
       });
-    return () => { active = false; };
+    let timer: number | undefined;
+    const poll = async () => {
+      await fetchAgent();
+      if (active) timer = window.setTimeout(() => { void poll(); }, 1500);
+    };
+    void poll();
+    return () => { active = false; window.clearTimeout(timer); };
   }, [agentId, key]);
 
   useEffect(() => {
@@ -31,6 +43,18 @@ export default function AgentDetailPage() {
     return () => setTitle(null);
   }, [agent?.name, setTitle]);
 
+  const retrySetup = async () => {
+    setRetrying(true);
+    setRetryError(null);
+    try {
+      await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agentId ?? "")}/setup/retry`, { method: "POST" });
+      setReload((value) => value + 1);
+    } catch {
+      setRetryError("Could not request setup retry. Check your connection; setup may already be running.");
+    } finally { setRetrying(false); }
+  };
+  const setup = agent?.setup;
+  const setupTitles = { queued: "Setup queued", preparing: "Preparing agent", blocked: "Plane setup required", failed: "Setup needs attention", unresolved: "Setup outcome needs checking", ready: "Workspace and planning ready", superseded: "Setup superseded" };
   const startup = agent?.startup;
   const staleRequest = startup && startup.soul_revision !== agent?.soul_revision;
 
@@ -40,6 +64,7 @@ export default function AgentDetailPage() {
       {!current && <p role="status">Loading agent…</p>}
       {current?.error && <div role="alert" className="space-y-3"><p>{current.error}</p><Button onClick={() => setReload((value) => value + 1)}>Retry</Button></div>}
       {agent && <>
+        {refreshError && <p role="alert">Live updates are disconnected. Showing the last confirmed state; reconnect to see current progress.</p>}
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <h1 className="text-2xl font-semibold">{agent.name}</h1>
@@ -65,6 +90,24 @@ export default function AgentDetailPage() {
             {staleRequest && <p role="status">The purpose changed after this request. It cannot authorize work on the current purpose.</p>}
           </> : <p>This agent was saved before startup requests were recorded. Opening this page does not start it.</p>}
         </section>
+        {setup && <section aria-label="Agent setup" className="space-y-3 rounded-xl border p-5">
+          <h2 className="text-lg font-semibold">{setupTitles[setup.status]}</h2>
+          <p role="status">{setup.message}</p>
+          <ul className="space-y-1 text-sm">
+            <li>{setup.files_ready ? "Private files ready" : "Private files pending"}</li>
+            <li>{setup.workspace_id ? "Plane workspace created" : "Plane workspace pending"}</li>
+            <li>{setup.project_id ? "Private Plane project ready" : "Private Plane project pending"}</li>
+            <li>{setup.discovery_item_id ? "First discovery task ready" : "First discovery task pending"}</li>
+          </ul>
+          {setup.project_id && setup.plane_origin && setup.workspace_slug && <a
+            className="text-sm underline underline-offset-4"
+            href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/`}
+            target="_blank" rel="noreferrer">Open planning project</a>}
+          {["blocked", "failed", "unresolved"].includes(setup.status) && <div><Button disabled={retrying} onClick={() => { void retrySetup(); }}>{retrying ? "Requesting retry…" : "Retry setup"}</Button></div>}
+          {retryError && <p role="alert">{retryError}</p>}
+          <p className="text-xs text-muted-foreground">Setup last updated <time dateTime={setup.updated_at}>{new Date(setup.updated_at).toLocaleString()}</time></p>
+          <details><summary className="cursor-pointer text-sm">Setup history</summary><ol className="mt-3 space-y-2 text-sm">{setup.events.map((event) => <li key={event.sequence}><time className="text-muted-foreground" dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time> · {event.message}</li>)}</ol></details>
+        </section>}
         <section aria-label="Agent activity" className="space-y-3 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">Activity</h2>
           <p>No execution sessions or stories yet.</p>

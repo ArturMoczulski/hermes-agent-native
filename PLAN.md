@@ -28,8 +28,9 @@ integration and full teams stay later. No completed evidence is reopened or eras
 
 AN-72 is active. Its first verified increment opens an agent detail after creation
 and atomically retains one initial-review intent, including lost-response/reload
-retries. This remains distinct from configured run admission. Next connect the
-protected planning/workspace setup and real managed run/artifact/stop path; see
+retries. This remains distinct from configured run admission. Creation now also
+connects private files, a private Plane planning home and discovery task, with
+visible setup/retry/recovery. Next connect the real managed run/artifact/stop path; see
 [Builder state](first-builder/STATE.md) for evidence and the exact handoff.
 
 The subsequent AN-16/M7 First Builder handoff adds protected repository development

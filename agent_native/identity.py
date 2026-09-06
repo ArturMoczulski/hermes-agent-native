@@ -45,6 +45,8 @@ def _read(conn, agent_id):
     ).fetchone()
     root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
                        if startup is not None else None)
+    from agent_native.startup import read_setup
+    root['setup'] = read_setup(conn, agent_id)
     return root
 
 
@@ -88,6 +90,8 @@ def create_root(conn, *, actor, request_id, name, purpose):
             '(id, agent_id, cause, soul_revision, requested_at) VALUES (?, ?, ?, 1, ?)',
             (str(uuid4()), agent_id, 'creation', _now()),
         )
+        from agent_native.startup import queue_setup
+        queue_setup(conn, agent_id)
         root = _read(conn, agent_id)
         _event(conn, root, 'agent.created')
         return root
@@ -110,6 +114,11 @@ def revise_soul(conn, *, actor, agent_id, expected_revision, purpose):
             'UPDATE agent_native_agents SET purpose = ?, soul_revision = soul_revision + 1 WHERE id = ?',
             (purpose, agent_id),
         )
+        conn.execute("UPDATE agent_native_setup SET status = 'superseded', "
+                     "message = 'Purpose changed. This setup request cannot start work.', updated_at = ? "
+                     'WHERE agent_id = ?', (_now(), agent_id))
+        from agent_native.startup import _event as setup_event
+        setup_event(conn, agent_id)
         root = _read(conn, agent_id)
         _event(conn, root, 'agent.soul_revised')
         return root

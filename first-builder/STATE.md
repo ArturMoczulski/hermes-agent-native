@@ -14,11 +14,78 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story alone is only the first checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone,
-AN-72 is In Progress. Its first creation/detail/initial-review increment is now
-verified below. AN-73–76 retain chat, inspection, continuity and real acceptance.
+AN-72 is In Progress. Creation/detail/initial review and protected filesystem/Plane
+setup are now connected and verified below. AN-73–76 retain chat, inspection, continuity and real acceptance.
 Existing identity, owner auth, provisioning, environment and Plane boundary work
 remain evidence; AN-24's broad remainder stays backlog. No managed writer or
 Builder runs. Earlier entries retain historical next steps; this focus wins.
+
+## AN-72 setup increment — private files and Plane planning home
+
+New owner creation now atomically queues setup alongside identity and first-review
+intent. The dashboard owns a background setup worker; closing a browser does not
+cancel setup. It publishes protected private files, creates/reconciles a separate
+Plane workspace, verifies its managed project is private, and seeds one correlated
+discovery task. Readiness creates no worker grant and launches no model.
+
+The agent page shows live setup progress, recent event history, a planning link,
+missing-configuration/errors and authenticated Retry setup. Polls are serialized;
+disconnection retains the last confirmed state with an explicit stale-data notice.
+Setup uses a protected host connection, validating that session and API-key
+credentials belong to the configured principal. No credential is returned to the
+browser or written into an agent's workspace. Initial deployment uses the human
+owner account so the owner receives workspace/project membership.
+
+Recovery records attempts before effects, retains IDs after confirmation and
+reuses the existing OS operation lock across processes. Unknown creates are only
+reconciled; an identified project's privacy can be narrowed idempotently. Missing,
+conflicting or replaced resources are not recreated. Purpose edits supersede setup
+in the same transaction; even late receipts cannot restore readiness for the old
+purpose. Shutdown/stale-purpose checks also run immediately before remote writes.
+
+TDD began with a failing Playwright setup-state assertion and a failing durable
+queue assertion. Review then reproduced and fixed incorrect initial-account
+pinning, stale setup after purpose changes, false uncertain state when shutdown
+vetoed the first write, and a late receipt reviving a superseded intent. Contract
+checks exercised real HTTP response loss, privacy confirmation, duplicate/foreign
+scope, redirects, malformed/oversized responses and host revocation. Browser test
+synchronization and a test-only fixture route order were corrected; these were
+verification-fixture defects, not passing product evidence.
+
+Verification: 7 Playwright scenarios passed using cached Chromium. The final
+six-file Python regression passed 89 tests with 1 existing opt-in Docker skip
+(no container changes). Production build, targeted Ruff/ESLint, 43 local
+documentation links/anchors and whitespace checks passed.
+See [setup documentation](../implementation/writer-startup-setup.md) for commands.
+Logs: `/tmp/an72-setup-browser.log`, `/tmp/an72-setup-python-final.log`,
+`/tmp/an72-setup-terminal-green.log`, `/tmp/an72-setup-build.log`.
+
+The installed Plane v1.4.2 smoke also passed with a disposable account/workspace:
+ready, one private managed project, one discovery task, retained state after DB
+reopen and no additional remote effects on repeat. Workspace deletion, token
+revocation and disposable-account deactivation all passed. Safe report:
+`/var/folders/2b/7m6z3dx90ll0dw34_3gs7jcc0000gn/T/an72-live-setup-avqjk1n7/report.json`.
+
+The production preview was rebuilt/restarted with its existing database retained.
+Its protected connection is configured for the existing human Plane owner, outside
+Git at `~/.hermes-agent-native-preview/agent-native/plane-setup.json`. A real ordinary
+root **Fantasy writer (setup preview)** now has ready private files, a private
+Plane project and discovery task; all previous agents remain. It explicitly shows
+**Not started**, has no model execution, and is a setup demonstration only.
+
+- Agent: `b2632bb0-cdbd-4557-8650-4fd6936e8a50`.
+- Preview: http://127.0.0.1:19221/agents/b2632bb0-cdbd-4557-8650-4fd6936e8a50.
+- Plane project: `27a1ee07-e48c-4178-9abd-8a1572a0ffab`.
+- Discovery item: `b1ddc120-a813-41c9-95cd-27161bc448db`.
+- Preview process session for this harness: 90109.
+- Production browser rendering verified; screenshot `/tmp/an72-writer-setup.png`.
+
+Next within AN-72: explicit model/finite-limit configuration, narrow managed
+Hermes tool/schema dispatch, one service-owned writing run, durable story artifact
+and actual Pause. Reuse the setup/discovery receipt, but revalidate current purpose,
+planning freshness and authority at admission. Hermes run budgets are advisory;
+the host must enforce displayed limits. Chat/inspection/cadence follow in AN-73–76.
+No setup result completes AN-72 or the broader writer milestone.
 
 ## AN-72 first increment — startup intent and agent detail
 
