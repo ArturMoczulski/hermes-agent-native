@@ -38,9 +38,15 @@ is accepted for the host planning scope, including AN-3's existing-Builder recov
 review. AN-4's unfinished managed-run transport acceptance is explicitly carried
 to sequence 3. AN-17's [execution audit](implementation/hermes-execution-audit.md)
 pins the Hermes baseline and maps native routes, current gaps and required managed
-controls. The next ready item is AN-24: enforce trusted owner/run authority at real
+controls. AN-24 is active: enforce trusted owner/run authority at real
 operation boundaries, including nested tools and alternate dispatch. AN-23 source
 freshness and AN-70 runtime limits still gate dependent execution work. Existing Plane
 resources are reused; general provisioning recovery remains AN-21 after the handoff.
 Use the live AN-16 milestone and AN-57/AN-58 execution/proof records for acceptance;
 plan changes do not establish a deployed Builder.
+
+The first AN-24 increment connects host-scoped Plane inspection to Hermes direct
+and nested tool dispatch and closes pre-delivery field-revocation checks. Its
+verified behavior and remaining scope are in [Builder state](first-builder/STATE.md). Write
+correlation, full native/auxiliary enforcement and actual run admission remain
+explicit follow-up work in the same Plane item and linked runtime records.

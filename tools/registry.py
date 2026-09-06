@@ -811,6 +811,10 @@ class ToolRegistry:
         self, name: str, args: dict, *, scope: Optional[str] = None, **kwargs) -> str | dict:
         """Execute a tool handler by name: async handlers bridged via ``_run_async()``,
         results normalized, every exception returned as ``{"error": ...}``."""
+        from agent_native.plane_tools import dispatch_plane_tool
+        managed = dispatch_plane_tool(name, args)
+        if managed is not None:
+            return managed
         entry = self.get_entry(name, scope=scope)
         if not entry:
             return tool_error(f"Unknown tool: {name}")

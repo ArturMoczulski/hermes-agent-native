@@ -392,8 +392,12 @@ class MutationJournal:
             raise ValueError("Protected preparation is invalid") from None
         return {"arguments": arguments, "prepared": prepared, "attempted": bool(row[3])}
 
-    def mark_attempted(self, scope, operation_id):
-        """Durably mark possible delivery before HTTP; this is never reset."""
+    def mark_attempted(self, scope, operation_id, *, authorize=None):
+        """Mark possible delivery with current permissions in one transaction.
+
+        The trusted adapter supplies field authorization; HTTP starts only after
+        this transaction commits. The attempt marker is never reset.
+        """
         operation_id = canonical_uuid(operation_id)
         with write_txn(self._conn):
             record = self._current_receipt(scope, operation_id)
@@ -406,6 +410,8 @@ class MutationJournal:
                 )
             if saved["prepared"]["method"] is None:
                 raise ValueError("A no-op preparation cannot begin network delivery")
+            if authorize is not None:
+                authorize()
             self._conn.execute(
                 "UPDATE agent_native_plane_preparations SET attempted = 1, attempted_at = ? "
                 "WHERE operation_id = ?",

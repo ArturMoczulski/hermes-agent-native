@@ -15,9 +15,9 @@ operations. M7 is now the first handoff gate, using root-relevant M0/M1/M2 work.
 
 Use Plane through the Builder API account for current work and priorities. The
 full specification is now organized in milestone modules and rolling cycles; see
-[coverage index](../implementation/plane-roadmap-coverage.md). Next ready slice at
-the latest review: AN-24 owner/run authority in sequence 3, following the AN-17
-source audit. AN-19, AN-20 and AN-22 host planning operations/recovery are accepted. Sequence 2 is reviewed;
+[coverage index](../implementation/plane-roadmap-coverage.md). Current implementation at
+the latest review: AN-24 is active in sequence 3; its first Plane dispatch and
+pre-delivery revocation increment is verified below, following the AN-17 source audit. AN-19, AN-20 and AN-22 host planning operations/recovery are accepted. Sequence 2 is reviewed;
 AN-3's existing-Builder recovery scope is accepted, general provisioning recovery
 remains AN-21, and unfinished AN-4 runtime integration is carried to sequence 3.
 All cycles remain undated. No managed Builder has been launched.
@@ -446,3 +446,61 @@ actual boundary. AN-61/62 policy decisions are accepted. AN-23 source freshness 
 independently ready; AN-70 configured runtime limits remain open before admission.
 AN-7/26/30/32/18/57 retain implementation and live controlled-run proof. Cycle 3
 remains selected and undated; no autonomous Builder is running.
+
+## Latest increment — connected Plane tool authority (AN-24, partial)
+
+AN-24 is In Progress in sequence 3 under the owner's explicit direction to begin
+the audit findings. The [connected Plane tool boundary](../agent_native/README.md#hermes-plane-tool-boundary-an-24-first-increment)
+now reserves Plane names in both Hermes dispatch entry points and routes
+`plane_resource_inspect` through a private, host-bound adapter. Forged fields,
+task/session IDs and native handler registration cannot select scope or bypass
+the guard. Purpose changes, grant revocation, bare threads and ended/copied
+bindings deny access. Real `CellAuthority` socket RPC uses the same context.
+
+The adapter and SQLite connection are opened, used and closed on one host thread.
+Binding exit revokes queued/captured reads before I/O cleanup; late item responses
+are discarded and cannot trigger further membership/dependency reads. Cleanup
+still reclaims the executor if adapter closure raises. Existing owner identity
+and provisioning checks remain unchanged. No arbitrary worker code receives host
+objects, credentials or a new capability through this implementation.
+
+Also fixed a demonstrated Plane write race: field authorization now participates
+in the delivery-attempt transaction. A second owner connection revoking a field
+before that transaction prevents all HTTP writes, records rejection and cannot
+be bypassed by regranting and retrying the same operation ID. Already admitted
+in-flight effects retain their existing unknown/no-resend handling.
+
+TDD evidence: six native-handler impersonation cases first performed the forbidden
+fixture effect, then passed. After adding the host binding, four authorized-read
+cases still failed until actual dispatch was connected. A real socket-RPC case
+then reproduced SQLite's cross-thread error; thread ownership fixed it. A cleanup
+exception test reproduced the unreclaimed worker and passed after guaranteed
+shutdown. The pre-attempt field-revocation test first delivered one unauthorized
+fixture PATCH and then passed with zero writes. Independent lifetime verification
+holds an HTTP response across binding exit and confirms no data/follow-up reads.
+
+Regression validation: the final combined 20-file Hermes/identity/API/Plane set
+passed 423 tests, zero failures, with automatic retries disabled. The command
+is recorded below and the evidence is attached to AN-24 in Plane. One inherited kernel test initially failed on macOS because `pgrep -c`
+is Linux-only; the test now checks the actual owned PID using portable options,
+preserving the single-kernel/no-orphan assertion. A subsequent inherited remote
+kernel test raced a changing dictionary; it now waits for the actual fixture
+result-read event with bounded cleanup, preserving its busy-kernel assertion.
+New and changed framework code
+passes Ruff; changed documentation links and whitespace are checked before commit.
+No live Plane accounts or model calls were used for behavior verification, and
+no browser workflow changed. Only project-management records were updated in Plane.
+
+AN-24 remains open. Next: extend host-bound operation identity and current grant
+checks to the remaining selected tools and model boundaries. Model-facing Plane
+writes still need durable host correlation; native and auxiliary admission gates,
+run-derived skill/schema loading and real stopping are not established here.
+AN-7/26/30/32/18/57 retain those integrations and live proof. AN-70 remains open
+before configured runtime admission. The preview still shows inactive agent
+records; no autonomous Builder or new UI workflow has been launched.
+
+AN-24 combined verification command (isolated fixture services):
+
+```sh
+HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 8 tests/hermes_cli/test_agent_native_plane_tools.py tests/hermes_cli/test_agent_native_plane_tool_lifetime.py tests/hermes_cli/test_agent_native_plane_attempt_authority.py tests/tools/test_agent_native_dispatch.py tests/tools/test_registry.py tests/test_model_tools.py tests/test_model_tools_async_bridge.py tests/tools/test_code_execution.py tests/tools/test_code_kernel.py tests/tools/test_code_kernel_remote.py tests/hermes_cli/test_agent_native_identity.py tests/hermes_cli/test_agent_native_api.py tests/hermes_cli/test_agent_native_plane_write_access.py tests/hermes_cli/test_agent_native_plane_writes.py tests/hermes_cli/test_agent_native_plane_write_failures.py tests/hermes_cli/test_agent_native_plane_write_journal.py tests/hermes_cli/test_agent_native_plane_recovery.py tests/hermes_cli/test_agent_native_plane_recovery_failures.py tests/hermes_cli/test_agent_native_plane_recovery_journal.py tests/hermes_cli/test_agent_native_plane_operation_lock.py -q
+```

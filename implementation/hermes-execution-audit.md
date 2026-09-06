@@ -3,6 +3,13 @@
 Audit snapshot: 2026-09-06, committed fork `f7c54d1452418bf63b110c98bdf40e50e002919d`.
 This is a source inventory and delivery map. It does not enable managed execution.
 
+Subsequent AN-24 implementation connects the reserved Plane inspection tool at
+the two shared dispatch paths; see the [current boundary description](../agent_native/README.md#hermes-plane-tool-boundary-an-24-first-increment).
+The matrices and JSON below retain the immutable audit snapshot, including its
+then-unmodified dispatch files. They are historical source references, not a claim
+that today's working files still match those blobs. Native/auxiliary execution
+admission and the managed Builder launch remain unimplemented.
+
 The existing Hermes engine remains a suitable starting point for one controlled
 Builder run. The framework currently exposes inactive root CRUD and separately
 verified host primitives. Native model entry points do not call those controls.

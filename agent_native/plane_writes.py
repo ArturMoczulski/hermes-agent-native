@@ -618,7 +618,11 @@ class PlaneWrites:
 
         def mark_attempted():
             nonlocal attempted
-            self.journal.mark_attempted(scope, operation_id)
+            self.journal.mark_attempted(
+                scope,
+                operation_id,
+                authorize=lambda: self._check(context, operation, requirements),
+            )
             attempted = True
 
         try:

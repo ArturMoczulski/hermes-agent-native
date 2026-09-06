@@ -354,10 +354,11 @@ class TestKernelOwnershipAndLifecycle(unittest.TestCase):
         self.assertEqual([r["status"] for r in results], ["success"] * 6)
         self.assertEqual(len(_KERNELS), 1)
         live = subprocess.run(
-            ["pgrep", "-fc", "-P", str(os.getpid()), "hermes_kernel_runner"],
-            capture_output=True, text=True,
-        ).stdout.strip()
-        self.assertEqual(live, "1")
+            ["pgrep", "-f", "-P", str(os.getpid()), "hermes_kernel_runner"],
+            capture_output=True, text=True, check=True,
+        ).stdout.splitlines()
+        # pgrep -c is Linux-only; compare the actual PID on macOS too.
+        self.assertEqual(live, [str(next(iter(_KERNELS.values())).proc.pid)])
 
 
 class TestPerCellRpcAuthority(unittest.TestCase):

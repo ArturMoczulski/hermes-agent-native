@@ -814,6 +814,10 @@ def handle_function_call(
     it (single-fire contract). enabled/disabled_toolsets scope the Tool Search
     bridge catalog to this session's grant (None = unrestricted).
     """
+    from agent_native.plane_tools import is_plane_tool
+    if is_plane_tool(function_name):
+        # Framework tools use host authority before native bridges or middleware.
+        return registry.dispatch(function_name, function_args)
     function_args = coerce_tool_args(function_name, function_args)
     if not isinstance(function_args, dict):
         function_args = {}

@@ -182,3 +182,54 @@ Read the [operation boundary and evidence](../implementation/plane-scoped-writes
 for the supported surface, focused checks and remaining runtime integration.
 Neither these contexts nor the journal authenticate an admitted run. Existing
 sandbox restrictions remain in force; no managed Builder or cadence is activated.
+
+## Hermes Plane tool boundary (AN-24, first increment)
+
+`plane_tools.bind_plane_tools(actor=OWNER, open_service=...)` connects
+`plane_resource_inspect` to the real Hermes `model_tools.handle_function_call`
+and `ToolRegistry.dispatch` paths. Every `plane_` name is reserved: missing,
+expired or forged authority cannot fall through to a native/plugin handler.
+The early model dispatch branch precedes argument coercion, tool-search bridges
+and native middleware; skip flags and caller task/session IDs cannot select
+scope. Existing ordinary native tools retain their behavior.
+
+The trusted host supplies a context-manager factory yielding a fresh
+`(PlaneWrites, opaque_context)` pair. That factory creates and closes its private
+control connection on one host-owned thread. Calls from other Hermes threads,
+including `execute_code` socket RPC with `CellAuthority`, are serialized onto
+that thread; SQLite thread checks remain enabled. The issued context selects
+the project and agent. Model arguments only select the supported resource and
+cannot supply actors, bindings, credentials or alternative projects.
+
+The existing adapter rechecks current grants and soul revision before and after
+HTTP. Binding lifetime joins those checks: ending a binding revokes copied and
+queued contexts before waiting for in-flight I/O cleanup. A late response is
+discarded, and item inspection cannot start subsequent membership/dependency
+reads. Ending a binding does not revoke the durable grant or implement agent
+retirement. The host keeps its factory, services, credentials and capabilities
+out of generated code; these Python objects are not a worker transport.
+
+Only resource inspection is connected in this increment. The other reserved
+Plane tools return an unavailable-operation error here. Existing trusted-host
+writes remain available through `PlaneWrites`; exposing them to models needs
+host-owned durable operation correlation. The schema/context assembly, managed
+run admission, native/auxiliary tool gates and real Builder launch remain open.
+No tool is added to the ordinary core model catalog, and no dashboard workflow
+or background agent is activated by this connection.
+
+The same increment closes a concrete write race: current resource-field rights
+are now checked inside the transaction that records a delivery attempt. A field
+revoked before that transaction commits produces no HTTP mutation and a rejected
+receipt. Revocation after admission cannot retract an already in-flight remote
+request; unknown-outcome reconciliation and no-resend rules still apply.
+
+Focused real HTTP/SQLite and socket-RPC checks:
+
+```sh
+scripts/run_tests.sh tests/tools/test_agent_native_dispatch.py tests/hermes_cli/test_agent_native_plane_tools.py tests/hermes_cli/test_agent_native_plane_tool_lifetime.py tests/hermes_cli/test_agent_native_plane_attempt_authority.py
+```
+
+These use isolated fixture services, not live Plane accounts or model calls.
+The [Builder state](../first-builder/STATE.md) records red/green and regression
+evidence. AN-24 remains active in Plane; this is not acceptance of all managed
+operation boundaries.
