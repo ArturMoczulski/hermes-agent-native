@@ -66,7 +66,12 @@ def _default(conn):
     if result is None:
         from agent_native.model_runtime import profile_default
         choice = profile_default()
-        result = {**choice, 'revision': 1, 'updated_at': _now(), 'reasoning_effort': 'default'}
+        from agent_native.reasoning import get_reasoning_options
+        from agent.model_metadata import strip_codex_context_variant_suffix
+        astra = strip_codex_context_variant_suffix(choice['model']) == 'gpt-6-astra'
+        effort = ('low' if astra and 'low' in get_reasoning_options(
+            choice['provider'], choice['model'])['efforts'] else 'default')
+        result = {**choice, 'revision': 1, 'updated_at': _now(), 'reasoning_effort': effort}
         conn.execute('INSERT INTO agent_native_model_default '
                      '(id,provider,model,revision,updated_at,reasoning_effort) VALUES(1,?,?,?,?,?)',
                      (result['provider'], result['model'], 1, result['updated_at'], result['reasoning_effort']))

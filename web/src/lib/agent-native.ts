@@ -2,7 +2,7 @@ import { EFFORT_OPTIONS, VALID_EFFORTS } from "./reasoning-effort";
 
 export type ModelChoice = { provider: string; model: string; reasoning_effort?: string };
 export function reasoningEffortLabel(effort: string | undefined): string {
-  return !effort || effort === "default" ? "Hermes default" : EFFORT_OPTIONS.find((option) => option.value === effort)?.label ?? effort;
+  return !effort || effort === "default" ? "Runtime automatic" : EFFORT_OPTIONS.find((option) => option.value === effort)?.label ?? effort;
 }
 export type ModelSelection = ModelChoice & {
   revision: number;

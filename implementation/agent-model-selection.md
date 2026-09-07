@@ -76,3 +76,10 @@ to prove persistence, independent choices and work/chat request propagation.
 AN-83 is implemented and verified with a focused browser scenario, native request
 checks and storage/upgrade regressions. AN-80 continuous Plane comments and
 verified output links is next. See Builder state and Plane for exact evidence.
+
+Owner clarification: the automatic option is labeled Runtime automatic, not Hermes
+default; it does not read the global profile ReasoningPicker. Clickable reasoning
+labels open the existing scoped model/effort picker. Fresh Astra creation defaults
+use explicit Low when the selected route declares support. Saved owner defaults
+remain authoritative. Preview automatic Astra selections were changed through
+normal owner settings operations, preserving historical attempt snapshots.

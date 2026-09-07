@@ -93,3 +93,16 @@ def test_upgrade_preserves_existing_model_records_and_creation_retries(configure
     legacy_work = c.post(URL, json={**BODY, 'request_id': 'after-upgrade', 'work': {'timeout_seconds': 60, 'max_iterations': 5}})
     assert legacy_work.status_code == 201, legacy_work.text
     assert legacy_work.json()['model_selection']['reasoning_effort'] == 'default'
+
+
+def test_fresh_astra_default_uses_low_and_remains_owner_configurable(configured, monkeypatch):
+    from agent_native import model_runtime
+    monkeypatch.setattr(model_runtime, 'profile_default', lambda: {
+        'provider': 'openai-codex', 'model': 'gpt-6-astra'})
+    initial = configured.get(DEFAULT).json()
+    assert initial['reasoning_effort'] == 'low'
+    # Persisted owner choices win over the bootstrap default.
+    changed = configured.put(DEFAULT, json={**A, 'reasoning_effort': 'default',
+                                            'expected_revision': initial['revision']})
+    assert changed.status_code == 200, changed.text
+    assert configured.get(DEFAULT).json()['reasoning_effort'] == 'default'

@@ -1,3 +1,17 @@
+## Reasoning-default clarification — 2026-09-07
+
+Owner requested actionable reasoning labels and the lightest Astra default.
+Default/agent settings now open their own effort editor when the label is clicked.
+Runtime automatic means built-in transport behavior, not global profile inheritance.
+Fresh Astra creation defaults use Low; saved owner choices remain authoritative.
+Targeted storage test failed on default versus low, then passed; the browser case
+failed on the absent control, then passed (6.1s). Two storage cases passed.
+Logs: /tmp/an83-default-{red,green}.log and /tmp/an83-link-{red,green}.log.
+Production web build and focused Ruff passed. Live preview restarted idle; owner
+API set the creation default and six automatic Astra agent preferences to explicit
+Low. The live clickable editor confirmed Low; no inference was launched.
+Next: AN-80 continuous progress comments and saved-output links in Plane.
+
 # First Builder — current work and handoff
 
 Updated: 2026-09-07. Working branch: `codex/astra-capability-proof`.

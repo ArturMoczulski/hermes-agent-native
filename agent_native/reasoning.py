@@ -7,7 +7,7 @@ from providers import get_provider_profile
 def get_reasoning_options(provider, model):
     """Describe exact supported controls without inference or credential resolution.
 
-    Unknown capabilities remain usable through Hermes default. They are not
+    Unknown capabilities remain usable through Runtime automatic. They are not
     permission to guess a reasoning vocabulary from a model name.
     """
     provider = str(provider or '').strip().lower()
@@ -52,8 +52,8 @@ def get_reasoning_options(provider, model):
         allowed.discard('none')
     efforts = [effort for effort in EFFORT_LADDER if effort in allowed and effort in (supported or ())]
     return {
-        'efforts': ['default', *efforts], 'default_label': 'Hermes default',
-        'message': None if efforts else 'Exact reasoning controls are not declared for this route. Hermes default remains available.',
+        'efforts': ['default', *efforts], 'default_label': 'Runtime automatic',
+        'message': None if efforts else 'Exact reasoning controls are not declared for this route. Runtime automatic remains available.',
     }
 
 

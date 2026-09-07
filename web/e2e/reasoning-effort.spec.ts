@@ -138,3 +138,27 @@ test('reasoning effort persists through defaults and retries and changes only su
   expect(chatRequests.map((entry: { reasoning: { effort: string } }) => entry.reasoning?.effort)).toEqual(['low', 'low', 'high']);
   expect(chatRequests.every((entry: { path: string; model: string }) => entry.path === '/v1/chat/completions' && entry.model === model)).toBe(true);
 });
+
+
+test('reasoning labels open the actual default and agent controls', async ({ page, request }) => {
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only'; });
+  await page.goto('/agents');
+  const defaults = page.getByRole('region', { name: 'Default agent model', exact: true });
+  await expect(defaults.getByRole('button', { name: 'Reasoning: Runtime automatic', exact: true })).toBeVisible();
+  await defaults.getByRole('button', { name: 'Reasoning: Runtime automatic', exact: true }).click();
+  await expect(page.getByRole('dialog')).toContainText('not inherited from the Hermes settings page');
+  await choose(page, 'low');
+  await expect(defaults.getByRole('button', { name: 'Reasoning: Low', exact: true })).toBeVisible();
+  await page.getByLabel('Agent name', { exact: true }).fill('Reasoning controls');
+  await page.getByLabel('Purpose', { exact: true }).fill('Inspect configurable reasoning without running a model.');
+  await page.getByRole('button', { name: 'Create agent', exact: true }).click();
+  const settings = page.getByRole('region', { name: 'Agent model', exact: true });
+  await settings.getByRole('button', { name: 'Reasoning: Low', exact: true }).click();
+  await selectEffort(page, 'high');
+  await page.getByRole('dialog').getByRole('button', { name: 'Save', exact: true }).click();
+  await expect(settings.getByRole('button', { name: 'Reasoning: High', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(settings.getByRole('button', { name: 'Reasoning: High', exact: true })).toBeVisible();
+  const result = await request.get(`${api}/models/default`, { headers });
+  expect((await result.json()).reasoning_effort).toBe('low');
+});

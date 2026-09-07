@@ -30,10 +30,14 @@ new-agent default includes this preference; creation can override it and the
 owner can change it later. Reasoning is operational configuration and never
 changes the soul or lifespan of an agent.
 
-Offer only levels supported by the chosen provider/model route. **Hermes default**
+Offer only levels supported by the chosen provider/model route. **Runtime automatic**
 preserves that native transport’s ordinary default behavior; it does not promise
 that reasoning is disabled or that no reasoning parameter is sent. Unknown
-capabilities offer this default alone, with an explanation. An explicit effort
+capabilities offer this default alone, with an explanation. This is built-in
+runtime behavior, not inheritance from the Hermes profile settings page.
+Reasoning labels in the default and agent settings open the editor that actually
+controls that preference. New Astra defaults use explicit **Low**, the lightest
+supported effort, unless the owner has saved another choice. An explicit effort
 must not be silently weakened or strengthened. Changing models may require the
 owner to choose a compatible effort before saving. Do not advertise Codex app
 orchestration levels as direct model API levels.

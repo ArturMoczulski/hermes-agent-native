@@ -50,7 +50,7 @@ function AgentReasoningControl({ selection, effort, onChange, onLoaded }: {
       }).catch(() => {
         if (active) {
           setLoaded({ key, error: true });
-          onLoaded({ key, efforts: [], default_label: "Hermes default", message: null });
+          onLoaded({ key, efforts: [], default_label: "Runtime automatic", message: null });
         }
       });
     return () => { active = false; };
@@ -72,7 +72,7 @@ function AgentReasoningControl({ selection, effort, onChange, onLoaded }: {
     {!options && <p role="status" className="text-xs text-muted-foreground">Loading supported reasoning levels…</p>}
     {options && !allowed && <p role="alert">Choose a supported reasoning effort for this model. Your previous choice has not been changed.</p>}
     {options?.message && <p className="text-xs text-muted-foreground">{options.message}</p>}
-    <p className="text-xs text-muted-foreground">Higher effort can take longer and use more model tokens. Hermes default keeps the native behavior for this model; it does not mean reasoning is off.</p>
+    <p className="text-xs text-muted-foreground">Higher effort can take longer and use more model tokens. Runtime automatic uses the provider runtime’s built-in behavior, not inherited from the Hermes settings page. Choose an explicit level here to control effort; automatic does not mean reasoning is off.</p>
   </div>;
 }
 
@@ -93,7 +93,7 @@ export function DefaultAgentModelControls({ onChange }: { onChange(model: Defaul
       <h2 className="text-lg font-semibold">Default agent model</h2>
       <Button disabled={!current || error} onClick={() => setEditing(current)}>Change default model</Button>
     </div>
-    <p className="break-words text-sm">{current ? modelChoiceLabel(current) : error ? "Default unavailable" : "Loading default…"}</p>
+    <p className="break-words text-sm">{current ? <>{current.provider} · {current.model} · <button type="button" className="underline underline-offset-4" disabled={error} onClick={() => setEditing(current)}>Reasoning: {reasoningEffortLabel(current.reasoning_effort)}</button></> : error ? "Default unavailable" : "Loading default…"}</p>
     <p className="text-sm text-muted-foreground">Copied into newly created agents. Existing agents keep their own selection when this default changes.</p>
     <Link to="/models" className="text-sm underline underline-offset-4">Manage provider connections</Link>
     {error && <div role="alert" className="space-y-2"><p>Could not load the default model. Check your connection and retry.</p><Button onClick={() => setReload((value) => value + 1)}>Reload default</Button></div>}
@@ -124,7 +124,7 @@ export function AgentModelControls({ agent, onMutationStart, onUpdate }: {
       <h2 className="text-lg font-semibold">Agent model</h2>
       <Button onClick={() => setEditing({ choice: agent.model_selection ?? null, revision: agent.model_selection?.revision ?? 0 })}>Change agent model</Button>
     </div>
-    <p className="break-words text-sm">{modelChoiceLabel(agent.model_selection)}</p>
+    <p className="break-words text-sm">{agent.model_selection ? <>{agent.model_selection.provider} · {agent.model_selection.model} · <button type="button" className="underline underline-offset-4" onClick={() => setEditing({ choice: agent.model_selection ?? null, revision: agent.model_selection?.revision ?? 0 })}>Reasoning: {reasoningEffortLabel(agent.model_selection.reasoning_effort)}</button></> : modelChoiceLabel(null)}</p>
     {agent.model_selection && <p className="text-xs text-muted-foreground">Selection revision {agent.model_selection.revision} · {agent.model_selection.source === "default" ? "Copied from the creation default" : agent.model_selection.source === "legacy" ? "Retained from existing configuration" : "Chosen for this agent"}</p>}
     <p className="text-sm text-muted-foreground">Applies to the next work run or chat message. An active attempt keeps the model it started with. Identity, purpose, planning and conversation history stay with this agent.</p>
     {!!agent.model_activity?.length && <dl className="grid gap-2 text-sm sm:grid-cols-[auto_1fr]">
