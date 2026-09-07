@@ -26,7 +26,8 @@ CREATE TABLE IF NOT EXISTS agent_native_work_effects (
 );
 """
 from agent_native.result_store import RESULT_SCHEMA
-WORK_SCHEMA += RESULT_SCHEMA
+from agent_native.work_focus import FOCUS_SCHEMA
+WORK_SCHEMA += RESULT_SCHEMA + FOCUS_SCHEMA
 
 TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
 
@@ -52,6 +53,8 @@ def read_work(conn, agent_id):
     from agent_native.result_store import list_results
     result['outputs'] = list_outputs(conn, agent_id)
     result['results'] = list_results(conn, agent_id)
+    from agent_native.work_focus import read_focus
+    result['focus'] = read_focus(conn, result['id'])
     for private in ('binding_id', 'worker_pid', 'stop_requested'):
         result.pop(private, None)
     return result

@@ -77,6 +77,7 @@ export function outputVersionLink(agentId: string, output: OutputReference): str
 
 export type AgentWork = {
   id: string;
+  focus?: WorkFocus | null;
   state: "queued" | "preparing" | "running" | "stopping" | "paused" | "completed" | "failed" | "unknown";
   limits: WorkLimits;
   session_id: string;
@@ -106,3 +107,27 @@ export function agentWorkStatus(agent: Agent): string {
   };
   return labels[work.state];
 }
+
+export type WorkFocus = {
+  selection_id: string;
+  item_id: string;
+  cycle_id: string | null;
+  name: string;
+  description_html: string | null;
+  selected_at: string;
+  soul_revision: number;
+  run_id: string;
+};
+
+export type AgentPlanning = {
+  agent_id: string;
+  soul_revision: number;
+  setup_activation_id: string;
+  observed_at: string;
+  plane_origin: string;
+  workspace_slug: string;
+  project: { id: string; name: string; description?: string | null };
+  items: { id: string; name: string; description_html?: string | null; state?: string | null }[];
+  cycles: { id: string; name: string; description?: string | null }[];
+  states: { id: string; name: string; group?: string }[];
+};

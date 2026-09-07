@@ -6,6 +6,7 @@ import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { Markdown } from "@/components/Markdown";
 import { fetchJSON } from "@/lib/api";
+import PlanningWork from "./PlanningWork";
 import { usePageHeader } from "@/contexts/usePageHeader";
 
 type LoadedAgent = { key: string; agent?: Agent; error?: string };
@@ -86,6 +87,7 @@ export default function AgentDetailPage() {
             mutationVersion.current += 1;
             setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
           }} />
+        <PlanningWork key={`planning:${agent.id}:${agent.soul_revision}:${agent.setup?.activation_id}`} agent={agent} />
         <section aria-label="Agent purpose" className="space-y-3 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">Purpose</h2>
           <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>

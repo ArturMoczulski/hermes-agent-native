@@ -1,4 +1,4 @@
-"""Owner dashboard operations for inactive agent-native records.
+"""Owner dashboard operations for agent-native identity, work and inspection.
 
 Only the existing dashboard owner session is accepted. Scoped automation tokens
 cannot promote themselves to OWNER through request data or general middleware.
@@ -138,3 +138,24 @@ def read_output(agent_id: str, output_id: str, version: int, actor=Depends(owner
             raise HTTPException(status_code=404, detail='Output not found') from exc
         except (ValueError, OSError) as exc:
             raise HTTPException(status_code=409, detail='Output content could not be verified') from exc
+
+
+@router.get('/{agent_id}/planning')
+def read_planning(agent_id: str, actor=Depends(owner_session)):
+    from hermes_constants import get_hermes_home
+    from agent_native.planning_view import (
+        PlanningConfigurationRequired, PlanningNotReady, read_planning as read,
+    )
+    from agent_native.plane_reads import PlaneReadError, PlaneScopeError
+    with connect_closing(board='default') as conn:
+        try:
+            return read(conn, actor=actor, agent_id=agent_id,
+                        home=get_hermes_home() / 'agent-native')
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except (PlanningNotReady, PlanningConfigurationRequired) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except (PermissionError, PlaneScopeError) as exc:
+            raise HTTPException(status_code=403, detail='Planning inspection is no longer authorized') from exc
+        except PlaneReadError as exc:
+            raise HTTPException(status_code=503, detail='Plane planning data is unavailable') from exc

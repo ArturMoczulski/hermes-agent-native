@@ -71,7 +71,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -111,6 +111,11 @@ class _Run:
                             (message,message,_now(),self.work['id']))
                         state.event(conn,self.work['id'],'work.unknown',message)
                 raise
+        elif tool == 'work_item_select':
+            from agent_native.work_focus import select
+            result = select(conn, validate=self.validate, inspect=planning.inspect,
+                            agent_id=self.work['agent_id'], run_id=self.work['id'],
+                            call_id=call_id, arguments=args)
         elif tool == 'output_publish':
             from agent_native.output_store import publish
             required = {'title','content','item_id','format'}
@@ -135,7 +140,10 @@ class _Run:
             summary = (('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
                        'Plane: '+args.get('operation','inspected '+args.get('kind','resource')))
-            state.event(conn,self.work['id'],'work.effect',summary)
+            if tool != 'work_item_select':
+                # Selection and its event commit together; receipt recovery must
+                # not emit a second change or make an old item current again.
+                state.event(conn,self.work['id'],'work.effect',summary)
         return result
 
     def _admit(self, conn, params):
@@ -168,7 +176,8 @@ class _Run:
                     snapshot = planning.snapshot()
                     initial = ('Begin your initial project work from your protected purpose. Use the supplied planning skill. '
                                'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
-                               'Choose useful work appropriate to your purpose and the supplied material. Save any produced text or Markdown '
+                               'Choose useful work appropriate to your purpose and the supplied material. Use work_item_select before '
+                               'substantive work and whenever you switch tasks. Save any produced text or Markdown '
                                'with output_publish; use output_id only when revising an existing output. Record paths in Plane. '
                                'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
                                'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '

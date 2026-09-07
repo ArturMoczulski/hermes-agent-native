@@ -1,7 +1,8 @@
 # Shared agent work and outputs
 
 Status: shared bounded execution and result/output storage implemented on
-2026-09-07, with a verified shared output/results reader deployed to the local preview.
+2026-09-07, with the shared Work planning and output/results views verified and
+deployed to the local preview (AN-78 and AN-79 complete).
 The owner also added continuous Plane reporting below. The First Builder handoff
 remains later. The successful bounded writer
 at `9c0bd0b` and live demo/refresh fix at `4164226` remain accepted evidence.
@@ -17,7 +18,8 @@ This extends those contracts rather than introducing another product specificati
 The earlier writer checkpoint supplied fiction-specific instructions and a fixed
 story tool. The shared worker now takes its domain from protected purpose and
 supplied context. Its fixed catalog contains scoped Plane reads/writes,
-`output_publish` and `result_record`; it grants no ambient shell or browsing tools.
+`work_item_select`, `output_publish` and `result_record`; it grants no ambient shell
+or browsing tools.
 Generic output storage supports text and Markdown, independent output identities
 and explicit immutable revisions. A finished attempt requires a recorded result,
 which can have an empty output list. Waiting and blocked reports stay explicit;
@@ -81,6 +83,63 @@ producers or imports. No agent-authored executable renderer. Controls advertised
 as supported must have a real backend operation; future features are not empty
 mock dashboards.
 
+## Work planning inspection and explicit selection
+
+The shared Work view reads the prepared Plane project brief, cycles and their
+goals, and selected item requirements through an authenticated owner endpoint.
+This read-only inspection uses the current prepared account/project and the
+existing bounded Plane adapter. It remains available for a chat-only or paused
+agent without installing or restoring agent grants, starting work, or exposing
+credentials. Configuration, purpose and scope are checked again after external
+reads. It is a view into Plane, not another task board.
+
+The managed worker reports its focus with `work_item_select(item_id)` before
+substantive work and when it changes items. The host observes that authorized
+item and records an immutable selection: item identity, name and description,
+cycle membership at selection, assignment fingerprint, time, run and protected
+purpose revision. Local receipt recovery returns the original selection without
+making an older selection current again. Selection grants no new permissions and
+does not accept work. Existing output/result checks remain in force independently.
+
+Show **Current work item** during an active attempt and **Last selected work item**
+after it stops. Keep the selected requirements separate from item details observed
+by the latest successful Plane check. A difference does not prove the running
+agent has adopted an edit. A cached inventory from before a new selection cannot
+establish that the selected task is missing or that its requirements changed.
+Cycle membership is the snapshot at selection, not a claim that no one has moved
+the item since. Historical runs have no invented selection; no priority, status,
+cycle order or saved output is a substitute for an explicit record.
+
+Planning loads independently of local run status, on opening the view, changing
+its agent/purpose/setup or selection, and **Refresh planning**. Display the last
+successful observation time and retain visibly stale data on temporary outage.
+Scope or authorization failures clear it; delayed responses cannot populate a
+different agent or purpose. Rich item descriptions become readable inert text.
+Saved outputs and recorded results retain their existing verified readers and
+links. The owner can still pause while planning is unavailable.
+
+This is a bounded initial-run monitoring increment. Selection is not a complete
+assignment scheduler, acceptance decision or resumed activation. Cadence, broader
+work steering, child supervision and automatic Plane reporting remain their own
+tracked work.
+
+AN-79 verification: missing endpoint, missing selection and missing view tests
+failed before implementation. A browser regression also reproduced cached older
+requirements being misrepresented after a new selection; binding the snapshot to
+its selection and using neutral comparison text fixed it. **152 distinct focused
+Python tests** passed across owner/scoped reads, planning, selection/replay,
+work effects/results/API and native workers. **14 Playwright scenarios** passed
+across shared planning, writer and analyst work: active selection, refresh/outage,
+reselection and route isolation, safe text, saved output reading and actual Pause.
+The production build and scoped lint passed. External Plane/model fixtures are
+scripted; framework routes, stores and native worker processes are real.
+
+The idle local preview was backed up and restarted. Authenticated reads and the
+built browser verify real Plane planning and the previous saved story. All six
+agents, three work states, model-call counts and saved outputs match the backup;
+no new live work ran and historical selections remain absent. See
+[Builder state](../first-builder/STATE.md) for logs and rollout details.
+
 ## Shared activity table
 
 AN-74 owns the owner's paginated activity request. Use the [screen contract](../design/12-control-center-screens.md#9-event-history):
@@ -111,16 +170,16 @@ Activity presentation remains unchanged until these small test-first increments 
 ## Plane work mapping
 
 - [AN-78 — Generalize bounded agent work and result records](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4b7a3d8b-a48d-4e0b-9e01-0645a126cffd/) contains the completed shared execution/records checkpoint and minimal common reader.
-- [AN-79 — Show shared Work and Saved outputs for every agent](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/d4143b70-112e-421d-ad5a-288dfc92b48c/) follows the shared records and exposes their common human workflow.
+- [AN-79 — Show shared Work and Saved outputs for every agent](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/d4143b70-112e-421d-ad5a-288dfc92b48c/) is complete: explicit work selection, real planning context and freshness extend the common output/results workflow.
 - AN-73 continues native conversations, decisions and steering; AN-74 owns deeper session/activity/output inspection. Their existing records are generalized, not copied.
 - AN-75/76 retain continuity and full owner-journey acceptance; the analyst is an added bounded generality proof.
 - AN-6/26/48 retain broader planning, skills and media/review scope. AN-37–45 retain actual child creation, delegation, escalation, recursive monitoring and global Inbox. Narrow subset evidence links back to them.
 
 Current cycle: **03 — Shared agent work and the fantasy writer**, with no planned
-dates. AN-78 is complete. AN-79 retains the fuller shared Work view; its minimal
-Saved outputs/Results reader and authenticated version link were brought forward
-so the backend change preserves the writer's ability to open saved work. AN-80
-then adds continuous Plane reporting and output synchronization.
+dates. AN-78 and AN-79 are complete. The shared Work view now reads real planning
+and explicit selections; Saved outputs/Results preserve the writer's ability to
+open saved work and exact-version links. AN-80 is next for continuous Plane
+reporting and output synchronization.
 The original writer milestone/module remains the acceptance home. The new items
 also link into the existing governed-work and control-center capability modules.
 

@@ -2,7 +2,7 @@
 import json
 import re
 
-SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'}
+SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select'}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'
@@ -103,29 +103,35 @@ def next_reply(messages, purpose):
         name, arguments = operation('cycle.assign', {'cycle_id': result(2)['resource']['id'], 'item_id': item(),
                                     'expected_item_fingerprint': result(4)['fingerprint'],
                                     'expected_cycle_id': result(4)['cycle_id']})
-    elif file_free and index == 6:
+    elif index == 6:
+        name, arguments = 'work_item_select', {'item_id': item()}
+    elif 'E2E_PLAN_RESELECT' in purpose and index == 7:
+        name, arguments = 'work_item_select', {'item_id': item()}
+    elif 'E2E_PLAN_RESELECT' in purpose and index == 8:
+        return {'role': 'assistant', 'content': 'Requirements were selected again.'}
+    elif file_free and index == 7:
         summary = ('The supplied sample supports arithmetic, but no trend or forecast. Scope the next work to '
                    'obtaining a comparable sample before any growth claim.' if file_free == 'discovery' else
                    'Waiting for the owner to provide the comparison period before evaluating a trend.')
         name, arguments = 'result_record', {'item_id': item(), 'summary': summary, 'outcome': file_free,
                                             'evaluation': 'No trend can be established from one sample.', 'outputs': []}
-    elif file_free and index == 7:
+    elif file_free and index == 8:
         return {'role': 'assistant', 'content': 'I recorded the ' + file_free + ' result without creating an unnecessary file.'}
-    elif index == 6:
-        name, arguments = 'output_publish', {'title': title, 'content': content, 'item_id': item(), 'format': 'text' if plaintext else 'markdown'}
     elif index == 7:
-        name, arguments = operation('artifact.record', {'item_id': item(), 'reference': result(6)['relative_path'],
-                                    'description': 'Saved output version ' + str(result(6)['version'])})
+        name, arguments = 'output_publish', {'title': title, 'content': content, 'item_id': item(), 'format': 'text' if plaintext else 'markdown'}
     elif index == 8:
-        name, arguments = 'plane_resource_inspect', {'kind': 'item', 'resource_id': item()}
+        name, arguments = operation('artifact.record', {'item_id': item(), 'reference': result(7)['relative_path'],
+                                    'description': 'Saved output version ' + str(result(7)['version'])})
     elif index == 9:
-        name, arguments = operation('item.update', {'item_id': item(), 'expected_fingerprint': result(8)['fingerprint'],
-                                    'description': criteria + '\nResult: saved ' + title + '; ready for owner review.'})
+        name, arguments = 'plane_resource_inspect', {'kind': 'item', 'resource_id': item()}
     elif index == 10:
+        name, arguments = operation('item.update', {'item_id': item(), 'expected_fingerprint': result(9)['fingerprint'],
+                                    'description': criteria + '\nResult: saved ' + title + '; ready for owner review.'})
+    elif index == 11:
         name, arguments = 'result_record', {'item_id': item(), 'summary': 'Completed ' + title + ' for owner review.',
             'outcome': 'submitted', 'evaluation': evaluation,
-            'outputs': [{'output_id': result(6)['output_id'], 'version': result(6)['version']}]}
-    elif index == 11:
+            'outputs': [{'output_id': result(7)['output_id'], 'version': result(7)['version']}]}
+    elif index == 12:
         return {'role': 'assistant', 'content': 'I planned the first cycle, completed ' + title + ', saved its output, '
                 'recorded an evaluation, and updated its Plane task. The result awaits owner review.'}
     else:
@@ -140,16 +146,23 @@ def handle_writer_request(handler, body, server, model_name):
         return False
     messages = body.get('messages') or []
     system_text = '\n'.join(_text(message) for message in messages if message.get('role') in ('system', 'developer'))
-    marker = re.search(r'E2E_WRITER_HOLD[A-Za-z0-9_-]*', system_text)
+    marker = re.search(r'E2E_(?:WRITER|PLAN)_HOLD[A-Za-z0-9_-]*', system_text)
+    try:
+        phase = len(_results(messages))
+    except (KeyError, ValueError) as exc:
+        handler._send({'error': {'message': 'Shared-work fixture contract failed: ' + str(exc)}}, status=400)
+        return True
+    reselect = 'E2E_PLAN_RESELECT' in system_text
+    key = ('E2E_PLAN_RESELECT_BEFORE' if phase == 7 else 'E2E_PLAN_RESELECT_AFTER') if reselect and phase in (7, 8) else (marker.group(0) if marker else None)
+    hold = key is not None and (reselect or 'E2E_WRITER_' in key or phase >= 7)
     evidence = getattr(server, 'writer_requests', None)
     if evidence is None:
         evidence = server.writer_requests = []
     evidence.append({'tool_results': sum(message.get('role') == 'tool' for message in messages),
-                     'hold_marker': marker.group(0) if marker else None,
+                     'hold_marker': key,
                      'tools': sorted(tool_names), 'system_text': system_text,
                      'initial_context': next((_text(m) for m in messages if m.get('role') == 'user'), '')})
-    if marker:
-        key = marker.group(0)
+    if hold:
         try:
             server.holds.evidence(key)
         except KeyError:
@@ -157,7 +170,8 @@ def handle_writer_request(handler, body, server, model_name):
         server.holds.enter(key)
         if not server.holds.wait(key, handler.connection):
             return True
-        message = {'role': 'assistant', 'content': server.holds.evidence(key)['late_reply']}
+        message = (next_reply(messages, system_text) if reselect and phase == 7 else
+                   {'role': 'assistant', 'content': server.holds.evidence(key)['late_reply']})
     else:
         try:
             message = next_reply(messages, system_text)
@@ -178,6 +192,6 @@ def handle_writer_request(handler, body, server, model_name):
         written = handler._send({'id': 'writer-fixture', 'object': 'chat.completion', 'created': 1, 'model': model_name,
                                  'choices': [{'index': 0, 'message': message, 'finish_reason': finish}],
                                  'usage': {'prompt_tokens': 100, 'completion_tokens': 100, 'total_tokens': 200}})
-    if marker:
-        server.holds.written(marker.group(0), written)
+    if hold:
+        server.holds.written(key, written)
     return True

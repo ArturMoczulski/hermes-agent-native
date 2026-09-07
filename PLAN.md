@@ -47,15 +47,17 @@ native worker. The original three preview agents remain unchanged. See
 The demo's explicit 300-second/20-step limits are not global defaults. The
 captioned video is verified and AN-72 is Done in Plane. The owner then requested
 a shared interface for the framework. AN-78 now provides shared bounded work and results plus the verified shared
-Saved outputs/Results reader in the local preview. AN-79
-retains the fuller Work view, including real planning context and criteria. The
-owner added AN-80 for continuous Plane progress comments, per-agent verbosity and
+Saved outputs/Results reader in the local preview. AN-79 now adds the verified
+shared Work planning view: project and cycles, explicitly selected work and
+requirements, direct Plane links and independent refresh/stale states. Existing
+runs keep their history without an invented selection. The owner added AN-80 for continuous Plane progress comments, per-agent verbosity and
 verified output links/description sections; it follows AN-79 and precedes AN-73,
 which connects proactive questions and steering to the shared work. The writer and an
 analyst on supplied material must use the same path; a useful outcome need not
 produce a story or a file. The Plane skill now directs incremental comments during
 work, not a retrospective batch at completion; enforceable reporting configuration
-and delivery remain AN-80. The external Builder used comments on AN-78 throughout this increment.
+and delivery remain AN-80, the next actionable slice. The external Builder used
+progress comments on AN-78 and AN-79 throughout implementation and verification.
 AN-74–76 retain detailed inspection, continuity and full milestone acceptance.
 AN-74 includes the owner-requested shared Activity table: newest first, twenty
 rows by default, 20/50/100 choices and true bounded pagination.

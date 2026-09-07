@@ -13,7 +13,7 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-**AN-72 and AN-78 are complete; AN-79 and AN-80 precede AN-73.** The captioned live demo video is
+**AN-72, AN-78 and AN-79 are complete; AN-80 is next, before AN-73.** The captioned live demo video is
 verified, and the completed item retains its evidence and scope. The owner
 deferred AN-77's remaining purpose-revision/transcript ordering; AN-77 remains
 Todo with accepted native chat, receipts, deadlines and full-service-restart
@@ -33,19 +33,64 @@ steps; these values apply to that demonstration, not unattended or global defaul
 
 Current: AN-78 has shared bounded execution, immutable text/Markdown outputs and
 explicit result reports with or without files. The shared reader is verified and deployed, so newly saved writer and analyst
-outputs remain accessible through the same interface. AN-79
-retains the fuller project/cycle/assignment/criteria presentation. AN-80 adds the
+outputs remain accessible through the same interface. AN-79 now provides real
+project/cycle planning, explicit current or last selected work and requirements,
+freshness and direct Plane links. AN-80 adds the
 owner's continuous Plane progress comments, persistent verbosity preference and
 verified output links/description sections. The bundled Plane skill now instructs
 incremental reporting; the external Builder posted and read back a progress comment
-on the active AN-78 item while verification was still in progress.
+on the active AN-78 and AN-79 items while verification was still in progress.
 
 AN-73 then continues conversation, questions and steering. AN-74 covers detailed
 inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the full
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
 
-## Shared bounded work — current verification
+## Shared Work planning — AN-79 complete
+
+The common create/detail UI uses work labels for all purposes. Work planning
+shows the prepared Plane project brief and cycle goals, an explicit selected item
+and its requirements, the recorded cycle at selection, direct Plane links and the
+last successful planning check. Current selection is distinct from last selection
+on a stopped attempt. Historical runs never acquire a guessed assignment.
+
+The host admits `work_item_select(item_id)` through the existing private worker
+boundary. It records immutable selection history and an event atomically; lost
+receipt replay cannot make an old selection current again. The worker now has five
+fixed tools: scoped Plane inspection and operations, explicit selection, output
+publication and result recording. Selection cannot widen authority or accept work.
+The owner planning API can inspect prepared chat-only/paused agents independently
+of revoked agent grants, without installing grants or starting a worker.
+
+Planning loads separately from live local state and offers Refresh planning.
+Temporary outage keeps visibly stale data; scope changes discard it. Requirements
+observed in Plane stay separate from the selection snapshot. Independent review
+found an older cached snapshot could be described as a change after reselection;
+a real held-worker/browser test reproduced that failure. The fix binds comparison
+to the selection that requested the snapshot and uses neutral last-check wording.
+Decision handling and child controls are explicitly unavailable in this increment.
+
+TDD evidence: endpoint and selection failures preceded implementation. **152 distinct
+Python checks** passed: planning API/Plane reads/writer planning (104), focus/work
+effects/results/work API (39) and native workers (9). Logs:
+`/tmp/an79-planning-final-green.log`, `/tmp/an79-focus-regression.log` and
+`/tmp/an79-focus-green.log`. **14 Playwright scenarios passed** in
+`/tmp/an79-ui-final-regression.log`, including shared writer/analyst outputs, actual
+Pause, limits, selection, changed requirements, outage, reselection and route
+switching. RED logs are `/tmp/an79-ui-red.log` and
+`/tmp/an79-ui-reselection-red.log`. Production build and scoped lint passed:
+`/tmp/an79-ui-final-build.log` and `/tmp/an79-ui-final-lint.log`.
+
+Preview at `http://127.0.0.1:19221` now runs the tested build (PID **60055**).
+Before restarting the exact idle preview, its control database was backed up to
+`~/.hermes-agent-native-preview/backups/work-planning-2026-09-07/kanban.db`.
+Authenticated planning/output reads and the actual built browser succeeded; all
+six agents, three work states and model-call counts, and saved-output records and
+content are unchanged. The historical demo has no invented work selection.
+`/tmp/an79-preview-planning.png` was visually inspected. No new live model run was
+started. AN-80 is the next slice; automatic Plane reporting is not implemented yet.
+
+## Shared bounded work — AN-78 verification
 
 Native work now uses the same restricted tool catalog for writer and analyst
 purposes: scoped Plane operations, output publication and result recording. Result
@@ -75,8 +120,8 @@ reload and error handling, file-free results, Pause and limits. Production web
 build and scoped lint passed (`/tmp/shared-output-build.log`,
 `/tmp/shared-output-lint.log`, `/tmp/an78-lint.log`). No new live model demonstration has been launched.
 
-The tested backend and built reader are now running at
-`http://127.0.0.1:19221` (preview PID 36743). The exact idle process was checked
+At the AN-78 checkpoint, the tested backend and built reader were running at
+`http://127.0.0.1:19221` (then preview PID 36743; superseded by AN-79 above). The exact idle process was checked
 before restart. Its control backup is
 `~/.hermes-agent-native-preview/backups/shared-work-2026-09-07/kanban.db`.
 All six agents, three completed/paused work states and model-call counts were

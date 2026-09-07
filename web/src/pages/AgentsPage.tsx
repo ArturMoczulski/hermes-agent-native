@@ -110,7 +110,7 @@ export default function AgentsPage() {
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">Your agents</h1>
         <p className="text-muted-foreground">Give each agent a purpose to keep and develop over time.</p>
-        <p className="rounded-lg border p-3 text-sm">Create an agent to talk with it, or set both work limits to start its first private writing run after setup is ready.</p>
+        <p className="rounded-lg border p-3 text-sm">Create an agent to talk with it, or set both work limits to start its first private work run after setup is ready.</p>
       </header>
       <form onSubmit={(event) => void create(event)} className="space-y-4 rounded-xl border p-5">
         <h2 className="text-lg font-semibold">Create an agent</h2>
@@ -123,8 +123,8 @@ export default function AgentsPage() {
           <textarea id="agent-purpose" className="min-h-28 w-full rounded-md border bg-background p-3" value={purpose} onChange={(e) => setPurpose(e.target.value)} required maxLength={20000} disabled={saving} placeholder="What should this agent work toward?" />
         </div>
         <fieldset className="space-y-3 rounded-lg border p-4" disabled={saving}>
-          <legend className="px-1 text-sm font-medium">First writing run (optional)</legend>
-          <p className="text-sm text-muted-foreground">Set both limits to let the agent plan and write in its private workspace. Leave both blank to create it for conversation. This starts one run; automatic continuation is not enabled.</p>
+          <legend className="px-1 text-sm font-medium">First work run (optional)</legend>
+          <p className="text-sm text-muted-foreground">Set both limits to let the agent plan and work toward its purpose in its private workspace. Leave both blank to create it for conversation. This starts one run; automatic continuation is not enabled.</p>
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2"><Label htmlFor="agent-run-time">Maximum run time (seconds)</Label><Input id="agent-run-time" type="number" min={1} max={3600} step={1} required={wantsWork} value={timeoutSeconds} onChange={(event) => setTimeoutSeconds(event.target.value)} /></div>
             <div className="space-y-2"><Label htmlFor="agent-model-steps">Maximum model steps</Label><Input id="agent-model-steps" type="number" min={1} max={100} step={1} required={wantsWork} value={modelSteps} onChange={(event) => setModelSteps(event.target.value)} /></div>

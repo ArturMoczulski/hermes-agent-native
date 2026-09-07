@@ -177,6 +177,21 @@ agent/work and evaluation links. Use **Open output**, **Download** where availab
 and format-appropriate controls such as audio playback. The result detail below
 owns the complete review interaction; do not maintain duplicate result records.
 
+A current work item must come from an explicit assignment/selection record,
+not an inference from Plane priority, status or cycle order. When work stops,
+label the retained record as last selected work. Preserve the requirements and
+cycle observed when the agent selected it; distinguish them from later planning
+observations. Show when each was observed, and do not imply that the agent has
+adopted a human edit just because the refreshed view can see it. Missing selection
+and temporarily unavailable planning are distinct states.
+
+Planning freshness is independent of live execution status. Provide **Refresh
+planning**, the last successful check time, and a visible stale state after an
+outage. An older snapshot cannot explain a newer selection. Changing agent,
+purpose or project discards incompatible cached data. Owner inspection must not
+start work or reinstate revoked agent permissions; stopping remains available
+while the planning service is unavailable.
+
 Show whether recent progress and output links reached the Plane item, with
 **Open work item** and pending, failed, unknown or description-conflict details
 when present. A saved output and its delivery to Plane have distinct states.

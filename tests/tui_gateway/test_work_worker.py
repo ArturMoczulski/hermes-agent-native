@@ -29,7 +29,7 @@ def eventually(read, predicate, timeout=20):
 
 @pytest.fixture
 def model():
-    state = SimpleNamespace(requests=[], tools=['plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'],
+    state = SimpleNamespace(requests=[], tools=['plane_resource_inspect', 'plane_operation_execute', 'work_item_select', 'output_publish', 'result_record'],
                             final_response='The supplied sales data shows a 25% increase.',
                             entered=threading.Event(), disconnected=threading.Event(), hold=False)
     class Handler(BaseHTTPRequestHandler):
@@ -53,6 +53,7 @@ def model():
                 arguments = {
                     'plane_resource_inspect': {'kind': 'project'},
                     'plane_operation_execute': {'operation': 'item.create', 'arguments': {'name': 'Compare supplied quarterly sales', 'description_html': '<p>Report the numerical change using only supplied figures.</p>'}},
+                    'work_item_select': {'item_id': '11111111-1111-4111-8111-111111111111'},
                     'output_publish': {'title': 'Quarterly sales comparison', 'content': 'Sales grew from 80 to 100 units: a 25% increase.',
                                        'item_id': '11111111-1111-4111-8111-111111111111', 'format': 'markdown'},
                     'result_record': {'item_id': '11111111-1111-4111-8111-111111111111',
@@ -177,7 +178,7 @@ def test_native_work_loop_has_scoped_tools_parent_admission_and_canonical_histor
     assert all(f['params']['run_id'] == worker.attempt['run_id'] for f in worker.controls + worker.effects)
     system_prompts = []
     for request in model.requests:
-        assert {t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'}
+        assert {t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'work_item_select', 'output_publish', 'result_record'}
         text = json.dumps(request['messages'])
         assert worker.attempt['purpose'] in text and worker.attempt['skill_text'] in text
         assert 'PRIVATE_HOST_SOUL_MUST_NOT_LEAK' not in text
@@ -220,7 +221,7 @@ def test_native_work_does_not_dispatch_provider_invented_ambient_tool(worker, mo
     assert model.requests, worker.result
     assert not worker.effects
     assert not (worker.workspace / 'forbidden-work-tool-ran').exists()
-    assert all({t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'} for request in model.requests)
+    assert all({t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'work_item_select', 'output_publish', 'result_record'} for request in model.requests)
 
 
 def test_native_work_model_admission_denial_makes_no_provider_request(worker, model):

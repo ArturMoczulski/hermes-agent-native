@@ -102,6 +102,45 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
 
     app.router.routes.insert(0, app.router.routes.pop())
 
+    @app.patch('/__e2e__/planning-control/{agent_id}')
+    def planning_control(request: Request, agent_id: str, body: dict):
+        """Alter only the external Plane fixture; production state stays real."""
+        _require_token(request)
+        from threading import Event
+        projects = [p for p in plane.projects.values() if p.get('external_id') == agent_id]
+        if len(projects) != 1:
+            from fastapi import HTTPException
+            raise HTTPException(404, 'Fixture project not found')
+        project = projects[0]
+        slug = next(w['slug'] for w in plane.workspaces.values() if w['id'] == project['workspace'])
+        path = f'/api/v1/workspaces/{slug}/projects/{project["id"]}/'
+        item = plane.items.get(body.get('item_id'))
+        if item and item['project'] == project['id']:
+            if 'description_html' in body:
+                item['description_html'] = body['description_html']
+            if body.get('delete_item'):
+                del plane.items[item['id']]
+        if 'outage' in body:
+            if body['outage']:
+                plane.overrides['GET', path] = lambda _: (503, {}, {'error': 'Fixture Plane unavailable'})
+            else:
+                plane.overrides.pop(('GET', path), None)
+        if not hasattr(plane, 'planning_holds'):
+            plane.planning_holds = {}
+        if body.get('hold'):
+            hold = plane.planning_holds[agent_id] = {'entered': Event(), 'release': Event()}
+            def delayed(_):
+                hold['entered'].set()
+                hold['release'].wait(15)
+                return 200, {}, project
+            plane.overrides['GET', path] = delayed
+        if body.get('release') and agent_id in plane.planning_holds:
+            plane.planning_holds[agent_id]['release'].set()
+            plane.overrides.pop(('GET', path), None)
+        hold = plane.planning_holds.get(agent_id)
+        return {'hold_entered': bool(hold and hold['entered'].is_set()),
+                'project_gets': sum(r['method'] == 'GET' and r['path'] == path for r in plane.requests)}
+
     @app.get('/__e2e__/writer-evidence/{agent_id}')
     def writer_evidence(request: Request, agent_id: str):
         _require_token(request)

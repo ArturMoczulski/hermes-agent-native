@@ -41,6 +41,10 @@ class PlaneReadError(RuntimeError):
         self.retry_after = retry_after
 
 
+class PlaneScopeError(PlaneReadError):
+    """A returned resource does not belong to the authorized project or item."""
+
+
 def _uuid(value):
     try:
         if not isinstance(value, str) or str(UUID(value)) != value:
@@ -62,7 +66,7 @@ def _record(payload, scope, kind, *, item_id=None):
     if item_id:
         expected['id' if kind == 'item' else 'issue'] = item_id
     if any(payload.get(key) != value for key, value in expected.items()):
-        raise PlaneReadError('Plane resource is outside the authorized scope')
+        raise PlaneScopeError('Plane resource is outside the authorized scope')
     result = _select(payload, _FIELDS[kind])
     if kind == 'attachment':
         attributes = payload.get('attributes') or {}

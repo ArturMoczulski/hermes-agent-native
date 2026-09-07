@@ -25,7 +25,7 @@ test('a supplied-data analyst plans and records a report through the shared work
   await expect.poll(async () => (await evidence()).model_requests.filter((r: {system_text:string}) => r.system_text.includes(marker)).length,
     { timeout: 30000 }).toBeGreaterThan(0)
   const observed = (await evidence()).model_requests.find((r: {system_text:string}) => r.system_text.includes(marker))
-  expect(observed.tools).toEqual(['output_publish', 'plane_operation_execute', 'plane_resource_inspect', 'result_record'])
+  expect(observed.tools).toEqual(['output_publish', 'plane_operation_execute', 'plane_resource_inspect', 'result_record', 'work_item_select'])
   expect(observed.initial_context).not.toMatch(/fantasy story|writing task|story_publish/i)
   expect(observed.system_text).not.toContain('planning and story tools')
   await expect.poll(async () => {
