@@ -1,3 +1,19 @@
+## AN-87 recreated writer succeeds live — 2026-09-08
+
+Final active Fantasy Wizard Series: e6ff85a9-35e8-4357-9165-0be91bb382f4.
+Original failed b378e904-10fb-4e38-92a2-dd6937f96480 and intermediate unknown
+f205bad2-735d-4cf5-9022-44b01edec273 removed with supported API; history and
+Plane records retained. Final agent keeps original purpose plus owner's Faerûn
+answer, Astra Low, 30-second cadence, 300-second/30-step attempt bounds.
+
+Live run bdff4c7c-4693-4b6e-a419-d227194d9656 completed: recovered a rejected
+cycle assignment, confirmed both memberships, saved The Unfinished Atlas —
+provisional series foundation v1 (da6c888b-8632-4b30-87c2-a01767c1bdd3), recorded
+result 66cfaac3-556c-4c37-9fa8-30c5cb87a203, and planned The Bell That Remembered.
+No opening story claimed yet. Cadence remains enabled by owner's request.
+Production UI removal/cadence checked; web build passed. AN-85–88 Done in Plane.
+Remaining unrelated worktree changes preserved. Commits 613468d, 7694314, be88c6a.
+
 ## AN-88 live Plane response mismatch — 2026-09-08
 
 First recreation f205bad2-735d-4cf5-9022-44b01edec273 successfully recovered the
