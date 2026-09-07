@@ -46,6 +46,40 @@ inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the 
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
 
+## Narrated main-feature tour — AN-82 complete
+
+The owner requested a shorter product walkthrough with spoken explanation,
+separate from the exhaustive AN-81 test video. The new tour covers purpose-based
+creation, private Plane setup, bounded current work, project/cycle/task planning,
+retained native chat, activity, exact-version outputs, result evaluation, a shared
+analyst example, real Pause, and today's limits. The 4:37.8 video is 1600×1120
+with 11 chapters and 6–24-second result holds. Voiceover is generated locally
+with macOS Samantha; no paid speech service or live model was invoked.
+
+Local artifacts (ignored by Git):
+`apps/desktop/demo/features-2026-09-07/agent-native-narrated-feature-tour.mp4`,
+`index.html`, `transcript.md`, `capture-manifest.json`, and `narrated-tour.json`.
+The bundle retains raw browser clips, checkpoint images, narration sources and
+the artifact assembly script. Capture uses the real built application, framework
+API, isolated storage and native worker/tool execution, with controlled model and
+Plane HTTP responses. This demonstrates the implemented interaction, not fresh
+live-model judgment. Personal preview agents and live work were unchanged.
+
+The narration explicitly separates conversation from active-work steering,
+self-assessment from independent acceptance, and bounded runs from future cadence,
+resume, children, decisions and richer inspection. Full audio/video decoding
+passed; final frames, chapter boundaries, source hashes and narration duration
+were checked. Final-film chat, planning, writer/analyst
+outputs and Pause frames were visually inspected. The local chapter player opens,
+plays and seeks in installed Chromium. No product behavior changed and no broad
+test suite was run. AN-80 remains the next implementation slice.
+
+Capture observations retained for follow-up: the setup panel keeps its static
+“Execution has not started” sentence after execution begins, and a chat reload
+can display an unsupported terminal-resize warning. A normal fresh attachment
+restored a clean view with both exchanges retained; the warning screenshot
+remains in the evidence. Neither issue was patched for the recording.
+
 ## Owner brainstorm captured — 2026-09-07
 
 Saved [foundational skills and parallel internal roles](../design/ideas/2026-09-07-foundational-skills-and-internal-roles.md)

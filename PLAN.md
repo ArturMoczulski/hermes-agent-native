@@ -59,7 +59,9 @@ produce a story or a file. The Plane skill now directs incremental comments duri
 work, not a retrospective batch at completion; enforceable reporting configuration
 and delivery remain AN-80, the next implementation slice. AN-81 now provides a verified
 recording of all 30 current framework browser scenarios, with 47 readable proof
-checkpoints and a chapter index. AN-80 resumes as the next implementation slice. The external Builder used
+checkpoints and a chapter index. AN-82 adds a separate 4:38 narrated tour of the main
+implemented features, with readable screen holds, chapter navigation and a transcript.
+AN-80 resumes as the next implementation slice. The external Builder used
 progress comments on AN-78 and AN-79 throughout implementation and verification.
 AN-74–76 retain detailed inspection, continuity and full milestone acceptance.
 AN-74 includes the owner-requested shared Activity table: newest first, twenty
