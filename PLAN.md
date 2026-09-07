@@ -68,6 +68,7 @@ and demonstrates a real TDD improvement using the writer's run/chat/continuity
 foundation. The First Builder remains hosted by the external coding environment.
 Existing preview agents are not automatically enabled. The Builder handoff remains later.
 
-Follow small TDD increments and the existing Playwright setup. Keep one active
+Follow small TDD increments and the existing Playwright setup, using
+[named test cases by default](first-builder/PRACTICES.md#targeted-verification-by-default). Keep one active
 implementation slice, no cycle dates or duration estimates. Runtime cadence and
 finite limits must be explicitly configured before launch; open defaults remain open.

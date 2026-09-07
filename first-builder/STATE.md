@@ -46,6 +46,16 @@ inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the 
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
 
+## Owner testing convention — 2026-09-07
+
+Future work defaults to named test cases, including Playwright, under
+[targeted verification](PRACTICES.md#targeted-verification-by-default). Broader
+coverage requires an identified impact or gate; passing checks are reused until
+relevant changes invalidate them. Earlier large verification runs below are
+historical evidence, not the default testing recipe. This instructions-only
+change used documentation checks, without application tests or runtime changes.
+AN-80 remains the next implementation item.
+
 ## Shared Work planning — AN-79 complete
 
 The common create/detail UI uses work labels for all purposes. Work planning

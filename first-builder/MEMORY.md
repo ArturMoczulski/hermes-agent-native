@@ -139,3 +139,10 @@ contradictory instructions or store secrets here.
   adjustable up to one hundred. The design selects 20/50/100 page sizes and stable
   pages with a new-activity indicator. This belongs to shared inspection work,
   not a writer-specific UI. No runtime change is established by the plan.
+
+- **Targeted tests — owner instruction (2026-09-07):** default to individual unit,
+  integration and Playwright cases for each feature increment. Avoid tens or
+  hundreds of unrelated tests; widen only for a concrete need, including a full
+  suite when warranted. Preserve actual TDD and end-to-end proof while keeping
+  iteration fast. Source: owner conversation;
+  [working policy](PRACTICES.md#targeted-verification-by-default).

@@ -1,11 +1,16 @@
 # Dashboard browser acceptance
 
-Run from the repository root with a Node version supported by package.json:
+For feature work, run the affected spec and named case from the repository root
+with a Node version supported by package.json. Replace the example selector:
 
 ```sh
-npm run build --workspace ui-tui
-npm run test:e2e --workspace web
+npm run build --workspace ui-tui  # prerequisite only if missing or relevant TUI code changed
+npm run test:e2e --workspace web -- feature.spec.ts --grep 'case name' --retries 0
 ```
+
+Follow the [targeted verification policy](../../first-builder/PRACTICES.md#targeted-verification-by-default).
+Broaden to a whole spec or suite only for identified affected behavior or a required
+gate; do not rerun the default suite for each small change.
 
 Playwright starts the real Hermes FastAPI application and Vite on loopback ports
 19219 and 19220. The backend uses disposable storage and removes inherited Hermes
@@ -37,10 +42,10 @@ replaced only at its external HTTP boundary; the test records request counts to
 catch unexpected model calls. Native test configuration disables title generation,
 memory, and compression. It is test isolation, not a managed-agent security policy.
 
-Run just those native chat checks with:
+When the native chat flows are affected, select the relevant case with:
 
 ```sh
-npm run test:e2e --workspace web -- native-chat.spec.ts
+npm run test:e2e --workspace web -- native-chat.spec.ts --grep 'case name' --retries 0
 ```
 
 Managed conversation scenarios select two framework agents, verify their distinct
@@ -60,10 +65,12 @@ see [managed chat scope](../../implementation/native-agent-chat.md).
 
 ## Full service restart
 
-Run the separate restart suite after the default suite, not concurrently:
+When restart behavior is affected, select the relevant case in the separate
+restart configuration. Never run it concurrently with other browser checks;
+running the default suite first is not a prerequisite:
 
 ```sh
-npm run test:e2e --workspace web -- --config playwright.restart.config.ts
+npm run test:e2e --workspace web -- --config playwright.restart.config.ts --grep 'case name' --retries 0
 ```
 
 It uses the same installed-Chromium override and adds fixture control port 19218.
@@ -88,7 +95,7 @@ No download is performed by the test command. If the installed Chromium differs
 from Playwright's default revision, point the suite at its executable:
 
 ```sh
-PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/absolute/path/to/Chromium' npm run test:e2e --workspace web
+PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH='/absolute/path/to/Chromium' npm run test:e2e --workspace web -- feature.spec.ts --grep 'case name' --retries 0
 ```
 
 On the development Mac this passed with the existing cached chromium-1208

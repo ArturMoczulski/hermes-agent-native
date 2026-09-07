@@ -227,7 +227,7 @@ managed venv, lazy dependencies, gateway, and docs tooling.
 curl -fsSL https://hermes-agent.nousresearch.com/install.sh | bash
 cd "${HERMES_HOME:-$HOME/.hermes}/hermes-agent"
 uv pip install -e ".[all,dev]"
-scripts/run_tests.sh
+scripts/run_tests.sh  # optional full-suite validation; use focused cases for feature work
 ```
 
 Manual clone fallback (for throwaway clones/CI where you intentionally do not
@@ -242,7 +242,7 @@ curl -LsSf https://astral.sh/uv/install.sh | sh
 uv venv ~/.hermes/venvs/hermes-dev --python 3.11
 source ~/.hermes/venvs/hermes-dev/bin/activate
 uv pip install -e ".[all,dev]"
-scripts/run_tests.sh
+scripts/run_tests.sh  # optional full-suite validation; use focused cases for feature work
 ```
 
 ---

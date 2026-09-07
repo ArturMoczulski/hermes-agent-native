@@ -32,6 +32,37 @@ user workflow; do not invent a UI solely to test an internal function. A pure
 refactor uses existing behavioral tests as its baseline. Documentation-only edits
 need consistency and link checks, not artificial runtime tests.
 
+## Targeted verification by default
+
+The owner requires fast feedback through **individual test cases** during normal
+feature work. Run the smallest set that proves the changed behavior; do not turn
+each small increment into tens or hundreds of loosely related checks.
+
+- Before a run, select an explicit file and named case(s), including relevant
+  parameter variants. A whole file is not automatically focused. Avoid name-only
+  filters across the repository, which still discover unrelated files.
+- During red-green-refactor, run the new failing case and the directly affected
+  regression cases. Keep the real end-to-end boundary when it matters; speed is
+  not a reason to replace the required browser/process workflow with unit mocks.
+- Expand only for identified impact: callers affected by a shared contract,
+  storage migrations, test setup/dependency changes, an unexplained failure, or
+  required CI/release coverage. Select the affected cases first. Before a whole
+  file, group or suite, briefly state what extra risk it checks. Use judgment;
+  necessary broad coverage needs no additional permission and has no fixed count
+  limit. Being in the same folder alone is not a reason to run everything.
+- After relevant checks pass, move on. Reuse that evidence until another edit,
+  failure or unresolved concern invalidates it. A commit, handoff or documentation
+  edit is not by itself a reason to rerun previously passing application tests.
+- Confirm the intended cases actually ran. Zero selected tests or all-skipped
+  output is not verification. Record the selector and result, with the reason
+  for broader coverage when used; a large test count is not the goal.
+
+Documentation-only work uses consistency and link checks. Keep required build and
+type checks appropriate to the change; run a production build after relevant
+frontend changes, not repeatedly while verifying unrelated backend or text edits.
+This policy applies to the externally hosted Builder, delegated contributors and
+the future framework-hosted Builder.
+
 ## Playwright as the primary product-level verification
 
 - Exercise the actual application in a browser against its real backend and
@@ -71,13 +102,24 @@ the boundary whose correctness is in question. Maintain relevant existing tests.
 Use the repository's existing commands and inspect package scripts before adding
 new ones. Current entry points, relative to the repository root:
 
-| Area | Existing command |
+Replace example paths and test names below with the cases for the current change.
+
+| Area | Focused command |
 | --- | --- |
-| Python unit/integration tests | `scripts/run_tests.sh tests/path/to/test_file.py` (replace the example path); do not invoke bare pytest. |
-| Web unit tests | `npm run test --workspace web -- <test-file>` (replace the example path). |
-| Web type checks, unit tests and lint | `npm run check --workspace web`. |
-| Agent-native browser acceptance | `npm run test:e2e --workspace web` (real isolated backend and installed Chromium; see setup below). |
-| Existing desktop Playwright tests | `npm run test:e2e --workspace apps/desktop` (builds and runs the existing desktop suite). |
+| Python unit/integration | `scripts/run_tests.sh tests/path/to/test_file.py -k 'test_name' --file-retries 0`; retain the canonical runner's isolation, never bare pytest. |
+| Web unit tests | `npm run test --workspace web -- src/path/to/file.test.ts -t 'case name'`. |
+| Agent-native browser acceptance | `npm run test:e2e --workspace web -- feature.spec.ts --grep 'case name' --retries 0`. |
+| Desktop browser acceptance, after the required desktop build | `npm exec --workspace apps/desktop -- playwright test e2e/feature.spec.ts --grep 'case name' --retries 0`. |
+
+Python's runner converts node IDs into a leaf-name filter, dropping class and
+parameter specificity. Prefer explicit file plus `-k` and check the selected cases.
+Use disabled retries for a clear red/green result; investigate failures instead of
+accepting a later retry as proof the defect is fixed.
+
+`npm run check --workspace web` includes the whole web unit suite and lint; it is
+a broader check, not the default feature loop. A bare browser test command runs
+its whole suite. The desktop `test:e2e` wrapper also rebuilds and selects `e2e/`;
+reuse a current build and the selected-case command above for iteration.
 
 The framework browser/backend setup is documented in
 [web/e2e/README.md](../web/e2e/README.md). Reuse the installed Chromium with the
@@ -86,10 +128,9 @@ downloads. Desktop tests do not replace framework browser acceptance. Include
 `npm run build --workspace web` for frontend changes to verify the production
 TypeScript and bundle paths as well as browser behavior.
 
-Run focused tests during each loop and affected regression checks before declaring
-the increment complete. Broaden verification for cross-cutting changes and release
-gates; do not run the entire upstream suite after every tiny edit. An unavailable
-required check remains an explicit gap, not a pass.
+Choose final verification with the same targeted policy above; finishing an
+increment does not automatically require a suite run. An unavailable required
+check remains an explicit gap, not a pass.
 
 ## Continuous work and completion
 

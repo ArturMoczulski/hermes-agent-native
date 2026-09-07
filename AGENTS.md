@@ -310,6 +310,14 @@ changing `pyproject.toml`. Reference: #2810 (bounds), #9801 (SHA pinning + audit
 
 ## Testing (applies everywhere)
 
+**Default to individual test cases, not whole files or suites.** Use an explicit
+file plus a test-name filter for each small TDD step, and select only directly
+affected regression cases. A file containing hundreds of tests is not a targeted
+check. Broaden only when the changed behavior, dependencies, a failure or a required
+gate warrants it; state the concrete reason before running broader checks. Once
+the relevant checks pass, continue implementation instead of repeatedly expanding
+or rerunning coverage. See [targeted verification](first-builder/PRACTICES.md#targeted-verification-by-default).
+
 **ALWAYS use `scripts/run_tests.sh`**, never bare `pytest`. It enforces CI parity: credential
 vars unset, `TZ=UTC`, `LANG=C.UTF-8`, `HERMES_HOME` → temp dir, and per-file subprocess
 isolation via `scripts/run_tests_parallel.py` (no xdist; workers scale with CPU count) so
@@ -317,10 +325,10 @@ module-level dicts/ContextVars cannot leak between files. Direct `pytest` on a b
 with API keys set has caused repeated "works locally, fails in CI" incidents (and the reverse).
 
 ```bash
-scripts/run_tests.sh                                    # full suite
-scripts/run_tests.sh tests/gateway/                     # one directory
-scripts/run_tests.sh tests/agent/test_foo.py -k test_x  # runner is file-granular; -k narrows
-scripts/run_tests.sh -v --tb=long                       # pytest flags pass through
+scripts/run_tests.sh tests/path/to/test_file.py -k 'test_name' --file-retries 0  # one TDD case; replace placeholders
+scripts/run_tests.sh tests/path/to/test_file.py -k 'test_name or related_case' --file-retries 0  # identified affected cases
+scripts/run_tests.sh tests/path/to/test_file.py         # whole file, when justified
+scripts/run_tests.sh                                    # full suite, only when justified or required
 ```
 
 - **Flake policy:** a failing FILE is retried once in a fresh subprocess (`--file-retries`;

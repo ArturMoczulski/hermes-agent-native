@@ -31,7 +31,10 @@ explicitly; general managed-agent skill selection remains subsequent work.
 
 Follow the red-green-refactor loop in PRACTICES.md for every behavior change.
 An implementation milestone is a sequence of these loops, not one batch of code
-followed by testing. Do not defer end-to-end coverage until a feature is finished.
+followed by testing. Do not defer end-to-end coverage until a feature is finished. Default to named
+test cases for each step, following [targeted verification](PRACTICES.md#targeted-verification-by-default);
+expand to broader checks only for an identified need, and reuse passing evidence
+until relevant changes invalidate it.
 
 After each increment, evaluate the result, record the evidence and remaining work,
 and continue to the next authorized increment. Do not ask for routine approval
