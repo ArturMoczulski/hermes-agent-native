@@ -1,5 +1,5 @@
 import { stripVTControlCharacters } from 'node:util'
-import { test, expect } from '@playwright/test'
+import { test, expect, demoCheckpoint } from './demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' }
@@ -89,6 +89,13 @@ test('a managed reply deadline closes the real model request and the next messag
     expect(nextRequests[0].system_prompt_sha256).toBe(heldRequests[0].system_prompt_sha256)
     const after = await (await request.get(`${backend}/api/agent-native/agents/${agent.id}`, { headers })).json()
     expect(after.execution).toBe('not_started')
+    await expect.poll(() => stripVTControlCharacters(output).replace(/\s+/g, '')).toContain(`My purpose: ${agent.purpose}`.replace(/\s+/g, ''))
+    await demoCheckpoint(page, test.info(), {
+      title: 'A timed-out reply stops; a new message succeeds',
+      expected: 'Terminate the stuck model request at its deadline, then allow a fresh message.',
+      proof: 'The old worker and provider socket stopped. A new worker completed the next reply; history contains no late timeout reply and project work remains not started.',
+      focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+    })
   } finally {
     await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker } })
     await request.post(`${backend}/__e2e__/managed-deadline-config`, { headers, data: { timeout_seconds: 90 } })

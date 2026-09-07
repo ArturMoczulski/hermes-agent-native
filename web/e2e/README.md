@@ -104,3 +104,74 @@ CI can use Playwright's matching cached browser. There is no auto-install step.
 
 Failure traces are under `web/test-results/` and are ignored by Git. Existing
 upstream development warnings may appear; they are not test failures.
+
+
+## Readable test demonstration
+
+The opt-in demo configurations record the existing framework browser scenarios,
+including their error and recovery paths. They do not establish every future
+product requirement, live model quality or production Plane availability. The
+browser, framework, storage and native processes are real; only the external
+model and Plane HTTP services are scripted fixtures.
+
+`demoCheckpoint` is called **after** the corresponding assertions. In demo mode
+it adds an Expected/Verified caption, highlights the relevant screen area,
+captures a screenshot and holds it for five seconds. API-only checks display an
+explicit API evidence card. A failed assertion cannot earn a verified checkpoint.
+Normal test runs do not inject captions or add these viewing pauses, and product
+timeouts remain unchanged. The final Playwright report determines the test result;
+a checkpoint passing does not imply that later assertions or teardown passed.
+
+For a requested complete recording, run these commands **sequentially** from the
+repository root, using the installed Chromium override described above:
+
+```sh
+AN_E2E_DEMO=1 npm run test:e2e --workspace web -- --config playwright.demo.config.ts
+AN_E2E_DEMO=1 npm run test:e2e --workspace web -- --config playwright.restart-demo.config.ts
+```
+
+The output directories are `web/test-results/e2e-demo/default` and
+`web/test-results/e2e-demo/restart`. Each contains a JSON reporter result, videos,
+annotated screenshots and per-test checkpoint manifests. Tests with two pages
+retain separate recordings. A pilot or targeted re-recording must use a separate
+`AN_E2E_DEMO_OUTPUT_DIR` so it cannot overwrite the complete recording:
+
+```sh
+AN_E2E_DEMO=1 AN_E2E_DEMO_OUTPUT_DIR=/tmp/e2e-demo-pilot \
+  npm run test:e2e --workspace web -- --config playwright.demo.config.ts \
+  planning-work.spec.ts --grep 'selected work shows brief, cycle and criteria'
+```
+
+Do not edit watched repository files while Vite is recording. Tailwind can issue a
+full browser reload even for a Markdown change, which invalidates a deliberately
+held network-outage scene. Keep preparation and recording sequential.
+
+Assemble completed recordings with [the evidence assembler](../../scripts/assemble_e2e_demo.py).
+It requires Python with Pillow and local `ffmpeg`/`ffprobe`; no model call or
+browser download is involved:
+
+```sh
+.venv/bin/python scripts/assemble_e2e_demo.py \
+  --run-dir web/test-results/e2e-demo/default \
+  --run-dir web/test-results/e2e-demo/restart \
+  --output-dir apps/desktop/demo/e2e-review --expected-tests 30 --plan-only
+```
+
+Review the validated plan, then omit `--plan-only` to encode. Add another
+`--run-dir /absolute/path/to/targeted-rerun` if a case needed re-recording. The
+latest timestamped attempt for every scenario must pass; prior attempts, including
+failures, remain archived and explicitly identified. The expected scenario count
+is an explicit completeness check; update it when the suite changes.
+
+The destination contains `agent-native-e2e-demo.mp4`, an `index.html` chapter
+player, `chapters.md`, and `evidence.json` with the full edit plan and asset hashes.
+Raw recordings, screenshots, manifests and reporter results are retained under
+`raw/`. Final reporter attachments resolve Playwright's renamed video paths,
+including tests with multiple browser pages. Preserve this destination before
+running commands that clean test output directories.
+
+The assembled demonstration holds each exact checkpoint screenshot for 8–12
+seconds and labels accelerated workflow footage. The encoder validates frame
+counts and final duration so chapter timestamps match playback. Raw evidence
+remains available alongside the chapter index. These recording configurations
+are an owner review tool, not the default feature-verification command.

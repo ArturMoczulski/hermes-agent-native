@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, demoCheckpoint } from './demo-fixture';
 
 const token = 'agent-native-local-e2e-only';
 const api = 'http://127.0.0.1:19219/api/agent-native/agents';
@@ -32,6 +32,12 @@ test('creation opens its agent detail and retains one startup request across rel
   await row.getByRole('link', { name: 'Fantasy writer', exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/agents/${agent.id}$`));
   expect((await (await request.get(`${api}/${agent.id}`, { headers })).json()).startup).toEqual(agent.startup);
+  await demoCheckpoint(page, test.info(), {
+    title: 'One agent, one startup request',
+    expected: 'Creation opens the correct agent and reload preserves its purpose and startup identity.',
+    proof: 'Fantasy writer appears once in the roster. Its original startup request is unchanged after reload and navigation.',
+    focus: page.getByLabel('Startup request'),
+  });
 });
 
 test('retry after a lost response and reload opens the original agent and startup request', async ({ page, request }) => {
@@ -57,18 +63,38 @@ test('retry after a lost response and reload opens the original agent and startu
   await expect(page.getByLabel('Startup request')).toContainText(first!.startup.id);
   const agents = await (await request.get(api, { headers })).json();
   expect(agents.filter((agent: { name: string }) => agent.name === 'Writer with lost response')).toHaveLength(1);
+  await demoCheckpoint(page, test.info(), {
+    title: 'Lost creation reply recovered safely',
+    expected: 'Retry after reload must reopen the committed agent instead of creating a duplicate.',
+    proof: 'Exactly one Writer with lost response exists; the visible startup ID matches the first committed request.',
+    focus: page.getByLabel('Startup request'),
+  });
 });
 
 test('unknown detail shows a recoverable error without inventing an agent', async ({ page }) => {
   await page.goto('/agents/not-a-real-agent');
   await expect(page.getByRole('alert')).toContainText('Could not load this agent');
   await expect(page.getByRole('link', { name: 'All agents', exact: true })).toBeVisible();
+  await demoCheckpoint(page, test.info(), {
+    title: 'Unknown agent has a recovery path',
+    expected: 'An invalid agent address must show an error and a way back to the roster.',
+    proof: 'Could not load this agent is visible, with All agents available. No agent was invented.',
+    focus: page.getByRole('alert'),
+  });
 });
 
-test('unauthenticated callers cannot list, create or inspect agents', async ({ request }) => {
-  expect((await request.get(api)).status()).toBe(401);
-  expect((await request.post(api, { data: { actor: 'owner', name: 'Forged', purpose: 'No', request_id: 'forged' } })).status()).toBe(401);
-  expect((await request.get(`${api}/missing`)).status()).toBe(401);
+test('unauthenticated callers cannot list, create or inspect agents', async ({ page, request }) => {
+  const listStatus = (await request.get(api)).status();
+  const createStatus = (await request.post(api, { data: { actor: 'owner', name: 'Forged', purpose: 'No', request_id: 'forged' } })).status();
+  const inspectStatus = (await request.get(`${api}/missing`)).status();
+  expect(listStatus).toBe(401);
+  expect(createStatus).toBe(401);
+  expect(inspectStatus).toBe(401);
+  await demoCheckpoint(page, test.info(), {
+    title: 'API evidence: unauthenticated access rejected',
+    expected: 'Reading, creating and inspecting agents requires the owner session token.',
+    proof: `Actual HTTP responses: list ${listStatus}; forged owner creation ${createStatus}; inspect ${inspectStatus}. All three are Unauthorized.`,
+  });
 });
 
 
@@ -87,6 +113,12 @@ test('storage failure prevents an unrecoverable creation write', async ({ page, 
   await expect(page.getByRole('alert')).toContainText('nothing was sent');
   const agents = await (await request.get(api, { headers })).json();
   expect(agents.filter((agent: { name: string }) => agent.name === 'Writer without storage')).toHaveLength(0);
+  await demoCheckpoint(page, test.info(), {
+    title: 'Unsafe creation is stopped before sending',
+    expected: 'Unavailable browser storage must prevent an unrecoverable creation request.',
+    proof: 'The warning says nothing was sent. An authenticated API read confirms zero Writer without storage agents.',
+    focus: page.getByRole('alert'),
+  });
 });
 
 test('startup prepares private files and explains missing Plane setup without claiming work started', async ({ page, request }) => {
@@ -112,6 +144,12 @@ test('startup prepares private files and explains missing Plane setup without cl
   expect(result.setup.project_id).toBeNull();
   expect(JSON.stringify(result)).not.toContain('api_key');
   expect((await request.post(`${api}/${agent.id}/setup/retry`)).status()).toBe(401);
+  await demoCheckpoint(page, test.info(), {
+    title: 'Missing Plane setup is explained honestly',
+    expected: 'Private files can be ready while planning is blocked; retry must not falsely start work.',
+    proof: `After retry and reload: setup=${result.setup.status}, project=${result.setup.project_id}. Private files ready and Plane setup required remain visible.`,
+    focus: setup,
+  });
 });
 
 test('configured creation reaches a private planning home with one discovery task and survives reload', async ({ page, request }) => {
@@ -131,7 +169,19 @@ test('configured creation reaches a private planning home with one discovery tas
   const current = await (await request.get(`${api}/${id}`, { headers })).json();
   const evidence = await (await request.get(`http://127.0.0.1:19219/__e2e__/plane-evidence/${id}`, { headers })).json();
   expect(evidence).toEqual({ workspace_count: 1, managed_project_count: 1, private: true, discovery_count: 1, discovery_id: current.setup.discovery_item_id });
+  await demoCheckpoint(page, test.info(), {
+    title: 'A private planning home is ready',
+    expected: 'Configured creation provisions one private project and one discovery task, retained after reload.',
+    proof: `Verified workspace count ${evidence.workspace_count}, managed projects ${evidence.managed_project_count}, discovery tasks ${evidence.discovery_count}, private=${evidence.private}.`,
+    focus: setup,
+  });
   await page.route(`**/api/agent-native/agents/${id}`, (route) => route.abort());
   await expect(page.getByRole('alert')).toContainText('Live updates are disconnected');
   await expect(setup).toContainText('Workspace and planning ready');
+  await demoCheckpoint(page, test.info(), {
+    title: 'Disconnection preserves confirmed setup',
+    expected: 'A failed live update must show a warning while retaining the last confirmed setup state.',
+    proof: 'Live updates are disconnected is visible; the prepared planning home still shows Workspace and planning ready.',
+    focus: page.getByRole('alert'),
+  });
 });

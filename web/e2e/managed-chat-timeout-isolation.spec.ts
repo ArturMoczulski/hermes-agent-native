@@ -1,4 +1,5 @@
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
+import { type APIRequestContext, type Page } from '@playwright/test'
+import { test, expect, demoCheckpoint } from './demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' }
@@ -166,6 +167,19 @@ test('one managed timeout leaves another held conversation alive and able to fin
     for (const prompt of [promptA, promptB]) {
       expect(native.model_requests.filter((r: { last_user: string }) => r.last_user === prompt)).toHaveLength(1)
     }
+    // Both deadline-sensitive branches are settled before recording either hold.
+    await demoCheckpoint(page, test.info(), {
+      title: 'A timeout stays isolated to its conversation',
+      expected: 'The citadel agent times out without terminating the other agent’s concurrent reply.',
+      proof: 'This conversation has an error receipt and only its user message in history. Its worker socket closed, and retrying the same message ID did not restart it.',
+      focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+    })
+    await demoCheckpoint(secondPage, test.info(), {
+      title: 'The other concurrent conversation finishes',
+      expected: 'The ocean agent remains alive while the citadel agent times out, then completes normally.',
+      proof: 'This terminal shows the released test reply. Its receipt is complete and history contains its own exchange; one model request occurred for each agent, with no cross-agent late reply.',
+      focus: secondPage.locator('.hermes-chat-xterm-host .xterm-screen'),
+    })
   } finally {
     for (const marker of [markerA, markerB]) {
       await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker } })

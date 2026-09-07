@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, demoCheckpoint } from './demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' }
@@ -23,9 +23,21 @@ test('creation retains explicit work limits and waits for the real planning setu
   await expect(page.getByLabel('Execution status')).toHaveText('Waiting for setup')
   expect((await get()).work.id).toBe(before.work.id)
   expect((await get()).work.model_calls).toBe(0)
+  await demoCheckpoint(page, test.info(), {
+    title: 'Work waits for its planning setup',
+    expected: 'The explicit 300-second / 20-step limits survive reload and no model call starts before setup.',
+    proof: 'Waiting for setup remains visible; the same queued run has model_calls=0 and the requested limits.',
+    focus: page.getByRole('region', { name: 'Agent work', exact: true }),
+  })
   await page.getByRole('button', { name: 'Pause', exact: true }).click()
   await expect(page.getByLabel('Execution status')).toHaveText('Paused')
   expect((await get()).work.state).toBe('paused')
+  await demoCheckpoint(page, test.info(), {
+    title: 'Queued work can be paused',
+    expected: 'The owner can stop waiting work before execution begins.',
+    proof: 'The execution status is Paused and the persisted run state is paused.',
+    focus: page.getByRole('region', { name: 'Agent work', exact: true }),
+  })
 })
 
 
@@ -77,6 +89,12 @@ test('a writer purpose uses shared output and result records without a chat prom
   expect((await get()).work.model_calls).toBe(a.work.model_calls)
   expect((await get()).work.outputs).toHaveLength(1)
   expect((await get()).work.results).toHaveLength(1)
+  await demoCheckpoint(page, test.info(), {
+    title: 'A writer produces a saved, readable result',
+    expected: 'A purpose starts planning and writing without a chat prompt; the exact output reopens after reload.',
+    proof: `The story starts “At moonrise, Mara found a dragon”. One saved output and one submitted result persist; model calls=${a.work.model_calls}, worker_alive=${proof.worker_alive}.`,
+    focus: reader,
+  })
 })
 
 
@@ -112,6 +130,13 @@ test('Pause stops a real active worker and held model connection after navigatin
   await page.reload()
   expect((await get()).work.state).toBe('paused')
   expect((await get()).work.id).toBe(before.work.id)
+  await expect(page.getByLabel('Execution status')).toHaveText('Paused')
+  await demoCheckpoint(page, test.info(), {
+    title: 'Pause stops the real worker',
+    expected: 'After leaving and returning, Pause must terminate execution and the held model connection.',
+    proof: `The same run stays paused after reload. worker_alive=${proof.worker_alive}; the model socket disconnected and model calls stayed at ${after.work.model_calls}.`,
+    focus: page.getByRole('region', { name: 'Agent work', exact: true }),
+  })
 })
 
 for (const limit of ['time', 'steps'] as const) {
@@ -144,6 +169,13 @@ for (const limit of ['time', 'steps'] as const) {
     }
     await page.reload()
     expect((await get()).work.model_calls).toBe(final.work.model_calls)
+    await expect(page.getByLabel('Execution status')).toHaveText(limit === 'time' ? 'Paused' : 'Failed')
+    await demoCheckpoint(page, test.info(), {
+      title: limit === 'time' ? 'The time limit interrupts a held call' : 'The step limit prevents another model call',
+      expected: limit === 'time' ? 'An 8-second limit must stop the active worker and close the pending model connection.' : 'A 2-step limit must prevent a third provider call.',
+      proof: `Persisted state=${final.work.state}; model_calls=${final.work.model_calls}; worker_alive=${proof.worker_alive}. Reload did not start another call.`,
+      focus: page.getByRole('region', { name: 'Agent work', exact: true }),
+    })
   })
 }
 
@@ -181,6 +213,12 @@ test('polling keeps exactly one work panel and Pause control for an active write
     await expect.soft(page.getByRole('region', { name: 'Agent work', exact: true })).toHaveCount(1)
     await expect.soft(page.getByRole('region', { name: 'Saved outputs', exact: true })).toHaveCount(1)
     await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(1)
+    await demoCheckpoint(page, test.info(), {
+      title: 'Live polling keeps one set of controls',
+      expected: 'Repeated live updates must not duplicate the work panel, outputs panel or Pause button.',
+      proof: `After ${activePolls} running-state polls: one work panel, one Saved outputs panel and one Pause control.`,
+      focus: page.getByRole('region', { name: 'Agent work', exact: true }),
+    })
     await page.getByRole('button', { name: 'Pause', exact: true }).click()
     await expect(page.getByLabel('Execution status')).toHaveText('Paused')
     await expect.poll(async () => (await hold()).client_disconnected).toBe(true)
@@ -190,6 +228,12 @@ test('polling keeps exactly one work panel and Pause control for an active write
     await expect(page.getByRole('region', { name: 'Agent work', exact: true })).toHaveCount(1)
     await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toHaveCount(1)
     await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(0)
+    await demoCheckpoint(page, test.info(), {
+      title: 'Stopped controls reflect the actual process',
+      expected: 'After Pause, the single work panel remains and its active Pause control disappears.',
+      proof: `The screen shows Paused; worker_alive=${proof.worker_alive}, no output file, and zero Pause buttons.`,
+      focus: page.getByRole('region', { name: 'Agent work', exact: true }),
+    })
   } finally {
     await request.post(`${backend}${endpoint}/work/pause`, { headers })
     await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker } })

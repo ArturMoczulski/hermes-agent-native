@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, demoCheckpoint } from './demo-fixture';
 
 const backend = 'http://127.0.0.1:19219';
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' };
@@ -91,6 +91,12 @@ test('native chat sends through the TUI and Hermes engine, then resumes its pers
   expect((await (await request.get(`${backend}/api/sessions?min_messages=2`, { headers })).json()).sessions.filter((s: { id: string }) => !s.id.startsWith('an_chat_')).map((session: { id: string }) => session.id)).toEqual([sessionId]);
   expect(terminalOutput).not.toContain('Chat unavailable');
   await expect(page.getByRole('button', { name: 'Reconnect chat', exact: true })).not.toBeVisible();
+  await demoCheckpoint(page, test.info(), {
+    title: 'Native chat remembers its conversation',
+    expected: 'Send a message, reload the browser, then ask what you mentioned.',
+    proof: 'The terminal recalls the moonlit citadel. The persisted session contains exactly both exchanges, and the second model request includes the first exchange.',
+    focus: terminal,
+  });
 });
 
 test('native terminal rejects an unauthenticated WebSocket', async ({ page }) => {
@@ -103,4 +109,9 @@ test('native terminal rejects an unauthenticated WebSocket', async ({ page }) =>
   }));
   expect(result.opened).toBe(false);
   expect(result.code).toBe(1006);
+  await demoCheckpoint(page, test.info(), {
+    title: 'Unauthenticated terminal access is rejected',
+    expected: 'A WebSocket without the owner session token must not open a terminal.',
+    proof: 'Protocol assertions passed: opened = false and close code = 1006. This is an API security check; the roster is only the browser backdrop.',
+  });
 });

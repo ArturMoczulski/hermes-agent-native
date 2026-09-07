@@ -1,5 +1,6 @@
 import { stripVTControlCharacters } from 'node:util'
-import { test, expect, type APIRequestContext, type Page } from '@playwright/test'
+import { type APIRequestContext, type Page } from '@playwright/test'
+import { test, expect, demoCheckpoint } from '../e2e/demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'
 const control = 'http://127.0.0.1:19218'
@@ -101,11 +102,24 @@ test('saved conversation and unsent draft recover across a whole service crash w
   await expect.poll(c.output).toContain('moonlitDraftQ9')
   expect(await c.history()).toEqual([prompt, `My purpose: ${purpose}`])
   expect((await requests(request)).length).toBe(beforeCount)
+  await demoCheckpoint(page, test.info(), {
+    title: 'The whole service restarts without losing your draft',
+    expected: 'Recover the open chat, saved conversation and unsent draft after an actual service crash.',
+    proof: 'moonlitDraftQ9 is restored in the composer. The browser refreshed its expired owner token automatically; history is unchanged and no model request was replayed.',
+    focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+  })
   await c.send('Managed conversation test: remember our conversation?')
   await expect.poll(c.history, { timeout: 45000 }).toEqual([prompt, `My purpose: ${purpose}`, 'Managed conversation test: remember our conversation?', 'Our conversation is retained.'])
   await expect.poll(async () => (await c.delivery()).composer?.pending).toBeNull()
   expect((await requests(request)).length).toBe(beforeCount + 1)
+  await expect.poll(c.output).toContain('Ourconversationisretained.')
   expect((await c.get(`/api/agent-native/agents/${c.agent.id}`)).execution).toBe('not_started')
+  await demoCheckpoint(page, test.info(), {
+    title: 'Recovered chat can continue the same conversation',
+    expected: 'After service recovery, send a follow-up and retain the previous exchange.',
+    proof: 'The saved conversation now contains “Our conversation is retained”. Exactly one fresh model request followed the restart; project work did not start.',
+    focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+  })
 })
 
 test('an interrupted managed message becomes visibly uncertain after service restart and is never replayed', async ({ page, request }) => {
@@ -142,6 +156,12 @@ test('an interrupted managed message becomes visibly uncertain after service res
     await expect.poll(c.output).toContain('/acknowledge')
     expect((await hold()).request_count).toBe(1)
     expect(await c.history()).toEqual([heldPrompt])
+    await demoCheckpoint(page, test.info(), {
+      title: 'An interrupted message is visibly uncertain',
+      expected: 'After a crash during a reply, preserve the message and require acknowledgement instead of resending it.',
+      proof: 'The terminal offers /acknowledge. The same message ID has an unknown receipt, its text remains in the draft, and only its original model request exists.',
+      focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+    })
     expect((await request.post(`${control}/__e2e__/release-model`, { headers: fixtureHeaders, data: { marker } })).ok()).toBe(true)
     await c.send('/acknowledge')
     await expect.poll(async () => (await c.delivery()).composer?.pending).toBeNull()
@@ -152,7 +172,14 @@ test('an interrupted managed message becomes visibly uncertain after service res
     expect(c.output()).not.toContain(`LATE_TIMEOUT_REPLY_${marker}`)
     expect((await hold()).request_count).toBe(1)
     expect((await requests(request)).filter((r: { last_user: string }) => r.last_user.endsWith(next))).toHaveLength(1)
+    await expect.poll(c.output).toContain(`My purpose: ${purpose}`.replace(/\s+/g, ''))
     expect((await c.get(`/api/agent-native/agents/${c.agent.id}`)).execution).toBe('not_started')
+    await demoCheckpoint(page, test.info(), {
+      title: 'Acknowledgement clears uncertainty for a new message',
+      expected: 'Acknowledge the interrupted message, then send a new one without reviving the old reply.',
+      proof: 'The new purpose reply is saved and the pending message is cleared. No late interrupted reply was recorded; the old request count remains one.',
+      focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+    })
   } finally {
     await request.post(`${control}/__e2e__/release-model`, { headers: fixtureHeaders, data: { marker } })
   }

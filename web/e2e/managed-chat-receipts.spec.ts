@@ -1,5 +1,5 @@
 import { stripVTControlCharacters } from 'node:util'
-import { test, expect } from '@playwright/test'
+import { test, expect, demoCheckpoint } from './demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' }
@@ -157,4 +157,10 @@ test('a lost native acknowledgement reconciles once and preserves a newer unsent
   ).toEqual([prompt, `My purpose: ${agent.purpose}`])
   const evidence = await (await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers })).json()
   expect(evidence.model_requests.filter((r: { last_user: string }) => r.last_user === prompt)).toHaveLength(1)
+  await demoCheckpoint(page, test.info(), {
+    title: 'A lost acknowledgement does not duplicate a reply',
+    expected: 'Reconcile the completed message and keep a newer unsent draft after renderer restart.',
+    proof: 'The original reply and newerUnsentDraftAckQ9 are restored. Retrying the same message ID returned its completed receipt; exactly one model request and one exchange were saved.',
+    focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+  })
 })

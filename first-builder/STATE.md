@@ -46,6 +46,51 @@ inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the 
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
 
+## Readable end-to-end demonstration — AN-81 complete
+
+The owner requested a video of all implemented framework browser scenarios, with
+clear expected outcomes and enough time to inspect the verified results. Opt-in
+`AN_E2E_DEMO=1` checkpoints now annotate assertions already passed, highlight the
+screen, capture exact screenshots and hold for five seconds. Dedicated recording
+configs preserve 1600×1000 browser videos. Default verification has no annotation
+or viewing delay; one named normal-mode creation case passed in **2.5 seconds**.
+
+All **30 distinct framework browser scenarios** have passing final recordings:
+28 default and two full-service-restart scenarios. There are **47 proof
+checkpoints**. The initial default run passed 27/28; a documentation edit caused
+Tailwind/Vite to reload the browser during the remaining test's deliberately
+blocked API request. The trace navigation occurred 123 ms after the Markdown
+edit. The same named scenario passed when re-recorded with edits paused; product
+code and assertions were unchanged. The original failure, trace and successful
+rerun are retained. Do not edit watched files while recording Vite.
+
+The captioned MP4 is **13:33.2**, 1600×1120, with actual browser footage, labeled
+playback acceleration and 8–12-second exact screenshot holds. The separate bottom
+strip preserves the complete application viewport. `index.html` provides clickable
+chapters; `evidence.json` records final reporter outcomes, attempt history, hashes,
+source timings, frame counts and measured duration. The reusable
+[assembler](../scripts/assemble_e2e_demo.py) rejects missing/failing final coverage.
+See [recording instructions](../web/e2e/README.md#readable-test-demonstration).
+
+Local artifacts (ignored by Git):
+`apps/desktop/demo/e2e-2026-09-07/agent-native-e2e-demo.mp4`, `index.html`,
+`chapters.md`, `evidence.json`, and `raw/`. Capture logs:
+`/tmp/an81-demo-default.log`, `/tmp/an81-demo-restart.log`,
+`/tmp/an81-demo-creation-rerun.log`; assembly log:
+`/tmp/an81-assembly-encode.log`. Full MP4 decoding completed without errors.
+Representative final-film frames, including chat drafts/replies, uncertain
+restart, writer and analyst output, API rejection and the outage rerun, were
+visually inspected. Frame counts and final duration match the edit plan. Scoped
+ESLint, TypeScript and Python Ruff checks passed. No application build or broad
+unit suite was required for these recording-only changes.
+
+The real browser, framework API, databases, files and native worker processes are
+exercised; **model and Plane responses are isolated HTTP fixtures**. This proves
+current integration behavior, not live-model judgement or future requirements.
+No personal preview or live agent was changed and no live model was invoked.
+The earlier AN-72 live demonstration remains separate evidence. AN-80 remains
+next: continuous Plane progress comments, verbosity and output traceability.
+
 ## Owner testing convention — 2026-09-07
 
 Future work defaults to named test cases, including Playwright, under

@@ -1,5 +1,5 @@
 import { stripVTControlCharacters } from 'node:util';
-import { test, expect } from '@playwright/test';
+import { test, expect, demoCheckpoint } from './demo-fixture';
 
 const backend = 'http://127.0.0.1:19219';
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' };
@@ -88,6 +88,13 @@ test('unsent managed draft survives native renderer restart and remains with its
   await expect.poll(visibleOutput, { timeout: 30000 }).toContain('citadelDraftUnsentQ7');
   expect((await evidence()).model_requests).toHaveLength(before);
 
+  await demoCheckpoint(page, test.info(), {
+    title: 'An unsent draft survives renderer restart',
+    expected: 'Restore the first agent after its native renderer stops, without submitting its draft.',
+    proof: 'The composer still contains citadelDraftUnsentQ7. The other agent has no copy of that draft; the model-request count has not increased.',
+    focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+  });
+
   // Merely selecting/restoring did not submit. One explicit Enter must send
   // the complete retained draft exactly once through the real native loop.
   terminalOutput = '';
@@ -100,4 +107,10 @@ test('unsent managed draft survives native renderer restart and remains with its
   // or native transcript. Its unsubmitted conversation must remain absent.
   const other = await request.get(`${backend}/api/sessions/${seen.get(roots[1].id)}/messages`, { headers });
   expect(other.status()).toBe(404);
+  await demoCheckpoint(page, test.info(), {
+    title: 'Only an explicit send submits the recovered draft',
+    expected: 'Press Enter once to send the complete restored draft to its original agent.',
+    proof: 'The terminal now shows that agent’s purpose reply. Exactly one new model request and one user message were recorded; the other agent still has no transcript.',
+    focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+  });
 });

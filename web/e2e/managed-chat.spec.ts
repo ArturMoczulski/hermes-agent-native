@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, demoCheckpoint } from './demo-fixture';
 
 const backend = 'http://127.0.0.1:19219';
 const agents = `${backend}/api/agent-native/agents`;
@@ -64,6 +64,12 @@ test('selected agents use their protected purpose and separate retained native c
     const current = await (await request.get(`${agents}/${root.id}`, { headers })).json();
     expect(current.execution).toBe('not_started');
     expect(current.startup).toEqual(root.startup);
+    await demoCheckpoint(page, test.info(), {
+      title: `${root.name}: its own protected purpose`,
+      expected: 'Each selected agent answers using its own purpose, without starting project work.',
+      proof: `The terminal replies “My purpose: ${root.purpose}”. Its own native transcript contains this exchange; execution remains not_started.`,
+      focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+    });
   }
   expect(seen.get(roots[0].id)).not.toBe(seen.get(roots[1].id));
   terminalOutput = '';
@@ -88,4 +94,10 @@ test('selected agents use their protected purpose and separate retained native c
   const managedRequests = evidence.model_requests.filter((r: { last_user: string }) => r.last_user === prompt || r.last_user === followup);
   expect(managedRequests).toHaveLength(3);
   for (const r of managedRequests) expect(r.tool_names).toEqual([]);
+  await demoCheckpoint(page, test.info(), {
+    title: 'Separate agent conversations retain their history',
+    expected: 'Switch back to the first agent, continue its conversation, and reload.',
+    proof: '“Our conversation is retained” survives reload. The two agents have different stored sessions; exactly three model requests occurred and chat exposed no project-work tools.',
+    focus: page.locator('.hermes-chat-xterm-host .xterm-screen'),
+  });
 });

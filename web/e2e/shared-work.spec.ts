@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test'
+import { expect, test, demoCheckpoint } from './demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' }
@@ -78,11 +78,29 @@ test('a supplied-data analyst plans and records a report through the shared work
   expect(reloaded.work.results).toEqual(completed.work.results)
   expect(reloaded.work.model_calls).toBe(completed.work.model_calls)
   expect((await request.get(`${backend}/api/agent-native/agents/${id}/outputs/${output.output_id}/versions/1`)).status()).toBe(401)
+  await demoCheckpoint(page, test.info(), {
+    title: 'The shared workflow also delivers an analyst report',
+    expected: 'An analyst uses the same work tools and exact-version reader as the writer, with no duplicate work on reload.',
+    proof: `The saved report shows Profit: 60 credits and Margin: 40%. Version ${output.version} survives reload; worker_alive=${proof.worker_alive}.`,
+    focus: reader,
+  })
+  await demoCheckpoint(page, test.info(), {
+    title: 'Submission is separate from acceptance',
+    expected: 'A report must identify its agent evaluation without presenting it as accepted work.',
+    proof: 'Submitted for review, Agent evaluation and Acceptance has not been evaluated are all visible.',
+    focus: results,
+  })
   for (const suffix of ['&version=999', '']) {
     await page.goto(`/agents/${id}?output=${output.output_id}${suffix}`)
     await expect(page.getByRole('alert').filter({ hasText: 'Could not load or verify this output version' })).toBeVisible()
     await expect(page.getByRole('button', { name: 'Retry output', exact: true })).toBeVisible()
     await expect(reader).toHaveCount(0)
+    await demoCheckpoint(page, test.info(), {
+      title: suffix ? 'An unknown output version is rejected' : 'An incomplete output link is rejected',
+      expected: 'Invalid version links must show an error instead of silently opening a different output.',
+      proof: 'Could not load or verify this output version is visible, Retry output is available, and no output reader is present.',
+      focus: page.getByRole('alert').filter({ hasText: 'Could not load or verify this output version' }),
+    })
   }
   await page.goto(outputUrl.toString())
   await expect(reader).toContainText('Profit: 60 credits')
@@ -134,6 +152,12 @@ for (const outcome of ['discovery', 'waiting'] as const) {
     expect(reloaded.work.results).toEqual(completed.work.results)
     expect(reloaded.work.outputs).toEqual([])
     expect(reloaded.work.model_calls).toBe(completed.work.model_calls)
+    await demoCheckpoint(page, test.info(), {
+      title: outcome === 'discovery' ? 'Discovery is useful without a file' : 'Waiting is recorded without pretending the task is accepted',
+      expected: 'A file-free result must retain its explanation after reload, with acceptance left unevaluated.',
+      proof: `Result=${outcome}; saved outputs=${reloaded.work.outputs.length}; worker_alive=${proof.worker_alive}. The result summary is retained and no Plane item was marked complete.`,
+      focus: results,
+    })
   })
 }
 
@@ -169,4 +193,10 @@ test('a plain text output renders literally and reopens by exact version', async
   const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${created.id}`, { headers })).json()
   expect(proof.worker_alive).toBe(false)
   expect(proof.file_content).toContain('# Literal heading')
+  await demoCheckpoint(page, test.info(), {
+    title: 'Plain text remains literal and safe',
+    expected: 'Text output must preserve Markdown and script-looking characters without interpreting them.',
+    proof: 'The exact-version reader retains # Literal heading and **These are literal characters.** after reload. It contains no script element or rendered Markdown heading.',
+    focus: reader,
+  })
 })
