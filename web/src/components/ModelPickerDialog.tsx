@@ -43,7 +43,7 @@ interface ModelOptionProvider {
   warning?: string;
 }
 
-interface ModelOptionsResponse {
+export interface ModelOptionsResponse {
   model?: string;
   provider?: string;
   providers?: ModelOptionProvider[];
@@ -88,6 +88,10 @@ interface Props {
   title?: string;
   /** If true, hides "Persist globally" checkbox — always saves to config.yaml. */
   alwaysGlobal?: boolean;
+  /** Agent-native settings have their own scope; never offer native global saving. */
+  hideGlobal?: boolean;
+  scopeDescription?: string;
+  actionLabel?: string;
 }
 
 export function ModelPickerDialog(props: Props) {
@@ -100,6 +104,9 @@ export function ModelPickerDialog(props: Props) {
     onClose,
     title = "Switch Model",
     alwaysGlobal = false,
+    hideGlobal = false,
+    scopeDescription,
+    actionLabel = "Switch",
   } = props;
   const standalone = !!loader && !!onApply;
 
@@ -271,7 +278,7 @@ export function ModelPickerDialog(props: Props) {
   ) => {
     const providerSlug = forced?.provider ?? selectedProvider?.slug ?? "";
     const model = forced?.model ?? selectedModel;
-    const shouldPersistGlobal = forced?.persistGlobal ?? persistGlobal;
+    const shouldPersistGlobal = hideGlobal ? false : (forced?.persistGlobal ?? persistGlobal);
 
     if (!providerSlug || !model || applying) return;
 
@@ -429,7 +436,9 @@ export function ModelPickerDialog(props: Props) {
         </div>
 
         <footer className="border-t border-border p-3 flex items-center justify-between gap-3 flex-wrap">
-          {alwaysGlobal ? (
+          {hideGlobal ? (
+            <span className="text-xs text-muted-foreground">{scopeDescription}</span>
+          ) : alwaysGlobal ? (
             <span className="text-xs text-muted-foreground">
               Saves to config.yaml — applies to new sessions.
             </span>
@@ -465,7 +474,7 @@ export function ModelPickerDialog(props: Props) {
               Cancel
             </Button>
             <Button onClick={confirm} disabled={!canConfirm}>
-              {applying ? <Spinner /> : "Switch"}
+              {applying ? <Spinner /> : actionLabel}
             </Button>
           </div>
         </footer>

@@ -197,7 +197,8 @@ class _Run:
                         conn.execute("UPDATE agent_native_work_runs SET state='running' WHERE id=?",(self.work['id'],))
                         state.event(conn,self.work['id'],'work.running','Working from the purpose and current Plane project.')
                     self.host.submit_turn({'sid':attempt['session_id'],'session_key':attempt['session_id'],
-                        'request_id':attempt['run_id'],'work_attempt':attempt},
+                        'request_id':attempt['run_id'],'work_attempt':attempt,
+                        'model_selection':self.work['model_selection']},
                         on_complete=lambda frame:self.inbox.put({'finished':frame}))
                     with write_txn(conn):
                         conn.execute('UPDATE agent_native_work_runs SET worker_pid=? WHERE id=?',(self.host.pid,self.work['id']))
@@ -319,6 +320,8 @@ class WorkService:
                     work = state.read_work(conn,agent_id)
                     if work['state']!='queued':
                         continue
+                    from agent_native.model_settings import snapshot_attempt
+                    work['model_selection'] = snapshot_attempt(conn, agent_id, 'work', work['id'])
                     conn.execute("UPDATE agent_native_work_runs SET state='preparing',started_at=? WHERE id=?",(_now(),work['id']))
                     state.event(conn,work['id'],'work.preparing','Reading the prepared project before starting the native worker.')
                 run = _Run(self,work)

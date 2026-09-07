@@ -58,6 +58,20 @@ Browser regression setup lives in [web/e2e](../../web/e2e/README.md). Tests use
 isolated storage and a local model fixture, never personal conversation history.
 Use the existing Chromium executable override; no browser download is necessary.
 
+## Framework agent model settings
+
+On **Agents**, **Default agent model** chooses the provider/model copied to new
+agents. The creation form can choose a different pair. Existing agents have
+**Agent model → Change agent model** on their details page. These settings use
+Hermes’s configured provider connections and model picker; credentials stay in
+Keys/provider configuration. Updating the new-agent default leaves existing
+agents unchanged.
+
+A change applies to the next admitted work run or chat message. Current work and
+the latest chat selection remain visible separately. Reload the preview after an
+upgrade to load the new controls. No model request is made simply by saving a
+choice. See [model behavior](../../design/15-model-selection.md).
+
 ## Reconnect input regression
 
 The first native chat browser proof also found that PTY reattachment's Ctrl+L

@@ -13,7 +13,7 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-**AN-72, AN-78 and AN-79 are complete; AN-80 is next, before AN-73.** The captioned live demo video is
+**AN-72, AN-78, AN-79 and AN-27 are complete. AN-80 is next, then AN-73.** The captioned live demo video is
 verified, and the completed item retains its evidence and scope. The owner
 deferred AN-77's remaining purpose-revision/transcript ordering; AN-77 remains
 Todo with accepted native chat, receipts, deadlines and full-service-restart
@@ -45,6 +45,56 @@ AN-73 then continues conversation, questions and steering. AN-74 covers detailed
 inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the full
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
+
+## Model selection — AN-27 complete
+
+Default provider/model settings are copied at creation, with optional per-agent
+overrides and later owner edits. Reuse of the native model picker and configured
+connections keeps credentials outside agent state. Default changes leave older
+agents unchanged. Independent revisions and immutable original creation input
+protect concurrent edits and lost-response retries, including a retry after the
+original connection is removed. Existing agents retain their explicit native
+profile choice, without changing their purpose, history or work.
+
+Work captures a selection at admission; chat captures it with its accepted
+message. The native worker resolves that exact connection and keeps it throughout
+the attempt. A settings edit affects the next attempt. Managed runtime fallback
+and auxiliary inference remain disabled; a final request guard rejects middleware
+model substitutions before network I/O. Missing configuration cannot consume the
+initial work attempt. The UI separates the saved choice from current/last work
+and recent chat selections. See [product requirements](../design/15-model-selection.md)
+and [implementation](../implementation/agent-model-selection.md).
+
+Focused red/green evidence: three initial settings/API cases and the initial
+browser workflow failed on missing behavior, then passed. A review regression
+proved unconfigured work incorrectly allocated an attempt; its fix and explicit
+retry-after-edit/removal case pass. Resolver/admission/native-chat tests cover
+exact named connections, strict routing and retained history; two middleware
+mutation cases verify no provider request escapes. Existing work creation,
+paused/unpaused planning, uncertain Plane writes, work selection and no-file
+results pass with explicitly isolated model fixtures.
+
+All three new browser scenarios pass. Actual held work stays on its admitted
+provider/model after an owner edit. Held chat does likewise, and the next message
+uses the new endpoint/model with the same conversation. Two intermediate failures
+were test synchronization mistakes: streamed text preceded receipt completion,
+and a fresh composer has no persisted file until first input. The helper now
+waits for settled receipts after the first submission, with draft checks before
+every Enter. No browser retry hid these failures. Logs: `/tmp/an27-browser-green.log`
+(first workflow), `/tmp/an27-browser-final.log` (default-outage guard), and
+`/tmp/an27-browser-runtime-green.log` (final native routing, 20 seconds).
+API evidence: `/tmp/an27-settings-green.log`, `/tmp/an27-unconfigured-green.log`
+and `/tmp/an27-fixture-regressions.log`. Scoped Python Ruff, frontend ESLint,
+TypeScript and the production web build pass. No full suite or paid inference ran.
+
+The local preview was restarted while idle with its existing home and database.
+Existing agents retain `openai-codex / gpt-6-astra`; the owner can now change them
+or the new-agent default through the UI. These live choices were not changed as
+part of testing. Read-only preview inspection verifies the loaded controls and
+configured picker; screenshots are in ignored
+`apps/desktop/demo/model-settings-2026-09-07/`. The standard test model remains
+local and scripted; no live model-quality evaluation was needed. AN-80 follows:
+continuous Plane progress comments, verbosity and verified output traceability.
 
 ## Narrated main-feature tour — AN-82 complete
 

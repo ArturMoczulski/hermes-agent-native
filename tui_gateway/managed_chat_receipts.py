@@ -218,6 +218,11 @@ def submit(server, rid, params, run_native):
             )
         session["_managed_receipt_id"] = message_id
         try:
+            from agent_native.model_settings import snapshot_attempt
+            from hermes_cli.kanban_db_connect import connect_closing
+            with connect_closing(binding._db_path) as control:
+                binding.validate()
+                snapshot_attempt(control, binding.agent_id, 'chat', message_id)
             from tui_gateway.managed_chat_host import submit_managed
             response = submit_managed(server, rid, params, session, receipt, db)
         except Exception as exc:

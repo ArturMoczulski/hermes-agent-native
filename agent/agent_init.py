@@ -2294,6 +2294,10 @@ def init_agent(
     if restricted and agent.provider in {"moa", "hermes", "opencode", "copilot-acp"}:
         raise PermissionError("Managed conversation cannot use an agent as its model")
     _finalize_routing(agent, api_mode, credential_pool)
+    if restricted:
+        # Capture after native model-name normalization. Request/execution
+        # middleware cannot substitute a different model in a managed attempt.
+        agent._managed_model_choice = (agent.model, agent.provider)
 
     # Platform callbacks are stored under their parameter names verbatim.
     for _cb in _CALLBACK_PARAMS:

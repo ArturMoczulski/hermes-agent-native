@@ -17,6 +17,7 @@ def owner_session(request: Request):
 
 
 router = APIRouter(prefix='/api/agent-native/agents')
+model_router = APIRouter(prefix='/api/agent-native/models')
 
 
 class WorkLimits(BaseModel):
@@ -29,12 +30,23 @@ class ConfigureWork(WorkLimits):
     expected_revision: int = Field(strict=True, ge=1)
 
 
+class ModelChoice(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    provider: str = Field(min_length=1, max_length=256)
+    model: str = Field(min_length=1, max_length=256)
+
+
+class ChangeModel(ModelChoice):
+    expected_revision: int = Field(strict=True, ge=1)
+
+
 class CreateAgent(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     request_id: str = Field(min_length=1, max_length=128)
     name: str = Field(min_length=1, max_length=200)
     purpose: str = Field(min_length=1, max_length=20000)
     work: WorkLimits | None = None
+    model_selection: ModelChoice | None = None
 
 
 @router.get('')
@@ -50,6 +62,8 @@ def create_agent(body: CreateAgent, actor=Depends(owner_session)):
             return identity.create_root(conn, actor=actor, **body.model_dump())
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.get('/{agent_id}')
@@ -101,6 +115,8 @@ def configure_work(agent_id: str, body: ConfigureWork, actor=Depends(owner_sessi
             raise HTTPException(status_code=404, detail='Agent not found') from exc
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.post('/{agent_id}/work/pause')
@@ -159,3 +175,46 @@ def read_planning(agent_id: str, actor=Depends(owner_session)):
             raise HTTPException(status_code=403, detail='Planning inspection is no longer authorized') from exc
         except PlaneReadError as exc:
             raise HTTPException(status_code=503, detail='Plane planning data is unavailable') from exc
+
+
+@model_router.get('/default')
+def read_model_default(actor=Depends(owner_session)):
+    from agent_native.model_settings import get_default
+    with connect_closing(board='default') as conn:
+        return get_default(conn)
+
+
+@model_router.put('/default')
+def set_model_default(body: ChangeModel, actor=Depends(owner_session)):
+    from agent_native.model_settings import change_default
+    with connect_closing(board='default') as conn:
+        try:
+            return change_default(conn, actor=actor, expected_revision=body.expected_revision,
+                                  choice=body.model_dump(exclude={'expected_revision'}))
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@model_router.get('/options')
+async def model_options(refresh: bool = False, actor=Depends(owner_session)):
+    from hermes_cli.web_routers.models import get_model_options
+    return await get_model_options(refresh=refresh, include_unconfigured=False, explicit_only=True)
+
+
+@router.put('/{agent_id}/model')
+def set_agent_model(agent_id: str, body: ChangeModel, actor=Depends(owner_session)):
+    from agent_native.model_settings import change_selection
+    with connect_closing(board='default') as conn:
+        try:
+            change_selection(conn, actor=actor, agent_id=agent_id,
+                             expected_revision=body.expected_revision,
+                             choice=body.model_dump(exclude={'expected_revision'}))
+            return identity.get_root(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc

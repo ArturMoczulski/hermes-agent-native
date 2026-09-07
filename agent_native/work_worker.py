@@ -8,7 +8,7 @@ from agent.work_policy import TOOL_NAMES, WorkContext, bind  # noqa: F401
 def run_turn(host, frame):
     from run_agent import AIAgent
     from hermes_state import SessionDB
-    from tui_gateway import server
+    from agent_native.model_runtime import resolve_selection
 
     data = dict(frame['work_attempt'])
     context = WorkContext(**data, request=host.request_work)
@@ -43,11 +43,16 @@ def run_turn(host, frame):
             except ValueError:
                 db.set_session_title(sid, db.get_next_title_in_lineage(title))
         history = db.get_messages_as_conversation(sid, repair_alternation=True)
-        model, runtime = server._resolve_agent_model_runtime(None, None)
+        selection = frame.get('model_selection')
+        if (not isinstance(selection, dict) or selection.get('agent_id') != context.agent_id
+                or selection.get('kind') != 'work' or selection.get('attempt_id') != context.run_id):
+            raise PermissionError('Work bootstrap has no matching admitted model selection')
+        model, runtime = resolve_selection(selection)
         with bind(context):
             agent = AIAgent(model=model, provider=runtime.get('provider'), base_url=runtime.get('base_url'),
                 api_key=runtime.get('api_key'), api_mode=runtime.get('api_mode'),
-                credential_pool=runtime.get('credential_pool'), session_id=sid, session_db=db,
+                credential_pool=runtime.get('credential_pool'), requested_provider=runtime.get('requested_provider'),
+                capabilities=runtime.get('capabilities'), session_id=sid, session_db=db,
                 platform='agent-native-work', enabled_toolsets=[], skip_context_files=True,
                 load_soul_identity=False, skip_memory=True, skip_background_review=True,
                 save_trajectories=False, checkpoints_enabled=False, quiet_mode=True,

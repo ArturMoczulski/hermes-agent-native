@@ -1,4 +1,6 @@
 """Authenticated HTTP boundary over real isolated control storage."""
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
@@ -6,6 +8,14 @@ from fastapi.testclient import TestClient
 def client(monkeypatch, tmp_path):
     monkeypatch.setenv('HERMES_HOME', str(tmp_path / 'home'))
     monkeypatch.setenv('HERMES_KANBAN_DB', str(tmp_path / 'control.db'))
+    home = tmp_path / 'home'
+    home.mkdir()
+    # Explicit isolated connection: admission tests never inherit a real model.
+    (home / 'config.yaml').write_text(json.dumps({
+        'model': {'provider': 'custom:api-fixture', 'default': 'api-fixture-model'},
+        'custom_providers': [{'name': 'api-fixture', 'base_url': 'http://127.0.0.1:1/v1',
+                              'api_key': 'test-only', 'models': ['api-fixture-model']}],
+    }))
     from hermes_cli.web_server import app, _SESSION_TOKEN
     with TestClient(app, base_url='http://127.0.0.1') as client:
         client.headers['X-Hermes-Session-Token'] = _SESSION_TOKEN

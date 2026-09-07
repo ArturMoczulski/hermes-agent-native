@@ -18,7 +18,18 @@ from tests.hermes_cli.writer_plane_fixture import writer_plane_server
 
 
 @pytest.fixture
-def broker(tmp_path):
+def broker(tmp_path, monkeypatch):
+    profile = tmp_path / 'native-profile'
+    profile.mkdir()
+    monkeypatch.setenv('HERMES_HOME', str(profile))
+    # Broker tests never launch a worker, but admission still requires a real
+    # configured selection. This endpoint has no service and incurs no model call.
+    (profile / 'config.yaml').write_text(json.dumps({
+        'model': {'provider': 'custom:broker-fixture', 'default': 'fixture-model'},
+        'custom_providers': [{'name': 'broker-fixture',
+                              'base_url': 'http://127.0.0.1:18883/v1',
+                              'api_key': 'fixture-only'}],
+    }))
     with writer_plane_server() as plane:
         home = tmp_path / 'agent-native'
         home.mkdir(mode=0o700)

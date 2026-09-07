@@ -33,6 +33,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 
 | Document | Purpose |
 | --- | --- |
+| [Agent model selection](agent-model-selection.md) | Owner defaults, per-agent choices and fixed work/chat attempt selections. |
 | [Shared agent work](shared-agent-work.md) | Next refinement: common execution, results and Saved outputs, proven by writer and analyst. |
 | [Managed writer run](writer-managed-run.md) | Current bounded native execution, Plane planning, story versions, Pause and limits. |
 | [Fantasy-writer milestone](fantasy-writer-milestone.md) | Current cycle: create, chat, observe, save stories and continue; bounded delivery slices. |
@@ -123,9 +124,10 @@ receives code-editing privileges. Neither milestone is claimed implemented.
 - Plane is the planning store and board. Bundle the project-management skill and
   integrate it with framework control records; do not duplicate a Hermes board.
 
-Multiple roots, recursive teams, different models, and authorized communication
-between separately isolated workers remain part of the full product specification.
-They follow the writer and subsequent single-Builder handoff. Multiple physical
+The owner brought per-agent model/provider selection into the current writer
+cycle (AN-27). Recursive teams and authorized communication between separately
+isolated workers remain part of the full product specification and follow the
+writer and subsequent single-Builder handoff. Multiple physical
 worker hosts can follow later; neither the handoff nor the first release depends on them.
 
 ## Repository and First Builder workspace

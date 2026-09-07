@@ -49,6 +49,9 @@ def _read(conn, agent_id):
     root['setup'] = read_setup(conn, agent_id)
     from agent_native.work_state import read_work
     root['work'] = read_work(conn, agent_id)
+    from agent_native import model_settings
+    root['model_selection'] = model_settings.get_selection(conn, agent_id)
+    root['model_activity'] = model_settings.activity(conn, agent_id)
     if root['work'] is not None:
         root['execution'] = root['work']['state']
     return root
@@ -62,7 +65,7 @@ def _event(conn, root, kind):
     )
 
 
-def create_root(conn, *, actor, request_id, name, purpose, work=None):
+def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None):
     """Persist identity, first-review intent and event together; never launch a worker.
 
     The intent records the creating owner's request, not execution authority or
@@ -75,6 +78,8 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None):
                                  ((request_id, 'request_id'), (name, 'name'), (purpose, 'purpose')))
     from agent_native.work_state import configure, limits_json
     original_work = limits_json(work) if work is not None else None
+    from agent_native import model_settings
+    original_model = model_settings.creation_input(model_selection)
     with write_txn(conn):
         previous = conn.execute(
             'SELECT id, name, initial_purpose FROM agent_native_agents WHERE request_id = ?',
@@ -91,6 +96,11 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None):
             ).fetchone()
             if (original[0] if original else None) != original_work:
                 raise ConflictError('Creation request already used with different work limits')
+            saved_model = conn.execute(
+                'SELECT input_json FROM agent_native_creation_model WHERE agent_id=?', (previous[0],),
+            ).fetchone()
+            if (saved_model[0] if saved_model else None) != original_model:
+                raise ConflictError('Creation request already used with a different model selection')
             return _read(conn, previous[0])
         agent_id = str(uuid4())
         conn.execute(
@@ -108,6 +118,7 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None):
             '(id, agent_id, cause, soul_revision, requested_at) VALUES (?, ?, ?, 1, ?)',
             (str(uuid4()), agent_id, 'creation', _now()),
         )
+        model_settings.initialize_agent(conn, agent_id, model_selection)
         from agent_native.startup import queue_setup
         queue_setup(conn, agent_id)
         if work is not None:

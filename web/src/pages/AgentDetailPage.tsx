@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
-import { agentsEndpoint, agentWorkStatus, validWorkLimits, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult } from "@/lib/agent-native";
+import { agentsEndpoint, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { Markdown } from "@/components/Markdown";
 import { fetchJSON } from "@/lib/api";
 import PlanningWork from "./PlanningWork";
+import { AgentModelControls } from "@/components/AgentModelControls";
 import { usePageHeader } from "@/contexts/usePageHeader";
 
 type LoadedAgent = { key: string; agent?: Agent; error?: string };
@@ -81,6 +82,12 @@ export default function AgentDetailPage() {
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
           <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>
         </header>
+        <AgentModelControls key={`model:${agent.id}`} agent={agent}
+          onMutationStart={() => { mutationVersion.current += 1; }}
+          onUpdate={(result) => {
+            mutationVersion.current += 1;
+            setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
+          }} />
         <WorkControls key={`work:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {
@@ -156,7 +163,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
   const canPause = work && ["queued", "preparing", "running", "stopping"].includes(work.state);
 
   async function perform(nextAction: "start" | "pause") {
-    if (busy.current || (nextAction === "start" && !validWorkLimits(limits))) return;
+    if (busy.current || (nextAction === "start" && (!validWorkLimits(limits) || !validModelChoice(agent.model_selection)))) return;
     busy.current = true;
     setAction(nextAction);
     setError(null);
@@ -195,6 +202,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       {work.error && <p role="alert" className="whitespace-pre-wrap break-words">{work.error}</p>}
       <dl className="grid gap-2 text-sm sm:grid-cols-[auto_1fr]">
         <dt className="text-muted-foreground">Run limits</dt><dd>{work.limits.timeout_seconds} seconds · {work.limits.max_iterations} model steps</dd>
+        <dt className="text-muted-foreground">Run model</dt><dd className="break-words">{work.model_selection ? modelChoiceLabel(work.model_selection) : "Not recorded for this run"}</dd>
         <dt className="text-muted-foreground">Model calls</dt><dd>{work.model_calls}</dd>
         <dt className="text-muted-foreground">Session</dt><dd className="break-all">{work.session_id}</dd>
       </dl>
@@ -205,7 +213,8 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
         <div className="space-y-2"><Label htmlFor="agent-run-seconds">Maximum run time (seconds)</Label><Input id="agent-run-seconds" type="number" min={1} max={3600} step={1} required disabled={action !== null} value={seconds} onChange={(event) => setSeconds(event.target.value)} /></div>
         <div className="space-y-2"><Label htmlFor="agent-run-steps">Maximum model steps</Label><Input id="agent-run-steps" type="number" min={1} max={100} step={1} required disabled={action !== null} value={steps} onChange={(event) => setSteps(event.target.value)} /></div>
       </div>
-      <Button type="submit" disabled={action !== null || !validWorkLimits(limits)}>{action === "start" ? "Requesting work…" : "Start work"}</Button>
+      {!validModelChoice(agent.model_selection) && <p className="text-sm">Choose a configured model before starting work.</p>}
+      <Button type="submit" disabled={action !== null || !validWorkLimits(limits) || !validModelChoice(agent.model_selection)}>{action === "start" ? "Requesting work…" : "Start work"}</Button>
     </form>}
     {error && <p role="alert">{error}</p>}
   </section>;

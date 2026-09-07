@@ -119,10 +119,20 @@ def make_agent(server, binding, key, session_db=None):
     """Construct Hermes's actual engine with provider credentials kept in the host."""
     from run_agent import AIAgent
     binding.validate()
-    model, runtime = server['_resolve_agent_model_runtime'](None, None)
     db = session_db if session_db is not None else server['_get_db']()
     if db is None:
         raise RuntimeError('Native managed chat storage is unavailable')
+    from agent_native.model_runtime import resolve_selection
+    from agent_native.model_settings import read_attempt
+    from hermes_cli.kanban_db_connect import connect_closing
+    attempt = getattr(db, '_managed_chat_attempt', None)
+    if attempt is None or attempt.session_id != binding.session_id:
+        raise PermissionError('Managed model selection requires an admitted message')
+    with connect_closing(binding._db_path) as control:
+        selection = read_attempt(control, 'chat', attempt.message_id)
+    if selection is None or selection['agent_id'] != binding.agent_id:
+        raise PermissionError('Managed message has no matching admitted model selection')
+    model, runtime = resolve_selection(selection)
     db.ensure_session(key, source='tui', cwd=binding.workspace)
     # Native title provenance suppresses the optional model-generated title.
     # Native de-duplication permits multiple agents/revisions with the same name.
@@ -135,7 +145,8 @@ def make_agent(server, binding, key, session_db=None):
     with construction_scope(binding):
         return AIAgent(model=model, provider=runtime.get('provider'), base_url=runtime.get('base_url'),
                        api_key=runtime.get('api_key'), api_mode=runtime.get('api_mode'),
-                       credential_pool=runtime.get('credential_pool'), session_id=key,
+                       credential_pool=runtime.get('credential_pool'), requested_provider=runtime.get('requested_provider'),
+                       capabilities=runtime.get('capabilities'), session_id=key,
                        session_db=db,
                        enabled_toolsets=[], skip_context_files=True, load_soul_identity=False,
                        skip_memory=True, skip_background_review=True, checkpoints_enabled=False,

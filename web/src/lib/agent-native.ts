@@ -1,4 +1,33 @@
+export type ModelChoice = { provider: string; model: string };
+export type ModelSelection = ModelChoice & {
+  revision: number;
+  source: "default" | "override" | "legacy";
+  updated_at: string;
+};
+export type DefaultAgentModel = ModelChoice & { revision: number; updated_at: string };
+export type ModelActivity = ModelChoice & {
+  agent_id?: string;
+  kind: "work" | "chat";
+  attempt_id: string;
+  revision: number;
+  source: ModelSelection["source"];
+  created_at: string;
+};
+export const agentModelsEndpoint = "/api/agent-native/models";
+export function modelChoiceLabel(choice: ModelChoice | null | undefined): string {
+  return choice?.provider && choice.model ? `${choice.provider} · ${choice.model}` : "Model not configured";
+}
+export function validModelChoice(value: unknown): value is ModelChoice {
+  if (!value || typeof value !== "object") return false;
+  const choice = value as ModelChoice;
+  return typeof choice.provider === "string" && !!choice.provider.trim() && choice.provider.length <= 256
+    && typeof choice.model === "string" && !!choice.model.trim() && choice.model.length <= 256
+    && Array.from(choice.provider + choice.model).every((character) => character.charCodeAt(0) >= 32);
+}
+
 export type Agent = {
+  model_selection?: ModelSelection | null;
+  model_activity?: ModelActivity[];
   id: string;
   name: string;
   purpose: string;
@@ -76,6 +105,7 @@ export function outputVersionLink(agentId: string, output: OutputReference): str
 }
 
 export type AgentWork = {
+  model_selection?: ModelActivity | null;
   id: string;
   focus?: WorkFocus | null;
   state: "queued" | "preparing" | "running" | "stopping" | "paused" | "completed" | "failed" | "unknown";

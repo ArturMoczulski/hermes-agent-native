@@ -29,8 +29,10 @@ title to remove these restrictions.
 
 ## Conversation scope
 
-The host constructs the existing AIAgent with the configured native model and
-provider credentials. It uses the protected purpose and private workspace, with
+The host constructs the existing AIAgent with the provider/model captured for
+the admitted owner message, resolving credentials through the native connection
+store. [Per-agent model settings](agent-model-selection.md) affect the next
+message and preserve this conversation’s identity and history. It uses the protected purpose and private workspace, with
 ambient soul/context/memory disabled. It exposes no project tools, plugin tool
 catalog or auxiliary agent routes. Existing request, execution and lifecycle
 middleware remain in place; both native tool execution paths add an explicit
@@ -41,11 +43,12 @@ Each owner message admits one native conversation turn, with two loop iterations
 and 2,048 output tokens. Managed chat also has a host deadline, described below.
 These are early chat settings, not configured unattended-work limits.
 
-Plain chat cannot start project work, change purpose or clear a pause. The current
-identity model still reports project execution as **Not started**. Actual managed
-writing and Pause belong to AN-72. Missing provider configuration and failures use
-the native error path. Attachments, native management commands, model switching
-inside this scoped conversation and automatic wake activation are unavailable.
+Plain chat cannot start project work, change purpose or clear a pause. Independent
+bounded work and Pause are implemented by [managed work](writer-managed-run.md).
+Missing provider configuration and failures use the native error path. The owner
+can change the next-message model from agent details; native model-switch commands
+inside this scoped terminal remain unavailable. Attachments, native management
+commands and automatic wake activation are also unavailable.
 The local `/acknowledge` recovery command only closes an uncertain delivery record;
 it is not sent to the model and does not start work.
 

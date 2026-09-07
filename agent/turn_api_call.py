@@ -87,6 +87,8 @@ def perform_api_call(
                 next_api_kwargs, allow_stream=False, is_github_responses=agent._is_copilot_url(),
                 sanitize_harmony_tokens=agent._is_codex_backend(),
             )
+        from agent_native.model_runtime import assert_request_model
+        assert_request_model(agent, next_api_kwargs)
         if _use_streaming:
             return agent._interruptible_streaming_api_call(
                 next_api_kwargs, on_first_delta=_stop_spinner

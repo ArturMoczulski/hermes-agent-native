@@ -105,6 +105,16 @@ def native(binding, tmp_path, monkeypatch):
     monkeypatch.setenv('HERMES_HOME', str(profile))
     with fixture.native_model_server() as model:
         fixture.configure_native_chat(profile, model)
+        # These roots precede the provider fixture. Configure them explicitly;
+        # framework agents no longer inherit later profile model changes.
+        from agent_native import model_settings
+        from agent_native.identity import OWNER
+        from hermes_cli.kanban_db_connect import connect_closing
+        with connect_closing(binding._db_path) as control:
+            selection = model_settings.get_selection(control, binding.agent_id)
+            model_settings.change_selection(control, actor=OWNER, agent_id=binding.agent_id,
+                expected_revision=selection['revision'],
+                choice={'provider': 'custom:browser-fixture', 'model': fixture.MODEL})
         from hermes_state import SessionDB
         from tui_gateway import server
         db = SessionDB(tmp_path / 'native.db')

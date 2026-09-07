@@ -811,7 +811,8 @@ def _opencode_free_runtime(provider, requested_provider, model_cfg, target_model
 
 
 def resolve_runtime_provider(*, requested: Optional[str] = None, explicit_api_key: Optional[str] = None,
-                             explicit_base_url: Optional[str] = None, target_model: Optional[str] = None) -> Dict[str, Any]:
+                             explicit_base_url: Optional[str] = None, target_model: Optional[str] = None,
+                             strict_requested: bool = False) -> Dict[str, Any]:
     """Resolve runtime provider credentials for agent execution. Ladder (order is behavior — each
     rung returns or raises, else falls to the next):
       1. disabled-provider guard (``providers.<name>.enabled: false``)
@@ -824,13 +825,16 @@ def resolve_runtime_provider(*, requested: Optional[str] = None, explicit_api_ke
          → external-process → anthropic env → bedrock → registry api_key providers
       8. OpenRouter / bare-custom fallback
     target_model overrides model_cfg["default"] when computing provider-specific api_mode (e.g.
-    OpenCode Zen/Go where different models route through different API surfaces)."""
+    OpenCode Zen/Go where different models route through different API surfaces).
+    strict_requested skips the profile auto/local bypass for an explicit requested provider;
+    managed agents use it so another profile default cannot change their admitted connection."""
     requested_provider = resolve_requested_provider(requested)
     _raise_if_provider_disabled(requested_provider)
-    return next(r for r in _ladder_rungs(requested_provider, explicit_api_key, explicit_base_url, target_model) if r)
+    return next(r for r in _ladder_rungs(requested_provider, explicit_api_key, explicit_base_url, target_model,
+                                       strict_requested=strict_requested) if r)
 
 
-def _ladder_rungs(requested_provider, explicit_api_key, explicit_base_url, target_model):
+def _ladder_rungs(requested_provider, explicit_api_key, explicit_base_url, target_model, *, strict_requested=False):
     """Ladder rungs 2-8, yielded lazily so each is evaluated only when the previous one returned
     nothing; the last rung (OpenRouter / bare-custom fallback) always yields a runtime."""
     yield _resolve_requested_shortcuts(requested_provider, explicit_api_key, explicit_base_url, target_model)
@@ -840,7 +844,7 @@ def _ladder_rungs(requested_provider, explicit_api_key, explicit_base_url, targe
     # endpoint (e.g. Ollama at localhost:11434), route through the OpenAI-compatible resolver instead of
     # letting resolve_provider() pick up an ANTHROPIC_API_KEY or OPENAI_API_KEY from the environment and
     # send the request to a cloud API. Fixes #3846.
-    if not explicit_base_url and not explicit_api_key:
+    if not explicit_base_url and not explicit_api_key and (not strict_requested or requested_provider == "auto"):
         yield _local_endpoint_bypass(requested_provider, explicit_api_key, explicit_base_url)
     provider = resolve_provider(requested_provider, explicit_api_key=explicit_api_key, explicit_base_url=explicit_base_url)
     model_cfg = _get_model_config()

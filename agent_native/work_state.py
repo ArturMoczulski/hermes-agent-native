@@ -44,6 +44,8 @@ def read_work(conn, agent_id):
     names = [c[1] for c in conn.execute('PRAGMA table_info(agent_native_work_runs)')]
     result = dict(zip(names, row))
     result['limits'] = json.loads(result['limits'])
+    from agent_native.model_settings import read_attempt
+    result['model_selection'] = read_attempt(conn, 'work', result['id'])
     result['events'] = [dict(zip(('id','kind','summary','created_at'), row)) for row in conn.execute(
         'SELECT id,kind,summary,created_at FROM agent_native_work_events WHERE run_id=? ORDER BY id',
         (result['id'],)).fetchall()]
@@ -84,6 +86,12 @@ def configure(conn, *, actor, agent_id, expected_revision, limits):
             if previous['limits'] != limits:
                 raise ConflictError('This initial work run is already configured')
             return previous
+        from agent_native.model_settings import get_selection
+        from agent_native.model_runtime import validate_choice
+        try:
+            validate_choice(get_selection(conn, agent_id))
+        except ValueError as exc:
+            raise ValueError('Choose a configured model before starting work') from exc
         run_id = str(uuid4())
         conn.execute('INSERT INTO agent_native_work_runs '
                      '(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at) '

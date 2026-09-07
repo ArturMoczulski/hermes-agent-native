@@ -63,6 +63,21 @@ the normal managed-chat timeout setting and restores it after the scenario.
 These checks do not establish autonomous writing or cadence;
 see [managed chat scope](../../implementation/native-agent-chat.md).
 
+## Agent model selection
+
+`model-selection.spec.ts` has three focused scenarios: defaults and independent
+creation/edit choices (including lost-response retry), actual routing during a
+work/chat model change, and explicit creation when the default is unavailable.
+The same disposable model server exposes two named provider routes with distinct
+model IDs. Requests are held where needed to change settings during a real native
+attempt; evidence checks the exact endpoint and model used. Work/chat records
+must retain the old selection while the next chat message uses the new one.
+
+These scenarios require no intelligence, real credentials or paid inference.
+Any future live judgment evaluation must be separately invoked, explicitly choose
+an economical account-supported model and finite run limits, and never inherit a
+premium host default. See [the cost policy](../../design/15-model-selection.md#verification-without-routine-inference-costs).
+
 ## Full service restart
 
 When restart behavior is affected, select the relevant case in the separate

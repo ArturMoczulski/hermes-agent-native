@@ -137,3 +137,6 @@ from agent_native.work_state import WORK_SCHEMA
 from agent_native.story_store import STORY_SCHEMA
 from agent_native.output_store import OUTPUT_SCHEMA
 SCHEMA_SQL += WORK_SCHEMA + STORY_SCHEMA + OUTPUT_SCHEMA
+
+from agent_native.model_settings import MODEL_SCHEMA
+SCHEMA_SQL += MODEL_SCHEMA

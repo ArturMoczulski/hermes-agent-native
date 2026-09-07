@@ -5,6 +5,8 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
+**AN-27 model/provider selection is complete; AN-80 is next.**
+See [model settings and verification](implementation/agent-model-selection.md).
 The owner moved this earlier usable-agent milestone ahead of the First Builder:
 create an ordinary root from a purpose, talk to it, see it write and save stories,
 steer its work, inspect activity/sessions, then observe useful continuation on cadence.
@@ -57,11 +59,12 @@ which connects proactive questions and steering to the shared work. The writer a
 analyst on supplied material must use the same path; a useful outcome need not
 produce a story or a file. The Plane skill now directs incremental comments during
 work, not a retrospective batch at completion; enforceable reporting configuration
-and delivery remain AN-80, the next implementation slice. AN-81 now provides a verified
+and delivery remain AN-80, following the owner-prioritized AN-27 model selection. AN-81 now provides a verified
 recording of all 30 current framework browser scenarios, with 47 readable proof
 checkpoints and a chapter index. AN-82 adds a separate 4:38 narrated tour of the main
 implemented features, with readable screen holds, chapter navigation and a transcript.
-AN-80 resumes as the next implementation slice. The external Builder used
+AN-27 is now complete: defaults, per-agent overrides, immutable attempt choices
+and exact native routing are verified with local scripted model responses. AN-80 is next. The external Builder used
 progress comments on AN-78 and AN-79 throughout implementation and verification.
 AN-74–76 retain detailed inspection, continuity and full milestone acceptance.
 AN-74 includes the owner-requested shared Activity table: newest first, twenty

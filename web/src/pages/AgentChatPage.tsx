@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { agentsEndpoint, type Agent } from '@/lib/agent-native';
+import { agentsEndpoint, modelChoiceLabel, type Agent } from '@/lib/agent-native';
 import { fetchJSON } from '@/lib/api';
 import ChatPage from './ChatPage';
 
@@ -17,6 +17,21 @@ export default function AgentChatPage() {
       .catch(() => { if (active) setLoaded({ id: agentId, error: true }); });
     return () => { active = false; };
   }, [agentId]);
+  const chatReady = loaded.id === agentId && !!loaded.agent;
+  useEffect(() => {
+    if (!chatReady) return;
+    let active = true;
+    let timer: number | undefined;
+    const refresh = async () => {
+      try {
+        const agent = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agentId)}`);
+        if (active) setLoaded({ id: agentId, agent });
+      } catch { /* Conversation remains usable; details can reload model settings. */ }
+      if (active) timer = window.setTimeout(() => { void refresh(); }, 1500);
+    };
+    timer = window.setTimeout(() => { void refresh(); }, 1500);
+    return () => { active = false; window.clearTimeout(timer); };
+  }, [agentId, chatReady]);
   const agent = loaded.id === agentId ? loaded.agent : undefined;
   return <div className="flex min-h-0 flex-1 flex-col gap-3">
     <Link to={`/agents/${encodeURIComponent(agentId)}`} className="text-sm underline underline-offset-4">Agent details</Link>
@@ -24,6 +39,8 @@ export default function AgentChatPage() {
       <header aria-label="Conversation agent" className="space-y-1 rounded-lg border p-3">
         <h1 className="text-xl font-semibold">{agent.name}</h1>
         <p className="whitespace-pre-wrap break-words text-sm">{agent.purpose}</p>
+        <p className="break-words text-xs">Next message model: {modelChoiceLabel(agent.model_selection)}</p>
+        {agent.model_activity?.find((activity) => activity.kind === 'chat') && <p className="break-words text-xs text-muted-foreground">Latest message selection: {modelChoiceLabel(agent.model_activity.find((activity) => activity.kind === 'chat'))}</p>}
         <p className="text-xs text-muted-foreground">Purpose revision {agent.soul_revision} · Conversation only · Use agent details to view and control project work</p>
       </header>
       <ChatPage key={`${agent.id}:${agent.soul_revision}`} managedAgent={agent} />

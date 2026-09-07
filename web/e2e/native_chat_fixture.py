@@ -15,6 +15,8 @@ REPLY = 'The moonlit citadel is remembered in this conversation.'
 FOLLOWUP = 'Native browser test: what place did I mention?'
 RECALLED = 'You mentioned the moonlit citadel before reloading the browser.'
 MODEL = 'native-browser-fixture'
+ALTERNATE_MODEL = 'native-browser-fixture-small'
+MODELS = (MODEL, ALTERNATE_MODEL)
 MANAGED_PURPOSES = ('Write original stories about the moonlit citadel.', 'Write original stories about the glass ocean.')
 
 
@@ -107,7 +109,7 @@ def native_model_server():
         def do_GET(self):
             # Native runtime may inspect a local provider's model catalog.
             self._send({'object': 'list', 'data': [
-                {'id': MODEL, 'object': 'model', 'context_length': 128000}]})
+                {'id': model, 'object': 'model', 'context_length': 128000} for model in MODELS]})
 
         def do_POST(self):
             body = json.loads(self.rfile.read(int(self.headers['Content-Length'])))
@@ -123,11 +125,11 @@ def native_model_server():
                                     'system_prompt_sha256': hashlib.sha256(system_text.encode()).hexdigest(),
                                     'managed_purposes': purposes,
                                     'tool_names': [t.get('function', {}).get('name') for t in body.get('tools', [])]})
-            if self.path != '/v1/chat/completions' or body.get('model') != MODEL:
+            if self.path not in ('/v1/chat/completions', '/alternate/v1/chat/completions') or body.get('model') not in MODELS:
                 self._send({'error': {'message': 'Unexpected native test provider request'}}, status=400)
                 return
             from web.e2e.writer_model_fixture import handle_writer_request
-            if handle_writer_request(self, body, server, MODEL):
+            if handle_writer_request(self, body, server, body['model']):
                 return
             hold_marker = server.holds.enter(last_user)
             if hold_marker is not None:
@@ -156,12 +158,12 @@ def native_model_server():
                 ]
                 data = ''.join('data: ' + json.dumps({
                     'id': 'native-fixture', 'object': 'chat.completion.chunk', 'created': 1,
-                    'model': MODEL, 'choices': [frame],
+                    'model': body['model'], 'choices': [frame],
                 }) + '\n\n' for frame in frames) + 'data: [DONE]\n\n'
                 written = self._send(data.encode(), content_type='text/event-stream')
             else:
                 written = self._send({'id': 'native-fixture', 'object': 'chat.completion', 'created': 1,
-                            'model': MODEL, 'choices': [{'index': 0, 'finish_reason': 'stop',
+                            'model': body['model'], 'choices': [{'index': 0, 'finish_reason': 'stop',
                                 'message': {'role': 'assistant', 'content': answer}}],
                             'usage': {'prompt_tokens': 50, 'completion_tokens': 20, 'total_tokens': 70}})
             if hold_marker is not None:
@@ -207,7 +209,11 @@ def configure_native_chat(home, model):
     (root / 'config.yaml').write_text(yaml.safe_dump({
         'model': {'default': MODEL, 'provider': 'browser-fixture', 'base_url': model.url, 'context_length': 128000},
         'custom_providers': [{'name': 'browser-fixture', 'base_url': model.url,
-                              'api_key': 'native-browser-fixture-only', 'model': MODEL}],
+                              'api_key': 'native-browser-fixture-only', 'model': MODEL,
+                              'models': list(MODELS), 'discover_models': False},
+                             {'name': 'browser-alternate', 'base_url': model.url.replace('/v1', '/alternate/v1'),
+                              'api_key': 'native-browser-fixture-only', 'model': ALTERNATE_MODEL,
+                              'models': list(MODELS), 'discover_models': False}],
         'agent': {'max_turns': 3},
         'agent_native': {'managed_chat_timeout_seconds': 90},
         'terminal': {'cwd': str(workspace)},

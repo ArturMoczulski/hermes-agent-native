@@ -169,6 +169,8 @@ JSON box. Owner control is expressed through purpose edits, work updates and
 lifecycle operations; historical evidence must not be rewritten by changing a badge.
 Changing model preserves identity and accumulated work. Show when a saved setting
 will take effect; do not imply that an in-flight operation already uses it.
+See [model selection](15-model-selection.md) for default copying, attempt boundaries
+and cost-free routine verification.
 
 The compact agent Work area shows the actual Plane project/cycle, current
 assignment and criteria, current attempt and limits, recent results and

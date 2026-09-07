@@ -1,14 +1,15 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { agentsEndpoint as endpoint, agentWorkStatus, validWorkLimits, type Agent, type WorkLimits } from "@/lib/agent-native";
+import { agentsEndpoint as endpoint, agentWorkStatus, validWorkLimits, validModelChoice, modelChoiceLabel, type Agent, type WorkLimits, type ModelChoice, type DefaultAgentModel } from "@/lib/agent-native";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { fetchJSON, HERMES_BASE_PATH } from "@/lib/api";
 import { usePageHeader } from "@/contexts/usePageHeader";
+import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentModelControls";
 
-type PendingCreation = { request_id: string; name: string; purpose: string; work?: WorkLimits };
+type PendingCreation = { request_id: string; name: string; purpose: string; work?: WorkLimits; model_selection?: ModelChoice };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
 
 function restoreCreation(): PendingCreation | null {
@@ -17,8 +18,10 @@ function restoreCreation(): PendingCreation | null {
     if (value && typeof value.request_id === "string" && value.request_id.length > 0 && value.request_id.length <= 128
       && typeof value.name === "string" && value.name.trim() && value.name.length <= 200
       && typeof value.purpose === "string" && value.purpose.trim() && value.purpose.length <= 20000
-      && (value.work === undefined || validWorkLimits(value.work))) {
+      && (value.work === undefined || validWorkLimits(value.work))
+      && (value.model_selection === undefined || validModelChoice(value.model_selection))) {
       return { request_id: value.request_id, name: value.name, purpose: value.purpose,
+        ...(value.model_selection ? { model_selection: { provider: value.model_selection.provider, model: value.model_selection.model } } : {}),
         ...(value.work ? { work: { timeout_seconds: value.work.timeout_seconds, max_iterations: value.work.max_iterations } } : {}) };
     }
   } catch { /* Storage can be unavailable; submission will check before any write. */ }
@@ -31,12 +34,17 @@ export default function AgentsPage() {
   const [agents, setAgents] = useState<Agent[]>([]);
   const [initialRequest] = useState(restoreCreation);
   const [name, setName] = useState(initialRequest?.name ?? "");
+  const [defaultModel, setDefaultModel] = useState<DefaultAgentModel | null>(null);
+  const [modelSelection, setModelSelection] = useState<ModelChoice | null>(initialRequest?.model_selection ?? null);
+  const [choosingModel, setChoosingModel] = useState(false);
   const [purpose, setPurpose] = useState(initialRequest?.purpose ?? "");
   const [timeoutSeconds, setTimeoutSeconds] = useState(initialRequest?.work ? String(initialRequest.work.timeout_seconds) : "");
   const [modelSteps, setModelSteps] = useState(initialRequest?.work ? String(initialRequest.work.max_iterations) : "");
   const wantsWork = timeoutSeconds !== "" || modelSteps !== "";
   const workLimits = { timeout_seconds: Number(timeoutSeconds), max_iterations: Number(modelSteps) };
   const invalidWork = wantsWork && !validWorkLimits(workLimits);
+  const modelKnown = modelSelection !== null || defaultModel !== null;
+  const missingWorkModel = wantsWork && !validModelChoice(modelSelection ?? defaultModel);
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -63,15 +71,17 @@ export default function AgentsPage() {
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (submitting.current || !name.trim() || !purpose.trim() || invalidWork) return;
+    if (submitting.current || !name.trim() || !purpose.trim() || invalidWork || !modelKnown || missingWorkModel) return;
     submitting.current = true;
     setSaving(true);
     setError("");
     const work = wantsWork ? workLimits : undefined;
     if (pending.current?.name !== name.trim() || pending.current?.purpose !== purpose.trim()
       || pending.current?.work?.timeout_seconds !== work?.timeout_seconds
-      || pending.current?.work?.max_iterations !== work?.max_iterations) {
-      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), ...(work ? { work } : {}) };
+      || pending.current?.work?.max_iterations !== work?.max_iterations
+      || pending.current?.model_selection?.provider !== modelSelection?.provider
+      || pending.current?.model_selection?.model !== modelSelection?.model) {
+      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), ...(work ? { work } : {}), ...(modelSelection ? { model_selection: modelSelection } : {}) };
     }
     try {
       // Persist before POST: a committed response can be lost across a reload.
@@ -95,10 +105,11 @@ export default function AgentsPage() {
       setPurpose("");
       setTimeoutSeconds("");
       setModelSteps("");
+      setModelSelection(null);
       pending.current = null;
       void navigate(`/agents/${encodeURIComponent(agent.id)}`);
     } catch {
-      setError("Could not confirm creation. Retry with the same name, purpose and work limits to avoid a duplicate.");
+      setError("Could not confirm creation. Retry with the same name, purpose, model and work limits to avoid a duplicate.");
     } finally {
       submitting.current = false;
       setSaving(false);
@@ -112,6 +123,7 @@ export default function AgentsPage() {
         <p className="text-muted-foreground">Give each agent a purpose to keep and develop over time.</p>
         <p className="rounded-lg border p-3 text-sm">Create an agent to talk with it, or set both work limits to start its first private work run after setup is ready.</p>
       </header>
+      <DefaultAgentModelControls onChange={setDefaultModel} />
       <form onSubmit={(event) => void create(event)} className="space-y-4 rounded-xl border p-5">
         <h2 className="text-lg font-semibold">Create an agent</h2>
         <div className="space-y-2">
@@ -122,6 +134,16 @@ export default function AgentsPage() {
           <Label htmlFor="agent-purpose">Purpose</Label>
           <textarea id="agent-purpose" className="min-h-28 w-full rounded-md border bg-background p-3" value={purpose} onChange={(e) => setPurpose(e.target.value)} required maxLength={20000} disabled={saving} placeholder="What should this agent work toward?" />
         </div>
+        <fieldset aria-label="Model for this agent" className="space-y-3 rounded-lg border p-4" disabled={saving}>
+          <legend className="px-1 text-sm font-medium">Model for this agent</legend>
+          <p className="break-words text-sm">{modelKnown ? <>{modelSelection ? "Use selected model: " : "Use creation default: "}{modelChoiceLabel(modelSelection ?? defaultModel)}</> : "The default has not been confirmed. Wait for it to load, reload the default, or choose a different model."}</p>
+          {missingWorkModel && <p className="text-sm">Choose a configured model before starting work.</p>}
+          <div className="flex flex-wrap gap-2">
+            <Button type="button" onClick={() => setChoosingModel(true)}>Choose a different model</Button>
+            {modelSelection && <Button type="button" onClick={() => setModelSelection(null)}>Use default model</Button>}
+          </div>
+          <p className="text-xs text-muted-foreground">Each agent keeps its own selection. You can change it later in agent details.</p>
+        </fieldset>
         <fieldset className="space-y-3 rounded-lg border p-4" disabled={saving}>
           <legend className="px-1 text-sm font-medium">First work run (optional)</legend>
           <p className="text-sm text-muted-foreground">Set both limits to let the agent plan and work toward its purpose in its private workspace. Leave both blank to create it for conversation. This starts one run; automatic continuation is not enabled.</p>
@@ -131,8 +153,10 @@ export default function AgentsPage() {
           </div>
           {invalidWork && <p className="text-sm">Enter both limits: 1–3600 seconds and 1–100 model steps.</p>}
         </fieldset>
-        <Button type="submit" disabled={saving || loading || !name.trim() || !purpose.trim() || invalidWork}>{saving ? "Creating…" : "Create agent"}</Button>
+        <Button type="submit" disabled={saving || loading || !name.trim() || !purpose.trim() || invalidWork || !modelKnown || missingWorkModel}>{saving ? "Creating…" : "Create agent"}</Button>
       </form>
+      {choosingModel && <AgentModelPicker choice={modelSelection ?? defaultModel} title="Choose a model for this agent" actionLabel="Use model"
+        scopeDescription="Only this new agent will use the selected model." onApply={setModelSelection} onClose={() => setChoosingModel(false)} />}
       {error && <div role="alert" className="space-y-2"><p>{error}</p><Button disabled={saving} onClick={() => { setLoading(true); setError(""); setReload((value) => value + 1); }}>Reload agents</Button></div>}
       <section aria-label="Agent list" className="space-y-4">
         <h2 className="text-lg font-semibold">Agents</h2>
@@ -141,6 +165,7 @@ export default function AgentsPage() {
           <article key={agent.id} className="space-y-3 rounded-xl border p-5">
             <div className="flex items-center justify-between gap-4"><h3 className="font-semibold"><Link className="underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}`}>{agent.name}</Link></h3><span className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span></div>
             <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>
+            <p className="break-words text-sm text-muted-foreground">{modelChoiceLabel(agent.model_selection)}</p>
             <p className="break-all text-xs text-muted-foreground">Agent ID: {agent.id} · Purpose revision {agent.soul_revision}</p>
           </article>
         ))}

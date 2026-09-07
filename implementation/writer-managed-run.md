@@ -28,7 +28,9 @@ The first reached limit ends the attempt. A per-run watchdog enforces the time
 limit independently of the shared monitor and control-database write contention. These are execution limits, not cycle
 estimates. The current input ceilings are 3600 seconds and 100 model steps, with
 an internal 8192-token response ceiling; these ceilings are not default values.
-The native model and account come from the dashboard's configured profile.
+The run captures its agent’s saved provider/model at admission. Credentials come
+from that configured native connection. Later changes affect the next admitted
+attempt; see [model selection](agent-model-selection.md).
 
 Work waits for the agent's real private files and Plane workspace/project to be
 ready. The dashboard service starts it without a chat prompt. The detail page
