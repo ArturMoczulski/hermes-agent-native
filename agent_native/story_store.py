@@ -167,6 +167,11 @@ class _Tree:
         return fd
 
     def story(self, workspace, story_id, *, create=False):
+        return self.output(workspace, story_id, collection="stories", create=create)
+
+    def output(self, workspace, output_id, *, collection, create=False):
+        if collection not in ("stories", "outputs"):
+            raise ValueError("Unknown publication collection")
         if os.name != "posix":
             raise OSError(
                 "Story publication requires POSIX no-follow directory operations"
@@ -189,8 +194,8 @@ class _Tree:
             raise PermissionError(
                 "Story workspace must be host-owned without shared write access"
             )
-        fd = self._open_dir(fd, "stories", create=create)
-        return self._open_dir(fd, story_id, create=create)
+        fd = self._open_dir(fd, collection, create=create)
+        return self._open_dir(fd, output_id, create=create)
 
     def verify(self):
         for parent, name, fd in self.edges:
@@ -323,6 +328,8 @@ def publish(
     lookup = "SELECT * FROM agent_native_story_versions WHERE agent_id=? AND run_id=? AND call_id=?"
     conn.execute("BEGIN IMMEDIATE")
     try:
+        if conn.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='agent_native_output_versions'").fetchone():
+            raise RuntimeError("Story publication was replaced by the output store")
         validate(conn)
         row = _row(conn.execute(lookup, key))
         if row is not None:

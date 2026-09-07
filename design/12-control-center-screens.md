@@ -157,6 +157,7 @@ Sections:
 | Overview | Purpose, expected outcomes, continuing obligations, direct parent, human ownership, lifecycle, own activity, descendant summary, current assignments and blockers. **Open chat**, **View work**, **Create child**. |
 | Purpose evaluation | Latest review, evidence and applicable accountable acceptance; remaining obligations and the reason to continue, wait, clarify, pause or retire. Distinguish growth from recurring delivery/monitoring and assignment completion from whole-purpose fulfillment. Link related work, escalations and any retirement operation. |
 | Cadence | Interval, last check-in and its recorded outcome, next eligible check-in, last actual work and last accepted result as separate facts. **Edit cadence**. Show suspension causes; a paused agent has no ordinary upcoming activation. |
+| Plane progress updates | Owner-controlled **Concise**, **Standard** (default), or **Detailed**, with a short explanation of each level, **Save** and **Cancel**. Show the saved value and when it applies. Link the [reporting rules](13-project-management.md#continuous-work-item-updates-and-outputs); required events remain visible at every level. |
 | Soul | Purpose and fundamental rules, current revision and change history. **Edit purpose and rules** for the owner; never describe agent-authored memory as a soul change. |
 | Practices and memory | Separate readable sections, with last-change attribution, owner **Edit**, **Save** and **Cancel**. Preserve revisions and warn of concurrent changes. These edits cannot grant capabilities or override the soul. |
 | Capabilities | Configured model/provider, skills, workspace and effective permissions, including where a restriction comes from. Owner **Edit** controls with explicit changes and their effective status. |
@@ -175,6 +176,12 @@ assignment and criteria, current attempt and limits, recent results and
 agent/work and evaluation links. Use **Open output**, **Download** where available,
 and format-appropriate controls such as audio playback. The result detail below
 owns the complete review interaction; do not maintain duplicate result records.
+
+Show whether recent progress and output links reached the Plane item, with
+**Open work item** and pending, failed, unknown or description-conflict details
+when present. A saved output and its delivery to Plane have distinct states.
+Use the same versions and evaluations in both surfaces; a pending delivery must
+not obscure a saved output or disable stopping.
 
 Link **Decisions** to the same requests used by Chat and Inbox, and **Children**
 to the same parentage used by Monitor. A feature not yet supplied by the backend

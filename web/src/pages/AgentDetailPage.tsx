@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams } from "react-router";
+import { Link, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
-import { agentsEndpoint, agentWorkStatus, validWorkLimits, type Agent, type StoryMetadata, type StoryVersion } from "@/lib/agent-native";
+import { agentsEndpoint, agentWorkStatus, validWorkLimits, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { Markdown } from "@/components/Markdown";
@@ -96,7 +96,7 @@ export default function AgentDetailPage() {
           {startup ? <>
             <p>{agent.work
               ? "The initial work request is retained. Its current progress and limits are shown above."
-              : "Your agent is saved and its first review has been requested. Set work limits above when you want it to begin planning and writing."}</p>
+              : "Your agent is saved and its first review has been requested. Set work limits above when you want it to begin work on its purpose."}</p>
             <dl className="grid gap-2 text-sm sm:grid-cols-[auto_1fr]">
               <dt className="text-muted-foreground">Requested</dt><dd><time dateTime={startup.requested_at}>{new Date(startup.requested_at).toLocaleString()}</time></dd>
               <dt className="text-muted-foreground">Cause</dt><dd>Agent creation</dd>
@@ -132,7 +132,8 @@ export default function AgentDetailPage() {
           </li>)}</ol> : <p>No execution activity recorded yet.</p>}
           <p className="text-sm text-muted-foreground">Created <time dateTime={agent.created_at}>{new Date(agent.created_at).toLocaleString()}</time></p>
         </section>
-        <SavedStories key={`stories:${agent.id}`} agent={agent} />
+        <WorkResults key={`results:${agent.id}`} agent={agent} />
+        <SavedOutputs key={`outputs:${agent.id}`} agent={agent} />
       </>}
     </div>
   );
@@ -179,7 +180,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
 
   return <section aria-label="Agent work" className="space-y-4 rounded-xl border p-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
-      <h2 className="text-lg font-semibold">{work ? "Current work" : "Start the first writing run"}</h2>
+      <h2 className="text-lg font-semibold">{work ? "Current work" : "Start the first work run"}</h2>
       {canPause && <Button disabled={action !== null} onClick={() => { void perform("pause"); }}>{action === "pause" ? "Requesting pause…" : "Pause"}</Button>}
     </div>
     {work ? <>
@@ -187,7 +188,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       {work.state === "queued" && agent.setup?.status !== "ready" && <p>The request is saved. Work will begin after the private workspace and Plane project are ready.</p>}
       {work.state === "stopping" && <p role="status">Stopping the current run. Pause will be confirmed after it stops.</p>}
       {work.state === "paused" && <p>The run is paused. It will not restart automatically.</p>}
-      {work.state === "completed" && <p>This run has finished. Review its saved stories and evaluation below.</p>}
+      {work.state === "completed" && <p>This run has finished. Review its results and saved outputs below. Finishing a run does not mean its work has been accepted.</p>}
       {work.state === "unknown" && <p>The run outcome needs checking before any further work.</p>}
       {work.error && <p role="alert" className="whitespace-pre-wrap break-words">{work.error}</p>}
       <dl className="grid gap-2 text-sm sm:grid-cols-[auto_1fr]">
@@ -197,10 +198,10 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       </dl>
       <p className="text-xs text-muted-foreground">This is one bounded run. Automatic continuation and resume are not enabled yet.</p>
     </> : <form onSubmit={(event) => { event.preventDefault(); void perform("start"); }} className="space-y-4">
-      <p className="text-sm text-muted-foreground">Set both limits to let this agent plan and write in its private workspace. Work waits for setup if needed.</p>
+      <p className="text-sm text-muted-foreground">Set both limits to let this agent work on its purpose in its private workspace. Work waits for setup if needed.</p>
       <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2"><Label htmlFor="writer-run-seconds">Maximum run time (seconds)</Label><Input id="writer-run-seconds" type="number" min={1} max={3600} step={1} required disabled={action !== null} value={seconds} onChange={(event) => setSeconds(event.target.value)} /></div>
-        <div className="space-y-2"><Label htmlFor="writer-run-steps">Maximum model steps</Label><Input id="writer-run-steps" type="number" min={1} max={100} step={1} required disabled={action !== null} value={steps} onChange={(event) => setSteps(event.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="agent-run-seconds">Maximum run time (seconds)</Label><Input id="agent-run-seconds" type="number" min={1} max={3600} step={1} required disabled={action !== null} value={seconds} onChange={(event) => setSeconds(event.target.value)} /></div>
+        <div className="space-y-2"><Label htmlFor="agent-run-steps">Maximum model steps</Label><Input id="agent-run-steps" type="number" min={1} max={100} step={1} required disabled={action !== null} value={steps} onChange={(event) => setSteps(event.target.value)} /></div>
       </div>
       <Button type="submit" disabled={action !== null || !validWorkLimits(limits)}>{action === "start" ? "Requesting work…" : "Start work"}</Button>
     </form>}
@@ -208,45 +209,116 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
   </section>;
 }
 
-type StorySelection = { key: string; story?: StoryVersion; error?: boolean };
+function WorkResults({ agent }: { agent: Agent }) {
+  const results = agent.work?.results ?? [];
+  const labels: Record<WorkResult["outcome"], string> = {
+    submitted: "Submitted for review", discovery: "Discovery", waiting: "Waiting", blocked: "Blocked",
+  };
+  return <section aria-label="Work results" className="space-y-4 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">Results</h2>
+    {!results.length && <p>No results recorded yet.</p>}
+    {results.map((result) => <article key={result.id} className="space-y-3 rounded-lg border p-4">
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        <h3 className="font-semibold">{labels[result.outcome]}</h3>
+        <time className="text-xs text-muted-foreground" dateTime={result.created_at}>{new Date(result.created_at).toLocaleString()}</time>
+      </div>
+      <p className="whitespace-pre-wrap break-words">{result.summary}</p>
+      <section aria-label="Agent evaluation" className="space-y-2 text-sm">
+        <h4 className="font-semibold">Agent evaluation</h4>
+        <pre className="whitespace-pre-wrap break-words font-sans">{result.evaluation.report}</pre>
+        <p className="text-muted-foreground">This is the agent’s assessment. Acceptance has not been evaluated.</p>
+      </section>
+      {result.outputs.length ? <ul className="space-y-1 text-sm">{result.outputs.map((output) => {
+        const metadata = agent.work?.outputs.find((item) => item.output_id === output.output_id && item.version === output.version);
+        return <li key={`${output.output_id}:${output.version}`}><Link className="underline underline-offset-4" to={outputVersionLink(agent.id, output)}>
+          {metadata?.title ?? "Saved output"} · Version {output.version}
+        </Link></li>;
+      })}</ul> : <p className="text-sm text-muted-foreground">No saved outputs for this result.</p>}
+      <PlanningItemLink agent={agent} itemId={result.item_id} />
+    </article>)}
+  </section>;
+}
 
-function SavedStories({ agent }: { agent: Agent }) {
-  const [selection, setSelection] = useState<StorySelection | null>(null);
-  const stories = agent.work?.stories ?? [];
+function PlanningItemLink({ agent, itemId }: { agent: Agent; itemId: string }) {
+  const setup = agent.setup;
+  if (!setup?.plane_origin || !setup.workspace_slug || !setup.project_id) return null;
+  return <a className="inline-block text-sm underline underline-offset-4" target="_blank" rel="noreferrer"
+    href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/${encodeURIComponent(itemId)}/`}>Open work item</a>;
+}
 
-  async function read(story: StoryMetadata) {
-    const key = `${story.story_id}:${story.version}`;
-    setSelection({ key });
-    try {
-      const result = await fetchJSON<StoryVersion>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/stories/${encodeURIComponent(story.story_id)}/versions/${story.version}`);
-      if (result.story_id !== story.story_id || result.version !== story.version || typeof result.content !== "string") throw new Error("Story version does not match");
-      setSelection((previous) => previous?.key === key ? { key, story: result } : previous);
-    } catch {
-      setSelection((previous) => previous?.key === key ? { key, error: true } : previous);
-    }
+function SavedOutputs({ agent }: { agent: Agent }) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const outputs = agent.work?.outputs ?? [];
+  const outputId = searchParams.get("output");
+  const version = searchParams.get("version");
+  const hasSelection = outputId !== null || version !== null;
+  const uniqueSelection = searchParams.getAll("output").length === 1 && searchParams.getAll("version").length === 1;
+
+  function select(output: OutputReference | null) {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.delete("output");
+      next.delete("version");
+      if (output) { next.set("output", output.output_id); next.set("version", String(output.version)); }
+      return next;
+    });
   }
 
-  return <section aria-label="Saved stories" className="space-y-4 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">Saved stories</h2>
-    {!stories.length && <p>No story versions saved yet.</p>}
-    <div className="space-y-4">{stories.map((story) => <article key={`${story.story_id}:${story.version}`} className="space-y-2 rounded-lg border p-4">
-      <h3 className="font-semibold">{story.title} · Version {story.version}</h3>
-      <p className="text-xs text-muted-foreground"><time dateTime={story.created_at}>{new Date(story.created_at).toLocaleString()}</time></p>
-      <p className="break-all text-xs text-muted-foreground">{story.relative_path}</p>
-      {agent.setup?.plane_origin && agent.setup.workspace_slug && agent.setup.project_id && <a className="inline-block text-sm underline underline-offset-4" target="_blank" rel="noreferrer"
-        href={`${agent.setup.plane_origin}/${encodeURIComponent(agent.setup.workspace_slug)}/projects/${encodeURIComponent(agent.setup.project_id)}/issues/${encodeURIComponent(story.item_id)}/`}>Open writing task</a>}
-      <div><Button onClick={() => { void read(story); }}>Read story</Button></div>
+  return <section aria-label="Saved outputs" className="space-y-4 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">Saved outputs</h2>
+    {!outputs.length && <p>No output versions saved yet.</p>}
+    <div className="space-y-4">{outputs.map((output) => <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4">
+      <h3 className="font-semibold">{output.title} · Version {output.version}</h3>
+      <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>
+      <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>
+      <PlanningItemLink agent={agent} itemId={output.item_id} />
+      <div><Button onClick={() => select(output)}>Read output</Button></div>
     </article>)}</div>
-    {selection && !selection.story && !selection.error && <p role="status">Loading story…</p>}
-    {selection?.error && <p role="alert">Could not load or verify this story version. Check the connection and use Read story to retry.</p>}
-    {selection?.story && <article aria-label="Story reader" className="space-y-4 border-t pt-5">
-      <div className="flex items-start justify-between gap-3"><h3 className="text-xl font-semibold">{selection.story.title} · Version {selection.story.version}</h3><Button onClick={() => setSelection(null)}>Close story</Button></div>
-      <Markdown content={selection.story.content} />
-      {selection.story.evaluation != null && <section aria-label="Story evaluation" className="space-y-2 border-t pt-4">
-        <h4 className="font-semibold">Evaluation</h4>
-        <p className="text-xs text-muted-foreground">The agent’s assessment of this saved version.</p>
-        <pre className="whitespace-pre-wrap break-words text-sm">{typeof selection.story.evaluation === "string" ? selection.story.evaluation : typeof selection.story.evaluation.report === "string" ? selection.story.evaluation.report : JSON.stringify(selection.story.evaluation, null, 2)}</pre>
-      </section>}
-    </article>}
+    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agentId={agent.id}
+      outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
   </section>;
+}
+
+type LoadedOutput = { key: string; output?: OutputVersion; error?: boolean };
+
+function OutputReader({ agentId, outputId, requestedVersion, uniqueSelection, onClose }: {
+  agentId: string; outputId: string | null; requestedVersion: string | null; uniqueSelection: boolean; onClose: () => void;
+}) {
+  const [retry, setRetry] = useState(0);
+  const [loaded, setLoaded] = useState<LoadedOutput | null>(null);
+  const version = Number(requestedVersion);
+  const validSelection = uniqueSelection && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(outputId ?? "")
+    && /^[1-9][0-9]*$/.test(requestedVersion ?? "") && Number.isSafeInteger(version);
+  const key = `${agentId}:${outputId}:${requestedVersion}:${retry}`;
+  const current = loaded?.key === key ? loaded : null;
+
+  useEffect(() => {
+    if (!validSelection) return;
+    let active = true;
+    void fetchJSON<OutputVersion>(`${agentsEndpoint}/${encodeURIComponent(agentId)}/outputs/${encodeURIComponent(outputId ?? "")}/versions/${version}`)
+      .then((result) => {
+        if (result.agent_id !== agentId || result.output_id !== outputId || result.version !== version || typeof result.content !== "string"
+            || !["markdown", "text"].includes(result.format)) throw new Error("Output version does not match");
+        if (active) setLoaded({ key, output: result });
+      })
+      .catch(() => { if (active) setLoaded({ key, error: true }); });
+    return () => { active = false; };
+  }, [agentId, outputId, version, validSelection, key]);
+
+  if (!validSelection || current?.error) return <div className="space-y-3 border-t pt-5">
+    <p role="alert">Could not load or verify this output version. Check the link, connection and sign-in, then retry.</p>
+    <div className="flex gap-2"><Button onClick={() => setRetry((value) => value + 1)}>Retry output</Button><Button onClick={onClose}>Close output</Button></div>
+  </div>;
+  if (!current?.output) return <p role="status">Loading output…</p>;
+  const output = current.output;
+  return <article aria-label="Output reader" className="space-y-4 border-t pt-5">
+    <div className="flex items-start justify-between gap-3"><h3 className="text-xl font-semibold">{output.title} · Version {output.version}</h3><Button onClick={onClose}>Close output</Button></div>
+    <a className="inline-block text-sm underline underline-offset-4" href={outputVersionLink(agentId, output)}>Link to this version</a>
+    {output.format === "markdown" ? <Markdown content={output.content} /> : <pre className="whitespace-pre-wrap break-words text-sm">{output.content}</pre>}
+    {output.evaluation != null && <section aria-label="Saved version evaluation" className="space-y-2 border-t pt-4">
+      <h4 className="font-semibold">Agent evaluation</h4>
+      <p className="text-xs text-muted-foreground">The agent’s assessment of this saved version. Acceptance has not been evaluated.</p>
+      <pre className="whitespace-pre-wrap break-words text-sm">{typeof output.evaluation === "string" ? output.evaluation : typeof output.evaluation.report === "string" ? output.evaluation.report : JSON.stringify(output.evaluation, null, 2)}</pre>
+    </section>}
+  </article>;
 }

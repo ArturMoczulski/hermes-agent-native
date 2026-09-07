@@ -98,3 +98,24 @@ def test_execution_summary_tracks_the_durable_work_state(client):
     assert agent['execution'] == 'queued'
     paused = client.post(URL+'/'+agent['id']+'/work/pause').json()
     assert paused['execution'] == 'paused'
+
+
+def test_output_reader_scopes_agent_and_version_and_requires_owner(client, tmp_path):
+    from agent_native.output_store import publish
+    from hermes_cli.kanban_db_connect import connect_closing
+    agent = client.post(URL, json={**BODY, 'work': LIMITS}).json()
+    other = client.post(URL, json={**BODY, 'request_id': 'another-agent'}).json()
+    workspace = tmp_path / 'outputs-workspace'
+    workspace.mkdir(mode=0o700)
+    with connect_closing(board='default') as conn:
+        output = publish(conn, validate=lambda conn: None, workspace=workspace,
+                         agent_id=agent['id'], run_id=agent['work']['id'], call_id='seed-output',
+                         item_id='isolated-fixture-item', title='Supplied analysis', content='Growth: 25%', format='text')
+    suffix = '/outputs/'+output['output_id']+'/versions/1'
+    own = client.get(URL+'/'+agent['id']+suffix)
+    assert own.status_code == 200 and own.json()['content'] == 'Growth: 25%'
+    assert own.json()['format'] == 'text'
+    assert client.get(URL+'/'+other['id']+suffix).status_code == 404
+    assert client.get(URL+'/'+agent['id']+suffix[:-1]+'2').status_code == 404
+    client.headers.pop('X-Hermes-Session-Token')
+    assert client.get(URL+'/'+agent['id']+suffix).status_code == 401

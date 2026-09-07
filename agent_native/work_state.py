@@ -25,6 +25,9 @@ CREATE TABLE IF NOT EXISTS agent_native_work_effects (
  PRIMARY KEY(run_id, call_id)
 );
 """
+from agent_native.result_store import RESULT_SCHEMA
+WORK_SCHEMA += RESULT_SCHEMA
+
 TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
 
 
@@ -45,6 +48,10 @@ def read_work(conn, agent_id):
         (result['id'],)).fetchall()]
     from agent_native.story_store import list_stories
     result['stories'] = list_stories(conn, agent_id)
+    from agent_native.output_store import list_outputs
+    from agent_native.result_store import list_results
+    result['outputs'] = list_outputs(conn, agent_id)
+    result['results'] = list_results(conn, agent_id)
     for private in ('binding_id', 'worker_pid', 'stop_requested'):
         result.pop(private, None)
     return result

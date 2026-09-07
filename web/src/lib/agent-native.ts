@@ -44,6 +44,37 @@ export type StoryMetadata = {
 
 export type StoryVersion = StoryMetadata & { content: string };
 
+export type OutputReference = { output_id: string; version: number };
+
+export type OutputMetadata = OutputReference & {
+  agent_id: string;
+  run_id: string;
+  item_id: string;
+  title: string;
+  format: "markdown" | "text";
+  relative_path: string;
+  content_sha256: string;
+  created_at: string;
+  evaluation?: string | Record<string, unknown> | null;
+};
+
+export type OutputVersion = OutputMetadata & { content: string };
+
+export type WorkResult = {
+  id: string;
+  item_id: string;
+  outcome: "submitted" | "discovery" | "waiting" | "blocked";
+  summary: string;
+  evaluation: { report: string; source: "agent" };
+  acceptance: "not_evaluated";
+  outputs: OutputReference[];
+  created_at: string;
+};
+
+export function outputVersionLink(agentId: string, output: OutputReference): string {
+  return `/agents/${encodeURIComponent(agentId)}?output=${encodeURIComponent(output.output_id)}&version=${output.version}`;
+}
+
 export type AgentWork = {
   id: string;
   state: "queued" | "preparing" | "running" | "stopping" | "paused" | "completed" | "failed" | "unknown";
@@ -54,6 +85,8 @@ export type AgentWork = {
   summary: string | null;
   error: string | null;
   stories: StoryMetadata[];
+  outputs: OutputMetadata[];
+  results: WorkResult[];
 };
 
 export function validWorkLimits(value: unknown): value is WorkLimits {

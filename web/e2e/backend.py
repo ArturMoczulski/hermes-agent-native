@@ -120,14 +120,15 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
                 pass
         projects = [p for p in plane.projects.values() if p.get('external_id')==agent_id]
         project_ids = {p['id'] for p in projects}
-        stories = work['stories'] if work else []
-        content = (Path(home)/'agent-native'/'agents'/agent_id/'workspace'/stories[0]['relative_path']).read_text() if stories else None
+        outputs = (work.get('outputs') or work.get('stories') or []) if work else []
+        content = (Path(home)/'agent-native'/'agents'/agent_id/'workspace'/outputs[0]['relative_path']).read_text() if outputs else None
         with SessionDB(Path(home)/'state.db') as db:
             messages = db.get_messages_as_conversation(work['session_id']) if work else []
         return {'worker_alive':alive,'file_content':content,
                 'items':[i for i in plane.items.values() if i['project'] in project_ids],
                 'cycles':[c for c in plane.cycles.values() if c['project'] in project_ids],
-                'native_roles':[m['role'] for m in messages]}
+                'native_roles':[m['role'] for m in messages],
+                'model_requests':list(getattr(model, 'writer_requests', []))}
 
     app.router.routes.insert(0, app.router.routes.pop())
 

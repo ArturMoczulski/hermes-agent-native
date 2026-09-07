@@ -13,7 +13,7 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-**AN-72 is Done in Plane; AN-78 then AN-79 are next, before AN-73.** The captioned live demo video is
+**AN-72 and AN-78 are complete; AN-79 and AN-80 precede AN-73.** The captioned live demo video is
 verified, and the completed item retains its evidence and scope. The owner
 deferred AN-77's remaining purpose-revision/transcript ordering; AN-77 remains
 Todo with accepted native chat, receipts, deadlines and full-service-restart
@@ -21,8 +21,8 @@ evidence at `b6c59aa`.
 
 AN-72 now connects explicit owner run limits, existing private setup, native
 Hermes execution, scoped Plane planning, immutable story versions and actual
-Pause. The existing Agents detail page displays work state, activity, sessions,
-limits, stories and agent evaluation. See [managed writing](../implementation/writer-managed-run.md).
+Pause. The current Agents detail page displays work state, activity, sessions,
+limits, shared outputs and reported evaluation. See [managed writing](../implementation/writer-managed-run.md).
 Conversation remains native and separate; no duplicate composer or model loop.
 
 The owner requested an actual recorded demonstration. A new, separately created
@@ -31,18 +31,64 @@ live UI Pause. The original three preview agents remain unchanged and unconfigur
 for project work. The main demo used explicit limits of 300 seconds and 20 model
 steps; these values apply to that demonstration, not unattended or global defaults.
 
-Next: the owner requested planning only to generalize the framework after the
-writer demo. [Shared work delivery](../implementation/shared-agent-work.md) is the
-next plan: AN-78 removes common fiction instructions and story-only completion,
-adds shared result/output records and preserves current demo data; AN-79 exposes
-one Work/Saved outputs flow for writer and supplied-material analyst. Both are
-Todo, with no runtime implementation started. AN-73 then continues conversation,
-questions and steering using those same records. AN-74 covers detailed inspection
-and AN-75 cadence/resume/recovery. AN-76 and the full writer milestone remain open.
-The First Builder still runs through the external coding environment. Earlier
-next-step entries below are historical.
+Current: AN-78 has shared bounded execution, immutable text/Markdown outputs and
+explicit result reports with or without files. The shared reader is verified and deployed, so newly saved writer and analyst
+outputs remain accessible through the same interface. AN-79
+retains the fuller project/cycle/assignment/criteria presentation. AN-80 adds the
+owner's continuous Plane progress comments, persistent verbosity preference and
+verified output links/description sections. The bundled Plane skill now instructs
+incremental reporting; the external Builder posted and read back a progress comment
+on the active AN-78 item while verification was still in progress.
 
-## Shared work planning — current owner direction
+AN-73 then continues conversation, questions and steering. AN-74 covers detailed
+inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the full
+writer milestone remain open. The First Builder still runs through the external
+coding environment. Earlier next-step entries below are historical.
+
+## Shared bounded work — current verification
+
+Native work now uses the same restricted tool catalog for writer and analyst
+purposes: scoped Plane operations, output publication and result recording. Result
+reports retain purpose/criteria provenance and explicit outcomes; a file alone no
+longer makes a run successful. Waiting/discovery can legitimately have no file.
+A report never implies accepted work. Late completion after a purpose change or
+expired limit is paused, retaining prior evidence without claiming completion.
+
+The output store supports several outputs per assignment and immutable explicit
+revisions. Migration keeps original story content, file paths, identity/version,
+attempt/item origin and evaluation. The old writer is closed after upgrade. A
+rehearsal on a private copy of the preview database verified the one existing demo
+story and physical file without changing the live database.
+
+TDD evidence: native catalog/output/result RED then 9 native worker tests passed;
+result broker RED then 19 result checks passed, including two reproduced late
+completion races. Output migration's late legacy publisher regression failed
+before the guard and passed afterward. The final focused Python run passed **93
+tests across seven files** (`/tmp/an78-final-python.log`). Browser foundation
+checks passed **9 scenarios** (`/tmp/an78-shared-browser-green.log`) with real
+framework/native execution and scripted external Plane/model services. Those first
+browser checks retrieved new content through the owner API; they do not establish
+a human reader. The subsequent shared-reader RED proved the missing UI; **10 Playwright scenarios
+passed** after implementation (`/tmp/shared-output-browser-green.log`). These cover
+writer and analyst Markdown reading, literal plain text, exact-version deep-link
+reload and error handling, file-free results, Pause and limits. Production web
+build and scoped lint passed (`/tmp/shared-output-build.log`,
+`/tmp/shared-output-lint.log`, `/tmp/an78-lint.log`). No new live model demonstration has been launched.
+
+The tested backend and built reader are now running at
+`http://127.0.0.1:19221` (preview PID 36743). The exact idle process was checked
+before restart. Its control backup is
+`~/.hermes-agent-native-preview/backups/shared-work-2026-09-07/kanban.db`.
+All six agents, three completed/paused work states and model-call counts were
+verified unchanged after migration. The original story content/hash/evaluation
+matches the backup; the actual built browser opened its new exact-version link
+with no alerts. No generation was rerun. The story is now in Saved outputs;
+its older evaluation stays attached to that output, without an invented result.
+The minimal reader uses `?output=<UUID>&version=<integer>` on the agent route,
+requires ordinary owner authentication and preserves missing-version errors. AN-80 is specified and planned, not a claim that
+runtime verbosity or continuous delivery is already implemented.
+
+## Shared work planning — record before implementation
 
 The owner identified profession-specific UI and asked for shared Work, results,
 plans, decisions and children, using Saved outputs instead of Saved stories.

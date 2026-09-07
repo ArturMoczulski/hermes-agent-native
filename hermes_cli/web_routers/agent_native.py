@@ -121,7 +121,20 @@ def read_story(agent_id: str, story_id: str, version: int, actor=Depends(owner_s
         try:
             identity.get_root(conn, actor=actor, agent_id=agent_id)
             return read(conn,agent_id,story_id,version)
-        except KeyError as exc:
+        except LookupError as exc:
             raise HTTPException(status_code=404, detail='Story not found') from exc
         except (ValueError, OSError) as exc:
             raise HTTPException(status_code=409, detail='Story content could not be verified') from exc
+
+
+@router.get('/{agent_id}/outputs/{output_id}/versions/{version}')
+def read_output(agent_id: str, output_id: str, version: int, actor=Depends(owner_session)):
+    from agent_native.output_store import read_output as read
+    with connect_closing(board='default') as conn:
+        try:
+            identity.get_root(conn, actor=actor, agent_id=agent_id)
+            return read(conn, agent_id, output_id, version)
+        except LookupError as exc:
+            raise HTTPException(status_code=404, detail='Output not found') from exc
+        except (ValueError, OSError) as exc:
+            raise HTTPException(status_code=409, detail='Output content could not be verified') from exc

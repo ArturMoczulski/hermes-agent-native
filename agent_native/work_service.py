@@ -1,4 +1,4 @@
-"""Dashboard-owned initial writer runs; browsers only observe and request stops.
+"""Dashboard-owned initial bounded work runs; browsers only observe and request stops.
 
 Each run gets a native ComputeHost. Its private pipe delegates scoped effects to
 one host thread. Process stopping never waits for that thread or a Plane request.
@@ -33,9 +33,9 @@ class _Run:
             env={'HERMES_HOME':str(service.home.parent),'HERMES_MANAGED_COMPUTE_HOST':'1'},
             expected_hermes_home=str(service.home.parent), rpc_sink=self.inbox.put,
             autostart=False,respawn_max=0)
-        self.thread = threading.Thread(target=self.run,name='writer-'+work['id'][:8],daemon=True)
+        self.thread = threading.Thread(target=self.run,name='work-'+work['id'][:8],daemon=True)
         self.watchdog = threading.Thread(target=self._watch_deadline,
-                                        name='writer-deadline-'+work['id'][:8],daemon=True)
+                                        name='work-deadline-'+work['id'][:8],daemon=True)
         self.watchdog.start()
 
     def _watch_deadline(self):
@@ -71,7 +71,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','story_publish')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -111,22 +111,30 @@ class _Run:
                             (message,message,_now(),self.work['id']))
                         state.event(conn,self.work['id'],'work.unknown',message)
                 raise
-        else:
-            from agent_native.story_store import publish
-            if set(args) != {'title','content','item_id','evaluation'}:
-                raise ValueError('Story requires title, content, item and evaluation')
-            # Real scoped inspection checks item ownership; no model-provided path.
+        elif tool == 'output_publish':
+            from agent_native.output_store import publish
+            required = {'title','content','item_id','format'}
+            if not required <= set(args) or set(args) - required - {'output_id'}:
+                raise ValueError('Output requires title, content, item and format')
             planning.inspect({'kind':'item','resource_id':args['item_id']})
             result = publish(conn,validate=self.validate,workspace=self.workspace,
-                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
-                             **{**args,'evaluation':{'report':args['evaluation']}})
+                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id, **args)
+        else:
+            from agent_native.result_store import record
+            if 'item_id' not in args:
+                raise ValueError('Result requires an assignment')
+            observation = planning.inspect({'kind':'item','resource_id':args['item_id']})
+            result = record(conn,validate=self.validate,workspace=self.workspace,
+                            agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
+                            observation=observation,arguments=args)
         with write_txn(conn):
             # Keep honest receipts for an effect already sent even if Pause raced
             # its response. No subsequent effect is admitted after a stop.
             conn.execute('UPDATE agent_native_work_effects SET result=? WHERE run_id=? AND call_id=?',
                          (json.dumps(result),self.work['id'],call_id))
-            summary = ('Saved story: '+result['title']) if tool=='story_publish' else (
-                'Plane: '+args.get('operation','inspected '+args.get('kind','resource')))
+            summary = (('Saved output: '+result['title']) if tool=='output_publish' else
+                       ('Recorded result: '+result['summary']) if tool=='result_record' else
+                       'Plane: '+args.get('operation','inspected '+args.get('kind','resource')))
             state.event(conn,self.work['id'],'work.effect',summary)
         return result
 
@@ -159,9 +167,13 @@ class _Run:
                                    agent_id=root['id'],binding_id=binding,validate=self.validate) as planning:
                     snapshot = planning.snapshot()
                     initial = ('Begin your initial project work from your protected purpose. Use the supplied planning skill. '
-                               'Create a short project brief, an undated outcome cycle and a writing task with acceptance criteria. '
-                               'Write and evaluate a complete original fantasy story. Save it with story_publish, then record '
-                               'its relative_path and evaluation in Plane. Leave the task nonterminal for owner review; '
+                               'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
+                               'Choose useful work appropriate to your purpose and the supplied material. Save any produced text or Markdown '
+                               'with output_publish; use output_id only when revising an existing output. Record paths in Plane. '
+                               'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
+                               'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
+                               'External links are unverified references, never proof of saved content or successful actions. '
+                               'Leave the task nonterminal for owner review; '
                                'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
                                'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+
                                '\nSupported Plane operation argument contracts:\n'+json.dumps(_CONTRACTS))
@@ -201,7 +213,7 @@ class _Run:
                         elif method == 'event' and params.get('type') == 'message.complete':
                             self.final_text = str(params.get('payload',{}).get('text',''))[:16000]
         except Exception as exc:
-            _log.warning('Writer run stopped (%s)',type(exc).__name__)
+            _log.warning('Work run stopped (%s)',type(exc).__name__)
             self.fail(type(exc).__name__)
         finally:
             self.host.force_stop(timeout=2)
@@ -213,20 +225,35 @@ class _Run:
             current = state.read_work(conn,self.work['agent_id'])
             if current['state'] in state.TERMINAL or self.stopped.is_set():
                 return
-            if current['state']=='stopping':
+            try:
+                self.validate(conn)
+                authorized = True
+            except PermissionError:
+                authorized = False
+            if current['state']=='stopping' or not authorized:
                 target = 'paused' if dead else 'unknown'
-                conn.execute('UPDATE agent_native_work_runs SET state=?,finished_at=? WHERE id=?',
-                             (target,_now(),self.work['id']))
-                state.event(conn,self.work['id'],'work.'+target,'Owner stopped this run.')
+                summary = ('Work stopped or its execution authority ended.' if dead else
+                           'Worker exit could not be confirmed.')
+                conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,summary=?,finished_at=? WHERE id=?',
+                             (target,summary,_now(),self.work['id']))
+                state.event(conn,self.work['id'],'work.'+target,summary)
                 return
-            success = dead and frame.get('type')=='turn.end' and bool(current['stories'])
+            results = [result for result in current['results'] if result['run_id'] == self.work['id']]
+            success = dead and frame.get('type')=='turn.end' and bool(results)
             target = 'completed' if success else ('failed' if dead else 'unknown')
-            summary = self.final_text or (('The run ended before completing all requested steps. Saved stories remain available.'
-                                          if current['stories'] else 'The run ended without a saved story.')
-                                         if dead else 'Worker exit could not be confirmed.')
+            if success:
+                summary = self.final_text or results[0]['summary']
+            elif not dead:
+                summary = 'Worker exit could not be confirmed. Saved outputs and reports are retained.'
+            else:
+                summary = ('The run ended without a recorded result.' if not results else
+                           'The worker failed after recording a result.')
+                if current['outputs']:
+                    summary += ' Saved outputs remain available.'
             conn.execute('UPDATE agent_native_work_runs SET state=?,summary=?,finished_at=? WHERE id=?',
                          (target,summary,_now(),self.work['id']))
-            state.event(conn,self.work['id'],'work.'+target,'Story saved; run finished.' if success else summary[:1000])
+            state.event(conn,self.work['id'],'work.'+target,
+                        'Result recorded; attempt finished. Work acceptance remains separate.' if success else summary[:1000])
 
     def fail(self, reason):
         dead = self.host.force_stop(timeout=2)
@@ -294,7 +321,7 @@ class WorkService:
             try:
                 self.tick()
             except Exception as exc:
-                _log.warning('Writer service scan failed (%s)',type(exc).__name__)
+                _log.warning('Work service scan failed (%s)',type(exc).__name__)
             self.stopped.wait(.2)
 
 

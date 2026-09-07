@@ -45,6 +45,7 @@ def broker(tmp_path):
                                binding_id=binding, validate=run.validate) as planning:
                 yield SimpleNamespace(plane=plane, home=home, db_path=db_path, conn=conn,
                                       root=root, setup=setup, work=work, run=run, planning=planning)
+            run.ended.set()
             assert run.host.pid == 0, 'This test exercises the broker without launching a worker'
 
 
@@ -97,7 +98,7 @@ def test_lost_plane_write_preserves_unknown_and_blocks_all_later_admission(broke
                                 (s.work['id'],)).fetchone()[0] == 1
 
 
-def test_story_cannot_use_a_foreign_item_or_create_an_artifact(broker):
+def test_output_cannot_use_a_foreign_item_or_create_an_artifact(broker):
     s = broker
     other = create_root(s.conn, actor=OWNER, request_id='foreign-work',
                         name='Other writer', purpose='Write a different story.')
@@ -105,15 +106,15 @@ def test_story_cannot_use_a_foreign_item_or_create_an_artifact(broker):
     foreign = read_setup(s.conn, other['id'])
     assert foreign['status'] == 'ready'
     assert foreign['project_id'] != s.setup['project_id']
-    params = effect(s, 'foreign-story', 'story_publish', {
+    params = effect(s, 'foreign-output', 'output_publish', {
         'title': 'Must not be saved', 'content': 'Foreign story text',
-        'item_id': foreign['discovery_item_id'], 'evaluation': 'Must remain unpublished',
+        'item_id': foreign['discovery_item_id'], 'format': 'markdown',
     })
     prior_files = set(s.run.workspace.rglob('*'))
     with pytest.raises(PlaneReadError) as error:
         s.run._effect(s.conn, s.planning, params)
     assert error.value.status == 404
     assert not (s.run.workspace / 'stories').exists()
-    assert s.conn.execute('SELECT COUNT(*) FROM agent_native_story_versions').fetchone()[0] == 0
+    assert s.conn.execute('SELECT COUNT(*) FROM agent_native_output_versions').fetchone()[0] == 0
     assert work_state.read_work(s.conn, s.root['id'])['state'] == 'running'
     assert set(s.run.workspace.rglob('*')) == prior_files

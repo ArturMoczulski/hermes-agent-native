@@ -29,7 +29,7 @@ test('creation retains explicit work limits and waits for the real planning setu
 })
 
 
-test('a purpose drives real planning, a saved story and observable work without a chat prompt', async ({ page, request }) => {
+test('a writer purpose uses shared output and result records without a chat prompt', async ({ page, request }) => {
   test.setTimeout(90000)
   await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
   await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
@@ -51,13 +51,18 @@ test('a purpose drives real planning, a saved story and observable work without 
   const a = await get()
   expect(a.work.model_calls).toBeGreaterThan(5)
   expect(a.work.model_calls).toBeLessThanOrEqual(20)
-  expect(a.work.stories).toHaveLength(1)
+  expect(a.work.outputs).toHaveLength(1)
+  expect(a.work.results).toHaveLength(1)
+  expect(a.work.stories).toHaveLength(0)
   expect(a.work.events.some((e: {kind:string}) => e.kind === 'work.effect')).toBeTruthy()
-  await page.getByRole('button', { name: 'Read story', exact: true }).first().click()
-  await expect(page.getByText('At moonrise, Mara found a dragon', { exact: false }).last()).toBeVisible()
-  const story = a.work.stories[0]
-  const saved = await (await request.get(`${backend}/api/agent-native/agents/${id}/stories/${story.story_id}/versions/${story.version}`, { headers })).json()
+  const output = a.work.outputs[0]
+  const saved = await (await request.get(`${backend}/api/agent-native/agents/${id}/outputs/${output.output_id}/versions/${output.version}`, { headers })).json()
+  expect(a.work.results[0]).toMatchObject({ outcome: 'submitted', outputs: [{ output_id: output.output_id, version: 1 }] })
   expect(saved.content).toContain('At moonrise, Mara found a dragon')
+  await page.getByRole('button', { name: 'Read output', exact: true }).click()
+  const reader = page.getByRole('article', { name: 'Output reader', exact: true })
+  await expect(reader).toContainText('At moonrise, Mara found a dragon')
+  await expect(page.getByRole('region', { name: 'Work results', exact: true })).toContainText('Submitted for review')
   const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${id}`, { headers })).json()
   expect(proof.file_content).toBe(saved.content)
   expect(proof.items.some((i: {name:string}) => i.name === 'Write The Silver Gate')).toBeTruthy()
@@ -67,9 +72,11 @@ test('a purpose drives real planning, a saved story and observable work without 
   expect(proof.native_roles).toContain('tool')
   expect(proof.worker_alive).toBe(false)
   await page.reload()
+  await expect(reader).toContainText('At moonrise, Mara found a dragon')
   expect((await get()).work.id).toBe(a.work.id)
   expect((await get()).work.model_calls).toBe(a.work.model_calls)
-  expect((await get()).work.stories).toHaveLength(1)
+  expect((await get()).work.outputs).toHaveLength(1)
+  expect((await get()).work.results).toHaveLength(1)
 })
 
 
@@ -168,11 +175,11 @@ test('polling keeps exactly one work panel and Pause control for an active write
     await expect(page.getByLabel('Execution status')).toHaveText('Running')
     await test.info().attach('actual-polling-controls.json', { contentType: 'application/json', body: JSON.stringify({
       activePolls, workPanels: await page.getByRole('region', { name: 'Agent work', exact: true }).count(),
-      storyPanels: await page.getByRole('region', { name: 'Saved stories', exact: true }).count(),
+      outputPanels: await page.getByRole('region', { name: 'Saved outputs', exact: true }).count(),
       pauseButtons: await page.getByRole('button', { name: 'Pause', exact: true }).count(),
     }) })
     await expect.soft(page.getByRole('region', { name: 'Agent work', exact: true })).toHaveCount(1)
-    await expect.soft(page.getByRole('region', { name: 'Saved stories', exact: true })).toHaveCount(1)
+    await expect.soft(page.getByRole('region', { name: 'Saved outputs', exact: true })).toHaveCount(1)
     await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(1)
     await page.getByRole('button', { name: 'Pause', exact: true }).click()
     await expect(page.getByLabel('Execution status')).toHaveText('Paused')
@@ -181,7 +188,7 @@ test('polling keeps exactly one work panel and Pause control for an active write
     expect(proof.worker_alive).toBe(false)
     expect(proof.file_content).toBeNull()
     await expect(page.getByRole('region', { name: 'Agent work', exact: true })).toHaveCount(1)
-    await expect(page.getByRole('region', { name: 'Saved stories', exact: true })).toHaveCount(1)
+    await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toHaveCount(1)
     await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(0)
   } finally {
     await request.post(`${backend}${endpoint}/work/pause`, { headers })

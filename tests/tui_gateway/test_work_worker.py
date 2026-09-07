@@ -29,7 +29,8 @@ def eventually(read, predicate, timeout=20):
 
 @pytest.fixture
 def model():
-    state = SimpleNamespace(requests=[], tools=['plane_resource_inspect', 'plane_operation_execute', 'story_publish'],
+    state = SimpleNamespace(requests=[], tools=['plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'],
+                            final_response='The supplied sales data shows a 25% increase.',
                             entered=threading.Event(), disconnected=threading.Event(), hold=False)
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -51,10 +52,14 @@ def model():
                 name = state.tools[index]
                 arguments = {
                     'plane_resource_inspect': {'kind': 'project'},
-                    'plane_operation_execute': {'operation': 'item.create', 'arguments': {'name': 'Write moonlit story'}},
-                    'story_publish': {'title': 'Moonlit story', 'content': 'The dragon opened the silver gate.',
-                                      'item_id': '11111111-1111-4111-8111-111111111111',
-                                      'evaluation': 'The draft follows the fantasy brief.'},
+                    'plane_operation_execute': {'operation': 'item.create', 'arguments': {'name': 'Compare supplied quarterly sales', 'description_html': '<p>Report the numerical change using only supplied figures.</p>'}},
+                    'output_publish': {'title': 'Quarterly sales comparison', 'content': 'Sales grew from 80 to 100 units: a 25% increase.',
+                                       'item_id': '11111111-1111-4111-8111-111111111111', 'format': 'markdown'},
+                    'result_record': {'item_id': '11111111-1111-4111-8111-111111111111',
+                                      'summary': 'Sales increased 25%.', 'outcome': 'submitted',
+                                      'evaluation': 'Computed (100 - 80) / 80 from the supplied figures.',
+                                      'outputs': ([{'output_id': '22222222-2222-4222-8222-222222222222', 'version': 1}]
+                                                  if 'output_publish' in state.tools else [])},
                     'terminal': {'command': 'touch forbidden-work-tool-ran'},
                     'execute_code': {'code': "open('forbidden-work-tool-ran','w').write('bad')"},
                     'delegate_task': {'task': 'Create forbidden-work-tool-ran'},
@@ -65,7 +70,7 @@ def model():
                                           'function': {'name': name, 'arguments': json.dumps(arguments)}}]
                 finish = 'tool_calls'
             else:
-                message['content'] = 'The planned story is saved.'
+                message['content'] = state.final_response
                 finish = 'stop'
             # Exercise the real streaming SDK and native tool loop.
             payload = {'id': 'work-fixture-response', 'object': 'chat.completion.chunk', 'created': 1,
@@ -136,19 +141,20 @@ def worker(tmp_path, model):
         elif frame.get('method') == 'work.effect':
             state.effects.append(frame)
             host.send_work_result(frame['id'], {'ok': state.allowed, 'result': {
-                'item_id': '11111111-1111-4111-8111-111111111111', 'saved': True}, 'error': 'Work revoked'})
+                'item_id': '11111111-1111-4111-8111-111111111111',
+                'output_id': '22222222-2222-4222-8222-222222222222', 'version': 1, 'saved': True}, 'error': 'Work revoked'})
     host = HostSupervisor(registry_path=home / 'work-host.json', env={
         'HERMES_HOME': str(home), 'OPENAI_API_KEY': 'work-fixture-key',
         'HERMES_MANAGED_COMPUTE_HOST': '1'}, expected_hermes_home=str(home), rpc_sink=receive,
         autostart=False, respawn_max=0)
     run_id = str(uuid4())
     state.attempt = {'run_id': run_id, 'agent_id': str(uuid4()), 'soul_revision': 1,
-                     'name': 'Fixture writer', 'purpose': 'Write original moonlit dragon stories.',
+                     'name': 'Fixture analyst', 'purpose': 'Analyze supplied sales figures and explain useful findings.',
                      'workspace': str(workspace), 'session_id': 'an_work_' + uuid4().hex,
                      'native_db': str(home / 'state.db'), 'deadline_monotonic': time.monotonic() + 35,
                      'max_iterations': 8, 'max_tokens': 2048,
-                     'initial_context': 'Plan the first story in the authorized project, then write and evaluate it.',
-                     'skill_text': 'Use the project board. Record acceptance criteria before writing.'}
+                     'initial_context': 'Plan and evaluate a comparison of these supplied fictional figures: quarter A 80 units, quarter B 100 units. Do not obtain external data.',
+                     'skill_text': 'Use the project board. Record acceptance criteria before executing work.'}
     state.host, state.home, state.workspace = host, home, workspace
     def start():
         host.submit_turn({'sid': state.attempt['session_id'], 'request_id': run_id,
@@ -166,21 +172,44 @@ def test_native_work_loop_has_scoped_tools_parent_admission_and_canonical_histor
     result = eventually(lambda: worker.result, bool)
     assert result['type'] == 'turn.end', result.get('message', result)
     assert [f['params']['tool'] for f in worker.effects] == model.tools
-    assert [f['params']['tool_call_id'] for f in worker.effects] == [f'work_fixture_{i}' for i in range(3)]
-    assert len([f for f in worker.controls if f['params']['boundary'] == 'model']) == 4
+    assert [f['params']['tool_call_id'] for f in worker.effects] == [f'work_fixture_{i}' for i in range(len(model.tools))]
+    assert len([f for f in worker.controls if f['params']['boundary'] == 'model']) == len(model.tools) + 1
     assert all(f['params']['run_id'] == worker.attempt['run_id'] for f in worker.controls + worker.effects)
+    system_prompts = []
     for request in model.requests:
-        assert {t['function']['name'] for t in request['tools']} == set(worker.tool_names)
+        assert {t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'}
         text = json.dumps(request['messages'])
         assert worker.attempt['purpose'] in text and worker.attempt['skill_text'] in text
         assert 'PRIVATE_HOST_SOUL_MUST_NOT_LEAK' not in text
+        system = [m['content'] for m in request['messages'] if m['role'] == 'system']
+        assert system and not any(term in json.dumps(system).lower() for term in ('story', 'fantasy', 'fiction'))
+        system_prompts.append(system)
+    assert all(prompt == system_prompts[0] for prompt in system_prompts)
     with SessionDB(worker.home / 'state.db') as db:
         messages = db.get_messages_as_conversation(worker.attempt['session_id'])
         assert [m['content'] for m in messages if m['role'] == 'user'] == [worker.attempt['initial_context']]
-        assert len([m for m in messages if m['role'] == 'tool']) == 3
-        assert messages[-1]['content'] == 'The planned story is saved.'
+        assert len([m for m in messages if m['role'] == 'tool']) == len(model.tools)
+        assert messages[-1]['content'] == model.final_response
     event_types = {f.get('params', {}).get('type') for f in worker.frames if f.get('method') == 'event'}
     assert {'tool.start', 'tool.complete', 'message.complete'} <= event_types
+
+
+def test_native_analyst_can_report_a_result_without_a_saved_file(worker, model):
+    model.tools = ['plane_resource_inspect', 'plane_operation_execute', 'result_record']
+    worker.start()
+    result = eventually(lambda: worker.result, bool)
+    assert result['type'] == 'turn.end', result
+    assert [frame['params']['tool'] for frame in worker.effects] == model.tools
+    report = worker.effects[-1]['params']['arguments']
+    assert report['outputs'] == []
+    assert report['outcome'] == 'submitted'
+    assert report['evaluation'] == 'Computed (100 - 80) / 80 from the supplied figures.'
+    assert not list(worker.workspace.iterdir())
+    with SessionDB(worker.home / 'state.db') as db:
+        messages = db.get_messages_as_conversation(worker.attempt['session_id'])
+        assert messages[-1]['content'] == model.final_response
+        assert [m['tool_call_id'] for m in messages if m['role'] == 'tool'] == [
+            frame['params']['tool_call_id'] for frame in worker.effects]
 
 
 @pytest.mark.parametrize('tool', ['terminal', 'execute_code', 'delegate_task', 'memory', 'tool_call'])
@@ -191,7 +220,7 @@ def test_native_work_does_not_dispatch_provider_invented_ambient_tool(worker, mo
     assert model.requests, worker.result
     assert not worker.effects
     assert not (worker.workspace / 'forbidden-work-tool-ran').exists()
-    assert all({t['function']['name'] for t in request['tools']} == set(worker.tool_names) for request in model.requests)
+    assert all({t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'} for request in model.requests)
 
 
 def test_native_work_model_admission_denial_makes_no_provider_request(worker, model):

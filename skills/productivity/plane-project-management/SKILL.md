@@ -1,7 +1,7 @@
 ---
 name: plane-project-management
 description: Plan work through backlogs and cycles defined by outcomes.
-version: 1.2.0
+version: 1.3.0
 author: Artur Moczulski (@ArturMoczulski), Hermes Agent
 license: MIT
 platforms: [linux, macos, windows]
@@ -78,7 +78,8 @@ and authorized.
 | Cycle | Goal, sequence/order, selected items, dependencies, exit criteria/evidence and WIP limit. |
 | Item | Deliverable or learning question, criteria, priority, dependencies, implementer, evaluator, next action. |
 | Blocker | What is needed, responder, linked question, affected work. |
-| Result | Versioned evidence, evaluation against criteria, uncertainty, follow-up. |
+| Progress comment | Current work, observed change or evidence, blocker if any, next action and agent/attempt identity. |
+| Result | Versioned evidence, evaluation against criteria, uncertainty, follow-up and verified output links on the item. |
 | Cycle review | Achieved outcomes, unfinished-item dispositions, lesson, purpose evaluation and next action. |
 | Purpose evaluation | Current purpose/criteria revisions, accepted evidence, remaining and recurring obligations, uncertainty, continued need and lifecycle judgment. |
 
@@ -131,6 +132,54 @@ Work in small increments, attach evidence, and record meaningful progress and th
 next action. For software, follow the project's test-first conventions inside
 each item: failing behavior test, minimum change, passing verification, refactor.
 Never postpone tests until the sprint ends.
+
+Post progress in the **comments of the work item being executed**, through the
+available scoped API operations. Begin with a short start/next-step update, then
+post meaningful checkpoints **while work is happening**; do not accumulate a
+transcript and upload all progress only at the end. A comment should say what
+changed, what evidence you observed and what comes next. Include the actual
+agent and attempt identity supplied by the framework, never a claimed human
+identity. Do not report a test passing, upload succeeding or change taking effect
+before observing it.
+
+Use the owner-configured progress verbosity when supplied:
+
+- **Concise:** start, material blockers/decisions, available outputs and final or
+  interrupted outcome. Do not hide events that require the owner's attention.
+- **Standard:** concise events plus meaningful intermediate checkpoints, changed
+  findings, completed substeps and verification results. This is the default
+  reporting convention when no setting is supplied.
+- **Detailed:** standard events plus smaller useful increments and explanations
+  of changes in approach. Summarize public work; do not dump private reasoning,
+  every tool call, repeated unchanged status or sensitive data into Plane.
+
+Verbosity does not change permissions, thinking cadence or execution limits. A
+short task can legitimately have only a start and result; an extended task should
+show substantive updates before completion. Avoid repeated comments when nothing
+changed. A Plane outage cannot delay a required stop. Use the framework's pending
+communication mechanism when available, distinguish pending/confirmed/unknown,
+and reconcile uncertain delivery before sending again. If that mechanism is
+missing, preserve the handoff and report the gap; never claim queued or delivered
+comments that were not actually recorded. The external Builder applies this
+workflow now using its authorized Plane API account.
+
+As soon as a tangible output is committed, link it to its work item with its
+verified title, stable output ID, exact version, format and available safe
+open/download URL. Keep prior version links. Use a human-readable description and
+the service-provided location; do not invent URLs, expose credentials, or confuse
+an unverified external reference with a saved output or actual uploaded attachment.
+If opening/attaching is unsupported, record the available verified reference and
+state the missing capability. Do not claim a path-only comment is an attachment.
+
+At handoff or attempt end, provide an **Outputs** section at the end of the item's
+description with the saved versions, result/evaluation link and review status.
+Use the supported output-linking operation when available. Preserve the brief,
+acceptance criteria, human edits and unrelated content: inspect first, use the
+required fresh fingerprint and reconcile conflicts instead of overwriting. Do not
+rebuild rich description content through a plain-text-only operation that would
+lose formatting; report the missing safe operation. A useful result may have no
+file; say so without fabricating one. Available drafts are not accepted work, and
+an interrupted attempt retains already saved outputs with its actual status.
 
 When delegating, link the child's item or project to the parent outcome and provide
 brief, criteria, context and expected reporting. Keep one authoritative record per

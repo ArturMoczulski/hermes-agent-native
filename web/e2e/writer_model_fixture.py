@@ -1,8 +1,8 @@
-"""External scripted model for the real writer loop; no framework paths are mocked."""
+"""External scripted model for real shared work; no framework paths are mocked."""
 import json
 import re
 
-WRITER_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'story_publish'}
+SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record'}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'
@@ -59,47 +59,84 @@ def _results(messages):
     return results
 
 
-def next_reply(messages):
+def next_reply(messages, purpose):
     results = _results(messages)
     index = len(results)
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    analyst = 'E2E_ANALYST_' in purpose
+    plaintext = 'E2E_ANALYST_TEXT' in purpose
+    file_free = ('discovery' if 'E2E_ANALYST_DISCOVERY' in purpose else
+                 'waiting' if 'E2E_ANALYST_WAITING' in purpose else None)
+    title = 'Operations sample analysis' if analyst else STORY_TITLE
+    content = ('# Operations sample analysis\n\n'
+               'Supplied fictional sample: 12 fulfilled orders, revenue 150 credits, costs 90 credits.\n\n'
+               'Profit: 60 credits (150 - 90).\n\nMargin: 40% (60 / 150).\n\n'
+               'This sample does not establish trends or forecast future results.\n') if analyst else STORY_CONTENT
+    if plaintext:
+        title = 'Literal operations notes'
+        content = '# Literal heading\n<script>window.outputScriptRan = true</script>\n**These are literal characters.**\n'
+    brief = ('Analyze only the supplied fictional operations sample and explain the arithmetic and its limits.'
+             if analyst else BRIEF)
+    criteria = ('Acceptance criteria: correct profit and margin from the supplied sample; show calculations; '
+                'state that no trend is established; no external actions.' if analyst else CRITERIA)
+    evaluation = ('Profit is 150 - 90 = 60 credits; margin is 60 / 150 = 40%. '
+                  'The report uses only the supplied sample and makes no trend claim.' if analyst else
+                  'The story has a protagonist, dragon, moonlit citadel, and complete hopeful ending. '
+                  'Its original text is ready for owner review.')
     if index == 0:
         name, arguments = 'plane_resource_inspect', {'kind': 'project'}
     elif index == 1:
-        name, arguments = operation('project.update', {'description': BRIEF, 'expected_fingerprint': result(0)['fingerprint']})
+        name, arguments = operation('project.update', {'description': brief, 'expected_fingerprint': result(0)['fingerprint']})
     elif index == 2:
-        name, arguments = operation('cycle.create', {'name': CYCLE_NAME, 'description': 'Plan, write, evaluate and save the first story. No estimated dates.'})
+        name, arguments = operation('cycle.create', {
+            'name': 'Understand the supplied operations sample' if analyst else CYCLE_NAME,
+            'description': 'Plan, perform and evaluate the first bounded assignment. No estimated dates.'})
     elif index == 3:
-        name, arguments = operation('item.create', {'name': 'Write The Silver Gate', 'description': CRITERIA, 'priority': 'high'})
+        name, arguments = operation('item.create', {
+            'name': 'Analyze the supplied operations sample' if analyst else 'Write The Silver Gate',
+            'description': criteria, 'priority': 'high'})
     elif index == 4:
         name, arguments = 'plane_resource_inspect', {'kind': 'item', 'resource_id': item()}
     elif index == 5:
         name, arguments = operation('cycle.assign', {'cycle_id': result(2)['resource']['id'], 'item_id': item(),
                                     'expected_item_fingerprint': result(4)['fingerprint'],
                                     'expected_cycle_id': result(4)['cycle_id']})
+    elif file_free and index == 6:
+        summary = ('The supplied sample supports arithmetic, but no trend or forecast. Scope the next work to '
+                   'obtaining a comparable sample before any growth claim.' if file_free == 'discovery' else
+                   'Waiting for the owner to provide the comparison period before evaluating a trend.')
+        name, arguments = 'result_record', {'item_id': item(), 'summary': summary, 'outcome': file_free,
+                                            'evaluation': 'No trend can be established from one sample.', 'outputs': []}
+    elif file_free and index == 7:
+        return {'role': 'assistant', 'content': 'I recorded the ' + file_free + ' result without creating an unnecessary file.'}
     elif index == 6:
-        name, arguments = 'story_publish', {'title': STORY_TITLE, 'content': STORY_CONTENT, 'item_id': item(),
-                                            'evaluation': 'The story has a protagonist, dragon, moonlit citadel, and complete hopeful ending. Its original text is ready for owner review.'}
+        name, arguments = 'output_publish', {'title': title, 'content': content, 'item_id': item(), 'format': 'text' if plaintext else 'markdown'}
     elif index == 7:
         name, arguments = operation('artifact.record', {'item_id': item(), 'reference': result(6)['relative_path'],
-                                    'description': 'Saved story version ' + str(result(6)['version'])})
+                                    'description': 'Saved output version ' + str(result(6)['version'])})
     elif index == 8:
         name, arguments = 'plane_resource_inspect', {'kind': 'item', 'resource_id': item()}
     elif index == 9:
         name, arguments = operation('item.update', {'item_id': item(), 'expected_fingerprint': result(8)['fingerprint'],
-                                    'description': CRITERIA + '\nResult: saved The Silver Gate and its evaluation; ready for owner review.'})
+                                    'description': criteria + '\nResult: saved ' + title + '; ready for owner review.'})
     elif index == 10:
-        return {'role': 'assistant', 'content': 'I planned the first cycle, wrote The Silver Gate, saved its version and evaluation, and updated its Plane task.'}
+        name, arguments = 'result_record', {'item_id': item(), 'summary': 'Completed ' + title + ' for owner review.',
+            'outcome': 'submitted', 'evaluation': evaluation,
+            'outputs': [{'output_id': result(6)['output_id'], 'version': result(6)['version']}]}
+    elif index == 11:
+        return {'role': 'assistant', 'content': 'I planned the first cycle, completed ' + title + ', saved its output, '
+                'recorded an evaluation, and updated its Plane task. The result awaits owner review.'}
     else:
-        raise ValueError('Unexpected extra writer model request')
+        raise ValueError('Unexpected extra shared-work model request')
     return {'role': 'assistant', 'content': None, 'tool_calls': [{'id': f'writer_fixture_{index}', 'type': 'function',
             'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
 
 
 def handle_writer_request(handler, body, server, model_name):
-    if {tool.get('function', {}).get('name') for tool in body.get('tools', [])} != WRITER_TOOLS:
+    tool_names = {tool.get('function', {}).get('name') for tool in body.get('tools', [])}
+    if tool_names != SHARED_TOOLS:
         return False
     messages = body.get('messages') or []
     system_text = '\n'.join(_text(message) for message in messages if message.get('role') in ('system', 'developer'))
@@ -108,7 +145,9 @@ def handle_writer_request(handler, body, server, model_name):
     if evidence is None:
         evidence = server.writer_requests = []
     evidence.append({'tool_results': sum(message.get('role') == 'tool' for message in messages),
-                     'hold_marker': marker.group(0) if marker else None})
+                     'hold_marker': marker.group(0) if marker else None,
+                     'tools': sorted(tool_names), 'system_text': system_text,
+                     'initial_context': next((_text(m) for m in messages if m.get('role') == 'user'), '')})
     if marker:
         key = marker.group(0)
         try:
@@ -121,9 +160,9 @@ def handle_writer_request(handler, body, server, model_name):
         message = {'role': 'assistant', 'content': server.holds.evidence(key)['late_reply']}
     else:
         try:
-            message = next_reply(messages)
+            message = next_reply(messages, system_text)
         except (KeyError, ValueError, StopIteration) as exc:
-            handler._send({'error': {'message': 'Writer fixture contract failed: ' + str(exc)}}, status=400)
+            handler._send({'error': {'message': 'Shared-work fixture contract failed: ' + str(exc)}}, status=400)
             return True
     finish = 'tool_calls' if message.get('tool_calls') else 'stop'
     if body.get('stream'):

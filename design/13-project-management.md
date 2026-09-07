@@ -75,6 +75,8 @@ are not resolved by assigning a Plane role.
    Do not add calendar estimates, start/end date ranges or duration estimates.
 4. **Deliver incrementally.** Pull ready work, verify authority and dependencies,
    delegate where useful, and produce evidence. Keep state and next actions current.
+   Post meaningful progress comments on the active Plane item as work happens,
+   following the [reporting preference](#continuous-work-item-updates-and-outputs).
    Inspect active work before admitting more; avoid duplicate execution. A blocker
    on one item need not prevent independent authorized work.
 5. **Evaluate.** Submit results against the brief, then record acceptance, revision
@@ -130,6 +132,93 @@ Count progress through accepted outcomes, delivered evidence and useful learning
 Repeated board edits, new children, or successful check-ins alone are not progress.
 A repeated no-progress pattern prompts assessment and a change of approach or
 escalation; it must not generate an endless stream of identical questions.
+
+## Continuous work-item updates and outputs
+
+A work item's comments are the readable progress history of the agents doing that
+work. Agents post updates while working, when meaningful events happen; an end-of-run
+summary does not replace this history. Report on the actual assigned item, including
+when a child performs it, rather than copying every update to unrelated parent items.
+An attempt that spans sessions continues the same item's history. Cadence reviews
+without new work or evidence do not produce repetitive progress comments.
+
+The human owner can set **Plane progress updates** for each agent. **Standard** is
+the default. This is an operating preference, separate from the protected purpose,
+model reasoning settings, thinking cadence and work permissions. The agent cannot
+silently reduce the owner's selected level. The control shows the saved level and
+when a change takes effect; a change affects subsequent updates, not earlier history.
+
+| Level | Updates to post |
+| --- | --- |
+| Concise | Work starts or resumes; material blockers and required decisions; saved output availability; and the actual terminal outcome with evidence and next action. |
+| Standard | All concise events, plus significant checkpoints, useful findings, evaluation results and material changes to the approach. |
+| Detailed | All standard events, plus useful intermediate work summaries and verification findings that explain progress. Group closely related details into a readable update. |
+
+No level suppresses required decision escalation, stopping/failure information or
+output links. Detailed reporting does not expose private chain-of-thought, secrets,
+raw tool transcripts or a comment for every tool call. Report what was attempted,
+what was observed, and why a public plan changed. Avoid empty “still working” noise,
+invented percentages and duration estimates. Lower verbosity changes comment detail
+and optional checkpoints; it does not reduce the framework's required event record.
+
+Each comment identifies the actual agent, work item and attempt through stable links
+or identifiers, even when Plane displays a shared integration account. Include the
+relevant event time, a short progress summary, available evidence and the next action
+or wait reason. Claims and observations remain distinct. A required human decision
+links to the existing framework request; a comment does not create another decision
+inbox or become a trusted owner instruction. Child progress retains the child's
+identity rather than appearing to have been performed by its parent.
+
+### Link tangible outputs as they become available
+
+Publish an output reference on the item when the framework has saved and verified
+that version's content; do not wait for the whole assignment or run to finish. The
+comment identifies the output's title, format, stable identity and immutable version,
+producing agent/attempt, and current evaluation state. Provide an authenticated link
+that the owner can open or download from the item. A local filesystem path alone is
+not a usable cross-interface link. Use a native Plane attachment when that operation
+is supported and authorized; a working link is sufficient, and must not be described
+as an uploaded attachment when no upload occurred.
+
+Keep framework saved outputs distinct from external links, claimed effects and
+unverified references. Verify and display actual availability. A saved draft can be
+linked immediately as **Awaiting evaluation**; successful storage or a progress
+comment does not accept its quality, complete the item or satisfy dependencies.
+A later version receives a new immutable version reference. Earlier versions and
+their progress comments remain inspectable. Useful discovery or planning work without
+a tangible file records its result and evidence without creating a dummy attachment.
+
+### Maintain an Outputs section without replacing the brief
+
+Keep a framework-managed **Outputs** section at the end of the work item description,
+linking the relevant saved versions and their result/evaluation records. Add entries
+as outputs become available and reconcile the section when an attempt finishes,
+including when it stops or fails after producing a draft. The terminal comment
+summarizes the actual outcome, evidence, unresolved criteria and next action.
+A completed attempt can leave the assignment awaiting review or further work.
+
+Preserve the project brief, acceptance criteria and human edits. Update only the
+identified Outputs section against the current description. Concurrent edits must
+be merged without losing owner text; if a safe merge cannot be established, leave
+the current description intact and expose a pending conflict for resolution. A
+confirmed output comment remains a usable reference while that conflict is pending.
+Do not overwrite a changed description with an earlier copy or silently replace a
+human-edited Outputs section. Reconciliation must not append duplicate sections or
+repeat an already recorded version.
+
+### Observable delivery and recovery
+
+Every progress comment and output reference has a correlated framework communication
+event and an observable **Pending**, **Confirmed**, **Failed** or **Unknown** delivery
+state. Distinguish saved framework content from a confirmed Plane comment, description
+link or attachment. Retain actual sender, destination item and version provenance.
+
+Plane unavailability may delay reporting, but it does not turn undelivered updates
+into success. Preserve pending updates and their original event times, show the gap,
+and reconcile them when the service recovers. If a response is lost after Plane may
+have applied the update, inspect the existing effect before considering another
+write; never blindly resend and create duplicate comments, versions or sections.
+Stopping and cancellation remain available independently of reporting delivery.
 
 ## Human experience and communication
 

@@ -1,8 +1,9 @@
 # Shared agent work and outputs
 
-Status: owner-requested plan, 2026-09-07. This planning change implements no
-runtime behavior. It is the next refinement within the current usable-agent
-milestone; the First Builder handoff remains later. The successful bounded writer
+Status: shared bounded execution and result/output storage implemented on
+2026-09-07, with a verified shared output/results reader deployed to the local preview.
+The owner also added continuous Plane reporting below. The First Builder handoff
+remains later. The successful bounded writer
 at `9c0bd0b` and live demo/refresh fix at `4164226` remain accepted evidence.
 
 Product authority: [shared work/results](../design/03-projects-and-delegation.md#shared-work-and-results),
@@ -13,10 +14,14 @@ This extends those contracts rather than introducing another product specificati
 
 ## What changes and what is reused
 
-The current `work_service.py` and `agent/work_policy.py` supply fiction-specific
-instructions and a fixed story tool. Completion relies on saved stories. The
-API/renderer expose stories, and `story_store.py` assumes Markdown story lineages.
-These are current constraints, not general framework requirements.
+The earlier writer checkpoint supplied fiction-specific instructions and a fixed
+story tool. The shared worker now takes its domain from protected purpose and
+supplied context. Its fixed catalog contains scoped Plane reads/writes,
+`output_publish` and `result_record`; it grants no ambient shell or browsing tools.
+Generic output storage supports text and Markdown, independent output identities
+and explicit immutable revisions. A finished attempt requires a recorded result,
+which can have an empty output list. Waiting and blocked reports stay explicit;
+they do not accept an assignment or fulfill the agent's purpose.
 
 Reuse Hermes AIAgent/SessionDB, the service-owned worker, native TUI conversation,
 protected purpose and operation checks, actual stopping and finite run limits.
@@ -101,30 +106,48 @@ hundred real stored fixture events, then cover tied times, new events between
 pages, changing page size, agent switching with a delayed response, and empty/error
 states. Supporting API tests must prove bounded reads, maximum page size and
 owner/scope enforcement. No live model is required for this presentation work.
-The app remains unchanged until these small test-first increments are delivered.
+Activity presentation remains unchanged until these small test-first increments are delivered.
 
 ## Plane work mapping
 
-- [AN-78 — Generalize bounded agent work and result records](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4b7a3d8b-a48d-4e0b-9e01-0645a126cffd/) is the next urgent item; it depends on the accepted first-story checkpoint.
+- [AN-78 — Generalize bounded agent work and result records](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4b7a3d8b-a48d-4e0b-9e01-0645a126cffd/) contains the completed shared execution/records checkpoint and minimal common reader.
 - [AN-79 — Show shared Work and Saved outputs for every agent](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/d4143b70-112e-421d-ad5a-288dfc92b48c/) follows the shared records and exposes their common human workflow.
 - AN-73 continues native conversations, decisions and steering; AN-74 owns deeper session/activity/output inspection. Their existing records are generalized, not copied.
 - AN-75/76 retain continuity and full owner-journey acceptance; the analyst is an added bounded generality proof.
 - AN-6/26/48 retain broader planning, skills and media/review scope. AN-37–45 retain actual child creation, delegation, escalation, recursive monitoring and global Inbox. Narrow subset evidence links back to them.
 
 Current cycle: **03 — Shared agent work and the fantasy writer**, with no planned
-dates. Both new items are Todo; planning has not started runtime implementation.
+dates. AN-78 is complete. AN-79 retains the fuller shared Work view; its minimal
+Saved outputs/Results reader and authenticated version link were brought forward
+so the backend change preserves the writer's ability to open saved work. AN-80
+then adds continuous Plane reporting and output synchronization.
 The original writer milestone/module remains the acceptance home. The new items
 also link into the existing governed-work and control-center capability modules.
 
 ## Existing work and data
 
-The current story demo stays readable. At implementation time, introduce an
-explicit local schema migration mapping its immutable content, versions, origin,
-Plane links and evaluations into the shared model, with verification before
-switching readers. Do not delete records, rerun generation or overwrite evidence.
-No old-prototype compatibility layer is required; this preserves current accepted
-user data. The migration itself is part of the first implementation slice, not
-performed by this plan.
+The schema initializer now copies verified legacy story rows into canonical output
+records, retaining content, identity/version, original file path, dates, producer
+attempt, Plane item and evaluation. It refuses conflicting data and closes the
+legacy publisher after upgrade. Legacy read APIs remain available for current
+accepted data. New versions use the generic publisher; no generation is rerun.
+An isolated migration rehearsal verified the real demo's saved version and file
+against a private database backup before switching the live reader.
+
+Results retain protected purpose/revision, agent, assignment and attempt, the Plane
+item fingerprint and criteria-description snapshot observed at submission, and
+an immutable agent evaluation report. The description hash is a content revision,
+not a native Plane revision or proof that the agent evaluated those criteria
+correctly. Legacy evaluations remain on imported outputs; migration does not invent
+result records or retrospective acceptance. `observed_effects` are confirmed Plane
+receipts from the whole attempt, explicitly scoped as such, not proof that each
+receipt belongs to this result's item or that an external URL was saved.
+
+Verification includes real native workers against external provider fixtures,
+real scoped Plane HTTP/SQLite and immutable files, and browser creation/Pause.
+The latest executable evidence and rollout state are recorded in
+[Builder state](../first-builder/STATE.md). Scripted model responses establish
+integration, not independent planning judgment or quality.
 
 The first story checkpoint stays Done. Broader native-chat ordering remains
 owner-deferred. Existing conversation/inspection items adopt shared terminology;
@@ -132,3 +155,36 @@ child creation/delegation/escalation and global Inbox keep their original scope
 and IDs. Narrow subset evidence links back to broad capability records without
 claiming those records complete. See the [coverage index](plane-roadmap-coverage.md)
 and live Plane for work IDs, priorities and dependencies.
+
+
+## Continuous Plane reporting and output links
+
+The owner added [continuous work-item reporting](../design/13-project-management.md#continuous-work-item-updates-and-outputs):
+post progress comments while work is happening, apply an owner-controlled
+concise/standard/detailed preference, link tangible outputs as soon as saved, and
+maintain an Outputs block without replacing the item brief or human edits.
+[AN-80 — Report continuous progress and link saved outputs in Plane](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/95bb6694-2030-4c3a-b28f-79a7ade35dbe/)
+implements this after the shared output navigation in AN-79 and before broader
+AN-73 conversation steering. The cycle remains undated with one implementation
+item active. The bundled Plane skill applies the reporting convention now,
+including to the externally hosted First Builder.
+
+Existing `comment.create` supplies scoped plain-text comments with mutation IDs;
+`artifact.record` posts an explicitly unverified reference. Neither is automatic
+progress delivery, a verified saved-output link or an attachment upload. Existing
+`item.update` converts a supplied plain-text description to HTML, so it cannot
+safely maintain a section in arbitrary rich human text by flattening that text.
+Reuse the scoped adapter, grants, freshness checks and mutation journal; add the
+missing verified output-link/section operation and durable reporting delivery.
+Retain sender/item/attempt IDs and pending, confirmed, failed or unknown status.
+An unknown write must be reconciled before retry; it must not create duplicate
+comments or output sections. Reporting failure cannot delay Pause.
+
+First write a failing Playwright scenario that holds a real native worker after
+a meaningful checkpoint and proves its comment already exists in Plane. Then
+cover verbosity, saved-version opening from the item, update/restart idempotence,
+a concurrent human description edit, outage and actual stop. Add the visible
+verbosity control together with its owner-authorized persistent setting; do not
+ship a selector that merely changes a local label. Saved drafts remain awaiting
+evaluation, and file-free results do not manufacture an attachment. Runtime
+reporting automation and rich-description synchronization remain AN-80 work.

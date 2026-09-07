@@ -135,4 +135,5 @@ CREATE TABLE IF NOT EXISTS agent_native_events (
 
 from agent_native.work_state import WORK_SCHEMA
 from agent_native.story_store import STORY_SCHEMA
-SCHEMA_SQL += WORK_SCHEMA + STORY_SCHEMA
+from agent_native.output_store import OUTPUT_SCHEMA
+SCHEMA_SQL += WORK_SCHEMA + STORY_SCHEMA + OUTPUT_SCHEMA

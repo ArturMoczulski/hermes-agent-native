@@ -45,6 +45,21 @@ They are requirements, not claims that the current writer implementation passes.
 | Owner control | Both domains preserve scope, limits, real stopping, versions and unknown-effect handling. Reading an output cannot execute it or authorize a new run. |
 | Activity pages | More than one hundred events appear newest first in bounded 20/50/100-row pages. Equal timestamps and new arrivals do not duplicate or skip events during navigation. Latest, page-size changes and agent switching preserve the correct scope; stale responses, unavailable pages and failures are handled explicitly. |
 
+## Continuous Plane reporting checks
+
+These validate [continuous work-item updates and outputs](13-project-management.md#continuous-work-item-updates-and-outputs)
+without requiring a particular agent profession.
+
+| Case | Required evidence |
+| --- | --- |
+| Work still running | Hold a run after a meaningful checkpoint. Its actual Plane item already contains attributed start and checkpoint comments before the run finishes; a final batch of comments cannot satisfy this case. |
+| Per-agent verbosity | The owner changes Concise, Standard and Detailed on one agent. Subsequent comments reflect the selected level, while starts, material blockers, required decisions, saved outputs and terminal outcomes appear at every level. Another agent's preference and earlier history remain unchanged. |
+| Output available during work | Save a verified version before the run ends. Open or download that exact version from the item's comment and Outputs section. The same identity, version and evaluation appear in the framework; a draft is awaiting evaluation, and an external reference is not presented as a saved file. |
+| More outputs and versions | Add a second output and a new version of the first. Both outputs and all referenced immutable versions remain accessible, without replacing older content or duplicating entries on reconciliation. |
+| Delivery interruption | Lose a response after Plane applies a comment or description update, then recover or restart. Delivery first remains unknown, then reconciles to the existing effect without a duplicate comment or Outputs section. An outage preserves pending updates and does not prevent stopping. |
+| Concurrent owner edit | Change the brief, criteria or Outputs section while an output update is pending. Preserve owner edits and either safely merge the reference or show an unresolved conflict with the confirmed comment still usable. |
+| Stopped or failed work | Stop or fail a run after it saves a draft. Its terminal comment reports the observed outcome and remaining work; the output remains linked without marking the assignment accepted or the run successful. |
+
 ## Evidence required during implementation
 
 For a user-facing increment, write the relevant Playwright acceptance test before
