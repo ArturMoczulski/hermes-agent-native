@@ -161,6 +161,8 @@ def handle_writer_request(handler, body, server, model_name):
     key = ('E2E_PLAN_RESELECT_BEFORE' if phase == 7 else 'E2E_PLAN_RESELECT_AFTER') if reselect and phase in (7, 8) else (marker.group(0) if marker else None)
     if 'E2E_PROGRESS_CHECKPOINTS' in system_text and phase >= 9:
         key = 'E2E_PROGRESS_CHECKPOINTS'
+    if 'E2E_OUTPUT_LINK_HOLD' in system_text and phase == 8:
+        key = 'E2E_OUTPUT_LINK_HOLD'
     hold = key is not None and (reselect or 'E2E_WRITER_' in key or phase >= 7)
     evidence = getattr(server, 'writer_requests', None)
     if evidence is None:
@@ -177,7 +179,7 @@ def handle_writer_request(handler, body, server, model_name):
         server.holds.enter(key)
         if not server.holds.wait(key, handler.connection):
             return True
-        message = (next_reply(messages, system_text) if reselect and phase == 7 else
+        message = (next_reply(messages, system_text) if (reselect and phase == 7) or key == 'E2E_OUTPUT_LINK_HOLD' else
                    {'role': 'assistant', 'content': server.holds.evidence(key)['late_reply']})
     else:
         try:

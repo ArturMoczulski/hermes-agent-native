@@ -77,3 +77,57 @@ test('owner verbosity persists and governs native checkpoint reporting', async (
     await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker: 'E2E_PROGRESS_CHECKPOINTS' } });
   }
 });
+
+
+test('saved output link is present in Plane before finish and opens the exact version', async ({ page, request }) => {
+  test.setTimeout(90000);
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only'; });
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true, dashboard_url: 'http://127.0.0.1:19220' } });
+  const created = await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
+    request_id: crypto.randomUUID(), name: 'Linked outputs', purpose: 'Write an original fantasy story. E2E_OUTPUT_LINK_HOLD',
+    work: { timeout_seconds: 300, max_iterations: 20 },
+  } });
+  expect(created.status()).toBe(201);
+  const { id } = await created.json();
+  const api = `${backend}/api/agent-native/agents/${id}`;
+  try {
+    await expect.poll(async () => {
+      const r = await request.get(`${backend}/__e2e__/model-holds/E2E_OUTPUT_LINK_HOLD`, { headers });
+      return r.ok() && (await r.json()).entered;
+    }, { timeout: 30000 }).toBe(true);
+    const agent = await (await request.get(api, { headers })).json();
+    expect(agent.work.state).toBe('running');
+    const output = agent.work.outputs[0];
+    expect(output.version).toBe(1);
+    await page.setExtraHTTPHeaders(headers);
+    await page.goto(`${backend}/__e2e__/plane-comments/${id}`);
+    const link = page.getByRole('link', { name: /Open saved output/ });
+    await expect(link).toHaveCount(1);
+    await expect(link).toHaveAttribute('href', `http://127.0.0.1:19220/agents/${id}?output=${output.output_id}&version=1`);
+    await link.click();
+    await expect(page).toHaveURL(new RegExp(`output=${output.output_id}&version=1`));
+    await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toContainText('At moonrise, Mara found a dragon');
+    await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker: 'E2E_OUTPUT_LINK_HOLD' } });
+    await expect.poll(async () => (await (await request.get(api, { headers })).json()).work.state, { timeout: 30000 }).toBe('completed');
+    await expect.poll(async () => {
+      const e = await (await request.get(`${backend}/__e2e__/writer-evidence/${id}`, { headers })).json();
+      return e.comments.some((c: { comment_html: string }) => c.comment_html.includes('Attempt completed'));
+    }, { timeout: 15000 }).toBe(true);
+    const evidence = await (await request.get(`${backend}/__e2e__/writer-evidence/${id}`, { headers })).json();
+    expect(evidence.comments.some((c: { comment_html: string }) => c.comment_html.includes('Result recorded: submitted') && c.comment_html.includes('not owner acceptance'))).toBe(true);
+    expect(evidence.worker_alive).toBe(false);
+    await page.reload();
+    await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toContainText('At moonrise, Mara found a dragon');
+    const finalAgent = await (await request.get(api, { headers })).json();
+    const resultId = finalAgent.work.results[0].id;
+    await page.goto(`${backend}/__e2e__/plane-comments/${id}`);
+    const resultLink = page.getByRole('link', { name: 'Open recorded result', exact: true });
+    await expect(resultLink).toHaveAttribute('href', `http://127.0.0.1:19220/agents/${id}#result-${resultId}`);
+    await resultLink.click();
+    await expect(page.locator(`#result-${resultId}`)).toBeInViewport();
+
+  } finally {
+    await request.post(`${api}/work/pause`, { headers });
+    await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker: 'E2E_OUTPUT_LINK_HOLD' } });
+  }
+});

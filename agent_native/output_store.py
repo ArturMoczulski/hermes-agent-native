@@ -95,7 +95,7 @@ def _directory(tree, workspace, row, *, create=False):
 
 
 def publish(conn, *, validate, workspace: Path, agent_id, run_id, call_id,
-            item_id, title, content, format, output_id=None):
+            item_id, title, content, format, output_id=None, record_progress=None):
     """Publish atomically under live host authority; caller owns assignment scope.
 
     Omitting output_id creates a new output, including when this assignment has
@@ -149,6 +149,9 @@ def publish(conn, *, validate, workspace: Path, agent_id, run_id, call_id,
                 tuple(row.values()))
         validate(conn)
         tree.verify()
+        if record_progress is not None:
+            record_progress(conn, result)
+            validate(conn)
         commit_attempted = True
         conn.commit()
         tree.keep = True

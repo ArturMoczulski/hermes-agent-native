@@ -292,3 +292,25 @@ A focused browser case saves Detailed, reloads, then holds a real native worker
 with both checkpoint and detail comments already in the Plane fixture. Supporting
 checks cover concise/standard filtering, blockers, stable replay, wrong-item
 rejection, stale/invalid settings and unauthenticated requests. No paid inference.
+
+### AN-80 third increment: saved evidence and attempt outcomes
+
+Saving an output or result now atomically records its reporting intent. Plane
+comments link to the exact output version or recorded result, using the
+operator-configured dashboard public URL. Missing configuration produces an
+honest metadata-only report. Links contain no credentials and retain normal
+dashboard authentication. Output/result/outcome reports are independent of verbosity.
+
+Terminal state queues an attempt-status report; a bounded host delivery pass runs
+after worker shutdown handling, so Plane cannot delay stopping the process.
+Current purpose and planning authority are revalidated. Unknown acknowledgements
+are retained without automatic resend. A saved output, an agent result, owner
+acceptance and purpose completion remain separate facts. No historic backfill.
+
+Verification: a scripted native-worker browser case observes the output comment
+before completion, opens its exact saved version, then opens the recorded result
+and checks the terminal comment. Eight focused domain tests cover atomicity,
+version replay, file-free results, stopping, altered links, lost acknowledgements,
+schema upgrade and changed-purpose authority. Three existing comment-format
+regressions protect plain-text behavior. Rich Outputs sections and owner delivery
+reconciliation remain open; this increment does not complete AN-80.

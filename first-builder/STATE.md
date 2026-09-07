@@ -1,3 +1,17 @@
+## AN-80 saved evidence and outcomes — 2026-09-07
+
+Output/result records atomically enqueue Plane notifications with exact-version
+output links and result anchors. Terminal attempts enqueue honest status reports;
+network delivery follows worker shutdown handling with current purpose checks.
+Unknown acknowledgements are not automatically retried. No historical backfill.
+
+Verification: eight targeted new domain cases passed, and the native scripted
+worker browser case passed (8.2s), including result-link viewport navigation.
+Evidence: /tmp/an80-output-browser-final.log, /tmp/an80-output-storage-green.log,
+/tmp/an80-output-recovery-guards.log. No paid inference or full suite.
+Next: preserved rich Outputs sections and owner delivery reconciliation.
+AN-80 remains In Progress; AN-73 follows.
+
 ## AN-80 verbosity and checkpoints — 2026-09-07
 
 Owner-only per-agent progress settings now persist concise/standard/detailed

@@ -100,3 +100,13 @@ during creation; see [managed writing](../../implementation/writer-managed-run.m
 After changing purpose, reopen the agent conversation; an old connection is
 rejected rather than silently adopting a different purpose behind its header.
 See [scope and remaining acceptance](../../implementation/native-agent-chat.md).
+
+## Links from Plane to saved work
+
+Set `dashboard.public_url` in the preview home's `config.yaml` to the dashboard
+address its owner can open (locally, `http://127.0.0.1:19221`). Restart the dashboard
+after changing configuration. The host uses this explicit address for new saved
+output/result comments; it never trusts a request Host header or embeds tokens.
+Without a valid URL it reports identifiers with a configuration explanation.
+Existing comments are not rewritten. Remote owners need a reachable deployment
+URL and ordinary dashboard authentication.

@@ -45,7 +45,7 @@ def list_results(conn, agent_id):
         'WHERE agent_id=? ORDER BY created_at DESC,id DESC', (agent_id,))]
 
 
-def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation, arguments):
+def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation, arguments, record_progress=None):
     """Host supplies identity and a fresh scoped Plane observation, never the model.
 
     Criteria and their fingerprint describe what the host observed at submission.
@@ -87,7 +87,10 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
         if previous:
             if previous[3] != request_hash:
                 raise ValueError('Result call identity was reused with different input')
-            return _checked(previous)
+            result = _checked(previous)
+            if record_progress is not None:
+                record_progress(conn, result)
+            return result
         work = conn.execute('SELECT agent_id,soul_revision FROM agent_native_work_runs WHERE id=?', (run_id,)).fetchone()
         if work is None or work[0] != agent_id:
             raise PermissionError('Result identity does not match this work run')
@@ -130,4 +133,7 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
                      '(id,agent_id,run_id,item_id,call_id,request_sha256,record_json,record_sha256,created_at) '
                      'VALUES (?,?,?,?,?,?,?,?,?)',
                      (record['id'],agent_id,run_id,args['item_id'],call_id,request_hash,encoded,_hash(encoded),record['created_at']))
+        if record_progress is not None:
+            record_progress(conn, record)
+            validate(conn)
     return record

@@ -1,6 +1,6 @@
 import { AgentProgressSettings } from "@/components/AgentProgressSettings";
 import { useEffect, useRef, useState } from "react";
-import { Link, useParams, useSearchParams } from "react-router";
+import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { agentsEndpoint, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
@@ -104,7 +104,7 @@ export default function AgentDetailPage() {
             <thead><tr><th className="p-2">Time</th><th className="p-2">Update</th><th className="p-2">Delivery</th></tr></thead>
             <tbody>{agent.work.progress.map((report) => <tr key={report.operation_id} className="border-t">
               <td className="p-2"><time dateTime={report.created_at}>{new Date(report.created_at).toLocaleString()}</time></td>
-              <td className="p-2">{report.summary}</td>
+              <td className="p-2">{report.summary}{report.link_url && <a className="block underline underline-offset-4" href={report.link_url}>{report.link_label}</a>}</td>
               <td className="p-2">{{ pending: "Pending", confirmed: "Confirmed", failed: "Failed", unknown: "Unknown — inspect before resending" }[report.status]}</td>
             </tr>)}</tbody>
           </table></div> : <p className="text-sm">No progress updates recorded for this attempt.</p>}
@@ -236,13 +236,18 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
 
 function WorkResults({ agent }: { agent: Agent }) {
   const results = agent.work?.results ?? [];
+  const { hash } = useLocation();
+  const selectedId = results.find(result => hash === `#result-${result.id}`)?.id;
+  useEffect(() => {
+    if (selectedId) document.getElementById(`result-${selectedId}`)?.scrollIntoView({ block: "start" });
+  }, [selectedId, hash]);
   const labels: Record<WorkResult["outcome"], string> = {
     submitted: "Submitted for review", discovery: "Discovery", waiting: "Waiting", blocked: "Blocked",
   };
   return <section aria-label="Work results" className="space-y-4 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">Results</h2>
     {!results.length && <p>No results recorded yet.</p>}
-    {results.map((result) => <article key={result.id} className="space-y-3 rounded-lg border p-4">
+    {results.map((result) => <article id={`result-${result.id}`} key={result.id} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">{labels[result.outcome]}</h3>
         <time className="text-xs text-muted-foreground" dateTime={result.created_at}>{new Date(result.created_at).toLocaleString()}</time>

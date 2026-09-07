@@ -126,20 +126,28 @@ class _Run:
             deliver(conn, planning, self.validate, result['selection_id'])
         elif tool == 'output_publish':
             from agent_native.output_store import publish
+            from agent_native import progress
+            base = progress.public_base()
             required = {'title','content','item_id','format'}
             if not required <= set(args) or set(args) - required - {'output_id'}:
                 raise ValueError('Output requires title, content, item and format')
             planning.inspect({'kind':'item','resource_id':args['item_id']})
             result = publish(conn,validate=self.validate,workspace=self.workspace,
-                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id, **args)
+                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
+                             record_progress=lambda c, r: progress.output_saved(c, r, base), **args)
+            progress.deliver(conn, planning, self.validate, f"output:{result['output_id']}:{result['version']}")
         else:
             from agent_native.result_store import record
+            from agent_native import progress
+            base = progress.public_base()
             if 'item_id' not in args:
                 raise ValueError('Result requires an assignment')
             observation = planning.inspect({'kind':'item','resource_id':args['item_id']})
             result = record(conn,validate=self.validate,workspace=self.workspace,
                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
-                            observation=observation,arguments=args)
+                            observation=observation,arguments=args,
+                            record_progress=lambda c, r: progress.result_recorded(c, r, base))
+            progress.deliver(conn, planning, self.validate, 'result:'+result['id'])
         with write_txn(conn):
             # Keep honest receipts for an effect already sent even if Pause raced
             # its response. No subsequent effect is admitted after a stop.
@@ -190,7 +198,8 @@ class _Run:
                                'do not duplicate that start update. Use progress_report for meaningful checkpoints, details and blockers as you work. '
                                'Owner verbosity controls delivery, and direct comment.create is not available to this worker. '
                                'Save any produced text or Markdown '
-                               'with output_publish; use output_id only when revising an existing output. Record paths in Plane. '
+                               'with output_publish; use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
+                               'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
                                'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
                                'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
                                'External links are unverified references, never proof of saved content or successful actions. '
@@ -239,7 +248,44 @@ class _Run:
             self.fail(type(exc).__name__)
         finally:
             self.host.force_stop(timeout=2)
+            self._report_terminal()
             self.ended.set()
+
+    def _report_terminal(self):
+        """Host-only notification of committed evidence after the worker stopped.
+
+        This validator never reaches a model or its effect broker. Existing
+        Plane grants and purpose/configuration checks still govern delivery.
+        Unknown attempts are not retried; only never-attempted reports are sent.
+        """
+        from agent_native import progress
+        from agent_native.writer_planning import open_planning
+        budget_end = time.monotonic() + 15
+
+        def validate(conn):
+            row = conn.execute('SELECT w.state,w.agent_id,w.soul_revision,a.soul_revision '
+                               'FROM agent_native_work_runs w JOIN agent_native_agents a ON a.id=w.agent_id '
+                               'WHERE w.id=?', (self.work['id'],)).fetchone()
+            if (not row or row[0] not in state.TERMINAL or row[1] != self.work['agent_id']
+                    or row[2] != self.work['soul_revision'] or row[2] != row[3]
+                    or time.monotonic() >= budget_end):
+                raise PermissionError('Terminal reporting authority ended')
+        try:
+            with connect_closing(self.service.db_path) as conn:
+                pending = conn.execute("SELECT source_id FROM agent_native_progress WHERE run_id=? AND agent_id=? AND status='pending' ORDER BY created_at,operation_id",
+                                       (self.work['id'], self.work['agent_id'])).fetchall()
+                if not pending:
+                    return
+                validate(conn)
+                binding = conn.execute('SELECT binding_id FROM agent_native_work_runs WHERE id=?', (self.work['id'],)).fetchone()[0]
+                if not binding:
+                    return
+                with open_planning(db_path=self.service.db_path, home=self.service.home,
+                                   agent_id=self.work['agent_id'], binding_id=binding, validate=validate) as planning:
+                    for (source_id,) in pending:
+                        progress.deliver(conn, planning, validate, source_id)
+        except Exception as exc:
+            _log.warning('Terminal reporting remains pending or uncertain (%s)', type(exc).__name__)
 
     def finish(self, conn, frame):
         dead = self.host.force_stop(timeout=2)

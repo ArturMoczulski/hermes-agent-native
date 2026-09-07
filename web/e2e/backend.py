@@ -42,6 +42,12 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
             path.chmod(0o600)
         else:
             path.unlink(missing_ok=True)
+        if 'dashboard_url' in body:
+            import yaml
+            config_path = Path(home) / 'config.yaml'
+            config = yaml.safe_load(config_path.read_text())
+            config.setdefault('dashboard', {})['public_url'] = body['dashboard_url']
+            config_path.write_text(yaml.safe_dump(config))
         return {'configured': path.exists()}
 
     @app.get('/__e2e__/plane-evidence/{agent_id}')
@@ -169,6 +175,17 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
                 'comments':[c for c in plane.comments.values() if c['project'] in project_ids],
                 'native_roles':[m['role'] for m in messages],
                 'model_requests':list(getattr(model, 'writer_requests', []))}
+
+    app.router.routes.insert(0, app.router.routes.pop())
+
+    @app.get('/__e2e__/plane-comments/{agent_id}')
+    def plane_comments_view(request: Request, agent_id: str):
+        # Render stored external-fixture comments, not a simulated product UI.
+        _require_token(request)
+        from fastapi.responses import HTMLResponse
+        project_ids = {p['id'] for p in plane.projects.values() if p.get('external_id') == agent_id}
+        comments = [c['comment_html'] for c in plane.comments.values() if c['project'] in project_ids]
+        return HTMLResponse('<h1>Stored Plane fixture comments</h1>' + ''.join('<article>'+c+'</article>' for c in comments))
 
     app.router.routes.insert(0, app.router.routes.pop())
 

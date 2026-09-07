@@ -82,6 +82,8 @@ _CONTRACTS = {
     'comment.create': _object(
         {
             'item_id': _UUID,
+            'link_url': {'type': 'string', 'minLength': 1, 'maxLength': 2048},
+            'link_label': _NAME,
             'text': {
                 'type': 'string',
                 'minLength': 1,
@@ -219,6 +221,19 @@ def validate_arguments(operation, arguments):
         needs_id = result['kind'] in ('item', 'cycle')
         if needs_id != ('resource_id' in result):
             raise ContractError('Invalid operation arguments')
+    if operation == 'comment.create':
+        if ('link_url' in result) != ('link_label' in result):
+            raise ContractError('A comment link requires its destination and label')
+        if 'link_url' in result:
+            from urllib.parse import urlsplit
+            try:
+                url = urlsplit(result['link_url'])
+                if (url.scheme not in ('http', 'https') or not url.hostname or url.username or url.password
+                        or any(ord(c) < 33 or ord(c) == 127 for c in result['link_url'])):
+                    raise ValueError
+                _ = url.port
+            except ValueError:
+                raise ContractError('Comment links require an HTTP URL without credentials') from None
     _canonical_json(result, MAX_ARGUMENT_BYTES, 'Invalid operation arguments')
     return result
 

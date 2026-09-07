@@ -721,6 +721,8 @@ def connect(db_path: Optional[Path] = None, *, board: Optional[str] = None) -> s
                 conn.executescript(agent_native_schema)
                 from agent_native.model_settings import migrate_reasoning
                 migrate_reasoning(conn)
+                from agent_native.progress import migrate_links
+                migrate_links(conn)
                 from agent_native.output_store import migrate_stories
                 migrate_stories(conn)
                 _INITIALIZED_PATHS.add(resolved)

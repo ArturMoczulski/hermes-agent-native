@@ -34,8 +34,12 @@ TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
 
 
 def event(conn, run_id, kind, summary):
-    conn.execute('INSERT INTO agent_native_work_events(run_id,kind,summary,created_at) VALUES (?,?,?,?)',
-                 (run_id, kind, summary, _now()))
+    with write_txn(conn, allow_nested=True):
+        conn.execute('INSERT INTO agent_native_work_events(run_id,kind,summary,created_at) VALUES (?,?,?,?)',
+                     (run_id, kind, summary, _now()))
+        if kind in ('work.completed', 'work.paused', 'work.failed', 'work.unknown'):
+            from agent_native.progress import terminal
+            terminal(conn, run_id)
 
 
 def read_work(conn, agent_id):

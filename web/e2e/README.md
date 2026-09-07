@@ -212,3 +212,9 @@ saves Detailed through the real owner API, reloads it, and holds a native worker
 after two progress tools. Both checkpoint and detail comments must already exist
 in the external Plane fixture. Supporting targeted Python cases verify filtering,
 blockers, stable receipts, selected-item scope and owner-only stale-edit handling.
+
+The `saved output link is present in Plane before finish and opens the exact version`
+case holds the native worker after publication, opens the stored comment's link
+in the framework reader, and then verifies result navigation and the terminal
+notification. The comment page is an isolated fixture rendering stored Plane
+HTTP payloads, not the actual Plane frontend. Model responses are local scripts.

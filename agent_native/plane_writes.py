@@ -43,12 +43,19 @@ class _LiteralText(HTMLParser):
     def __init__(self, value):
         super().__init__(convert_charrefs=True)
         self.parts = []
+        self.links = []
         self.feed(value)
         self.close()
 
     def handle_starttag(self, tag, attrs):
-        if tag not in ("p", "br", "div"):
+        if tag not in ("p", "br", "div", "a"):
             raise PlaneWriteError("Plane changed the literal text markup")
+        if tag == "a":
+            attributes = dict(attrs)
+            if (len(attributes) != len(attrs) or not attributes.get('href')
+                    or any(k not in ('href', 'target', 'rel') for k in attributes)):
+                raise PlaneWriteError("Plane changed the link markup")
+            self.links.append(attributes['href'])
         if tag == "br":
             self.parts.append("\n")
 
@@ -72,11 +79,11 @@ def _verify_applied(raw, payload):
             raise PlaneWriteError("Plane omitted a requested field")
         actual = raw[key]
         if key in ("description_html", "comment_html"):
-            if (
-                not isinstance(actual, str)
-                or _LiteralText(actual).text != _LiteralText(value).text
-            ):
+            if not isinstance(actual, str):
                 raise PlaneWriteError("Plane did not return the requested literal text")
+            returned, expected = _LiteralText(actual), _LiteralText(value)
+            if returned.text != expected.text or returned.links != expected.links:
+                raise PlaneWriteError("Plane did not return the requested text and link destinations")
         elif type(actual) is not type(value) or actual != value:
             raise PlaneWriteError("Plane did not return the requested field value")
 
@@ -242,6 +249,8 @@ class PlaneWrites:
             "external_source": "agent-native",
             "external_id": operation_id,
         }
+        if 'link_url' in args:
+            payload['comment_html'] += '<p><a href="' + html.escape(args['link_url'], quote=True) + '">' + html.escape(args['link_label']) + '</a></p>'
         return (
             "POST",
             f"work-items/{args['item_id']}/comments/",
