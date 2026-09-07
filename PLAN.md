@@ -52,6 +52,8 @@ connects proactive questions and steering to the shared work. The writer and an
 analyst on supplied material must use the same path; a useful outcome need not
 produce a story or a file. This turn changes planning only.
 AN-74–76 retain detailed inspection, continuity and full milestone acceptance.
+AN-74 includes the owner-requested shared Activity table: newest first, twenty
+rows by default, 20/50/100 choices and true bounded pagination.
 See [Builder state](first-builder/STATE.md) for the exact handoff.
 
 The subsequent AN-16/M7 First Builder handoff adds protected repository development

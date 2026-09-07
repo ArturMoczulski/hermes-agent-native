@@ -76,6 +76,33 @@ producers or imports. No agent-authored executable renderer. Controls advertised
 as supported must have a real backend operation; future features are not empty
 mock dashboards.
 
+## Shared activity table
+
+AN-74 owns the owner's paginated activity request. Use the [screen contract](../design/12-control-center-screens.md#9-event-history):
+newest first, twenty rows by default, selectable 20/50/100, Previous/Next/Latest
+and stable pages with a new-activity indicator. This component is shared by all
+agents and links to the same work, session and output records.
+
+Current `read_work()` returns all events ordered by ID, and agent detail/roster
+polls repeatedly include that history. Introduce a bounded authenticated history
+read; keep routine status/roster responses lightweight. Reuse existing router,
+control storage and UI primitives. Enforce the page-size limit at the service;
+reversing and slicing the full browser array is not pagination of the data source.
+
+Use deterministic ordering and a stable history boundary while browsing older
+pages. Bind continuation state to the agent/run and filters, discard stale UI
+responses, and deduplicate by immutable identity. Independent setup, identity and
+work event sequences need source-qualified identities if later merged; timestamp
+or an unqualified local ID alone is insufficient. Do not invent actor/outcome
+fields that current events do not record, or turn missing detail into success.
+
+Before implementation, write a failing Playwright table flow with more than one
+hundred real stored fixture events, then cover tied times, new events between
+pages, changing page size, agent switching with a delayed response, and empty/error
+states. Supporting API tests must prove bounded reads, maximum page size and
+owner/scope enforcement. No live model is required for this presentation work.
+The app remains unchanged until these small test-first increments are delivered.
+
 ## Plane work mapping
 
 - [AN-78 — Generalize bounded agent work and result records](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4b7a3d8b-a48d-4e0b-9e01-0645a126cffd/) is the next urgent item; it depends on the accepted first-story checkpoint.

@@ -43,6 +43,7 @@ They are requirements, not claims that the current writer implementation passes.
 | Work without a file | A verified planning change or useful discovery can be recorded without a dummy story. A pending clarification or wait is not false success. No outcome implicitly accepts the assignment or retires its agent. |
 | Decisions and children | The same request identity is used across views. Missing backend support is shown as unavailable; registered children later use shared identity, work/results and actual subtree controls under UX-05–UX-11. |
 | Owner control | Both domains preserve scope, limits, real stopping, versions and unknown-effect handling. Reading an output cannot execute it or authorize a new run. |
+| Activity pages | More than one hundred events appear newest first in bounded 20/50/100-row pages. Equal timestamps and new arrivals do not duplicate or skip events during navigation. Latest, page-size changes and agent switching preserve the correct scope; stale responses, unavailable pages and failures are handled explicitly. |
 
 ## Evidence required during implementation
 

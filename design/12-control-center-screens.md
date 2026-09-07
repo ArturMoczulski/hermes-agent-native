@@ -298,9 +298,35 @@ is a normal outcome, not a failure or a reason to invent further assignments.
 
 ## 9. Event history
 
-Reach History from Monitor, an agent, an assignment or a decision. It is an
-inspectable timeline, not the main chat feed. Support all-system, agent/subtree,
-project, assignment, time-range and event-type filters.
+Reach Activity/History from Monitor, an agent, an assignment or a decision. Use
+one shared paginated table for all agent purposes, separate from the chat feed.
+Support all-system, agent/subtree, project, assignment, time-range and event-type
+filters as their underlying records become available.
+
+Owner-selected activity presentation, 2026-09-07:
+
+- Show newest recorded activity first, with a stable tie-breaker for equal times.
+- Default to **20 rows per page**, with **20 / 50 / 100** in a **Rows per page**
+  selector. One hundred is the maximum page size, not a history retention limit.
+- Show **Previous**, **Next**, current page, and **Latest**. Disable unavailable
+  directions based on actual data; do not invent a total page/event count.
+- Use compact columns for time, event type, readable summary and related work/run.
+  Show actor, target and outcome when recorded; otherwise identify missing details
+  honestly. Expand a row for its recorded details and links, rather than rendering
+  every tool result in full in the table. Narrow screens retain pagination and
+  readable summaries with details on demand.
+- Keep a loaded page stable as new events arrive. Show **New activity available**;
+  selecting it or **Latest** loads the newest page. Do not silently shift rows,
+  reset scroll, duplicate entries or skip older entries during navigation.
+- Changing agent, filters or page size starts at the newest page in the new scope.
+  Preserve the chosen page size while moving between agents. Delayed responses
+  from a previous selection must not overwrite the current view.
+- Preserve loading, empty, error and disconnected/last-known states. Provide a
+  safe retry for a failed page request. Reading older history never starts work.
+
+Pagination bounds both the displayed rows and the fetched history. The browser
+must not download every event just to display the first twenty. The selected
+agent and its live status stay visible independently of the current history page.
 
 Every event shows time, actor, readable action, target, outcome and related
 records. Include agent creation and lifecycle changes, cadence reviews and their

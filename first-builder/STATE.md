@@ -67,6 +67,20 @@ and cycle/module membership, preserved completed/deferred states, and null dates
 on every cycle. Independent design review found no contradictions in the selected
 work/result, evaluation, capability or child-boundary contracts.
 
+## Shared Activity table — planning refinement
+
+The owner requested newest-first activity in a paginated table, twenty rows by
+default and adjustable to one hundred. The screen contract now specifies
+20/50/100, Previous/Next/Latest, stable pages and a new-activity indicator. AN-74
+retains this work; no extra item or priority change is needed. Its implementation
+must stop returning the full event history on routine status/roster reads, enforce
+bounded scoped pages, and test new arrivals/tied times/agent switches. Domain-neutral
+views and truthful unavailable states remain the shared UX direction.
+
+This is a documentation/Plane refinement only. Runtime code and agents are
+unchanged; no browser or model run was started. Verification is recorded with
+the planning update; implementation still follows the selected TDD sequence.
+
 ## AN-72 live demonstration — completed bounded checkpoint
 
 On 2026-09-07, [Moonlit Cartographer — live demo](http://127.0.0.1:19221/agents/f6889031-7c56-482d-b395-49cd8584c12e)

@@ -133,3 +133,9 @@ contradictory instructions or store secrets here.
   supplied material, including meaningful work without a file. Existing writer
   evidence remains accepted. No runtime implementation was requested in this turn.
   See [shared delivery](../implementation/shared-agent-work.md).
+
+- **Activity table — owner request (2026-09-07):** replace the ever-growing
+  activity list with a newest-first paginated table, twenty rows by default and
+  adjustable up to one hundred. The design selects 20/50/100 page sizes and stable
+  pages with a new-activity indicator. This belongs to shared inspection work,
+  not a writer-specific UI. No runtime change is established by the plan.

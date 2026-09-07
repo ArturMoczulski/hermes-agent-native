@@ -112,13 +112,15 @@ Human authority comes from the authenticated owner channel, not a frontend label
 
 ## Delivery and verification
 
-Current priority: the [fantasy-writer milestone](fantasy-writer-milestone.md).
-Deliver a roster and agent details linked to the existing `/chat`, with Activity
-and Stories views around the same identity. AN-77 first repairs native chat and
-binds managed conversation; AN-72 then connects actual writing, results and Pause.
-AN-73 adds ongoing-work communication; detailed inspection and continuity complete
-the earlier writer milestone. Reuse that foundation for the Builder. Full
-organization screens stay later.
+Current priority: [shared work and outputs](shared-agent-work.md) within the
+[writer milestone](fantasy-writer-milestone.md). AN-72's first story/Pause evidence
+is accepted. Generalize execution/results and the Work/Saved outputs surface in
+AN-78/79, then continue native conversation/decisions in AN-73 and deeper
+inspection in AN-74. Activity uses a shared newest-first paginated table with
+20/50/100 rows, bounded server reads and stable history while new events arrive.
+The native chat is retained; AN-77's remaining ordering work stays owner-deferred.
+Continuity completes the earlier writer milestone. Reuse that foundation for
+the Builder. Full organization screens stay later.
 The framework browser test harness now exists in [web/e2e](../web/e2e/README.md);
 reuse it and the installed Chromium rather than creating another test stack.
 
