@@ -90,4 +90,7 @@ def worker(conn,*,validate,inspect,agent_id,run_id,arguments):
                      (key,agent_id,revision,run_id,item_id,observation['fingerprint'],arguments['topic'],arguments['question'],_now()))
         from agent_native.work_state import event
         event(conn,run_id,'work.question_asked','Agent asked an owner question: '+key)
-        return _get(conn,agent_id,key)
+        question = _get(conn,agent_id,key)
+        from agent_native.progress import question_asked
+        question_asked(conn, {**question, 'agent_id':agent_id})
+        return question

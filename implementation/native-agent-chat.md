@@ -255,3 +255,14 @@ answers, pause, changed item criteria, agent/owner/purpose scope and shared chat
 identity. The native-worker browser case asks, accepts an owner answer, reloads
 and uses that answer in a saved draft. A second browser case protects feedback
 handling. External inference is scripted, not a model-quality evaluation.
+
+### Plane question comments
+
+New question creation atomically enqueues a host-attributed Plane comment carrying
+the question text/ID and, when configured, the public agent-page link. Delivery
+uses the existing progress journal and is unconditional across verbosity settings.
+Replay/uncertain acknowledgements do not resend; pending/confirmed/unknown status
+is visible in Plane progress. Existing pre-feature questions are not backfilled.
+Answers still use Questions for you; incoming Plane-comment interpretation is AN-84.
+The native browser test verifies the question comment exists before answering;
+focused tests cover lost acknowledgements and question/intent rollback together.

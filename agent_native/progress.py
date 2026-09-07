@@ -215,3 +215,14 @@ def terminal(conn, run_id):
                      record={'agent_id': row[0], 'run_id': run_id, 'item_id': focus['item_id']},
                      summary='Attempt '+row[1],
                      details='This is the bounded attempt status, not acceptance of the assignment or completion of the agent purpose. Review saved evidence and any unresolved delivery before continuing.')
+
+
+def question_asked(conn, record):
+    base = public_base()
+    _evidence_intent(conn, source_id='question:'+record['id'], record=record,
+                     summary='Question for the owner',
+                     details=(record['question']+'\nQuestion ID: '+record['id']+
+                              '\nPlease answer in Questions for you on the agent page. '
+                              'Plane comment replies are not automatically treated as trusted owner answers.'),
+                     link_url=f"{base}/agents/{record['agent_id']}" if base else None,
+                     link_label='Open agent questions' if base else None)

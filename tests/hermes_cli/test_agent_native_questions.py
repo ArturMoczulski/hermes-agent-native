@@ -76,3 +76,32 @@ def test_question_api_requires_owner_and_scopes_missing_records(client):
     c.headers.pop('X-Hermes-Session-Token')
     assert c.get(path).status_code in (401,403)
     assert c.post(path+'/missing/answer',json=args).status_code in (401,403)
+
+
+def test_question_is_posted_once_in_plane_even_when_acknowledgement_is_lost(broker):
+    from agent_native import progress
+    s=broker
+    select(s)
+    progress.change_settings(s.conn,actor=OWNER,agent_id=s.root['id'],verbosity='concise',expected_revision=1)
+    path=f"/api/v1/workspaces/{s.setup['workspace_slug']}/projects/{s.setup['project_id']}/work-items/{s.setup['discovery_item_id']}/comments/"
+    s.plane.lose.add(('POST',path))
+    q=ask(s)
+    comments=[c for c in s.plane.comments.values() if q['id'] in c['comment_html']]
+    assert len(comments)==1
+    assert q['question'] in comments[0]['comment_html']
+    assert ask(s,'repeat-question')['id']==q['id']
+    assert len([c for c in s.plane.comments.values() if q['id'] in c['comment_html']])==1
+    report=s.conn.execute('SELECT status FROM agent_native_progress WHERE source_id=?',('question:'+q['id'],)).fetchone()
+    assert report[0]=='unknown'
+
+
+def test_question_and_plane_intent_commit_together(broker):
+    import sqlite3
+    s=broker
+    select(s)
+    s.conn.execute("CREATE TRIGGER reject_question_report BEFORE INSERT ON agent_native_progress WHEN NEW.source_id LIKE 'question:%' BEGIN SELECT RAISE(ABORT,'report unavailable'); END")
+    before=len(s.plane.comments)
+    with pytest.raises(sqlite3.IntegrityError):
+        ask(s)
+    assert s.conn.execute('SELECT count(*) FROM agent_native_questions').fetchone()[0]==0
+    assert len(s.plane.comments)==before

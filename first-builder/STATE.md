@@ -1,3 +1,18 @@
+## AN-73 questions mirrored to Plane — 2026-09-07
+
+Owner required questions in item comments too. New questions atomically enqueue
+an unconditional Plane progress comment with question text/ID and optional public
+agent link. Delivery uses existing scoped journal; repeats/unknown acknowledgement
+are not resent. Trusted answers remain in Questions for you; AN-84 comment reading
+is not implicitly implemented. No backfill of historical questions.
+
+TDD red: /tmp/an73-question-plane-red.log and browser-red.log. Lost-ack/dedup check
+passed in /tmp/an73-question-plane-green.log. Native question/comment/answer/output
+browser passed (6.4s), /tmp/an73-question-plane-browser-green.log. No paid inference
+or broad tests. Atomic rollback check passed in /tmp/an73-question-plane-atomic.log.
+Scoped Ruff and diff checks passed. Idle local preview restarted and /agents returned
+HTTP 200. Next remains AN-73 minimum acceptance then AN-75 continuation.
+
 ## AN-73 proactive work questions — 2026-09-07
 
 Added scoped work_question ask/read, durable question identity per agent/purpose/

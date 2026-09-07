@@ -14,6 +14,7 @@ test('agent asks a question and uses the retained owner answer in saved work',as
     const questions=page.getByRole('region',{name:'Questions for you',exact:true});
     await expect(questions).toContainText('What kind of ending would you like?',{timeout:30000});
     await expect(questions.getByRole('link',{name:'Open affected work item'})).toHaveAttribute('href',/\/issues\/[0-9a-f-]+\/$/);
+    await expect.poll(async()=>{const e=await(await request.get(`${backend}/__e2e__/writer-evidence/${id}`,{headers})).json();return e.comments.filter((c:{comment_html:string})=>c.comment_html.includes('What kind of ending would you like?')).length;}).toBe(1);
     await questions.getByLabel('Your answer').fill('A hopeful ending with a reunited family.');
     await questions.getByRole('button',{name:'Send answer'}).click();
     await expect(questions).toContainText('Answered');

@@ -117,6 +117,9 @@ class _Run:
             from agent_native.questions import worker
             result = worker(conn, validate=self.validate, inspect=planning.inspect, agent_id=self.work['agent_id'],
                             run_id=self.work['id'], arguments=args)
+            if 'question' in args:
+                from agent_native.progress import deliver
+                deliver(conn, planning, self.validate, 'question:'+result['id'])
         elif tool == 'work_feedback':
             from agent_native.feedback import worker
             result = worker(conn, validate=self.validate, agent_id=self.work['agent_id'],

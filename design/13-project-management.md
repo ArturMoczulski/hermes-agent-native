@@ -188,6 +188,15 @@ A later version receives a new immutable version reference. Earlier versions and
 their progress comments remain inspectable. Useful discovery or planning work without
 a tangible file records its result and evidence without creating a dummy attachment.
 
+### Questions in work-item comments
+
+Post new agent questions as comments on the affected Plane work item as well as
+showing them in the framework. Include the question identity and a link to the
+agent when available. Questions are reported at every verbosity level. Repeated
+asks and uncertain delivery must not create duplicate comments. Comment visibility
+does not itself establish a trusted answer channel; incoming-comment review and
+owner-answer applicability follow the communication rules.
+
 ### Maintain an Outputs section without replacing the brief
 
 Keep a framework-managed **Outputs** section at the end of the work item description,
