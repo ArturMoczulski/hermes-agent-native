@@ -1,3 +1,24 @@
+## Live narrated cadence demo — 2026-09-07
+
+Owner requested a live self-driven agent screenshare. Recorded actual Astra Low,
+local framework and Plane (not scripted fixtures). Agent
+`a07a1124-0fdb-4d74-a924-386c6c672d50` created a cafe brief and progress comments.
+After API-posted feedback, configured 15-second cadence started a distinct native
+session which replied and saved v2 of output dcce6abc-9fd0-40a8-9fa5-9bdf5b80e419.
+Baseline 150/37.5% retained; scenario 100/25% plus risk note verified. No manual
+second work start or continue prompt. Cadence disabled afterward.
+
+Artifact (ignored by Git): apps/desktop/demo/self-driven-2026-09-07-take2/
+self-driven-agent-demo.mp4, index.html, transcript.md, evidence.json and raw clips.
+144.9s, 1600x1100, audio/video decoded without errors; final frame and source
+screens inspected. Local Samantha narration; waits edited, result frames held.
+
+Live finding: earlier agent 9c7ddf2c-c4ec-4491-82e4-2f3da9da129b failed on
+cycle.assign PlaneWriteConflict after item.update, without a saved result.
+Recorded in AN-75. Successful demo avoided metadata/cycle edits on the supplied
+discovery item. Correct owner Plane session was required for its workspace;
+recording resumed on the same successful agent after fixing capture login.
+
 ## AN-75 cadence continuation — 2026-09-07
 
 Owner selected cadence as highest-impact next work. Added opt-in Thinking cadence
