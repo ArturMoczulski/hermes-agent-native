@@ -308,8 +308,18 @@ def _canonical_json(record, byte_limit, message):
 
 
 def fingerprint(record):
-    """Hash bounded canonical JSON metadata; not an upstream CAS token."""
+    """Hash observed content, excluding volatile touch time; not an upstream CAS token.
+
+    Plane can asynchronously change updated_at after returning a successful write,
+    without changing the projected task fields. Keep validating the entire input
+    before excluding that timestamp; actual field changes still conflict.
+    """
     payload = _canonical_json(
         record, MAX_FINGERPRINT_BYTES, 'Invalid fingerprint metadata'
     )
+    if isinstance(record, dict) and "updated_at" in record:
+        payload = _canonical_json(
+            {key: value for key, value in record.items() if key != "updated_at"},
+            MAX_FINGERPRINT_BYTES, "Invalid fingerprint metadata",
+        )
     return hashlib.sha256(payload).hexdigest()

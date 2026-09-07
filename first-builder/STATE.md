@@ -1,3 +1,16 @@
+## AN-75 timestamp-only Plane conflict — 2026-09-08
+
+Compared the failed live demo's last item.update receipt with its current Plane
+item: only updated_at changed. Source fingerprints now exclude that volatile
+top-level timestamp, preserving input validation and semantic field checks.
+Old fingerprints conservatively require fresh inspection; this is not upstream CAS.
+
+TDD: the cycle-assignment reproduction failed before the change; it and the
+changed-description rejection case passed afterward (2 tests, 1.5s). The targeted
+Playwright selected-work/cycle/criteria/refresh/stale-outage case passed (25.7s).
+Scoped Ruff and diff whitespace checks passed. No paid live agent rerun.
+AN-75 remains In Progress for remaining continuation/recovery acceptance.
+
 ## Live narrated cadence demo — 2026-09-07
 
 Owner requested a live self-driven agent screenshare. Recorded actual Astra Low,

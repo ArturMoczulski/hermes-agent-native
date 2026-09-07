@@ -87,7 +87,12 @@ are introduced.
 
 ## Source checks and concurrent changes
 
-Fingerprints hash bounded canonical JSON of selected source metadata. Before an
+Fingerprints hash bounded canonical JSON of selected source metadata, excluding
+only top-level `updated_at`. Plane can touch that timestamp asynchronously after a
+successful write without changing task content. The entire input is still validated
+before exclusion; content and other projected fields remain conflict-checked.
+Previously stored timestamp-inclusive fingerprints require a fresh inspection if
+they mismatch; they are not silently accepted. Before an
 edit, the adapter re-fetches the relevant resource and compares the supplied
 fingerprint. Cycle membership and dependencies receive additional current-source
 checks. Scoped reads and responses retain project/resource validation, and the

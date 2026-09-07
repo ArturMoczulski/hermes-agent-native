@@ -5,15 +5,14 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
-**AN-73 conversations and work steering is now In Progress, by owner direction.**
-Native chat has bounded local work context. Explicit Feedback for work now stores
-owner direction and worker handling reports without resuming work.
-Proactive questions and durable answers now share scoped records with native chat.
-Next: review the minimum AN-73 acceptance and proceed to AN-75 cadence/continuation;
-answers do not yet schedule subsequent attempts. AN-84 Plane comment review remains queued.
-AN-80 remains unfinished in Backlog: comments/output links and pending description
-references are implemented; uncertain-delivery reconciliation and safe description
-merging are deferred. AN-75 cadence/continuation follows the minimum conversation flow.
+**AN-75 cadence/continuation is In Progress.** Opt-in cadence and retained
+attempts are implemented; a live agent has picked up Plane feedback and saved a
+revised output without a manual continuation prompt. The demo exposed a false
+cycle-assignment conflict after timestamp-only Plane updates; that is now fixed
+with focused backend and browser coverage. Recovery after interrupted/failed work
+remains unfinished. AN-73 conversations and AN-84 comment review have implemented
+increments, with broader acceptance still open. AN-80 remains in Backlog:
+uncertain-delivery reconciliation and safe description merging are deferred.
 The reasoning-default clarification is complete: actionable labels and explicit Astra Low.
 See [model settings and verification](implementation/agent-model-selection.md).
 The owner moved this earlier usable-agent milestone ahead of the First Builder:
