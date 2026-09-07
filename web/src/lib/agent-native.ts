@@ -1,4 +1,9 @@
-export type ModelChoice = { provider: string; model: string };
+import { EFFORT_OPTIONS, VALID_EFFORTS } from "./reasoning-effort";
+
+export type ModelChoice = { provider: string; model: string; reasoning_effort?: string };
+export function reasoningEffortLabel(effort: string | undefined): string {
+  return !effort || effort === "default" ? "Hermes default" : EFFORT_OPTIONS.find((option) => option.value === effort)?.label ?? effort;
+}
 export type ModelSelection = ModelChoice & {
   revision: number;
   source: "default" | "override" | "legacy";
@@ -15,14 +20,15 @@ export type ModelActivity = ModelChoice & {
 };
 export const agentModelsEndpoint = "/api/agent-native/models";
 export function modelChoiceLabel(choice: ModelChoice | null | undefined): string {
-  return choice?.provider && choice.model ? `${choice.provider} · ${choice.model}` : "Model not configured";
+  return choice?.provider && choice.model ? `${choice.provider} · ${choice.model} · Reasoning: ${reasoningEffortLabel(choice.reasoning_effort)}` : "Model not configured";
 }
 export function validModelChoice(value: unknown): value is ModelChoice {
   if (!value || typeof value !== "object") return false;
   const choice = value as ModelChoice;
   return typeof choice.provider === "string" && !!choice.provider.trim() && choice.provider.length <= 256
     && typeof choice.model === "string" && !!choice.model.trim() && choice.model.length <= 256
-    && Array.from(choice.provider + choice.model).every((character) => character.charCodeAt(0) >= 32);
+    && Array.from(choice.provider + choice.model).every((character) => character.charCodeAt(0) >= 32)
+    && (choice.reasoning_effort === undefined || choice.reasoning_effort === "default" || VALID_EFFORTS.has(choice.reasoning_effort));
 }
 
 export type Agent = {

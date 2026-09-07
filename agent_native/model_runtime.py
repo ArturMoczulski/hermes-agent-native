@@ -7,6 +7,9 @@ from hermes_cli import config as native_config
 from hermes_cli import auth
 from hermes_cli import runtime_provider
 from hermes_cli.providers import custom_provider_slug
+from agent_native.reasoning import (
+    get_reasoning_options, validate_reasoning, reasoning_config, bind_reasoning, assert_request_reasoning,
+)
 
 _SUPPORTED_MODES = frozenset({'chat_completions', 'codex_responses', 'anthropic_messages'})
 
@@ -105,3 +108,5 @@ def assert_request_model(agent, request):
             or (isinstance(extra, dict) and 'model' in extra and extra['model'] != admitted[0])):
         agent.interrupt('Managed model selection changed before the provider request', hard_cancel=True)
         raise InterruptedError('Managed model selection cannot change during an admitted attempt')
+
+    assert_request_reasoning(agent, request)

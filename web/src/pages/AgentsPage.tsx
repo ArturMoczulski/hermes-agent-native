@@ -21,7 +21,8 @@ function restoreCreation(): PendingCreation | null {
       && (value.work === undefined || validWorkLimits(value.work))
       && (value.model_selection === undefined || validModelChoice(value.model_selection))) {
       return { request_id: value.request_id, name: value.name, purpose: value.purpose,
-        ...(value.model_selection ? { model_selection: { provider: value.model_selection.provider, model: value.model_selection.model } } : {}),
+        ...(value.model_selection ? { model_selection: { provider: value.model_selection.provider, model: value.model_selection.model,
+          ...(value.model_selection.reasoning_effort !== undefined ? { reasoning_effort: value.model_selection.reasoning_effort } : {}) } } : {}),
         ...(value.work ? { work: { timeout_seconds: value.work.timeout_seconds, max_iterations: value.work.max_iterations } } : {}) };
     }
   } catch { /* Storage can be unavailable; submission will check before any write. */ }
@@ -80,7 +81,8 @@ export default function AgentsPage() {
       || pending.current?.work?.timeout_seconds !== work?.timeout_seconds
       || pending.current?.work?.max_iterations !== work?.max_iterations
       || pending.current?.model_selection?.provider !== modelSelection?.provider
-      || pending.current?.model_selection?.model !== modelSelection?.model) {
+      || pending.current?.model_selection?.model !== modelSelection?.model
+      || (pending.current?.model_selection?.reasoning_effort ?? "default") !== (modelSelection?.reasoning_effort ?? "default")) {
       pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), ...(work ? { work } : {}), ...(modelSelection ? { model_selection: modelSelection } : {}) };
     }
     try {

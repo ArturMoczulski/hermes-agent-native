@@ -121,6 +121,9 @@ def native_model_server():
             system_text = '\n'.join(_text(m) for m in messages if m.get('role') in ('system', 'developer'))
             purposes = [p for p in MANAGED_PURPOSES if p in system_text]
             server.requests.append({'path': self.path, 'model': body.get('model'), 'last_user': last_user,
+                                    'reasoning_effort': body.get('reasoning_effort'),
+                                    'reasoning_effort_present': 'reasoning_effort' in body,
+                                    'reasoning': body.get('reasoning'),
                                     'history_has_first_exchange': history_present,
                                     'system_prompt_sha256': hashlib.sha256(system_text.encode()).hexdigest(),
                                     'managed_purposes': purposes,
@@ -204,6 +207,22 @@ def native_model_server():
 def configure_native_chat(home, model):
     """Normal native config in temporary HERMES_HOME; no production monkeypatches."""
     root = Path(home)
+    provider_plugin = root / 'plugins' / 'model-providers' / 'custom'
+    provider_plugin.mkdir(parents=True)
+    (provider_plugin / 'plugin.yaml').write_text('name: fixture-custom\nkind: model-provider\nversion: 1.0.0\n')
+    (provider_plugin / '__init__.py').write_text("""from providers import register_provider
+from providers.base import ProviderProfile
+
+class FixtureCustomProfile(ProviderProfile):
+    def supported_reasoning_efforts(self, model):
+        return {'native-browser-fixture': ('low', 'high'),
+                'native-browser-fixture-small': ('low',)}.get(model, ())
+
+    def build_api_kwargs_extras(self, *, reasoning_config=None, **context):
+        return ({'reasoning': dict(reasoning_config)}, {}) if reasoning_config else ({}, {})
+
+register_provider(FixtureCustomProfile(name='custom', api_mode='chat_completions'))
+""")
     workspace = root / 'workspace'
     workspace.mkdir()
     (root / 'config.yaml').write_text(yaml.safe_dump({

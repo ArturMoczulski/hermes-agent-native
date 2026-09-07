@@ -5,7 +5,7 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
-**AN-27 model/provider selection is complete; AN-80 is next.**
+**AN-27 model/provider selection and AN-83 reasoning effort are complete. AN-80 is next.**
 See [model settings and verification](implementation/agent-model-selection.md).
 The owner moved this earlier usable-agent milestone ahead of the First Builder:
 create an ordinary root from a purpose, talk to it, see it write and save stories,

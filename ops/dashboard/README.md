@@ -67,6 +67,10 @@ Hermes’s configured provider connections and model picker; credentials stay in
 Keys/provider configuration. Updating the new-agent default leaves existing
 agents unchanged.
 
+The same picker includes **Reasoning effort**, with levels supported by the chosen
+route and **Hermes default** to preserve native behavior. An unsupported retained
+choice must be resolved before Save; Cancel leaves the saved preference unchanged.
+
 A change applies to the next admitted work run or chat message. Current work and
 the latest chat selection remain visible separately. Reload the preview after an
 upgrade to load the new controls. No model request is made simply by saving a

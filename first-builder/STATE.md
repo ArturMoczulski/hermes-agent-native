@@ -13,7 +13,7 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-**AN-72, AN-78, AN-79 and AN-27 are complete. AN-80 is next, then AN-73.** The captioned live demo video is
+**AN-72, AN-78, AN-79, AN-27 and AN-83 are complete. AN-80 is next, then AN-73.** The captioned live demo video is
 verified, and the completed item retains its evidence and scope. The owner
 deferred AN-77's remaining purpose-revision/transcript ordering; AN-77 remains
 Todo with accepted native chat, receipts, deadlines and full-service-restart
@@ -45,6 +45,49 @@ AN-73 then continues conversation, questions and steering. AN-74 covers detailed
 inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the full
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
+
+## Reasoning effort — AN-83 complete
+
+Plane item `2fce2f02-2997-4538-b3ad-270dd1f562a3` extends model settings with
+reasoning effort. The owner can choose a default for new agents, override during
+creation or edit an existing agent. Exact route-supported levels appear in the
+native model picker. Incompatible retained effort blocks Save until the owner
+chooses a supported value. Hermes default preserves native transport behavior;
+it does not mean reasoning is off. Unknown routes expose this default alone.
+
+Four setting/event/attempt tables receive an additive column. Existing records
+and omitted-field creation retries retain their meaning. Effort-only changes use
+the existing setting revision, preserve identity/history and affect the next
+admitted run/message. Native constructors use the captured preference. The final
+request guard rejects dropped, clamped or rewritten explicit efforts. Astra’s
+native Responses mapping now matches its documented low/medium/high/xhigh/max
+API vocabulary; Codex app Ultra orchestration is not exposed as an API effort.
+
+Red: two owner API cases failed on the missing field/endpoint; three capability
+cases and three native request cases exposed missing metadata/unguarded effort;
+the browser lacked its reasoning selector. Green: three new settings/upgrade
+cases and two existing creation regressions, six runtime cases and three existing
+native regressions. The upgrade test reopens the real pre-feature database through
+native initialization and verifies idempotent migration and old creation retries.
+
+One focused Playwright scenario passed in 24.4 seconds. It proves default copying,
+creation override, an unsupported model/effort combination, lost-response retry,
+a held active work selection, effort-only editing and held chat followed by a new
+message using the new wire effort. Real native worker requests reach only the
+local scripted provider. Logs: `/tmp/an83-settings-red.log`,
+`/tmp/an83-settings-green.log`, `/tmp/an83-upgrade-green.log`,
+`/tmp/an83-browser-red.log`, `/tmp/an83-browser-green.log`.
+The initial browser red waited the full scenario timeout for a missing control;
+short visibility/option assertions now make that stage fail promptly. Scoped
+Ruff/ESLint and production TypeScript/Vite build pass (`/tmp/an83-web-build.log`).
+No full suite, paid inference or live judgment evaluation ran.
+
+Local preview restarted while idle with its existing home/database. Existing
+agents retain their model and Hermes-default reasoning. A read-only owner UI
+check confirms Astra’s available effort levels and Cancel without saving a live
+change. Screenshot: ignored `apps/desktop/demo/reasoning-settings-2026-09-07/`.
+AN-80 is next: continuous work-item comments with verbosity and verified output
+links/description sections, followed by AN-73 conversations and steering.
 
 ## Model selection — AN-27 complete
 

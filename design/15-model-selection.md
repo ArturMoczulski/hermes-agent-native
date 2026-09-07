@@ -23,6 +23,27 @@ Save and Cancel must be explicit. Preserve the submitted model choice when a
 creation response is lost and retried. A stale edit cannot overwrite a newer
 configuration without the owner first seeing the new value.
 
+## Reasoning effort
+
+The same settings include an agent’s default reasoning effort. The framework’s
+new-agent default includes this preference; creation can override it and the
+owner can change it later. Reasoning is operational configuration and never
+changes the soul or lifespan of an agent.
+
+Offer only levels supported by the chosen provider/model route. **Hermes default**
+preserves that native transport’s ordinary default behavior; it does not promise
+that reasoning is disabled or that no reasoning parameter is sent. Unknown
+capabilities offer this default alone, with an explanation. An explicit effort
+must not be silently weakened or strengthened. Changing models may require the
+owner to choose a compatible effort before saving. Do not advertise Codex app
+orchestration levels as direct model API levels.
+
+The effort is saved and captured with each admitted work/chat selection. Editing
+it applies to the next attempt, with explicit Save/Cancel and stale-edit checks.
+Show saved and current/last-attempt preferences alongside the model. Routine
+verification inspects actual scripted provider requests and tests default and
+explicit settings without paid inference.
+
 ## When a change takes effect
 
 An admitted work run or chat message keeps one fixed provider/model selection.

@@ -122,7 +122,7 @@ def make_agent(server, binding, key, session_db=None):
     db = session_db if session_db is not None else server['_get_db']()
     if db is None:
         raise RuntimeError('Native managed chat storage is unavailable')
-    from agent_native.model_runtime import resolve_selection
+    from agent_native.model_runtime import resolve_selection, reasoning_config, bind_reasoning
     from agent_native.model_settings import read_attempt
     from hermes_cli.kanban_db_connect import connect_closing
     attempt = getattr(db, '_managed_chat_attempt', None)
@@ -143,15 +143,17 @@ def make_agent(server, binding, key, session_db=None):
         except ValueError:
             db.set_session_title(key, db.get_next_title_in_lineage(title))
     with construction_scope(binding):
-        return AIAgent(model=model, provider=runtime.get('provider'), base_url=runtime.get('base_url'),
+        agent = AIAgent(model=model, provider=runtime.get('provider'), base_url=runtime.get('base_url'),
                        api_key=runtime.get('api_key'), api_mode=runtime.get('api_mode'),
                        credential_pool=runtime.get('credential_pool'), requested_provider=runtime.get('requested_provider'),
-                       capabilities=runtime.get('capabilities'), session_id=key,
+                       capabilities=runtime.get('capabilities'), reasoning_config=reasoning_config(selection),
+                       session_id=key,
                        session_db=db,
                        enabled_toolsets=[], skip_context_files=True, load_soul_identity=False,
                        skip_memory=True, skip_background_review=True, checkpoints_enabled=False,
                        save_trajectories=False, max_iterations=2, max_tokens=2048, run_budget_seconds=90,
                        quiet_mode=True, ephemeral_system_prompt=binding.purpose)
+        return bind_reasoning(agent, selection)
 
 
 def issue_turn_permit(session):

@@ -7,7 +7,7 @@ import { Label } from "@nous-research/ui/ui/components/label";
 import { ConfirmDialog } from "@/components/ConfirmDialog";
 import type { GatewayClient } from "@/lib/gatewayClient";
 import { Check, RefreshCw, Search, X } from "lucide-react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { createPortal } from "react-dom";
 import { cn, themedBody } from "@/lib/utils";
 import { fuzzyRank } from "@/lib/fuzzy";
@@ -92,6 +92,10 @@ interface Props {
   hideGlobal?: boolean;
   scopeDescription?: string;
   actionLabel?: string;
+  /** Optional agent-owned controls; native pickers keep their existing flow. */
+  selectionControls?(selection: { provider: string; model: string }): ReactNode;
+  selectionAllowed?(selection: { provider: string; model: string }): boolean;
+  selectCurrentModel?: boolean;
 }
 
 export function ModelPickerDialog(props: Props) {
@@ -107,6 +111,9 @@ export function ModelPickerDialog(props: Props) {
     hideGlobal = false,
     scopeDescription,
     actionLabel = "Switch",
+    selectionControls,
+    selectionAllowed,
+    selectCurrentModel = false,
   } = props;
   const standalone = !!loader && !!onApply;
 
@@ -124,17 +131,25 @@ export function ModelPickerDialog(props: Props) {
   const [pendingConfirm, setPendingConfirm] =
     useState<PendingExpensiveConfirm | null>(null);
   const closedRef = useRef(false);
+  const initializedSelection = useRef(false);
 
   const applyOptions = (r: ModelOptionsResponse) => {
     const next = r?.providers ?? [];
     setProviders(next);
     setCurrentModel(String(r?.model ?? ""));
     setCurrentProviderSlug(String(r?.provider ?? ""));
-    setSelectedSlug((prev) => {
-      if (prev && next.some((p) => p.slug === prev)) return prev;
-      return (next.find((p) => p.is_current) ?? next[0])?.slug ?? "";
-    });
-    setSelectedModel("");
+    const current = next.find((provider) => provider.slug === r?.provider);
+    if (selectCurrentModel && !initializedSelection.current && current && r?.model) {
+      setSelectedSlug(current.slug);
+      setSelectedModel(r.model);
+    } else {
+      setSelectedSlug((prev) => {
+        if (prev && next.some((p) => p.slug === prev)) return prev;
+        return (next.find((p) => p.is_current) ?? next[0])?.slug ?? "";
+      });
+      setSelectedModel("");
+    }
+    initializedSelection.current = true;
   };
 
   const requestOptions = (refresh = false) =>
@@ -270,7 +285,8 @@ export function ModelPickerDialog(props: Props) {
     [models, trimmedQuery, queryMatchesSelectedProviderOnly],
   );
 
-  const canConfirm = !!selectedProvider && !!selectedModel && !applying;
+  const canConfirm = !!selectedProvider && !!selectedModel && !applying
+    && (!selectionAllowed || selectionAllowed({ provider: selectedProvider.slug, model: selectedModel }));
 
   const applySelection = async (
     confirmExpensiveModel = false,
@@ -280,7 +296,8 @@ export function ModelPickerDialog(props: Props) {
     const model = forced?.model ?? selectedModel;
     const shouldPersistGlobal = hideGlobal ? false : (forced?.persistGlobal ?? persistGlobal);
 
-    if (!providerSlug || !model || applying) return;
+    if (!providerSlug || !model || applying
+      || (selectionAllowed && !selectionAllowed({ provider: providerSlug, model }))) return;
 
     if (standalone && onApply) {
       setApplying(true);
@@ -435,6 +452,9 @@ export function ModelPickerDialog(props: Props) {
           />
         </div>
 
+        {selectionControls && <div className="border-t border-border px-5 py-3">
+          {selectionControls({ provider: selectedProvider?.slug ?? "", model: selectedModel })}
+        </div>}
         <footer className="border-t border-border p-3 flex items-center justify-between gap-3 flex-wrap">
           {hideGlobal ? (
             <span className="text-xs text-muted-foreground">{scopeDescription}</span>

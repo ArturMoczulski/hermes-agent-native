@@ -78,6 +78,13 @@ Any future live judgment evaluation must be separately invoked, explicitly choos
 an economical account-supported model and finite run limits, and never inherit a
 premium host default. See [the cost policy](../../design/15-model-selection.md#verification-without-routine-inference-costs).
 
+`reasoning-effort.spec.ts` adds one focused default/override/retry and active-attempt
+workflow. A native provider-profile plugin exists only in the disposable test home
+and declares the fixture models’ exact effort levels. The local model server
+records the actual request fields. The test verifies unsupported combinations,
+reasoning-only edits, unchanged active work/chat effort and the next message’s new
+effort. It exercises the native request path without paid intelligence.
+
 ## Full service restart
 
 When restart behavior is affected, select the relevant case in the separate

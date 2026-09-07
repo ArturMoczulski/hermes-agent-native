@@ -8,7 +8,7 @@ from agent.work_policy import TOOL_NAMES, WorkContext, bind  # noqa: F401
 def run_turn(host, frame):
     from run_agent import AIAgent
     from hermes_state import SessionDB
-    from agent_native.model_runtime import resolve_selection
+    from agent_native.model_runtime import resolve_selection, reasoning_config, bind_reasoning
 
     data = dict(frame['work_attempt'])
     context = WorkContext(**data, request=host.request_work)
@@ -52,7 +52,8 @@ def run_turn(host, frame):
             agent = AIAgent(model=model, provider=runtime.get('provider'), base_url=runtime.get('base_url'),
                 api_key=runtime.get('api_key'), api_mode=runtime.get('api_mode'),
                 credential_pool=runtime.get('credential_pool'), requested_provider=runtime.get('requested_provider'),
-                capabilities=runtime.get('capabilities'), session_id=sid, session_db=db,
+                capabilities=runtime.get('capabilities'), reasoning_config=reasoning_config(selection),
+                session_id=sid, session_db=db,
                 platform='agent-native-work', enabled_toolsets=[], skip_context_files=True,
                 load_soul_identity=False, skip_memory=True, skip_background_review=True,
                 save_trajectories=False, checkpoints_enabled=False, quiet_mode=True,
@@ -61,6 +62,7 @@ def run_turn(host, frame):
                 tool_start_callback=tool_start, tool_complete_callback=tool_complete,
                 stream_delta_callback=stream,
                 status_callback=lambda text: emit('status.update', {'text': str(text), 'kind': 'status'}))
+            bind_reasoning(agent, selection)
             if getattr(agent, '_work_context', None) is not context:
                 raise PermissionError('Native engine did not retain its work authority')
             emit('work.started', {'run_id': context.run_id, 'agent_id': context.agent_id})

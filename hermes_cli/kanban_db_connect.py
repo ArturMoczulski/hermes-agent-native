@@ -719,6 +719,8 @@ def connect(db_path: Optional[Path] = None, *, board: Optional[str] = None) -> s
                 _migrate_add_optional_columns(conn)
                 from agent_native.schema import SCHEMA_SQL as agent_native_schema
                 conn.executescript(agent_native_schema)
+                from agent_native.model_settings import migrate_reasoning
+                migrate_reasoning(conn)
                 from agent_native.output_store import migrate_stories
                 migrate_stories(conn)
                 _INITIALIZED_PATHS.add(resolved)

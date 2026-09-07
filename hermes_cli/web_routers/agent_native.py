@@ -34,6 +34,7 @@ class ModelChoice(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     provider: str = Field(min_length=1, max_length=256)
     model: str = Field(min_length=1, max_length=256)
+    reasoning_effort: str = Field(default='default', min_length=1, max_length=32, strict=True)
 
 
 class ChangeModel(ModelChoice):
@@ -59,7 +60,7 @@ def list_agents(actor=Depends(owner_session)):
 def create_agent(body: CreateAgent, actor=Depends(owner_session)):
     with connect_closing(board='default') as conn:
         try:
-            return identity.create_root(conn, actor=actor, **body.model_dump())
+            return identity.create_root(conn, actor=actor, **body.model_dump(exclude_unset=True))
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except ValueError as exc:
@@ -201,6 +202,15 @@ def set_model_default(body: ChangeModel, actor=Depends(owner_session)):
 async def model_options(refresh: bool = False, actor=Depends(owner_session)):
     from hermes_cli.web_routers.models import get_model_options
     return await get_model_options(refresh=refresh, include_unconfigured=False, explicit_only=True)
+
+
+@model_router.get('/reasoning')
+def reasoning_options(provider: str, model: str, actor=Depends(owner_session)):
+    from agent_native.model_runtime import get_reasoning_options
+    try:
+        return get_reasoning_options(provider, model)
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
 @router.put('/{agent_id}/model')

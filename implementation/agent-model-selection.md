@@ -50,3 +50,29 @@ checks separate and explicitly configured; no live evaluation is required here.
 
 Exact red/green evidence and current completion status live in
 [Builder state](../first-builder/STATE.md) and Plane AN-27.
+
+## Reasoning effort — AN-83 implemented
+
+Extend the existing setting/default/attempt records with `reasoning_effort`,
+using `default` for pre-feature records and the existing native default behavior.
+Keep old creation-request input unchanged when the optional field was omitted;
+new explicit choices remain part of idempotency. Reuse the same owner routes and
+model-setting revision. Add a configured-pair reasoning-options endpoint, with
+exact known levels and default-only behavior for unknown routes.
+
+The existing global ReasoningPicker writes profile configuration; reuse labels
+and the native model picker, while persisting these choices in framework records.
+Work/chat constructors receive the captured preference through native
+`reasoning_config`. The request boundary must reject an explicit effort that was
+ignored, clamped or replaced. No new agent loop or broad inference settings form.
+
+The native Codex effort table needs an Astra entry. OpenAI’s
+[model specification](https://developers.openai.com/api/docs/models/gpt-6-astra)
+lists low, medium, high, xhigh and max; the Codex app catalog’s Ultra orchestration
+option is not a direct API effort. Use supported route metadata, not the app’s
+full UI vocabulary. Tests use an isolated native provider profile and HTTP fixture
+to prove persistence, independent choices and work/chat request propagation.
+
+AN-83 is implemented and verified with a focused browser scenario, native request
+checks and storage/upgrade regressions. AN-80 continuous Plane comments and
+verified output links is next. See Builder state and Plane for exact evidence.

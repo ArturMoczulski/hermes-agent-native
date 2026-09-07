@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { ModelPickerDialog, type ModelOptionsResponse } from "@/components/ModelPickerDialog";
 import { fetchJSON } from "@/lib/api";
-import { agentModelsEndpoint, agentsEndpoint, modelChoiceLabel, type Agent, type DefaultAgentModel, type ModelChoice } from "@/lib/agent-native";
+import { agentModelsEndpoint, agentsEndpoint, modelChoiceLabel, reasoningEffortLabel, type Agent, type DefaultAgentModel, type ModelChoice } from "@/lib/agent-native";
 
 export function AgentModelPicker({ choice, title, actionLabel = "Save", scopeDescription, onApply, onClose }: {
   choice?: ModelChoice | null;
@@ -13,13 +13,67 @@ export function AgentModelPicker({ choice, title, actionLabel = "Save", scopeDes
   onApply(choice: ModelChoice): Promise<void> | void;
   onClose(): void;
 }) {
-  return <ModelPickerDialog title={title} hideGlobal actionLabel={actionLabel} scopeDescription={scopeDescription}
+  const [effort, setEffort] = useState(choice?.reasoning_effort ?? "default");
+  const [capabilities, setCapabilities] = useState<ReasoningCapabilities | null>(null);
+  return <ModelPickerDialog title={title} hideGlobal selectCurrentModel actionLabel={actionLabel} scopeDescription={scopeDescription}
+    selectionAllowed={(selection) => capabilities?.key === reasoningKey(selection) && capabilities.efforts.includes(effort)}
+    selectionControls={(selection) => <AgentReasoningControl selection={selection} effort={effort} onChange={setEffort} onLoaded={setCapabilities} />}
     loader={async (options) => {
       const inventory = await fetchJSON<ModelOptionsResponse>(`${agentModelsEndpoint}/options${options?.refresh ? "?refresh=true" : ""}`);
       return { ...inventory, provider: choice?.provider ?? "", model: choice?.model ?? "",
         providers: inventory.providers?.map((provider) => ({ ...provider, is_current: provider.slug === choice?.provider })) };
     }}
-    onApply={({ provider, model }) => onApply({ provider, model })} onClose={onClose} />;
+    onApply={({ provider, model }) => onApply({ provider, model, reasoning_effort: effort })} onClose={onClose} />;
+}
+
+type ReasoningCapabilities = { key: string; efforts: string[]; default_label: string; message: string | null };
+function reasoningKey(selection: ModelChoice): string { return JSON.stringify([selection.provider, selection.model]); }
+
+function AgentReasoningControl({ selection, effort, onChange, onLoaded }: {
+  selection: ModelChoice; effort: string; onChange(value: string): void; onLoaded(value: ReasoningCapabilities): void;
+}) {
+  const { provider, model } = selection;
+  const key = reasoningKey(selection);
+  const [loaded, setLoaded] = useState<{ key: string; options?: ReasoningCapabilities; error?: boolean } | null>(null);
+  const [reload, setReload] = useState(0);
+  const current = loaded?.key === key ? loaded : null;
+  useEffect(() => {
+    if (!provider || !model) return;
+    let active = true;
+    void fetchJSON<Omit<ReasoningCapabilities, "key">>(`${agentModelsEndpoint}/reasoning?${new URLSearchParams({ provider, model })}`)
+      .then((result) => {
+        if (!Array.isArray(result.efforts) || !result.efforts.includes("default")) throw new Error("Invalid reasoning options");
+        if (active) {
+          const options = { ...result, key };
+          setLoaded({ key, options }); onLoaded(options);
+        }
+      }).catch(() => {
+        if (active) {
+          setLoaded({ key, error: true });
+          onLoaded({ key, efforts: [], default_label: "Hermes default", message: null });
+        }
+      });
+    return () => { active = false; };
+  }, [provider, model, key, reload, onLoaded]);
+  if (!provider || !model) return <p className="text-xs text-muted-foreground">Choose a model to configure its reasoning effort.</p>;
+  if (current?.error) return <div role="alert" className="space-y-2 text-sm">
+    <p>Could not load reasoning options for this model. Check the connection and retry.</p>
+    <Button onClick={() => setReload((value) => value + 1)}>Reload reasoning options</Button>
+  </div>;
+  const options = current?.options;
+  const allowed = options?.efforts.includes(effort);
+  return <div className="space-y-2 text-sm">
+    <label className="font-medium" htmlFor="agent-reasoning-effort">Reasoning effort</label>
+    <select id="agent-reasoning-effort" value={effort} disabled={!options}
+      className="w-full rounded-md border bg-background px-3 py-2" onChange={(event) => onChange(event.target.value)}>
+      {!allowed && <option value={effort} disabled>{reasoningEffortLabel(effort)}{options ? " — not supported" : ""}</option>}
+      {options?.efforts.map((value) => <option key={value} value={value}>{value === "default" ? options.default_label : reasoningEffortLabel(value)}</option>)}
+    </select>
+    {!options && <p role="status" className="text-xs text-muted-foreground">Loading supported reasoning levels…</p>}
+    {options && !allowed && <p role="alert">Choose a supported reasoning effort for this model. Your previous choice has not been changed.</p>}
+    {options?.message && <p className="text-xs text-muted-foreground">{options.message}</p>}
+    <p className="text-xs text-muted-foreground">Higher effort can take longer and use more model tokens. Hermes default keeps the native behavior for this model; it does not mean reasoning is off.</p>
+  </div>;
 }
 
 export function DefaultAgentModelControls({ onChange }: { onChange(model: DefaultAgentModel): void }) {
