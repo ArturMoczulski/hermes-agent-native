@@ -91,5 +91,7 @@ def select(conn, *, validate, inspect, agent_id, run_id, call_id, arguments):
                      (record['selection_id'], run_id, call_id, item_id, encoded, _hash(encoded)))
         from agent_native.work_state import event
         event(conn, run_id, 'work.focus', 'Selected work item: '+record['name'])
+        from agent_native.progress import selected
+        selected(conn, agent_id, record)
         validate(conn)
     return record

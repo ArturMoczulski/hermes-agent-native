@@ -166,6 +166,7 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         return {'worker_alive':alive,'file_content':content,
                 'items':[i for i in plane.items.values() if i['project'] in project_ids],
                 'cycles':[c for c in plane.cycles.values() if c['project'] in project_ids],
+                'comments':[c for c in plane.comments.values() if c['project'] in project_ids],
                 'native_roles':[m['role'] for m in messages],
                 'model_requests':list(getattr(model, 'writer_requests', []))}
 

@@ -95,6 +95,18 @@ export default function AgentDetailPage() {
             setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
           }} />
         <PlanningWork key={`planning:${agent.id}:${agent.soul_revision}:${agent.setup?.activation_id}`} agent={agent} />
+        {agent.work && <section aria-label="Plane progress" className="space-y-3 rounded-xl border p-5">
+          <h2 className="text-lg font-semibold">Plane progress</h2>
+          <p className="text-sm text-muted-foreground">Latest 20 progress updates. Confirmed means Plane acknowledged the comment. Unknown delivery is not retried automatically.</p>
+          {agent.work.progress?.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+            <thead><tr><th className="p-2">Time</th><th className="p-2">Update</th><th className="p-2">Delivery</th></tr></thead>
+            <tbody>{agent.work.progress.map((report) => <tr key={report.operation_id} className="border-t">
+              <td className="p-2"><time dateTime={report.created_at}>{new Date(report.created_at).toLocaleString()}</time></td>
+              <td className="p-2">{report.summary}</td>
+              <td className="p-2">{{ pending: "Pending", confirmed: "Confirmed", failed: "Failed", unknown: "Unknown — inspect before resending" }[report.status]}</td>
+            </tr>)}</tbody>
+          </table></div> : <p className="text-sm">No progress updates recorded for this attempt.</p>}
+        </section>}
         <section aria-label="Agent purpose" className="space-y-3 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">Purpose</h2>
           <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>

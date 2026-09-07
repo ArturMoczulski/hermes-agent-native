@@ -247,3 +247,26 @@ verbosity control together with its owner-authorized persistent setting; do not
 ship a selector that merely changes a local label. Saved drafts remain awaiting
 evaluation, and file-free results do not manufacture an attachment. Runtime
 reporting automation and rich-description synchronization remain AN-80 work.
+
+### AN-80 first increment: work-selection progress
+
+The host commits a progress intent in the same transaction as each new explicit
+work selection. It then uses the existing scoped `comment.create` adapter and
+mutation journal to post the selected item and next action, with actual agent,
+item and run IDs. Selection replay returns the same result without another
+comment, including after loss of the broker receipt. No historical selections
+are backfilled and no existing agent is started.
+
+The agent detail page shows the latest twenty delivery records, newest first.
+Confirmed requires an acknowledged comment receipt. An uncertain network result
+stays unknown and is not automatically retried; failure to report does not claim
+that execution failed or that the work was accepted. Intent and external mutation
+IDs remain available for later reconciliation. Pause retains its independent
+process-stop path.
+
+This is the first verified increment, not completion of AN-80. Owner verbosity,
+additional checkpoints/outcome reporting, output links/description sections,
+and an owner reconciliation flow remain open. The focused browser test holds a
+real worker after selection and verifies that Plane already contains the comment;
+reloading does not duplicate it, and Pause stops the run. Local scripted model
+and external Plane fixtures incur no paid inference.

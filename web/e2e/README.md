@@ -197,3 +197,12 @@ seconds and labels accelerated workflow footage. The encoder validates frame
 counts and final duration so chapter timestamps match playback. Raw evidence
 remains available alongside the chapter index. These recording configurations
 are an owner review tool, not the default feature-verification command.
+
+## Work-selection progress
+
+`plane-progress.spec.ts`, case `selected work posts progress in Plane before the
+native worker finishes`, holds the real native worker after selection. It checks
+the actual external Plane fixture comment, host attempt attribution, confirmed
+UI delivery state, reload without duplication, and Pause. This verifies the
+first AN-80 increment; it does not establish later verbosity, output linking or
+reconciliation behavior.

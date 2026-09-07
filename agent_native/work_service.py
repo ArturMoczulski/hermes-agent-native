@@ -116,6 +116,8 @@ class _Run:
             result = select(conn, validate=self.validate, inspect=planning.inspect,
                             agent_id=self.work['agent_id'], run_id=self.work['id'],
                             call_id=call_id, arguments=args)
+            from agent_native.progress import deliver_selection
+            deliver_selection(conn, planning, self.validate, result['selection_id'])
         elif tool == 'output_publish':
             from agent_native.output_store import publish
             required = {'title','content','item_id','format'}
@@ -177,7 +179,9 @@ class _Run:
                     initial = ('Begin your initial project work from your protected purpose. Use the supplied planning skill. '
                                'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
                                'Choose useful work appropriate to your purpose and the supplied material. Use work_item_select before '
-                               'substantive work and whenever you switch tasks. Save any produced text or Markdown '
+                               'substantive work and whenever you switch tasks. The framework posts a work-selection progress comment; '
+                               'do not duplicate that start update. Continue reporting meaningful progress through Plane comments. '
+                               'Save any produced text or Markdown '
                                'with output_publish; use output_id only when revising an existing output. Record paths in Plane. '
                                'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
                                'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '

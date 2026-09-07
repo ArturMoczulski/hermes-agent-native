@@ -111,6 +111,7 @@ export function outputVersionLink(agentId: string, output: OutputReference): str
 }
 
 export type AgentWork = {
+  progress?: { operation_id: string; source_id: string; item_id: string; summary: string; status: "pending" | "confirmed" | "failed" | "unknown"; comment_id: string | null; created_at: string }[];
   model_selection?: ModelActivity | null;
   id: string;
   focus?: WorkFocus | null;

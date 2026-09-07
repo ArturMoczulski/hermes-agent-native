@@ -1,3 +1,26 @@
+## AN-80 work-selection progress increment — 2026-09-07
+
+AN-80 is In Progress. A new explicit work selection now atomically stores a
+host-authored progress intent, then sends a scoped Plane comment with actual
+agent, item and attempt identity. Broker replay does not duplicate delivery.
+Lost HTTP acknowledgement remains Unknown, without automatic retry or false
+work failure. Agent detail has a latest-20, newest-first delivery table.
+
+Red: native worker ran with a selection but no Plane comment; both attribution
+and lost-response storage tests failed on missing comments. Green: the browser
+case passed in 7.4s; two storage cases passed in 1.3s. Evidence logs:
+/tmp/an80-progress-{red,green}.log and /tmp/an80-storage-{red,green}.log.
+Four affected focus regressions also passed (replay, rollback, stop and changed
+purpose); focused Ruff and production TypeScript/Vite build passed. The idle
+preview was restarted and its built progress panel verified. Historical runs
+have no fabricated reports; no live work was started.
+Models and Plane responses are local scripted fixtures; no paid inference.
+
+Remaining AN-80: per-agent verbosity, meaningful additional checkpoints and
+outcomes, immutable saved-output links and rich-description preservation,
+owner reconciliation, outage/stop acceptance. Do not mark AN-80 Done based on
+this first increment. AN-73 follows AN-80.
+
 ## Reasoning-default clarification — 2026-09-07
 
 Owner requested actionable reasoning labels and the lightest Astra default.
