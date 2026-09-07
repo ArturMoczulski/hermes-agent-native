@@ -109,3 +109,18 @@ contradictory instructions or store secrets here.
   evidence. Per-run time and model-step limits are execution caps, not project
   estimates. Fixture values do not establish live defaults. Source: current owner
   conversation.
+
+
+- **Live first-writer checkpoint (2026-09-07):** the owner requested an actual
+  recorded demonstration. A new Moonlit Cartographer used the existing ChatGPT
+  subscription/GPT-6 Astra connection to plan in Plane and publish a verified
+  story in 13 model calls. A separate live browser Pause stopped its real worker.
+  The demo's explicit 300-second/20-step limits do not establish global defaults;
+  the original three agents remain unchanged. The writing task stays In Progress
+  pending owner review. A finished bounded run is not full-purpose acceptance or
+  evidence of automatic cadence. See [STATE.md](STATE.md) for exact records.
+- **Poll through the live user workflow (2026-09-07):** recording exposed duplicate
+  sibling React keys that accumulated old work controls. Keep work/story keys
+  distinct, and verify a held active run over actual polling responses before
+  testing Pause. Immediate navigation had missed this defect. The regression
+  reproduced 13 controls, then passed with one control and confirmed worker death.

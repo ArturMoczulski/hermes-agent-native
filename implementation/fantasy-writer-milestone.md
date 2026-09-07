@@ -14,8 +14,12 @@ New creation now connects protected private files and a Plane planning home to
 a visible setup status; see [current setup](writer-startup-setup.md). A restricted
 Docker environment is also implemented as an internal piece. Plane host reads/writes and uncertain-write recovery
 have evidence. The first AN-24 bridge exposes Plane inspection through Hermes,
-not the complete managed planning tool set. The managed writer path is being verified with isolated external-service fixtures;
-that evidence is distinct from a live autonomous subscription demonstration.
+not the complete managed planning tool set. The managed writer path now has both
+isolated external-service fixture verification and a separate successful live
+GPT-6 Astra subscription demonstration. It authored a plan and saved a verified
+story; a separate live UI Pause stopped the native worker. See the
+[live checkpoint evidence](writer-managed-run.md#live-checkpoint-evidence).
+The full continuing writer milestone remains open.
 
 Extend `web/src/pages/AgentsPage.tsx`, `hermes_cli/web_routers/agent_native.py`
 and `agent_native/`. Reuse Hermes's model loop and callbacks, existing owner
@@ -53,8 +57,9 @@ the first execution slice and retain it as every later slice is added.
 The creation/detail/initial activation and setup increments are already accepted
 as partial AN-72 evidence. Native selected-agent conversation and restart recovery are now accepted checkpoints.
 The owner deferred remaining purpose/transcript ordering and selected the first
-managed story and actual Pause as the next target. The first saved story
-remains the first autonomous-work checkpoint and the larger milestone stays intact.
+managed story and actual Pause. Both now have live evidence, completing AN-72's
+bounded checkpoint. The first saved story remains an autonomous-work checkpoint;
+the larger continuing-agent milestone and owner result acceptance remain open.
 
 ## Plane delivery records
 
@@ -70,8 +75,11 @@ outcomes, not additional parallel copies of the broad capability backlog.
 | [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/) | Continue the writer purpose on cadence and recover interrupted work |
 | [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/) | Demonstrate a real autonomous writer through the owner interface |
 
-AN-72 is the active urgent slice. AN-77 is Todo: the owner explicitly deferred its
-remaining purpose/transcript ordering after the native chat/restart checkpoint.
+AN-72's bounded acceptance criteria are met. The live demo video is verified
+and AN-72 is Done in Plane, with evidence read back through its API.
+AN-73 is the next implementation slice. AN-77 is Todo: the owner explicitly
+deferred its remaining purpose/transcript ordering after the native chat/restart
+checkpoint.
 Plane's installed public API cannot remove the existing dependency relation; both
 items annotate that it is no longer an active gate. Accepted evidence is retained.
 AN-73 retains broader communication during work after AN-72; detailed inspection

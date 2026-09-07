@@ -74,5 +74,34 @@ retain a valid saved story; the UI must not mistake a later failure for loss of 
 
 Existing preview agents remain disabled for project work until explicitly
 configured. Fixture runs use isolated homes, real native processes and local
-external model/Plane servers. A passing scripted-provider flow proves integration,
-not the creative quality of a live model or the complete writer milestone.
+external model/Plane servers. A passing scripted-provider flow proves integration;
+the separate live evidence below demonstrates actual model-driven writing.
+Neither establishes the complete writer milestone.
+
+## Live checkpoint evidence
+
+The owner-requested demonstration on 2026-09-07 created a separate Moonlit
+Cartographer agent. Its configured GPT-6 Astra model used the existing ChatGPT
+subscription for 13 actual provider calls. It wrote a Plane brief, an undated
+cycle and a writing task, then saved **The Bridge That Remembered**, version 1.
+The authenticated canonical readback was independently checked: 606 words, with
+retained version, task reference and evaluation. The task remains In Progress
+for owner review; completion of this bounded attempt does not accept the result.
+The main demo's 300-second/20-step limits apply only to that run, with no change
+to global defaults or the original three preview agents.
+
+A separate live demonstration reached two model calls before the browser clicked
+Pause. UI/API readback and an independent process check confirmed the real native
+worker stopped. The exact identities and local recording paths are retained in
+[Builder state](../first-builder/STATE.md#an-72-live-demonstration--completed-bounded-checkpoint).
+The [captioned live demo](../apps/desktop/demo/writer-2026-09-07/writer-demo.mp4)
+is 99.33 seconds, with the working section explicitly sped up 6×. Final visual
+and full-video decode checks passed; AN-72 is Done in Plane with this evidence.
+
+Recording also found duplicate work controls caused by colliding sibling React
+keys. The regression held a real native writer through at least six actual agent
+GET polls: RED grew to 13 Pause buttons. Distinct stable work/story keys restored
+one of each panel and control. All six writer Playwright scenarios and the
+production web build passed, including actual worker/socket cancellation.
+AN-72's bounded checkpoint is complete; AN-73 is next. Cadence, resume, richer
+inspection and the full writer journey remain outside this checkpoint.

@@ -38,14 +38,16 @@ and marking interrupted messages uncertain without replay. Remaining acceptance
 covers purpose-revision/transcript ordering. A live managed subscription exchange
 is verified. Reuse native conversation storage, composer and model loop throughout; do not build a second chat implementation.
 
-AN-72 is the active urgent slice. The owner explicitly moved the first managed
-story ahead of AN-77's remaining purpose/transcript ordering work. Its accepted
-creation/detail/initial-review and private setup evidence remains intact at `82241f4`.
-The initial bounded native writer, story reading and Pause are now connected;
-see [managed writing](implementation/writer-managed-run.md) for scope and evidence.
-The first live demonstration still needs owner-selected run limits. AN-73 retains later proactive
-questions and steering during work; AN-74–76 cover inspection, continuity and full
-acceptance. See [Builder state](first-builder/STATE.md) for the exact handoff.
+AN-72's bounded first-writer checkpoint is complete. The authorized live demo
+used GPT-6 Astra through the existing ChatGPT subscription, authored its Plane
+plan and saved a verified story. A separate live browser Pause stopped its actual
+native worker. The original three preview agents remain unchanged. See
+[managed writing](implementation/writer-managed-run.md) for scope and evidence.
+The demo's explicit 300-second/20-step limits are not global defaults. The
+captioned video is verified and AN-72 is Done in Plane. AN-73 is next:
+proactive questions and steering during work.
+AN-74–76 retain detailed inspection, continuity and full milestone acceptance.
+See [Builder state](first-builder/STATE.md) for the exact handoff.
 
 The subsequent AN-16/M7 First Builder handoff adds protected repository development
 and demonstrates a real TDD improvement using the writer's run/chat/continuity

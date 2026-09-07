@@ -139,3 +139,52 @@ for (const limit of ['time', 'steps'] as const) {
     expect((await get()).work.model_calls).toBe(final.work.model_calls)
   })
 }
+
+
+test('polling keeps exactly one work panel and Pause control for an active writer', async ({ page, request }) => {
+  test.setTimeout(60000)
+  const marker = 'E2E_WRITER_HOLD_POLLING'
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+  const response = await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
+    request_id: 'writer-polling-controls', name: 'Writer with stable controls',
+    purpose: 'Write fantasy stories. ' + marker,
+    work: { timeout_seconds: 300, max_iterations: 20 },
+  } })
+  expect(response.status()).toBe(201)
+  const created = await response.json()
+  const endpoint = `/api/agent-native/agents/${created.id}`
+  const hold = async () => (await (await request.get(`${backend}/__e2e__/model-holds/${marker}`, { headers })).json())
+  let activePolls = 0
+  page.on('response', async (result) => {
+    if (result.request().method() !== 'GET' || new URL(result.url()).pathname !== endpoint || !result.ok()) return
+    const agent = await result.json().catch(() => null)
+    if (agent?.work?.state === 'running') activePolls += 1
+  })
+  try {
+    await page.goto(`/agents/${created.id}`)
+    await expect.poll(async () => (await hold()).entered, { timeout: 30000 }).toBe(true)
+    await expect.poll(() => activePolls, { timeout: 20000 }).toBeGreaterThanOrEqual(6)
+    await expect(page.getByLabel('Execution status')).toHaveText('Running')
+    await test.info().attach('actual-polling-controls.json', { contentType: 'application/json', body: JSON.stringify({
+      activePolls, workPanels: await page.getByRole('region', { name: 'Agent work', exact: true }).count(),
+      storyPanels: await page.getByRole('region', { name: 'Saved stories', exact: true }).count(),
+      pauseButtons: await page.getByRole('button', { name: 'Pause', exact: true }).count(),
+    }) })
+    await expect.soft(page.getByRole('region', { name: 'Agent work', exact: true })).toHaveCount(1)
+    await expect.soft(page.getByRole('region', { name: 'Saved stories', exact: true })).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(1)
+    await page.getByRole('button', { name: 'Pause', exact: true }).click()
+    await expect(page.getByLabel('Execution status')).toHaveText('Paused')
+    await expect.poll(async () => (await hold()).client_disconnected).toBe(true)
+    const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${created.id}`, { headers })).json()
+    expect(proof.worker_alive).toBe(false)
+    expect(proof.file_content).toBeNull()
+    await expect(page.getByRole('region', { name: 'Agent work', exact: true })).toHaveCount(1)
+    await expect(page.getByRole('region', { name: 'Saved stories', exact: true })).toHaveCount(1)
+    await expect(page.getByRole('button', { name: 'Pause', exact: true })).toHaveCount(0)
+  } finally {
+    await request.post(`${backend}${endpoint}/work/pause`, { headers })
+    await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker } })
+  }
+})

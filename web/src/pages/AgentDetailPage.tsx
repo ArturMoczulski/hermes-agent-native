@@ -80,7 +80,7 @@ export default function AgentDetailPage() {
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
           <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>
         </header>
-        <WorkControls key={agent.id} agent={agent}
+        <WorkControls key={`work:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {
             mutationVersion.current += 1;
@@ -132,7 +132,7 @@ export default function AgentDetailPage() {
           </li>)}</ol> : <p>No execution activity recorded yet.</p>}
           <p className="text-sm text-muted-foreground">Created <time dateTime={agent.created_at}>{new Date(agent.created_at).toLocaleString()}</time></p>
         </section>
-        <SavedStories key={agent.id} agent={agent} />
+        <SavedStories key={`stories:${agent.id}`} agent={agent} />
       </>}
     </div>
   );

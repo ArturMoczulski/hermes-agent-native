@@ -14,10 +14,11 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-**AN-72 is In Progress and urgent.** The owner deferred AN-77's remaining
-purpose-revision/transcript ordering and selected the first managed story as the
-next visible result. AN-77 is Todo, retaining its accepted native chat, receipts,
-deadlines and full-service-restart evidence at `b6c59aa`.
+**AN-72 is Done in Plane; AN-73 is next.** The captioned live demo video is
+verified, and the completed item retains its evidence and scope. The owner
+deferred AN-77's remaining purpose-revision/transcript ordering; AN-77 remains
+Todo with accepted native chat, receipts, deadlines and full-service-restart
+evidence at `b6c59aa`.
 
 AN-72 now connects explicit owner run limits, existing private setup, native
 Hermes execution, scoped Plane planning, immutable story versions and actual
@@ -25,19 +26,58 @@ Pause. The existing Agents detail page displays work state, activity, sessions,
 limits, stories and agent evaluation. See [managed writing](../implementation/writer-managed-run.md).
 Conversation remains native and separate; no duplicate composer or model loop.
 
-The live preview's three existing agents remain unconfigured for project work.
-The owner asked what the proposed limits mean; that explanation was supplied,
-and the choice for the first live run remains pending. Fixture limits are not
-live defaults. Do not silently enable existing records or claim a real autonomous
-subscription demonstration from scripted-provider evidence.
+The owner requested an actual recorded demonstration. A new, separately created
+writer completed a real subscription-backed run; a separate demo agent proved
+live UI Pause. The original three preview agents remain unchanged and unconfigured
+for project work. The main demo used explicit limits of 300 seconds and 20 model
+steps; these values apply to that demonstration, not unattended or global defaults.
 
-Next: finish the single-run acceptance checkpoint with owner-selected limits and
-a real isolated writer. AN-73 then connects conversation, questions and steering
-to work; AN-74 covers detailed inspection and AN-75 cadence/resume/recovery.
-AN-76 accepts the full writer journey. The First Builder still runs through the
-external coding environment. Earlier next-step entries are historical.
+Next: AN-73's conversation, questions and steering during work. AN-74 covers detailed inspection
+and AN-75 cadence/resume/recovery. AN-76 and the full writer milestone remain open.
+The First Builder still runs through the external coding environment. Earlier
+next-step entries below are historical.
 
-## AN-72 bounded native writer — current increment
+## AN-72 live demonstration — completed bounded checkpoint
+
+On 2026-09-07, [Moonlit Cartographer — live demo](http://127.0.0.1:19221/agents/f6889031-7c56-482d-b395-49cd8584c12e)
+completed 13 actual GPT-6 Astra calls through the configured ChatGPT subscription.
+It authored a Plane project brief, an undated cycle, a writing item with acceptance
+criteria, and a recorded result/evaluation. It published **The Bridge That
+Remembered**, version 1, with 606 words in the independently checked canonical
+story content. This is real-model evidence in addition to the external-provider
+fixture checks below; it does not establish artistic quality or a continuing cadence.
+
+The [demo Plane project](http://localhost:19230/an-f68890317c56482db39549cd8584c12e/projects/026e1ed4-f6fc-442e-8e38-ef50f2104533/issues/)
+retains the writing task In Progress for owner review. A completed native attempt,
+saved version and agent self-evaluation do not bypass terminal result acceptance.
+The main native worker, PID 80327, was independently confirmed dead after completion.
+
+A separate [Pause control — verified demo](http://127.0.0.1:19221/agents/6d27e238-bfaf-4f58-99b0-9f0ad5672964)
+reached two model calls. The actual browser clicked its unique Pause button; both
+UI and API reported Paused. A separate read of the control database and process
+check confirmed native worker PID 92265 was dead. An earlier Pause recording
+encountered the duplicate-control bug below; its worker PID 84338 was stopped
+through the owner API. That earlier clip is not evidence of a successful UI click.
+
+The live recording exposed duplicate sibling React keys on the work and story
+panels. A new Playwright regression kept a real held-model writer on its detail
+page across at least six actual successful polling responses. RED accumulated
+13 Pause controls. Distinct stable sibling keys fixed the defect; all six writer
+scenarios passed, including one work panel, one stories panel, one Pause control,
+then actual worker/socket termination. Scoped lint and the production web build
+passed. Logs: `/tmp/an72-duplicate-controls-{red,green,build}.log`; the RED trace
+is retained at `/tmp/an72-duplicate-controls-red-trace.zip`.
+
+Local evidence is intentionally ignored by Git under
+`apps/desktop/demo/writer-2026-09-07/`: `capture.json`, `story.json`, the raw UI/Plane
+recordings, and `pause-verified-capture.json` / `pause-verified-live-raw.webm`.
+The [captioned demo video](../apps/desktop/demo/writer-2026-09-07/writer-demo.mp4)
+is 99.33 seconds, H.264 at 1600 × 1120. Its working section is explicitly sped
+up 6×; cuts and timing are recorded in `video-edit.json`. Final frames were
+visually checked and the full video decoded without errors. AN-72's Done state
+and evidence were independently read back through the Plane API.
+
+## AN-72 bounded native writer — implementation evidence
 
 - Creation or explicit existing-agent configuration saves one initial work run.
   Creation input remains immutable across retries and later work configuration.
@@ -78,12 +118,13 @@ evidence to 153 passing tests. All five writer browser scenarios passed again
 after that fix (`/tmp/an72-writer-release-browser.log`), and the final web build
 and scoped lint passed. All 68 changed-document local links resolve.
 
-The preview at http://127.0.0.1:19221 was restarted on the same private home
-and database (verified PID 76228). Its three IDs/purpose revisions and configured
-`gpt-6-astra` model were preserved; the updated API confirms all three have no
-configured work run. No live provider work was launched.
+Before the live demonstration above, the preview at http://127.0.0.1:19221 was
+restarted on the same private home and database (verified PID 76228). Its three
+original IDs/purpose revisions and configured `gpt-6-astra` model were preserved.
+All three had no configured work run, and that deployment smoke check did not
+launch live provider work. The subsequent demo created separate agents.
 
-## AN-77 full service-restart recovery — current increment
+## AN-77 full service-restart recovery — previous accepted increment
 
 Managed chat now recovers automatically when a service restart rotates the local
 owner session token. The existing native ChatPage performs an authenticated,
