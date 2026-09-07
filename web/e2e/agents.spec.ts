@@ -185,3 +185,20 @@ test('configured creation reaches a private planning home with one discovery tas
     focus: page.getByRole('alert'),
   });
 });
+
+
+test('owner removes an agent while retaining its history', async ({ page, request }) => {
+  const created = await request.post(api, { headers, data: { request_id: crypto.randomUUID(), name: 'Remove me', purpose: 'A temporary purpose' } });
+  const agent = await created.json();
+  await page.goto(`/agents/${agent.id}`);
+  await page.getByRole('button', { name: 'Remove agent', exact: true }).click();
+  await expect(page.getByText('History, saved outputs and Plane records are retained.')).toBeVisible();
+  await page.getByRole('button', { name: 'Confirm removal', exact: true }).click();
+  await expect(page.getByRole('status').filter({ hasText: 'Agent removed. Autonomous' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Chat with agent', exact: true })).toHaveCount(0);
+  await page.reload();
+  await expect(page.getByRole('status').filter({ hasText: 'Agent removed. Autonomous' })).toBeVisible();
+  expect((await (await request.get(api, { headers })).json()).some((a: {id: string}) => a.id === agent.id)).toBe(false);
+  expect((await request.post(`${api}/${agent.id}/chat`, { headers })).status()).toBe(409);
+  expect((await request.delete(`${api}/${agent.id}`, { headers })).status()).toBe(200);
+});

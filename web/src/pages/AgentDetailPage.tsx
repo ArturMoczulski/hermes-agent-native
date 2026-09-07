@@ -20,6 +20,9 @@ export default function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
   const { setTitle } = usePageHeader();
   const [retryError, setRetryError] = useState<string | null>(null);
+  const [removing, setRemoving] = useState(false);
+  const [confirmRemove, setConfirmRemove] = useState(false);
+  const [removeError, setRemoveError] = useState(false);
   const [retrying, setRetrying] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
   const [reload, setReload] = useState(0);
@@ -66,6 +69,15 @@ export default function AgentDetailPage() {
       setRetryError("Could not request setup retry. Check your connection; setup may already be running.");
     } finally { setRetrying(false); }
   };
+  async function removeAgent() {
+    setRemoving(true); setRemoveError(false); mutationVersion.current += 1;
+    try {
+      const result = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agentId ?? "")}`, { method: "DELETE" });
+      mutationVersion.current += 1;
+      setLoaded({ key, agent: result }); setConfirmRemove(false);
+    } catch { setRemoveError(true); }
+    finally { setRemoving(false); }
+  }
   const setup = agent?.setup;
   const setupTitles = { queued: "Setup queued", preparing: "Preparing agent", blocked: "Plane setup required", failed: "Setup needs attention", unresolved: "Setup outcome needs checking", ready: "Workspace and planning ready", superseded: "Setup superseded" };
   const startup = agent?.startup;
@@ -84,9 +96,19 @@ export default function AgentDetailPage() {
             <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
           </div>
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
-          <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>
+          {!agent.removed_at && <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>}
         </header>
-        <AgentModelControls key={`model:${agent.id}`} agent={agent}
+        {agent.removed_at ? <p role="status">Agent removed. Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
+          <Button onClick={() => setConfirmRemove(true)}>Remove agent</Button>
+          {confirmRemove && <div className="space-y-3">
+            <p>Remove this agent and stop its work? This cannot be undone.</p>
+            <p>History, saved outputs and Plane records are retained.</p>
+            <Button disabled={removing} onClick={() => { void removeAgent(); }}>{removing ? "Removing…" : "Confirm removal"}</Button>
+            <Button disabled={removing} onClick={() => setConfirmRemove(false)}>Cancel</Button>
+          </div>}
+          {removeError && <p role="alert">Could not confirm removal. Reload or retry; repeating removal is safe.</p>}
+        </section>}
+        {!agent.removed_at && <><AgentModelControls key={`model:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {
             mutationVersion.current += 1;
@@ -102,6 +124,7 @@ export default function AgentDetailPage() {
         <AgentCadence key={`cadence:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} />
         <WorkQuestions key={`questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} />
         <WorkFeedback key={`feedback:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} />
+        </>}
         <PlanningWork key={`planning:${agent.id}:${agent.soul_revision}:${agent.setup?.activation_id}`} agent={agent} />
         {agent.work && <section aria-label="Plane progress" className="space-y-3 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">Plane progress</h2>

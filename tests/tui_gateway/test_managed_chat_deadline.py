@@ -420,3 +420,28 @@ def test_managed_close_cannot_discard_unconfirmed_live_worker(
         assert sid not in server._sessions and _dead(pid)
     finally:
         model.holds.release(marker)
+
+
+def test_removal_stops_silent_native_chat_without_waiting_for_model(binding, native, monkeypatch):
+    from agent_native.identity import OWNER, remove_root
+    from hermes_cli.kanban_db_connect import connect_closing
+    server, db, model, fixture, client, sid = _open(binding, native)
+    opener = str(uuid4())
+    client.request(server, 'prompt.submit', {'session_id': sid, 'client_message_id': opener, 'text': fixture.OPENER})
+    _eventually(lambda: _receipt(client, server, sid, opener), lambda r: r['status']=='complete')
+    original_enter = model.holds.enter
+    monkeypatch.setattr(model.holds, 'enter', lambda text: original_enter(text.split('Read-only work observations for this message.')[0].rstrip()))
+    marker, message_id = 'removeSilent_' + uuid4().hex, str(uuid4())
+    model.holds.arm(marker)
+    try:
+        client.request(server, 'prompt.submit', {'session_id': sid, 'client_message_id': message_id, 'text': 'Wait for ' + marker})
+        _eventually(lambda: model.holds.evidence(marker), lambda e: e['entered'])
+        record = server._sessions[sid]
+        pid = record['_managed_host'].pid
+        with connect_closing(binding._db_path) as conn:
+            remove_root(conn, actor=OWNER, agent_id=binding.agent_id)
+        _eventually(lambda: _dead(pid), bool, timeout=5)
+        _eventually(lambda: record['running'], lambda value: not value, timeout=2)
+        assert not any(marker in m['content'] for m in db.get_messages(binding.session_id) if m['role']=='assistant')
+    finally:
+        model.holds.release(marker)

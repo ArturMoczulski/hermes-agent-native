@@ -5,6 +5,9 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
+Owner-directed AN-85–87 address recoverable Plane conflicts, agent removal, and
+recreating the failed Fantasy Wizard Series. Known rejected conflicts now allow
+fresh inspection within the same run; unknown delivery still stops work.
 **AN-75 cadence/continuation is In Progress.** Opt-in cadence and retained
 attempts are implemented; a live agent has picked up Plane feedback and saved a
 revised output without a manual continuation prompt. The demo exposed a false

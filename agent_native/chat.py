@@ -55,9 +55,12 @@ def issue_binding(*, actor, agent_id, db_path=None, storage_root=None):
     _require_owner(actor)
     storage = Path(storage_root) if storage_root is not None else get_hermes_home() / 'agents'
     with connect_closing(db_path, board='default') as conn:
+        from agent_native.identity import require_active
+        require_active(conn, agent_id)
         root = get_root(conn, actor=actor, agent_id=agent_id)
         workspace = _workspace(conn, root, storage)
         with write_txn(conn):
+            require_active(conn, agent_id)
             current = get_root(conn, actor=actor, agent_id=agent_id)
             if current['soul_revision'] != root['soul_revision']:
                 raise ConflictError('Agent purpose changed; reopen its conversation')

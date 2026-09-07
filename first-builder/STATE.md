@@ -1,3 +1,17 @@
+## AN-86 removal and blocked cadence — 2026-09-08
+
+Added owner-confirmed Remove agent with retained history/Plane records and no
+restore action. Removed roots are hidden from the roster, reject new mutations
+and chat, disable cadence, invalidate setup and request work cancellation. Silent
+native chat is now polled for authority changes and stopped through existing
+cleanup. Managed child trees are not implemented; this slice covers roots only.
+
+Evidence: 2 focused API cases; removal Playwright (7.5s); real native chat process
+stop (4.8s), each with valid missing-behavior red. Cadence now states when stopped
+or failed work blocks an enabled schedule and hides misleading next-check-in time;
+focused browser red/green (6.3s). Scoped Ruff passes. Production build and live
+recreation are the final deployment checks. See implementation/agent-removal.md.
+
 ## AN-85 recoverable Plane conflicts — 2026-09-08
 
 Owner's Fantasy Wizard Series stopped on cycle.assign after Plane added editor

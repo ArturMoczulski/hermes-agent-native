@@ -27,10 +27,12 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
     catch{setError('Could not update cadence. Check the interval and current work; paused, failed or uncertain work needs review.');}
     finally{setBusy(false);}
   }
+  const blocked=cadence?.enabled&&['failed','unknown','paused','stopping'].includes(attempts[0]?.state);
   return <section aria-label="Thinking cadence" className="space-y-3 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">Thinking cadence</h2>
     <p>{cadence?.enabled?`Enabled · every ${cadence.interval_seconds} seconds`:'Automatic check-ins are off'}</p>
-    {cadence?.enabled&&cadence.next_due&&<p>Next eligible check-in: {new Date(cadence.next_due).toLocaleString()}. Active work and unresolved outcomes can delay it.</p>}
+    {blocked&&<p role="status">Check-ins blocked: the latest attempt {attempts[0]?.state==='failed'?'failed':`is ${attempts[0]?.state}`}. Review its activity and outcome. Enabled cadence does not restart stopped or uncertain work.</p>}
+    {cadence?.enabled&&!blocked&&cadence.next_due&&<p>Next eligible check-in: {new Date(cadence.next_due).toLocaleString()}. Active work and unresolved outcomes can delay it.</p>}
     <p className="text-sm">Each check-in reviews progress and decides whether to work, ask or wait. It uses the existing run limits. Missed intervals produce at most one check-in; paused work does not restart.</p>
     <label htmlFor="cadence-seconds">Check-in interval (seconds)</label>
     <Input id="cadence-seconds" type="number" min={1} max={2592000} value={seconds} placeholder={String(cadence?.interval_seconds??'')} onChange={e=>setSeconds(e.target.value)}/>

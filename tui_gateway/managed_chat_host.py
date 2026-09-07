@@ -240,7 +240,11 @@ class ManagedExecution:
                 },
                 on_complete=self.on_complete,
             )
-            self.done.wait()
+            # A silent provider produces no RPC frames to validate. Observe owner
+            # removal/purpose changes while waiting, then use normal hard cleanup.
+            while not self.done.wait(0.25):
+                if not self._active():
+                    break
         except Exception as exc:
             self.stop(f"Managed worker failed: {exc}")
 

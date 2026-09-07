@@ -13,6 +13,13 @@ from hermes_cli.kanban_db_connect import connect_closing
 def owner_session(request: Request):
     from hermes_cli.web_server import _require_token
     _require_token(request)
+    agent_id = request.path_params.get('agent_id')
+    if agent_id and request.method not in ('GET', 'HEAD', 'DELETE'):
+        with connect_closing(board='default') as conn:
+            try:
+                identity.require_active(conn, agent_id)
+            except identity.ConflictError as exc:
+                raise HTTPException(status_code=409, detail=str(exc)) from exc
     return identity.OWNER
 
 
@@ -348,3 +355,12 @@ def list_attempts(agent_id: str, actor=Depends(owner_session)):
         identity.get_root(conn,actor=actor,agent_id=agent_id)
         return [dict(zip(('id','state','summary','created_at','finished_at','session_id'),r)) for r in conn.execute(
             'SELECT id,state,summary,created_at,finished_at,session_id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 20',(agent_id,))]
+
+
+@router.delete('/{agent_id}')
+def remove_agent(agent_id: str, actor=Depends(owner_session)):
+    with connect_closing(board='default') as conn:
+        try:
+            return identity.remove_root(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc

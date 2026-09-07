@@ -32,6 +32,7 @@ export function validModelChoice(value: unknown): value is ModelChoice {
 }
 
 export type Agent = {
+  removed_at?: string | null;
   model_selection?: ModelSelection | null;
   model_activity?: ModelActivity[];
   id: string;
@@ -137,6 +138,7 @@ export function validWorkLimits(value: unknown): value is WorkLimits {
 }
 
 export function agentWorkStatus(agent: Agent): string {
+  if (agent.removed_at) return "Removed";
   const work = agent.work;
   if (!work) return "Not started";
   if (work.state === "queued" && agent.setup?.status !== "ready") return "Waiting for setup";

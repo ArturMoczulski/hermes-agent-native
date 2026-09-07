@@ -43,6 +43,8 @@ def _read(conn, agent_id):
         'SELECT id, cause, soul_revision, requested_at '
         'FROM agent_native_initial_activations WHERE agent_id = ?', (agent_id,),
     ).fetchone()
+    removed = conn.execute('SELECT removed_at FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone()
+    root['removed_at'] = removed[0] if removed else None
     root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
                        if startup is not None else None)
     from agent_native.startup import read_setup
@@ -140,6 +142,7 @@ def revise_soul(conn, *, actor, agent_id, expected_revision, purpose):
     _require_owner(actor)
     purpose = _text(purpose, 'purpose')
     with write_txn(conn):
+        require_active(conn, agent_id)
         root = _read(conn, agent_id)
         if root['soul_revision'] != expected_revision:
             raise ConflictError('Soul revision changed; reload before editing')
@@ -172,5 +175,32 @@ def list_roots(conn, *, actor):
     """Installation roster; only the trusted owner may enumerate roots."""
     _require_owner(actor)
     return [_read(conn, row[0]) for row in conn.execute(
-        'SELECT id FROM agent_native_agents ORDER BY created_at, id'
+        'SELECT id FROM agent_native_agents WHERE id NOT IN (SELECT agent_id FROM agent_native_removals) ORDER BY created_at, id'
     ).fetchall()]
+
+
+def require_active(conn, agent_id):
+    if conn.execute('SELECT 1 FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone():
+        raise ConflictError('Agent removed; its retained history is read-only')
+
+
+def remove_root(conn, *, actor, agent_id):
+    """End a managed root without erasing its audit, results or external project."""
+    _require_owner(actor)
+    with write_txn(conn):
+        root = _read(conn, agent_id)
+        if root['removed_at']:
+            return root
+        conn.execute('INSERT INTO agent_native_removals VALUES (?,?)', (agent_id, _now()))
+        # Revision invalidation stops setup and all previously issued capabilities.
+        conn.execute('UPDATE agent_native_agents SET soul_revision=soul_revision+1 WHERE id=?', (agent_id,))
+        conn.execute('UPDATE agent_native_cadence SET enabled=0 WHERE agent_id=?', (agent_id,))
+        conn.execute("UPDATE agent_native_setup SET status='superseded', message='Agent removed.', updated_at=? WHERE agent_id=?", (_now(),agent_id))
+        from agent_native.work_state import event
+        for run_id, state in conn.execute("SELECT id,state FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')", (agent_id,)).fetchall():
+            next_state = 'paused' if state == 'queued' else 'stopping'
+            conn.execute('UPDATE agent_native_work_runs SET stop_requested=1,state=? WHERE id=?', (next_state,run_id))
+            event(conn,run_id,'work.'+next_state,'Owner removed the agent; stopping work and preserving history.')
+        root = _read(conn, agent_id)
+        _event(conn,root,'agent.removed')
+        return root

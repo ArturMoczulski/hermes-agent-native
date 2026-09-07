@@ -85,8 +85,10 @@ def limits_json(limits):
 
 def configure(conn, *, actor, agent_id, expected_revision, limits):
     _require_owner(actor)
+    from agent_native.identity import require_active
     encoded = limits_json(limits)
     with write_txn(conn, allow_nested=True):
+        require_active(conn, agent_id)
         root = conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?', (agent_id,)).fetchone()
         if root is None:
             raise KeyError(agent_id)

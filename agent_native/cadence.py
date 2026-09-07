@@ -25,6 +25,8 @@ def configure(conn, *, actor, agent_id, expected_revision, interval_seconds, ena
     if type(enabled) is not bool or type(interval_seconds) is not int or not 1<=interval_seconds<=2592000:
         raise ValueError('Choose an interval of 1 to 2592000 seconds and an explicit enabled setting')
     with write_txn(conn):
+        from agent_native.identity import require_active
+        require_active(conn, agent_id)
         root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
         if not root: raise KeyError(agent_id)
         if root[0]!=expected_revision: raise ConflictError('Purpose changed; reload cadence settings')

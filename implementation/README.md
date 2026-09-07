@@ -33,6 +33,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 
 | Document | Purpose |
 | --- | --- |
+| [Agent removal](agent-removal.md) | Owner removal, stopped execution and retained history. |
 | [Agent model selection](agent-model-selection.md) | Owner defaults, per-agent choices and fixed work/chat attempt selections. |
 | [Shared agent work](shared-agent-work.md) | Next refinement: common execution, results and Saved outputs, proven by writer and analyst. |
 | [Managed writer run](writer-managed-run.md) | Current bounded native execution, Plane planning, story versions, Pause and limits. |

@@ -57,3 +57,35 @@ def test_creation_response_contains_durable_initial_review(client):
     assert client.post(URL, json=BODY).json()['startup'] == root['startup']
     assert client.get(URL + '/' + root['id']).json()['startup'] == root['startup']
     assert client.post(URL, json={**BODY, 'startup': {'actor': 'owner'}}).status_code == 422
+
+
+def test_remove_retains_history_and_blocks_new_work(client):
+    root = client.post(URL, json=BODY).json()
+    path = URL + '/' + root['id']
+    response = client.delete(path)
+    assert response.status_code == 200
+    assert response.json()['removed_at']
+    assert client.get(URL).json() == []
+    assert client.get(path).json()['purpose'] == BODY['purpose']
+    assert client.delete(path).json()['removed_at'] == response.json()['removed_at']
+    assert client.post(path + '/chat').status_code == 409
+    assert client.post(path + '/work', json={'expected_revision': 1, 'timeout_seconds': 30, 'max_iterations': 2}).status_code == 409
+    assert client.post(path + '/setup/retry').status_code == 409
+
+
+def test_removal_cancels_queued_work_and_cannot_be_revived(client):
+    from hermes_cli.kanban_db_connect import connect_closing
+    from agent_native.cadence import queue_due
+    body = {**BODY, 'work': {'timeout_seconds': 30, 'max_iterations': 2}}
+    root = client.post(URL, json=body).json()
+    path = URL + '/' + root['id']
+    assert client.post(path + '/cadence', json={'expected_revision': 1, 'interval_seconds': 1, 'enabled': True}).status_code == 200
+    removed = client.delete(path).json()
+    assert removed['work']['state'] == 'paused'
+    assert not removed['cadence']['enabled']
+    assert client.post(URL, json=body).json()['removed_at'] == removed['removed_at']
+    assert client.post(path+'/cadence', json={'expected_revision': removed['soul_revision'], 'interval_seconds': 1, 'enabled': True}).status_code == 409
+    with connect_closing(board='default') as conn:
+        assert queue_due(conn, now='2099-01-01T00:00:00+00:00') == []
+    client.headers.pop('X-Hermes-Session-Token')
+    assert client.delete(path).status_code == 401
