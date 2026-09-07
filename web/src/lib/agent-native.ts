@@ -111,6 +111,8 @@ export function outputVersionLink(agentId: string, output: OutputReference): str
 }
 
 export type AgentWork = {
+  output_sections?: { item_id: string; status: "pending"; reason: "conditional_write_unavailable"; text: string;
+    entries: { source_id: string; summary: string; comment_status: "pending" | "confirmed" | "failed" | "unknown"; link_url: string | null; link_label: string | null }[] }[];
   progress?: { operation_id: string; source_id: string; item_id: string; summary: string; status: "pending" | "confirmed" | "failed" | "unknown"; comment_id: string | null; created_at: string; link_url?: string | null; link_label?: string | null }[];
   model_selection?: ModelActivity | null;
   id: string;

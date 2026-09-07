@@ -109,6 +109,20 @@ export default function AgentDetailPage() {
             </tr>)}</tbody>
           </table></div> : <p className="text-sm">No progress updates recorded for this attempt.</p>}
         </section>}
+        {!!agent.work?.output_sections?.length && <section aria-label="Pending Plane output sections" className="space-y-3 rounded-xl border p-5">
+          <h2 className="text-lg font-semibold">Description update pending</h2>
+          <p className="text-sm text-muted-foreground">Plane cannot protect description updates against simultaneous edits. Your descriptions are left untouched. Saved references are available below; comment delivery is tracked separately above.</p>
+          {agent.work.output_sections.map(section => <details key={section.item_id} className="rounded border p-3">
+            <summary className="cursor-pointer">Review output references · Work item {section.item_id}</summary>
+            <p className="my-2 text-sm">This section has not been added to Plane. Review it alongside the current work item before incorporating references manually.</p>
+            <ul className="space-y-2 text-sm">{section.entries.map(entry => <li key={entry.source_id}>
+              {entry.link_url ? <a className="underline underline-offset-4" href={entry.link_url}>{entry.link_label}</a> : entry.summary}
+            </li>)}</ul>
+            <label className="mt-3 block text-sm">Output references
+              <textarea readOnly value={section.text} rows={8} className="mt-1 w-full rounded border bg-background p-2 text-sm" />
+            </label>
+          </details>)}
+        </section>}
         <section aria-label="Agent purpose" className="space-y-3 rounded-xl border p-5">
           <h2 className="text-lg font-semibold">Purpose</h2>
           <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>

@@ -114,3 +114,47 @@ def test_terminal_reporting_cannot_outlive_its_purpose_revision(broker):
     assert len(s.plane.requests) == before
     assert any(r['status'] == 'pending' and r['summary'] == 'Attempt paused'
                for r in work_state.read_work(s.conn, s.root['id'])['progress'])
+
+
+def test_pending_outputs_section_preserves_human_description_and_all_versions(broker, monkeypatch):
+    s = broker
+    monkeypatch.setenv('HERMES_DASHBOARD_PUBLIC_URL', 'http://127.0.0.1:19221')
+    item = s.plane.items[s.setup['discovery_item_id']]
+    original = '<h2>Human brief</h2><p><strong>Keep this</strong></p><ul><li>Acceptance</li></ul>'
+    item['description_html'] = original
+    requests_before = len(s.plane.requests)
+    first = publish(s)
+    # A human edits after publication; reading/reporting must never PATCH a stale copy.
+    changed = original + '<p>New human direction</p>'
+    item['description_html'] = changed
+    second = publish(s, 'revision', output_id=first['output_id'], content='Second version')
+    assert publish(s, 'revision', output_id=first['output_id'], content='Second version') == second
+    sections = work_state.read_work(s.conn, s.root['id'])['output_sections']
+    assert len(sections) == 1
+    section = sections[0]
+    assert section['status'] == 'pending'
+    assert section['reason'] == 'conditional_write_unavailable'
+    assert section['item_id'] == item['id']
+    assert len(section['entries']) == 2
+    assert all(f'version={v}' in section['text'] for v in (1, 2))
+    assert 'awaiting' in section['text'].lower()
+    assert item['description_html'] == changed
+    assert not any(r['method'] == 'PATCH' for r in s.plane.requests[requests_before:])
+    # Repeated reads are stable, do not resend or invent synchronization.
+    assert work_state.read_work(s.conn, s.root['id'])['output_sections'] == sections
+    from hermes_cli.kanban_db_connect import connect_closing
+    with connect_closing(s.db_path) as reopened:
+        assert work_state.read_work(reopened, s.root['id'])['output_sections'] == sections
+
+
+def test_pending_section_includes_file_free_result_without_claiming_delivery(broker):
+    s = broker
+    s.run._effect(s.conn, s.planning, effect(s, 'file-free-section', 'result_record', {
+        'item_id': s.setup['discovery_item_id'], 'summary': 'Need more information.',
+        'outcome': 'waiting', 'evaluation': 'A comparison period is missing.', 'outputs': []}))
+    section = work_state.read_work(s.conn, s.root['id'])['output_sections'][0]
+    assert section['status'] == 'pending'
+    assert 'not owner acceptance' in section['text']
+    assert 'No saved files' in section['text']
+    assert section['entries'][0]['comment_status'] == 'confirmed'
+    assert section['entries'][0]['link_url'] is None

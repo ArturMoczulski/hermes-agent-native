@@ -8,7 +8,9 @@ The current undated cycle 03 is **Shared agent work and the fantasy writer**.
 **AN-27 model/provider selection and AN-83 reasoning effort are complete. AN-80 is in progress.**
 Work selection and configurable checkpoint/detail/blocker reporting are implemented.
 Exact-version output links, result notices and final attempt outcomes are implemented.
-Preserved rich Outputs sections and owner delivery reconciliation remain open.
+Pending Outputs-section references are visible; automatic rich-description merging
+requires conditional-write support absent from the current Plane API.
+Owner delivery reconciliation is the next actionable increment.
 The reasoning-default clarification is complete: actionable labels and explicit Astra Low.
 See [model settings and verification](implementation/agent-model-selection.md).
 The owner moved this earlier usable-agent milestone ahead of the First Builder:

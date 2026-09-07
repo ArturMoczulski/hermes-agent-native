@@ -107,6 +107,13 @@ test('saved output link is present in Plane before finish and opens the exact ve
     await link.click();
     await expect(page).toHaveURL(new RegExp(`output=${output.output_id}&version=1`));
     await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toContainText('At moonrise, Mara found a dragon');
+    const pendingSection = page.getByRole('region', { name: 'Pending Plane output sections', exact: true });
+    await expect(pendingSection).toContainText('Description update pending');
+    await expect(pendingSection).toContainText('simultaneous edits');
+    await pendingSection.getByText('Review output references').click();
+    await expect(pendingSection.getByRole('textbox', { name: 'Output references' })).toHaveValue(new RegExp(`output=${output.output_id}&version=1`));
+    await expect(pendingSection.getByRole('link', { name: /Open saved output/ })).toHaveAttribute('href', `http://127.0.0.1:19220/agents/${id}?output=${output.output_id}&version=1`);
+
     await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker: 'E2E_OUTPUT_LINK_HOLD' } });
     await expect.poll(async () => (await (await request.get(api, { headers })).json()).work.state, { timeout: 30000 }).toBe('completed');
     await expect.poll(async () => {

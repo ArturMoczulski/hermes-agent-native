@@ -218,3 +218,9 @@ case holds the native worker after publication, opens the stored comment's link
 in the framework reader, and then verifies result navigation and the terminal
 notification. The comment page is an isolated fixture rendering stored Plane
 HTTP payloads, not the actual Plane frontend. Model responses are local scripts.
+
+That saved-output workflow also opens the pending description section during the
+run and verifies its selectable exact-version reference. It does not claim Plane
+description synchronization; conditional writes are unavailable in the supported
+Plane API. Focused storage tests verify rich human text remains unchanged and
+reference proposals survive reopening the database.

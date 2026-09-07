@@ -1,3 +1,25 @@
+## AN-80 pending Outputs sections — 2026-09-07
+
+Implemented the non-destructive fallback: the agent detail page exposes pending
+Outputs reference sections grouped by item, exact saved versions/result links,
+and selectable text. This is not a Plane description write or confirmed merge.
+Evidence comes from durable progress intents, separately from the latest-20 table.
+The supported Plane API ignores If-Match (implementation/plane-api-validation.md);
+automatic merge remains blocked on atomic conditional-write support. Do not replace
+this with a racy read/PATCH or direct Plane database access.
+
+TDD: browser and two domain cases reproduced missing sections. Browser green in
+/tmp/an80-section-browser-green.log (1 passed, 8.2s); file-free result check passed
+in /tmp/an80-section-green.log. Preservation/reopen check passed in
+/tmp/an80-section-preservation-green.log after correcting the assertion to exclude
+fixture provisioning PATCHes. Rich human edits remain untouched; version replay
+adds no duplicate entries. Build /tmp/an80-section-build.log passed; scoped Ruff
+and diff checks passed. No paid inference or broad test suite.
+
+Idle local preview restarted with the built UI; /tmp/an80-section-preview.log.
+AN-80 stays In Progress. Next actionable step: owner reconciliation of uncertain
+comment delivery. Automatic description merging remains a separate capability gap.
+
 ## AN-80 saved evidence and outcomes — 2026-09-07
 
 Output/result records atomically enqueue Plane notifications with exact-version

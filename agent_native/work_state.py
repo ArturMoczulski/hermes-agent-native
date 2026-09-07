@@ -64,6 +64,8 @@ def read_work(conn, agent_id):
     result['focus'] = read_focus(conn, result['id'])
     from agent_native.progress import recent
     result['progress'] = recent(conn, result['id'])
+    from agent_native.output_sections import pending_sections
+    result['output_sections'] = pending_sections(conn, result['id'])
     for private in ('binding_id', 'worker_pid', 'stop_requested'):
         result.pop(private, None)
     return result

@@ -314,3 +314,25 @@ version replay, file-free results, stopping, altered links, lost acknowledgement
 schema upgrade and changed-purpose authority. Three existing comment-format
 regressions protect plain-text behavior. Rich Outputs sections and owner delivery
 reconciliation remain open; this increment does not complete AN-80.
+
+### AN-80 fourth increment: explicit pending description sections
+
+The current Plane API ignores `If-Match` (see [the live API evidence](plane-api-validation.md)).
+A read/merge/PATCH cannot guarantee preservation of a simultaneous human edit.
+Consequently the host does not issue automatic description writes. The agent
+page shows **Description update pending**, its reason, exact saved-version and
+result links, and selectable reference text grouped by work item. This implements
+the product's non-destructive conflict fallback, not automatic synchronization.
+
+The proposal is derived from durable evidence-report intents for the attempt,
+including prior versions and terminal reports, independently of the latest-20
+comment table. A confirmed comment cannot confirm the description. File-free
+results do not invent attachments. Repeated reads/reopens cannot duplicate a
+section or send a mutation. References can be reviewed manually against the
+current Plane item; no control claims a manual paste was verified.
+
+Automatic merging remains blocked on a verified atomic conditional-write operation
+in Plane. A second preflight GET or a framework-only lock is insufficient because
+human editors do not participate in that lock. Do not introduce direct Plane DB
+writes or claim current fingerprint checks solve this race. Owner reconciliation
+of uncertain comments is the next independent delivery increment.
