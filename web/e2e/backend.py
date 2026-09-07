@@ -14,7 +14,7 @@ for key in list(os.environ):
     if key.startswith('HERMES_') or key.endswith(('_API_KEY', '_TOKEN', '_SECRET', '_PASSWORD')):
         os.environ.pop(key, None)
 
-from tests.hermes_cli.test_agent_native_plane_setup import plane_server
+from tests.hermes_cli.writer_plane_fixture import writer_plane_server as plane_server
 
 from native_chat_fixture import configure_native_chat, native_model_server
 
@@ -99,6 +99,35 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         return {'ready': ready, 'native_ready_session_ids': native_ready_session_ids,
                 'managed_ready_ids': managed_ready_ids, 'managed_workers': managed_workers,
                 'model_requests': list(model.requests)}
+
+    app.router.routes.insert(0, app.router.routes.pop())
+
+    @app.get('/__e2e__/writer-evidence/{agent_id}')
+    def writer_evidence(request: Request, agent_id: str):
+        _require_token(request)
+        from agent_native.work_state import read_work
+        from hermes_cli.kanban_db_connect import connect_closing
+        from hermes_state import SessionDB
+        with connect_closing(Path(home)/'kanban.db') as conn:
+            work = read_work(conn,agent_id)
+            pid = conn.execute('SELECT worker_pid FROM agent_native_work_runs WHERE agent_id=?',(agent_id,)).fetchone()
+        alive = False
+        if pid and pid[0]:
+            try:
+                os.kill(pid[0],0)
+                alive = True
+            except ProcessLookupError:
+                pass
+        projects = [p for p in plane.projects.values() if p.get('external_id')==agent_id]
+        project_ids = {p['id'] for p in projects}
+        stories = work['stories'] if work else []
+        content = (Path(home)/'agent-native'/'agents'/agent_id/'workspace'/stories[0]['relative_path']).read_text() if stories else None
+        with SessionDB(Path(home)/'state.db') as db:
+            messages = db.get_messages_as_conversation(work['session_id']) if work else []
+        return {'worker_alive':alive,'file_content':content,
+                'items':[i for i in plane.items.values() if i['project'] in project_ids],
+                'cycles':[c for c in plane.cycles.values() if c['project'] in project_ids],
+                'native_roles':[m['role'] for m in messages]}
 
     app.router.routes.insert(0, app.router.routes.pop())
 

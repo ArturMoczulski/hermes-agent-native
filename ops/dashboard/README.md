@@ -75,8 +75,10 @@ agent**. This uses the same native TUI as generic Chat, with the selected agent'
 protected purpose and retained conversation. Switching agents and returning
 restores the corresponding history. Chat is available before Plane setup completes.
 
-The page currently says **Conversation only · Project work has not started**.
-Talking does not start writing, enable project tools or complete startup work.
+The chat header identifies conversation-only scope. Talking does not start or
+resume project work. Agent details show its independent work status. To enable
+one initial writing run, configure explicit time and model-step limits there or
+during creation; see [managed writing](../../implementation/writer-managed-run.md).
 After changing purpose, reopen the agent conversation; an old connection is
 rejected rather than silently adopting a different purpose behind its header.
 See [scope and remaining acceptance](../../implementation/native-agent-chat.md).

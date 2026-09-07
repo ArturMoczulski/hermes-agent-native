@@ -1,0 +1,141 @@
+import { expect, test } from '@playwright/test'
+
+const backend = 'http://127.0.0.1:19219'
+const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' }
+
+test('creation retains explicit work limits and waits for the real planning setup before running', async ({ page, request }) => {
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: false } })
+  await page.goto('/agents')
+  await page.getByLabel('Agent name', { exact: true }).fill('First working citadel writer')
+  await page.getByLabel('Purpose', { exact: true }).fill('Develop an original fantasy setting and write stories about the moonlit citadel.')
+  await page.getByLabel('Maximum run time (seconds)', { exact: true }).fill('300')
+  await page.getByLabel('Maximum model steps', { exact: true }).fill('20')
+  await page.getByRole('button', { name: 'Create agent', exact: true }).click()
+  await expect(page.getByRole('main').getByRole('heading', { name: 'First working citadel writer', exact: true })).toBeVisible()
+  await expect(page.getByLabel('Execution status')).toHaveText('Waiting for setup')
+  const id = page.url().split('/').at(-1)
+  const get = async () => (await (await request.get(`${backend}/api/agent-native/agents/${id}`, { headers })).json())
+  const before = await get()
+  expect(before.work).toMatchObject({ state: 'queued', limits: { timeout_seconds: 300, max_iterations: 20 } })
+  expect(before.work.session_id).toBeTruthy()
+  await page.reload()
+  await expect(page.getByLabel('Execution status')).toHaveText('Waiting for setup')
+  expect((await get()).work.id).toBe(before.work.id)
+  expect((await get()).work.model_calls).toBe(0)
+  await page.getByRole('button', { name: 'Pause', exact: true }).click()
+  await expect(page.getByLabel('Execution status')).toHaveText('Paused')
+  expect((await get()).work.state).toBe('paused')
+})
+
+
+test('a purpose drives real planning, a saved story and observable work without a chat prompt', async ({ page, request }) => {
+  test.setTimeout(90000)
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+  await page.goto('/agents')
+  await page.getByLabel('Agent name', { exact: true }).fill('Working glass dragon writer')
+  await page.getByLabel('Purpose', { exact: true }).fill('Write original fantasy stories about a glass dragon and a moonlit citadel.')
+  await page.getByLabel('Maximum run time (seconds)', { exact: true }).fill('300')
+  await page.getByLabel('Maximum model steps', { exact: true }).fill('20')
+  await page.getByRole('button', { name: 'Create agent', exact: true }).click()
+  await expect(page.getByRole('main').getByRole('heading', { name: 'Working glass dragon writer', exact: true })).toBeVisible()
+  const id = page.url().split('/').at(-1)
+  const get = async () => (await (await request.get(`${backend}/api/agent-native/agents/${id}`, { headers })).json())
+  await expect.poll(async () => {
+    const a = await get()
+    if (['failed','unknown'].includes(a.work.state)) throw new Error(JSON.stringify(a.work))
+    return a.work.state
+  }, { timeout: 60000 }).toBe('completed')
+  await expect(page.getByLabel('Execution status')).toHaveText('Completed')
+  const a = await get()
+  expect(a.work.model_calls).toBeGreaterThan(5)
+  expect(a.work.model_calls).toBeLessThanOrEqual(20)
+  expect(a.work.stories).toHaveLength(1)
+  expect(a.work.events.some((e: {kind:string}) => e.kind === 'work.effect')).toBeTruthy()
+  await page.getByRole('button', { name: 'Read story', exact: true }).first().click()
+  await expect(page.getByText('At moonrise, Mara found a dragon', { exact: false }).last()).toBeVisible()
+  const story = a.work.stories[0]
+  const saved = await (await request.get(`${backend}/api/agent-native/agents/${id}/stories/${story.story_id}/versions/${story.version}`, { headers })).json()
+  expect(saved.content).toContain('At moonrise, Mara found a dragon')
+  const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${id}`, { headers })).json()
+  expect(proof.file_content).toBe(saved.content)
+  expect(proof.items.some((i: {name:string}) => i.name === 'Write The Silver Gate')).toBeTruthy()
+  expect(proof.cycles).toHaveLength(1)
+  expect(proof.cycles[0].start_date ?? null).toBeNull()
+  expect(proof.cycles[0].end_date ?? null).toBeNull()
+  expect(proof.native_roles).toContain('tool')
+  expect(proof.worker_alive).toBe(false)
+  await page.reload()
+  expect((await get()).work.id).toBe(a.work.id)
+  expect((await get()).work.model_calls).toBe(a.work.model_calls)
+  expect((await get()).work.stories).toHaveLength(1)
+})
+
+
+test('Pause stops a real active worker and held model connection after navigating away and back', async ({ page, request }) => {
+  test.setTimeout(60000)
+  const marker = 'E2E_WRITER_HOLD_PAUSE'
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+  await page.goto('/agents')
+  await page.getByLabel('Agent name', { exact: true }).fill('Pausable writer')
+  await page.getByLabel('Purpose', { exact: true }).fill('Write fantasy stories. ' + marker)
+  await page.getByLabel('Maximum run time (seconds)', { exact: true }).fill('300')
+  await page.getByLabel('Maximum model steps', { exact: true }).fill('20')
+  await page.getByRole('button', { name: 'Create agent', exact: true }).click()
+  await expect(page.getByRole('main').getByRole('heading', { name: 'Pausable writer', exact: true })).toBeVisible()
+  const id = page.url().split('/').at(-1)
+  const get = async () => (await (await request.get(`${backend}/api/agent-native/agents/${id}`, { headers })).json())
+  const hold = async () => (await (await request.get(`${backend}/__e2e__/model-holds/${marker}`, { headers })).json())
+  await expect.poll(async () => (await hold()).entered, { timeout: 30000 }).toBe(true)
+  const before = await get()
+  expect(before.work.state).toBe('running')
+  await page.goto('/agents')
+  expect((await get()).work.id).toBe(before.work.id)
+  await page.goto(`/agents/${id}`)
+  await page.getByRole('button', { name: 'Pause', exact: true }).click()
+  await expect(page.getByLabel('Execution status')).toHaveText('Paused')
+  await expect.poll(async () => (await hold()).client_disconnected).toBe(true)
+  const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${id}`, { headers })).json()
+  expect(proof.worker_alive).toBe(false)
+  const after = await get()
+  expect(after.work.stories).toHaveLength(0)
+  expect(after.work.model_calls).toBe(before.work.model_calls)
+  await page.reload()
+  expect((await get()).work.state).toBe('paused')
+  expect((await get()).work.id).toBe(before.work.id)
+})
+
+for (const limit of ['time', 'steps'] as const) {
+  test(`the configured ${limit} limit ends work without another provider call`, async ({ page, request }) => {
+    test.setTimeout(60000)
+    await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+    await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+    const marker = 'E2E_WRITER_HOLD_TIME'
+    const response = await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
+      request_id: `writer-limit-${limit}`, name: `Writer ${limit} limit`,
+      purpose: 'Write a fantasy story. ' + (limit === 'time' ? marker : ''),
+      work: { timeout_seconds: limit === 'time' ? 8 : 300, max_iterations: limit === 'steps' ? 2 : 20 },
+    } })
+    expect(response.status()).toBe(201)
+    const created = await response.json()
+    const get = async () => (await (await request.get(`${backend}/api/agent-native/agents/${created.id}`, { headers })).json())
+    await page.goto(`/agents/${created.id}`)
+    if (limit === 'time') {
+      await expect.poll(async () => (await (await request.get(`${backend}/__e2e__/model-holds/${marker}`, { headers })).json()).entered,
+        { timeout: 15000 }).toBe(true)
+    }
+    await expect.poll(async () => (await get()).work.state, { timeout: 20000 }).toBe(limit === 'time' ? 'paused' : 'failed')
+    const final = await get()
+    expect(final.work.model_calls).toBe(limit === 'time' ? 1 : 2)
+    expect(final.work.stories).toHaveLength(0)
+    const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${created.id}`, { headers })).json()
+    expect(proof.worker_alive).toBe(false)
+    if (limit === 'time') {
+      await expect.poll(async () => (await (await request.get(`${backend}/__e2e__/model-holds/${marker}`, { headers })).json()).client_disconnected).toBe(true)
+    }
+    await page.reload()
+    expect((await get()).work.model_calls).toBe(final.work.model_calls)
+  })
+}

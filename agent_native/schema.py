@@ -10,6 +10,10 @@ CREATE TABLE IF NOT EXISTS agent_native_agents (
     execution TEXT NOT NULL CHECK(execution = 'not_started'),
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_creation_work (
+    agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
+    work_limits TEXT
+);
 CREATE TABLE IF NOT EXISTS agent_native_chat_sessions (
     agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
     soul_revision INTEGER NOT NULL CHECK(soul_revision > 0),
@@ -128,3 +132,7 @@ CREATE TABLE IF NOT EXISTS agent_native_events (
     UNIQUE(agent_id, soul_revision)
 );
 """
+
+from agent_native.work_state import WORK_SCHEMA
+from agent_native.story_store import STORY_SCHEMA
+SCHEMA_SQL += WORK_SCHEMA + STORY_SCHEMA

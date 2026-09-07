@@ -24,7 +24,7 @@ export default function AgentChatPage() {
       <header aria-label="Conversation agent" className="space-y-1 rounded-lg border p-3">
         <h1 className="text-xl font-semibold">{agent.name}</h1>
         <p className="whitespace-pre-wrap break-words text-sm">{agent.purpose}</p>
-        <p className="text-xs text-muted-foreground">Purpose revision {agent.soul_revision} · Conversation only · Project work has not started</p>
+        <p className="text-xs text-muted-foreground">Purpose revision {agent.soul_revision} · Conversation only · Use agent details to view and control project work</p>
       </header>
       <ChatPage key={`${agent.id}:${agent.soul_revision}`} managedAgent={agent} />
     </>}

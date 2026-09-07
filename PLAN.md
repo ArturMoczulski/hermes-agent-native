@@ -26,7 +26,7 @@ the writer slices enforce all operations they actually expose. Minimal ordinary-
 Plane provisioning comes forward; Builder repository privileges, broader native
 integration and full teams stay later. No completed evidence is reopened or erased.
 
-AN-77 is active: selected agents now open the existing Hermes TUI with their
+AN-77 is deferred by the owner: selected agents now open the existing Hermes TUI with their
 protected purpose, private workspace and separate retained native conversations.
 See [managed conversation](implementation/native-agent-chat.md) for scope and
 verification. Conversation is available independently of Plane readiness and
@@ -38,16 +38,19 @@ and marking interrupted messages uncertain without replay. Remaining acceptance
 covers purpose-revision/transcript ordering. A live managed subscription exchange
 is verified. Reuse native conversation storage, composer and model loop throughout; do not build a second chat implementation.
 
-AN-72 is Todo after AN-77. Its accepted creation/detail/initial-review and private
-filesystem/Plane setup evidence remains intact at `82241f4`. The managed writing
-run, saved story and actual Pause remain unfinished. AN-73 retains later proactive
+AN-72 is the active urgent slice. The owner explicitly moved the first managed
+story ahead of AN-77's remaining purpose/transcript ordering work. Its accepted
+creation/detail/initial-review and private setup evidence remains intact at `82241f4`.
+The initial bounded native writer, story reading and Pause are now connected;
+see [managed writing](implementation/writer-managed-run.md) for scope and evidence.
+The first live demonstration still needs owner-selected run limits. AN-73 retains later proactive
 questions and steering during work; AN-74–76 cover inspection, continuity and full
 acceptance. See [Builder state](first-builder/STATE.md) for the exact handoff.
 
 The subsequent AN-16/M7 First Builder handoff adds protected repository development
 and demonstrates a real TDD improvement using the writer's run/chat/continuity
 foundation. The First Builder remains hosted by the external coding environment.
-No managed writer or Builder is launched by this planning update.
+Existing preview agents are not automatically enabled. The Builder handoff remains later.
 
 Follow small TDD increments and the existing Playwright setup. Keep one active
 implementation slice, no cycle dates or duration estimates. Runtime cadence and

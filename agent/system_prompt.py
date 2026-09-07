@@ -591,6 +591,9 @@ def build_system_prompt_parts(agent: Any, system_message: Optional[str] = None) 
     (snapshot, remaining session-stable guidance, caller ``system_message``,
     context files) and ``volatile`` (skills index, memory, user profile, external
     memory block, timestamp line).  Never re-rendered mid-session."""
+    from agent.work_policy import current as current_work, protected_prompt as work_prompt
+    if work := current_work(agent):
+        return {"stable": work_prompt(work), "context": "", "volatile": ""}
     from agent.managed_chat_policy import current_binding, protected_prompt
     binding = current_binding(agent)
     if binding is not None:

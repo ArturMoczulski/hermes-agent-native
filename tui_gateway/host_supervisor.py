@@ -259,6 +259,10 @@ class HostSupervisor:
             raise
         return request_id
 
+    def send_work_result(self, request_id: str, result: dict) -> None:
+        """Reply only to this owned host; never restart a stopped work process."""
+        self._send_frame({'type': 'work.effect_result', 'request_id': request_id, 'result': result})
+
     def interrupt(self, sid: str, *, request_id: str | None = None) -> None:
         self.start()
         self._send_frame(

@@ -47,6 +47,10 @@ def _read(conn, agent_id):
                        if startup is not None else None)
     from agent_native.startup import read_setup
     root['setup'] = read_setup(conn, agent_id)
+    from agent_native.work_state import read_work
+    root['work'] = read_work(conn, agent_id)
+    if root['work'] is not None:
+        root['execution'] = root['work']['state']
     return root
 
 
@@ -58,7 +62,7 @@ def _event(conn, root, kind):
     )
 
 
-def create_root(conn, *, actor, request_id, name, purpose):
+def create_root(conn, *, actor, request_id, name, purpose, work=None):
     """Persist identity, first-review intent and event together; never launch a worker.
 
     The intent records the creating owner's request, not execution authority or
@@ -69,6 +73,8 @@ def create_root(conn, *, actor, request_id, name, purpose):
     _require_owner(actor)
     request_id, name, purpose = (_text(v, k) for v, k in
                                  ((request_id, 'request_id'), (name, 'name'), (purpose, 'purpose')))
+    from agent_native.work_state import configure, limits_json
+    original_work = limits_json(work) if work is not None else None
     with write_txn(conn):
         previous = conn.execute(
             'SELECT id, name, initial_purpose FROM agent_native_agents WHERE request_id = ?',
@@ -77,6 +83,14 @@ def create_root(conn, *, actor, request_id, name, purpose):
         if previous is not None:
             if (previous[1], previous[2]) != (name, purpose):
                 raise ConflictError('Creation request already used with different input')
+            # Idempotency compares immutable creation input, not mutable work.
+            # Pre-upgrade identities have no row and were created without work.
+            original = conn.execute(
+                'SELECT work_limits FROM agent_native_creation_work WHERE agent_id = ?',
+                (previous[0],),
+            ).fetchone()
+            if (original[0] if original else None) != original_work:
+                raise ConflictError('Creation request already used with different work limits')
             return _read(conn, previous[0])
         agent_id = str(uuid4())
         conn.execute(
@@ -86,12 +100,18 @@ def create_root(conn, *, actor, request_id, name, purpose):
             (agent_id, request_id, name, purpose, purpose, 'not_started', _now()),
         )
         conn.execute(
+            'INSERT INTO agent_native_creation_work (agent_id, work_limits) VALUES (?, ?)',
+            (agent_id, original_work),
+        )
+        conn.execute(
             'INSERT INTO agent_native_initial_activations '
             '(id, agent_id, cause, soul_revision, requested_at) VALUES (?, ?, ?, 1, ?)',
             (str(uuid4()), agent_id, 'creation', _now()),
         )
         from agent_native.startup import queue_setup
         queue_setup(conn, agent_id)
+        if work is not None:
+            configure(conn, actor=actor, agent_id=agent_id, expected_revision=1, limits=work)
         root = _read(conn, agent_id)
         _event(conn, root, 'agent.created')
         return root

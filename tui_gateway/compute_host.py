@@ -8,6 +8,7 @@ import concurrent.futures
 import contextlib
 import json
 import os
+import queue
 import signal
 import subprocess
 import sys
@@ -55,13 +56,16 @@ class ComputeHost:
     _FRAME_HANDLERS: dict[str, str] = {
         "turn.start": "_handle_turn_start", "interrupt": "_handle_interrupt",
         "respond": "_handle_respond", "reload_mcp": "_handle_reload_mcp",
-        "control": "_handle_control", "shutdown": "_handle_shutdown"}
+        "control": "_handle_control", "shutdown": "_handle_shutdown",
+        "work.effect_result": "_handle_work_result"}
 
     def __init__(
         self, *, stdout: Any = None, max_workers: int | None = None,
         heartbeat_secs: int | float | None = None) -> None:
         self._stdout = stdout or sys.stdout
         self._write_lock = threading.Lock()
+        self._work_requests = {}
+        self._work_requests_lock = threading.Lock()
         self._executor = concurrent.futures.ThreadPoolExecutor(
             max_workers=max_workers or _default_workers(), thread_name_prefix="compute-host-turn")
         self._closed = threading.Event()
@@ -87,6 +91,31 @@ class ComputeHost:
         data = json.dumps(frame, separators=(",", ":"), ensure_ascii=False)
         with self._write_lock:
             print(data, file=self._stdout, flush=True)
+
+    def request_work(self, method, params, deadline):
+        """Private parent authorization/effect RPC; unknown delivery fails closed."""
+        request_id = str(uuid.uuid4())
+        pending = queue.Queue(maxsize=1)
+        with self._work_requests_lock:
+            self._work_requests[request_id] = pending
+        try:
+            self._transport.write({'jsonrpc': '2.0', 'method': method, 'id': request_id, 'params': params})
+            result = pending.get(timeout=max(.001, deadline - time.monotonic()))
+            if not isinstance(result, dict) or result.get('ok') is not True:
+                raise PermissionError('Work authority or effect was denied by the service')
+            return result.get('result')
+        except queue.Empty as exc:
+            raise PermissionError('Work service did not confirm the operation before its deadline') from exc
+        finally:
+            with self._work_requests_lock:
+                self._work_requests.pop(request_id, None)
+
+    def _handle_work_result(self, frame):
+        with self._work_requests_lock:
+            pending = self._work_requests.get(str(frame.get('request_id') or ''))
+            if pending is not None:
+                with contextlib.suppress(queue.Full):
+                    pending.put_nowait(frame.get('result'))
 
     def _reply(self, kind: str, sid: str, request_id: Any, **extra: Any) -> None:
         """Emit a per-session frame keyed by the request it answers."""
@@ -208,6 +237,10 @@ class ComputeHost:
             self._reply("turn.error", sid, request_id, message="sid required")
             return
         try:
+            if frame.get("work_attempt") is not None:
+                from agent_native.work_worker import run_turn
+                run_turn(self, frame)
+                return
             from tui_gateway import server
             session = self._ensure_server_session(server, frame)
             text = frame["text"] if "text" in frame else frame.get("prompt", "")

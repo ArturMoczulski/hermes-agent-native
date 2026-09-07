@@ -8,12 +8,14 @@ This plan does not launch a writer or claim that the milestone is implemented.
 
 ## Starting point and reuse
 
-The `/agents` page persists inactive records; creation is not wired to execution.
+The `/agents` page preserves conversation-only creation and also accepts explicit
+limits for one initial managed writing run; see [managed writing](writer-managed-run.md).
 New creation now connects protected private files and a Plane planning home to
 a visible setup status; see [current setup](writer-startup-setup.md). A restricted
 Docker environment is also implemented as an internal piece. Plane host reads/writes and uncertain-write recovery
 have evidence. The first AN-24 bridge exposes Plane inspection through Hermes,
-not the complete managed planning tool set. No managed framework agent is running.
+not the complete managed planning tool set. The managed writer path is being verified with isolated external-service fixtures;
+that evidence is distinct from a live autonomous subscription demonstration.
 
 Extend `web/src/pages/AgentsPage.tsx`, `hermes_cli/web_routers/agent_native.py`
 and `agent_native/`. Reuse Hermes's model loop and callbacks, existing owner
@@ -42,17 +44,16 @@ the first execution slice and retain it as every later slice is added.
 | Order | Deliverable | Required evidence |
 | --- | --- | --- |
 | 1 | Talk through existing Hermes chat before autonomous work (AN-77) | Repair `/chat` and verify native input/reply. Then bind stable framework agent identity, current protected purpose and retained Hermes session; enforce authenticated, idempotent submission and visible pending/reply/failure. Reconnect/restart preserve conversation. Managed conversation works without Plane readiness and cannot start project work or expose project tools. No duplicate React chat or model loop. |
-| 2 | Create → first managed story → visible result and Pause (AN-72) | Retain accepted identity/private filesystem/Plane setup. Configure model/cadence/finite run limits; bind protected purpose, current scoped plan, skills, authority and allowed tools to one service-owned Hermes run. Persist actions and a story artifact. Existing Agents UI opens a real activity/result view. Actual Pause terminates active execution. |
+| 2 | Create → first managed story → visible result and Pause (AN-72) | Retain accepted identity/private filesystem/Plane setup. Use the configured model and explicit finite run limits; cadence follows in AN-75; bind protected purpose, current scoped plan, skills, authority and allowed tools to one service-owned Hermes run. Persist actions and a story artifact. Existing Agents UI opens a real activity/result view. Actual Pause terminates active execution. |
 | 3 | Continuing Chat and owner steering (AN-73) | Extend the same conversation across work runs: explicit handling states, proactive question/answer, root pending list, feedback, purpose revision stopping/replanning and pause-preserving conversation. Reconnect does not duplicate messages or runs. |
 | 4 | Inspect Activity, Sessions and Stories (AN-74) | Agent detail views backed by the same event/run/artifact records: current work, cadence and freshness, activation cause, session history, expandable tools/results/errors, story versions and evaluations, Plane links. No synthetic telemetry or hidden-reasoning promise. |
 | 5 | Continue purpose across bounded turns (AN-75) | Configured cadence and one active work attempt; load fresh Plane context, evaluate results and whole purpose, choose a new clear step or wait/ask/retire. Survive browser closure, model/Plane failure and service restart; reconcile before retry, retain questions, never wake paused work. |
 | 6 | Demonstrate the complete owner journey (AN-76) | Run the product acceptance with a real configured model and isolated writer data: create, first story, chat/feedback, question/answer, another autonomous step, activity/artifacts, actual pause/resume, purpose edit and restart. Record evidence and limits; distinguish model quality from integration checks. |
 
 The creation/detail/initial activation and setup increments are already accepted
-as partial AN-72 evidence. The next Playwright target is a working native `/chat`;
-then prove that selecting a framework agent attaches the correct protected purpose
-and retained conversation with no autonomous project activation. Native chat repair
-alone does not satisfy managed identity/control acceptance. The first saved story
+as partial AN-72 evidence. Native selected-agent conversation and restart recovery are now accepted checkpoints.
+The owner deferred remaining purpose/transcript ordering and selected the first
+managed story and actual Pause as the next target. The first saved story
 remains the first autonomous-work checkpoint and the larger milestone stays intact.
 
 ## Plane delivery records
@@ -69,8 +70,10 @@ outcomes, not additional parallel copies of the broad capability backlog.
 | [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/) | Continue the writer purpose on cadence and recover interrupted work |
 | [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/) | Demonstrate a real autonomous writer through the owner interface |
 
-AN-77 is the active urgent slice; AN-72 is Todo and depends on it. AN-72's
-accepted setup evidence and unfinished story/Pause acceptance are preserved.
+AN-72 is the active urgent slice. AN-77 is Todo: the owner explicitly deferred its
+remaining purpose/transcript ordering after the native chat/restart checkpoint.
+Plane's installed public API cannot remove the existing dependency relation; both
+items annotate that it is no longer an active gate. Accepted evidence is retained.
 AN-73 retains broader communication during work after AN-72; detailed inspection
 also builds on that first run, and continuity uses both. Early conversation is
 independent of Plane setup and does not admit project work. The real-model journey

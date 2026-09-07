@@ -13,7 +13,7 @@ from agent_native.plane_setup import PlaneSetup, SetupError
 
 
 @contextmanager
-def plane_server():
+def plane_server(*, extension=None):
     class Handler(BaseHTTPRequestHandler):
         def handle_request(self):
             parsed = urlsplit(self.path)
@@ -43,12 +43,16 @@ def plane_server():
             except (BrokenPipeError, ConnectionResetError):
                 pass
 
-        do_GET = do_POST = do_PATCH = handle_request
+        do_GET = do_POST = do_PATCH = do_DELETE = handle_request
 
         def log_message(self, *args):
             pass
 
     def route(r):
+        if extension is not None:
+            result = extension(server, r)
+            if result is not None:
+                return result
         path, method, body = r['path'], r['method'], r['body']
         if path == '/auth/get-csrf-token/':
             return 200, {'Set-Cookie': 'csrftoken=fixture; Path=/'}, {'csrf_token': 'fixture'}

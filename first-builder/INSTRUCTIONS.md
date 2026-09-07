@@ -24,8 +24,8 @@ when starting/resuming substantive work or reviewing a cycle. Use the Builder’
 for the API credential location, project IDs and current-work discovery. Until Plane access
 exists, preserve the explicit bootstrap handoff in PLAN.md and STATE.md; never
 claim that repository edits created Plane items. This startup link loads the
-workflow for external contributors; managed-agent skill loading still needs
-implementation.
+workflow for external contributors. The initial writer now loads this skill
+explicitly; general managed-agent skill selection remains subsequent work.
 
 ## Work continuously in small increments
 

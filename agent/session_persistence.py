@@ -442,6 +442,9 @@ class SessionPersistenceMixin:
         """Optional per-session JSON snapshot (``sessions.write_json_snapshots``, default False) for external
         tooling; state.db is canonical. Rewrites the full list after every persistence point."""
         from agent.managed_chat_attempt import current_attempt
+        from agent.work_policy import current as current_work
+        if current_work(self) is not None:
+            return
         # Native SQLite owns managed transcript writes and checks the receipt in
         # its transaction. Optional file snapshots have no equivalent fence.
         if current_attempt(self) is not None or not getattr(self, "_session_json_enabled", False):

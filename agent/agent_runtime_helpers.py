@@ -2254,6 +2254,9 @@ def invoke_tool(agent, function_name: str, function_args: dict, effective_task_i
     def _authorized_execute(next_args):
         from agent.managed_chat_policy import deny_tools
         deny_tools(agent)
+        from agent.work_policy import current as current_work
+        if work := current_work(agent):
+            return work.tool(agent, function_name, next_args if isinstance(next_args, dict) else function_args, tool_call_id)
         return _execute(next_args if isinstance(next_args, dict) else function_args)
 
     if skip_tool_execution_middleware:

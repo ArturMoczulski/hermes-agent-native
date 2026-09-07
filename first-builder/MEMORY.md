@@ -101,3 +101,11 @@ contradictory instructions or store secrets here.
   protected purpose and lifecycle still need explicit server binding; a native
   profile alone does not establish managed authority. Source: owner approved the
   native-chat repair and reuse recommendation.
+
+
+- **First story before residual chat ordering — owner reprioritization (2026-09-07):**
+  defer AN-77's remaining purpose-revision/transcript ordering; implement AN-72's
+  first managed story and actual Pause next. Retain accepted native chat/restart
+  evidence. Per-run time and model-step limits are execution caps, not project
+  estimates. Fixture values do not establish live defaults. Source: current owner
+  conversation.

@@ -126,6 +126,9 @@ def native_model_server():
             if self.path != '/v1/chat/completions' or body.get('model') != MODEL:
                 self._send({'error': {'message': 'Unexpected native test provider request'}}, status=400)
                 return
+            from web.e2e.writer_model_fixture import handle_writer_request
+            if handle_writer_request(self, body, server, MODEL):
+                return
             hold_marker = server.holds.enter(last_user)
             if hold_marker is not None:
                 # Deliberately send no status line, headers or body until release.

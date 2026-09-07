@@ -1030,6 +1030,13 @@ def _init_fallback_chain(agent, fallback_model):
 
 
 def _load_tools(agent, enabled_toolsets, disabled_toolsets):
+    from agent.work_policy import current as current_work, tool_schemas
+    if current_work(agent) is not None:
+        agent.tools = tool_schemas()
+        agent.valid_tool_names = frozenset(tool['function']['name'] for tool in agent.tools)
+        agent._tool_snapshot_generation = 0
+        agent._kanban_worker_guidance = ""
+        return
     from agent.managed_chat_policy import current_binding
     if current_binding(agent) is not None:
         # Conversation authority cannot be widened by plugin discovery, kanban
@@ -2227,11 +2234,18 @@ def init_agent(
         load_soul_identity keeps ~/.hermes/SOUL.md as identity regardless.
     """
     from agent.managed_chat_policy import current_binding
+    from agent.work_policy import current as current_work
     managed = current_binding()
+    work = current_work()
     agent._managed_chat_binding = managed
-    if managed is not None:
-        managed.validate()
-        if session_id != managed.session_id:
+    agent._work_context = work
+    restricted = managed is not None or work is not None
+    if restricted:
+        if managed is not None:
+            managed.validate()
+        else:
+            work.check()
+        if session_id != (managed.session_id if managed is not None else work.session_id):
             raise PermissionError("Managed conversation session does not match its binding")
         enabled_toolsets, disabled_toolsets = [], []
         skip_context_files, load_soul_identity = True, False
@@ -2275,9 +2289,9 @@ def init_agent(
     agent.acp_command = acp_command or command
     agent.acp_args = list(acp_args or args or [])
     _resolve_api_mode(agent, api_mode, provider_name, base_url)
-    if managed is not None and agent.api_mode not in {"chat_completions", "codex_responses", "anthropic_messages"}:
+    if restricted and agent.api_mode not in {"chat_completions", "codex_responses", "anthropic_messages"}:
         raise PermissionError("Managed conversation requires a model-only transport")
-    if managed is not None and agent.provider in {"moa", "hermes", "opencode", "copilot-acp"}:
+    if restricted and agent.provider in {"moa", "hermes", "opencode", "copilot-acp"}:
         raise PermissionError("Managed conversation cannot use an agent as its model")
     _finalize_routing(agent, api_mode, credential_pool)
 
@@ -2313,7 +2327,7 @@ def init_agent(
     except Exception:
         _agent_cfg = {}
 
-    if managed is not None:
+    if restricted:
         # Per-instance projection only: keep native enforcement/middleware config
         # intact and use existing opt-outs for unrelated background work.
         _agent_cfg = dict(_agent_cfg)

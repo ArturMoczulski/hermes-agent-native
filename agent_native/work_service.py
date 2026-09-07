@@ -1,0 +1,304 @@
+"""Dashboard-owned initial writer runs; browsers only observe and request stops.
+
+Each run gets a native ComputeHost. Its private pipe delegates scoped effects to
+one host thread. Process stopping never waits for that thread or a Plane request.
+"""
+import hashlib
+import json
+import logging
+from pathlib import Path
+import queue
+import threading
+import time
+from uuid import uuid4
+
+from agent_native.identity import OWNER, _now, get_root
+from agent_native import work_state as state
+from hermes_cli.kanban_db_connect import connect_closing, write_txn
+
+_log = logging.getLogger(__name__)
+
+
+class _Run:
+    def __init__(self, service, work):
+        from tui_gateway.host_supervisor import HostSupervisor
+        self.service, self.work = service, work
+        self.deadline = time.monotonic() + work['limits']['timeout_seconds']
+        self.inbox = queue.Queue()
+        self.ended = threading.Event()
+        self.stopped = threading.Event()
+        self.final_text = ''
+        self.stop_lock = threading.Lock()
+        self.host = HostSupervisor(registry_path=service.home / 'work-hosts' / (work['id']+'.json'),
+            env={'HERMES_HOME':str(service.home.parent),'HERMES_MANAGED_COMPUTE_HOST':'1'},
+            expected_hermes_home=str(service.home.parent), rpc_sink=self.inbox.put,
+            autostart=False,respawn_max=0)
+        self.thread = threading.Thread(target=self.run,name='writer-'+work['id'][:8],daemon=True)
+        self.watchdog = threading.Thread(target=self._watch_deadline,
+                                        name='writer-deadline-'+work['id'][:8],daemon=True)
+        self.watchdog.start()
+
+    def _watch_deadline(self):
+        # Each run enforces its own clock even while another run's settlement
+        # or a queued-work claim blocks the shared service monitor on SQLite.
+        if not self.ended.wait(max(0, self.deadline - time.monotonic())):
+            self.stop('Work reached its time limit.')
+
+    def validate(self, conn):
+        if self.stopped.is_set() or time.monotonic() >= self.deadline:
+            raise PermissionError('Work was stopped or reached its time limit')
+        state.validate(conn,self.work['id'])
+
+    def stop(self, reason='Owner paused this work.'):
+        # No broker/HTTP/database lock may be acquired before process termination.
+        self.stopped.set()
+        dead = self.host.force_stop(timeout=2)
+        self.inbox.put(None)
+        if time.monotonic() >= self.deadline:
+            reason = 'Work reached its time limit.'
+        with self.stop_lock:
+            with connect_closing(self.service.db_path) as conn, write_txn(conn):
+                row = conn.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(self.work['id'],)).fetchone()
+                if row[0] not in state.TERMINAL:
+                    target = 'paused' if dead else 'unknown'
+                    conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,finished_at=?,summary=? WHERE id=?',
+                                 (target,_now(),reason,self.work['id']))
+                    state.event(conn,self.work['id'],'work.'+target,reason if dead else 'Worker stop could not be confirmed.')
+        return dead
+
+    def _effect(self, conn, planning, params):
+        self.validate(conn)
+        if params.get('run_id') != self.work['id']:
+            raise PermissionError('Work identity changed')
+        tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','story_publish')
+                or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
+            raise PermissionError('Unsupported work effect')
+        fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
+        with write_txn(conn):
+            self.validate(conn)
+            old = conn.execute('SELECT operation_id,fingerprint,result FROM agent_native_work_effects '
+                               'WHERE run_id=? AND call_id=?',(self.work['id'],call_id)).fetchone()
+            if old:
+                if old[1] != fingerprint:
+                    raise PermissionError('Native tool call was reused with different input')
+                if old[2] is not None:
+                    return json.loads(old[2])
+                operation_id = old[0]
+            else:
+                operation_id = str(uuid4())
+                conn.execute('INSERT INTO agent_native_work_effects(run_id,call_id,operation_id,fingerprint) VALUES(?,?,?,?)',
+                             (self.work['id'],call_id,operation_id,fingerprint))
+        if tool == 'plane_resource_inspect':
+            result = planning.inspect(args)
+        elif tool == 'plane_operation_execute':
+            if set(args) != {'operation','arguments'}:
+                raise ValueError('Planning effect requires operation and arguments')
+            from agent_native.plane_writes import PlaneWriteError
+            try:
+                result = planning.execute(operation_id,args['operation'],args['arguments'])
+            except PlaneWriteError as exc:
+                if exc.outcome == 'unknown':
+                    # The mutation journal retains the original operation. Revoke
+                    # this run before another model request or effect is admitted;
+                    # neither settlement nor a retry may relabel it as failed.
+                    message = ('Plane write outcome is unknown. Inspect the existing '
+                               'operation before continuing; it was not retried.')
+                    with write_txn(conn):
+                        conn.execute(
+                            "UPDATE agent_native_work_runs SET state='unknown',stop_requested=1,"
+                            'error=?,summary=?,finished_at=? WHERE id=?',
+                            (message,message,_now(),self.work['id']))
+                        state.event(conn,self.work['id'],'work.unknown',message)
+                raise
+        else:
+            from agent_native.story_store import publish
+            if set(args) != {'title','content','item_id','evaluation'}:
+                raise ValueError('Story requires title, content, item and evaluation')
+            # Real scoped inspection checks item ownership; no model-provided path.
+            planning.inspect({'kind':'item','resource_id':args['item_id']})
+            result = publish(conn,validate=self.validate,workspace=self.workspace,
+                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
+                             **{**args,'evaluation':{'report':args['evaluation']}})
+        with write_txn(conn):
+            # Keep honest receipts for an effect already sent even if Pause raced
+            # its response. No subsequent effect is admitted after a stop.
+            conn.execute('UPDATE agent_native_work_effects SET result=? WHERE run_id=? AND call_id=?',
+                         (json.dumps(result),self.work['id'],call_id))
+            summary = ('Saved story: '+result['title']) if tool=='story_publish' else (
+                'Plane: '+args.get('operation','inspected '+args.get('kind','resource')))
+            state.event(conn,self.work['id'],'work.effect',summary)
+        return result
+
+    def _admit(self, conn, params):
+        if params.get('run_id') != self.work['id'] or params.get('boundary') not in ('model','persist'):
+            raise PermissionError('Unsupported work boundary')
+        with write_txn(conn):
+            self.validate(conn)
+            if params['boundary']=='model':
+                count = conn.execute('SELECT model_calls FROM agent_native_work_runs WHERE id=?',(self.work['id'],)).fetchone()[0]
+                if count >= self.work['limits']['max_iterations']:
+                    raise PermissionError('Model step limit reached')
+                conn.execute('UPDATE agent_native_work_runs SET model_calls=model_calls+1 WHERE id=?',(self.work['id'],))
+                state.event(conn,self.work['id'],'work.model','Model step '+str(count+1))
+        return {}
+
+    def run(self):
+        from agent_native.writer_planning import install_grants, open_planning
+        from agent_native.plane_write_contracts import _CONTRACTS
+        try:
+            with connect_closing(self.service.db_path) as conn:
+                self.validate(conn)
+                root = get_root(conn,actor=OWNER,agent_id=self.work['agent_id'])
+                binding = install_grants(conn,actor=OWNER,agent_id=root['id'])
+                with write_txn(conn):
+                    self.validate(conn)
+                    conn.execute('UPDATE agent_native_work_runs SET binding_id=? WHERE id=?',(binding,self.work['id']))
+                self.workspace = self.service.home / 'agents' / root['id'] / 'workspace'
+                with open_planning(db_path=self.service.db_path,home=self.service.home,
+                                   agent_id=root['id'],binding_id=binding,validate=self.validate) as planning:
+                    snapshot = planning.snapshot()
+                    initial = ('Begin your initial project work from your protected purpose. Use the supplied planning skill. '
+                               'Create a short project brief, an undated outcome cycle and a writing task with acceptance criteria. '
+                               'Write and evaluate a complete original fantasy story. Save it with story_publish, then record '
+                               'its relative_path and evaluation in Plane. Leave the task nonterminal for owner review; '
+                               'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
+                               'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+
+                               '\nSupported Plane operation argument contracts:\n'+json.dumps(_CONTRACTS))
+                    skill = (Path(__file__).resolve().parents[1] / 'skills/productivity/plane-project-management/SKILL.md').read_text()
+                    attempt = {'run_id':self.work['id'],'agent_id':root['id'],'soul_revision':root['soul_revision'],
+                               'name':root['name'],'purpose':root['purpose'],'workspace':str(self.workspace),
+                               'session_id':self.work['session_id'],'native_db':str(self.service.home.parent/'state.db'),
+                               'deadline_monotonic':self.deadline,'max_iterations':self.work['limits']['max_iterations'],
+                               'max_tokens':8192,'initial_context':initial,'skill_text':skill}
+                    with write_txn(conn):
+                        self.validate(conn)
+                        conn.execute("UPDATE agent_native_work_runs SET state='running' WHERE id=?",(self.work['id'],))
+                        state.event(conn,self.work['id'],'work.running','Working from the purpose and current Plane project.')
+                    self.host.submit_turn({'sid':attempt['session_id'],'session_key':attempt['session_id'],
+                        'request_id':attempt['run_id'],'work_attempt':attempt},
+                        on_complete=lambda frame:self.inbox.put({'finished':frame}))
+                    with write_txn(conn):
+                        conn.execute('UPDATE agent_native_work_runs SET worker_pid=? WHERE id=?',(self.host.pid,self.work['id']))
+                    while not self.stopped.is_set():
+                        frame = self.inbox.get()
+                        if frame is None:
+                            break
+                        if 'finished' in frame:
+                            self.finish(conn,frame['finished'])
+                            break
+                        method, params = frame.get('method'), frame.get('params',{})
+                        if method in ('work.admit','work.effect'):
+                            try:
+                                result = self._admit(conn,params) if method=='work.admit' else self._effect(conn,planning,params)
+                                reply = {'ok':True,'result':result}
+                            except Exception as exc:
+                                # Never return credentials/HTTP response bodies in errors.
+                                reply = {'ok':False,'error':'Work operation could not be admitted or confirmed ('+type(exc).__name__+').'}
+                                with write_txn(conn):
+                                    state.event(conn,self.work['id'],'work.operation_failed',reply['error'])
+                            self.host.send_work_result(frame['id'],reply)
+                        elif method == 'event' and params.get('type') == 'message.complete':
+                            self.final_text = str(params.get('payload',{}).get('text',''))[:16000]
+        except Exception as exc:
+            _log.warning('Writer run stopped (%s)',type(exc).__name__)
+            self.fail(type(exc).__name__)
+        finally:
+            self.host.force_stop(timeout=2)
+            self.ended.set()
+
+    def finish(self, conn, frame):
+        dead = self.host.force_stop(timeout=2)
+        with write_txn(conn):
+            current = state.read_work(conn,self.work['agent_id'])
+            if current['state'] in state.TERMINAL or self.stopped.is_set():
+                return
+            if current['state']=='stopping':
+                target = 'paused' if dead else 'unknown'
+                conn.execute('UPDATE agent_native_work_runs SET state=?,finished_at=? WHERE id=?',
+                             (target,_now(),self.work['id']))
+                state.event(conn,self.work['id'],'work.'+target,'Owner stopped this run.')
+                return
+            success = dead and frame.get('type')=='turn.end' and bool(current['stories'])
+            target = 'completed' if success else ('failed' if dead else 'unknown')
+            summary = self.final_text or (('The run ended before completing all requested steps. Saved stories remain available.'
+                                          if current['stories'] else 'The run ended without a saved story.')
+                                         if dead else 'Worker exit could not be confirmed.')
+            conn.execute('UPDATE agent_native_work_runs SET state=?,summary=?,finished_at=? WHERE id=?',
+                         (target,summary,_now(),self.work['id']))
+            state.event(conn,self.work['id'],'work.'+target,'Story saved; run finished.' if success else summary[:1000])
+
+    def fail(self, reason):
+        dead = self.host.force_stop(timeout=2)
+        with connect_closing(self.service.db_path) as conn, write_txn(conn):
+            current = state.read_work(conn,self.work['agent_id'])
+            if current['state'] not in state.TERMINAL:
+                target = 'failed' if dead else 'unknown'
+                message = 'Work stopped; '+reason+'. Inspect activity before retrying any uncertain operation.'
+                conn.execute('UPDATE agent_native_work_runs SET state=?,error=?,finished_at=? WHERE id=?',
+                             (target,message,_now(),self.work['id']))
+                state.event(conn,self.work['id'],'work.'+target,message)
+
+
+class WorkService:
+    def __init__(self,db_path,home):
+        self.db_path,self.home = Path(db_path),Path(home).resolve()
+        self.stopped = threading.Event()
+        self.runs = {}
+        self.thread = threading.Thread(target=self.run,name='agent-native-work',daemon=True)
+
+    def start(self):
+        # Never replay uncertain work across a service restart.
+        with connect_closing(self.db_path) as conn, write_txn(conn):
+            for (run_id,) in conn.execute("SELECT id FROM agent_native_work_runs WHERE state IN ('preparing','running','stopping')").fetchall():
+                conn.execute("UPDATE agent_native_work_runs SET state='unknown',stop_requested=1,summary=? WHERE id=?",
+                             ('Service restarted during work; outcome requires review.',run_id))
+                state.event(conn,run_id,'work.unknown','Service restarted during work; no automatic retry.')
+        self.thread.start()
+        return self
+
+    def stop(self):
+        self.stopped.set()
+        self.thread.join(timeout=3)
+        for run in list(self.runs.values()):
+            run.stop('Service stopped this work run.')
+
+    def tick(self):
+        for run_id,run in list(self.runs.items()):
+            if run.ended.is_set():
+                self.runs.pop(run_id,None)
+                continue
+            try:
+                with connect_closing(self.db_path) as conn:
+                    run.validate(conn)
+            except PermissionError:
+                run.stop('Work paused or its execution authority ended.')
+        with connect_closing(self.db_path) as conn:
+            rows = conn.execute("SELECT w.agent_id FROM agent_native_work_runs w JOIN agent_native_setup s ON s.agent_id=w.agent_id "
+                                "WHERE w.state='queued' AND s.status='ready'").fetchall()
+            for (agent_id,) in rows:
+                if self.stopped.is_set():
+                    break
+                with write_txn(conn):
+                    work = state.read_work(conn,agent_id)
+                    if work['state']!='queued':
+                        continue
+                    conn.execute("UPDATE agent_native_work_runs SET state='preparing',started_at=? WHERE id=?",(_now(),work['id']))
+                    state.event(conn,work['id'],'work.preparing','Reading the prepared project before starting the native worker.')
+                run = _Run(self,work)
+                self.runs[work['id']] = run
+                run.thread.start()
+
+    def run(self):
+        while not self.stopped.is_set():
+            try:
+                self.tick()
+            except Exception as exc:
+                _log.warning('Writer service scan failed (%s)',type(exc).__name__)
+            self.stopped.wait(.2)
+
+
+def start_service():
+    from hermes_constants import get_hermes_home
+    from hermes_cli.kanban_db import kanban_db_path
+    return WorkService(kanban_db_path(board='default'),get_hermes_home()/'agent-native').start()

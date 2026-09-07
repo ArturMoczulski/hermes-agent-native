@@ -14,25 +14,74 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-AN-77 is In Progress and urgent. Native Hermes chat now binds selected framework
-identity, protected purpose and retained conversations, with conversation-only
-scope. Native draft persistence and durable submission receipts now support
-renderer restart and explicit retries. Per-message native workers now enforce
-host deadlines, with immutable receipt checks at native persistence. Remaining
-acceptance covers purpose-revision/transcript ordering. Full service-crash browser
-recovery is now verified; live subscription evidence is recorded below.
-The owner rejected a duplicate React conversation; the native TUI, gateway,
-AIAgent and SessionDB remain authoritative.
+**AN-72 is In Progress and urgent.** The owner deferred AN-77's remaining
+purpose-revision/transcript ordering and selected the first managed story as the
+next visible result. AN-77 is Todo, retaining its accepted native chat, receipts,
+deadlines and full-service-restart evidence at `b6c59aa`.
 
-AN-72 is Todo after AN-77. Creation/detail/initial review and protected filesystem/
-Plane setup are accepted at `82241f4` and verified below. Writing, story artifacts
-and Pause remain unfinished. AN-73 retains later proactive questions and steering
-during work; AN-74–76 retain inspection, continuity and full acceptance. Early
-managed conversation must work independently of Plane readiness and cannot admit
-autonomous project work or expose project tools. Existing identity, owner auth,
-provisioning, environment and Plane boundary evidence remains; AN-24's broad
-remainder stays backlog. No managed writer or Builder run is established by this
-planning update. Earlier next-step entries are historical; this focus wins.
+AN-72 now connects explicit owner run limits, existing private setup, native
+Hermes execution, scoped Plane planning, immutable story versions and actual
+Pause. The existing Agents detail page displays work state, activity, sessions,
+limits, stories and agent evaluation. See [managed writing](../implementation/writer-managed-run.md).
+Conversation remains native and separate; no duplicate composer or model loop.
+
+The live preview's three existing agents remain unconfigured for project work.
+The owner asked what the proposed limits mean; that explanation was supplied,
+and the choice for the first live run remains pending. Fixture limits are not
+live defaults. Do not silently enable existing records or claim a real autonomous
+subscription demonstration from scripted-provider evidence.
+
+Next: finish the single-run acceptance checkpoint with owner-selected limits and
+a real isolated writer. AN-73 then connects conversation, questions and steering
+to work; AN-74 covers detailed inspection and AN-75 cadence/resume/recovery.
+AN-76 accepts the full writer journey. The First Builder still runs through the
+external coding environment. Earlier next-step entries are historical.
+
+## AN-72 bounded native writer — current increment
+
+- Creation or explicit existing-agent configuration saves one initial work run.
+  Creation input remains immutable across retries and later work configuration.
+- Service-owned ComputeHost uses real AIAgent/SessionDB and the protected purpose,
+  fresh Plane context, full planning skill and a fixed three-tool catalog. The
+  worker receives no Plane credentials or owner capability. Native model calls,
+  persistence and broker effects require parent admission.
+- Plane operations reuse existing grants, fingerprints and mutation journaling.
+  A lost mutation response stops work as Outcome unknown and cannot trigger an
+  automatic new operation. The original journal stays available for reconciliation.
+- Story publication validates its Plane item, saves immutable host-chosen versions
+  and records canonical content/hash/evaluation. Owner API and Markdown reading
+  expose committed versions; a later failure retains already-saved stories.
+- Pause terminates the actual native worker and closes its held provider socket.
+  Both time and model-step limits are enforced. No recurring cadence or automatic
+  Resume is part of this initial run. Terminal task acceptance remains separate;
+  a saved draft and self-evaluation are handed off for owner review.
+
+Verification: 15 installed-Chromium scenarios passed, covering actual creation,
+setup, native chat, full planning/story reading, navigation/reload, Pause and both
+execution limits (`/tmp/an72-final-browser.log`). 152 focused Python tests passed
+across nine files: identity/API, setup, Plane writes, writer planning, broker,
+versioned story storage and native worker (`/tmp/an72-final-python.log`). The web
+production build passed. External Plane/model servers are fixtures; framework
+storage, API, processes, native execution and renderer are real. Existing native
+worker/chat-policy regression batches were also verified by the delegated work.
+
+Browser red/green work found the macOS `/var` host-root alias at publication;
+only the trusted installation base is canonicalized, preserving no-follow checks
+inside the agent workspace. Planning retains its existing prohibition on terminal
+Plane task states; the fixture now records a ready-for-review result rather than
+bypassing acceptance. One additional real-process regression reproduced and fixed
+a deadline fairness issue: a blocked SQLite writer cannot delay termination of
+another expired native worker. Both PIDs and provider sockets now close while
+the control write lock remains held, then state settles after release
+(`/tmp/an72-work-deadline-contention-green.log`). This brings focused Python
+evidence to 153 passing tests. All five writer browser scenarios passed again
+after that fix (`/tmp/an72-writer-release-browser.log`), and the final web build
+and scoped lint passed. All 68 changed-document local links resolve.
+
+The preview at http://127.0.0.1:19221 was restarted on the same private home
+and database (verified PID 76228). Its three IDs/purpose revisions and configured
+`gpt-6-astra` model were preserved; the updated API confirms all three have no
+configured work run. No live provider work was launched.
 
 ## AN-77 full service-restart recovery — current increment
 

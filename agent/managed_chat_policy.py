@@ -31,6 +31,8 @@ def bind_managed_chat(binding):
 
 
 def assert_current(agent):
+    from agent.work_policy import admit
+    admit(agent, 'persist')
     from agent.managed_chat_attempt import assert_active
     attempt = assert_active(agent)
     binding = current_binding(agent)
@@ -63,6 +65,9 @@ def managed_turn(fn):
 
     @wraps(fn)
     def run(agent, *args, **kwargs):
+        from agent.work_policy import current as current_work, run_turn
+        if current_work(agent) is not None:
+            return run_turn(fn, agent, args, kwargs, turn_signature)
         from agent.managed_chat_attempt import current_attempt
         if attempt := current_attempt():
             previous = vars(agent).get('_managed_chat_attempt')

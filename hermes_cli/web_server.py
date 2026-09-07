@@ -215,6 +215,8 @@ async def _lifespan(app: "FastAPI"):
 
     from agent_native.startup_service import start_service
     agent_setup_service = start_service()
+    from agent_native.work_service import start_service as start_work_service
+    agent_work_service = start_work_service()
 
     # Reap idle/dead keep-alive PTY sessions (30-min TTL).
     pty_reaper_task = asyncio.create_task(run_reaper(PTY_REGISTRY))
@@ -241,6 +243,7 @@ async def _lifespan(app: "FastAPI"):
     try:
         yield
     finally:
+        agent_work_service.stop()
         agent_setup_service.stop()
         hosted_room_start_cancel.set()
         _hosted_groups.stop_hosted_room_service(timeout=5.0)
