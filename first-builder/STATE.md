@@ -1,3 +1,20 @@
+## Fresh live self-driven screenshare — 2026-09-08
+
+Recorded the owner-requested narrated demo with live Astra Low and local Plane.
+Agent faae13c6-f834-4234-9ef9-d2bfde762391 (Willow & Lantern) posted progress
+and saved v1. Enabled 60-second cadence before posting external Plane feedback.
+Scheduled second attempt 0341de6e-636f-4ad6-b74b-2dc6ea69a285 reviewed comment
+1d044410-0fc3-4f7a-b84d-e9eaa9264fb6, replied and saved v2 of output
+41b7b2a8-046f-49ba-9ef3-294238eff3bf. No manual continuation; cadence disabled.
+
+Verified distinct sessions, scheduler event, confirmed progress comments in live
+Plane, review/reply correlation, and correct baseline/revised calculations.
+Narrated MP4: apps/desktop/demo/self-driven-2026-09-08/self-driven-agent-demo.mp4
+(ignored artifact; 158.7s, 1600x1100). Folder retains raw recording, transcript,
+chapter player and evidence.json. Waiting periods trimmed; captured result frames
+held. Full A/V decode passed and result screenshots inspected. This scoped demo
+uses the supplied discovery item; recovery and full planning remain open in AN-75.
+
 ## AN-75 timestamp-only Plane conflict — 2026-09-08
 
 Compared the failed live demo's last item.update receipt with its current Plane
