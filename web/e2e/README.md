@@ -55,8 +55,32 @@ the same protected prompt across replacement workers, and let a new explicit
 message finish. An overlapping second conversation must stay connected and finish
 successfully while the first times out. The test-only configuration endpoint writes
 the normal managed-chat timeout setting and restores it after the scenario.
-These checks do not establish autonomous writing, cadence or full service-restart
-recovery; see [managed chat scope](../../implementation/native-agent-chat.md).
+These checks do not establish autonomous writing or cadence;
+see [managed chat scope](../../implementation/native-agent-chat.md).
+
+## Full service restart
+
+Run the separate restart suite after the default suite, not concurrently:
+
+```sh
+npm run test:e2e --workspace web -- --config playwright.restart.config.ts
+```
+
+It uses the same installed-Chromium override and adds fixture control port 19218.
+A stable external model server and private home surround the real dashboard child.
+Unlike the ordinary suite, dashboard authentication uses the normal freshly minted
+token on every launch and normal HTML injection, with no browser token override.
+Startup verifies the owned backend PID and a per-launch nonce. Crash stops only
+that backend; the fixture records exact descendant identities and refuses restart
+if any old process survives. Emergency teardown is separate from product evidence.
+
+The browser remains open while the service is replaced. Tests require automatic
+auth recovery, retained history and draft, actual renderer/worker death and model
+socket closure, a durable uncertain receipt, the native acknowledgement guidance,
+no replay, and a successful explicitly submitted follow-up. Read-only native
+receipt evidence cannot perform recovery itself. No user profile, live preview or
+paid model is touched. Graceful fixture shutdown removes its disposable storage;
+a launcher-loss watchdog cleans up only when the fixture controller disappears.
 
 ## Reuse an installed Chromium
 

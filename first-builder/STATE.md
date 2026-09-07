@@ -19,8 +19,8 @@ identity, protected purpose and retained conversations, with conversation-only
 scope. Native draft persistence and durable submission receipts now support
 renderer restart and explicit retries. Per-message native workers now enforce
 host deadlines, with immutable receipt checks at native persistence. Remaining
-acceptance covers full service-restart recovery and purpose-revision/transcript
-ordering; live subscription evidence is recorded below.
+acceptance covers purpose-revision/transcript ordering. Full service-crash browser
+recovery is now verified; live subscription evidence is recorded below.
 The owner rejected a duplicate React conversation; the native TUI, gateway,
 AIAgent and SessionDB remain authoritative.
 
@@ -34,7 +34,54 @@ provisioning, environment and Plane boundary evidence remains; AN-24's broad
 remainder stays backlog. No managed writer or Builder run is established by this
 planning update. Earlier next-step entries are historical; this focus wins.
 
-## AN-77 host deadline — current increment
+## AN-77 full service-restart recovery — current increment
+
+Managed chat now recovers automatically when a service restart rotates the local
+owner session token. The existing native ChatPage performs an authenticated,
+read-only agent lookup before connecting its PTY. This exposes HTTP 401 to the
+existing guarded dashboard reload; browser WebSocket rejection alone appeared as
+1006 and previously retried the stale token indefinitely. Connection timeout and
+unmount cancel the lookup; stale attempts cannot open another socket. Ordinary
+native chat retains its existing connection path.
+
+Two installed-Chromium scenarios kill only a disposable real backend, observe the
+exact renderer/worker processes disappear, and restart against the same private
+home with a new normal dashboard token. The external model fixture stays alive.
+Saved exchanges and unsent drafts return without navigation, manual reload or
+resend. A held model request loses its actual socket; native storage and composer
+both recover the same UUID/text as unknown. The native UI explains /acknowledge;
+an explicit subsequent message completes in the retained conversation. Exact
+transcript and provider counts reject automatic replay or late results. Project
+execution remains not_started; no autonomous-work recovery is claimed.
+
+TDD: the first setup attempt exposed an early transcript polling error and fixture
+teardown issue, both corrected before product evidence. The actual RED then
+showed an expired browser token after a successful real service replacement
+(`/tmp/an77-service-restart-red2.log`). The reconnect fix passed both scenarios
+(`/tmp/an77-service-restart-green1.log`). Existing auth/reconnect unit checks:
+13 passed (`/tmp/an77-service-restart-unit.log`). Dashboard type-check/build and
+Ruff passed. ESLint reported zero errors and three existing ChatPage hook warnings
+outside the change. Independent review checked authority, cancellation, exact
+process evidence and observational receipt reads.
+
+All 16 distinct browser scenarios passed: the two full service-crash checks,
+13 existing scenarios in `/tmp/an77-service-restart-regression.log`, and the
+renderer-recovery scenario in `/tmp/an77-service-restart-renderer-final3.log`.
+The latter needed test-only corrections for VT line wrapping and late frames from
+an agent being left behind during navigation. It now requires frames from the
+selected agent's own PTY, compares complete saved drafts, verifies the other
+agent's composer is empty, and retains exact transcript/model-count assertions.
+The final test version passed. All 27 local documentation link targets resolve.
+
+The preview serves the rebuilt ChatPage asset; readback preserves all three agent
+IDs/revisions and gpt-6-astra configuration. No service restart, owner conversation
+submission or paid model call was needed for this frontend change. Existing open
+tabs need one reload to acquire the new bundle.
+
+Next: AN-77 purpose-revision/transcript ordering. Keep AN-72 waiting; managed
+writing, saved story artifacts and actual Pause remain unimplemented.
+
+## AN-77 host deadline — previous increment
 
 Each admitted managed owner message now runs in its own native ComputeHost.
 The parent keeps routing/receipt metadata; the worker reuses AIAgent, protected

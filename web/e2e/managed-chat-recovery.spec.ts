@@ -1,3 +1,4 @@
+import { stripVTControlCharacters } from 'node:util';
 import { test, expect } from '@playwright/test';
 
 const backend = 'http://127.0.0.1:19219';
@@ -22,11 +23,15 @@ test('unsent managed draft survives native renderer restart and remains with its
   }
   const seen = new Map<string, string>();
   let terminalOutput = '';
+  let displayedAgent = '';
   page.on('websocket', (socket) => {
-    const path = new URL(socket.url()).pathname;
+    const url = new URL(socket.url());
+    const path = url.pathname;
     socket.on('framereceived', ({ payload }) => {
       const text = typeof payload === 'string' ? payload : payload.toString('utf8');
-      if (path === '/api/pty') terminalOutput += text;
+      // A departing agent can flush queued frames after navigation begins.
+      // Judge the selected recipient's actual socket, not a mixed byte stream.
+      if (path === '/api/pty' && url.searchParams.get('agent') === displayedAgent) terminalOutput += text;
       if (path === '/api/events') {
         try {
           const event = JSON.parse(text);
@@ -40,6 +45,7 @@ test('unsent managed draft survives native renderer restart and remains with its
   const evidence = async () => (await (await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers })).json());
   const before = (await evidence()).model_requests.length;
   const open = async (root: typeof roots[number]) => {
+    displayedAgent = root.id;
     terminalOutput = '';
     await page.goto(`/agents/${root.id}`);
     await page.getByRole('link', { name: 'Chat with agent', exact: true }).click();
@@ -47,18 +53,24 @@ test('unsent managed draft survives native renderer restart and remains with its
     await expect(page.locator('.hermes-chat-xterm-host .xterm-screen')).toBeVisible();
     await expect.poll(async () => (await evidence()).managed_ready_ids, { timeout: 45000 }).toContain(root.id);
     await expect.poll(() => seen.get(root.id)).toBeTruthy();
+    await expect.poll(() => terminalOutput).not.toBe('');
   };
 
   await open(roots[0]);
-  await page.locator('.xterm-helper-textarea').focus();
-  await page.keyboard.type(draft);
-  await page.keyboard.press('Control+l');
-  await expect.poll(() => terminalOutput).toContain('citadelDraftUnsentQ7');
   const attach = await page.evaluate(() => window.localStorage.getItem('hermes.pty.token.chat'));
   expect(attach).toBeTruthy();
+  const saved = async () => (await (await request.get(`${backend}/__e2e__/managed-delivery/${roots[0].id}?attach_token=${attach}`, { headers })).json());
+  const visibleOutput = () => stripVTControlCharacters(terminalOutput).replace(/\s+/g, '');
+  await page.locator('.xterm-helper-textarea').focus();
+  await page.keyboard.type(draft);
+  await expect.poll(async () => (await saved()).composer?.draft?.input).toBe(draft);
+  await page.keyboard.press('Control+l');
+  await expect.poll(visibleOutput).toContain('citadelDraftUnsentQ7');
 
   await open(roots[1]);
-  expect(terminalOutput).not.toContain('citadelDraftUnsentQ7');
+  expect(visibleOutput()).not.toContain('citadelDraftUnsentQ7');
+  const otherDraft = await (await request.get(`${backend}/__e2e__/managed-delivery/${roots[1].id}?attach_token=${attach}`, { headers })).json();
+  expect(otherDraft.composer?.draft?.input ?? '').toBe('');
   expect((await evidence()).model_requests).toHaveLength(before);
 
   // Expire only the first agent's actual Node/Ink renderer. Its browser token,
@@ -72,7 +84,8 @@ test('unsent managed draft survives native renderer restart and remains with its
   await open(roots[0]);
   await page.locator('.xterm-helper-textarea').focus();
   await page.keyboard.press('Control+l');
-  await expect.poll(() => terminalOutput, { timeout: 30000 }).toContain('citadelDraftUnsentQ7');
+  await expect.poll(async () => (await saved()).composer?.draft?.input).toBe(draft);
+  await expect.poll(visibleOutput, { timeout: 30000 }).toContain('citadelDraftUnsentQ7');
   expect((await evidence()).model_requests).toHaveLength(before);
 
   // Merely selecting/restoring did not submit. One explicit Enter must send

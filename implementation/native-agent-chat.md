@@ -112,11 +112,20 @@ outcome instead of launching it again. The owner can inspect saved history and
 replace the composer text with `/acknowledge` to close that local pending attempt,
 then write a new message. The old receipt remains in native storage.
 
-This checkpoint proves renderer restart and durable receipt behavior. Full browser
-recovery across a service restart and complete writer lifecycle recovery remain
-separate acceptance work. Draft recovery also
-requires retaining the browser's attachment token; clearing browser storage or
-using another browser selects a different draft scope.
+Full service-crash browser recovery is also verified. Before connecting a managed
+PTY, the existing ChatPage makes a read-only authenticated agent request. A stale
+loopback token reaches the dashboard's existing guarded reload instead of staying
+in a WebSocket 1006 reconnect loop. The same browser attachment recovers its native
+draft/history; no prompt is sent by this check. Connection timeout and unmount
+cancel the read, and superseded attempts cannot open a socket.
+
+The test kills the actual backend alone, requires the old renderer and held worker
+to stop, and starts the service with a fresh token against the same private home.
+It checks both the native durable uncertain receipt and the visible composer,
+actual provider socket closure, no replay, and an explicit subsequent exchange.
+Complete autonomous writer lifecycle recovery remains separate acceptance work.
+Draft recovery requires retaining the browser's attachment token; clearing browser
+storage or using another browser selects a different draft scope.
 
 ## Evidence and remaining acceptance
 
@@ -147,10 +156,10 @@ This single live exchange complements the isolated recovery tests; it does not
 establish autonomous writing or every service-restart behavior.
 See [Builder state](../first-builder/STATE.md) for executed checks and preview status.
 
-AN-77 stays In Progress. Remaining acceptance includes full service-restart
-recovery through the browser. Revocation
-checks at native persistence narrow stale writes; strict atomic ordering between
-the control database and native transcript storage remains to be established.
+AN-77 stays In Progress. Remaining acceptance concerns purpose-revision/transcript
+ordering. Revocation checks at native persistence narrow stale writes; strict atomic
+ordering between the control database and native transcript storage remains to be
+established.
 Do not report this usable conversation checkpoint as the full writer milestone.
 
 ## Repeat the focused checks

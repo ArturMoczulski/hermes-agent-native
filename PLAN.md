@@ -33,9 +33,10 @@ verification. Conversation is available independently of Plane readiness and
 cannot start project work. Native drafts and submission receipts now support
 renderer restart and safe explicit retries. Each message now runs in an isolated
 native worker with a hard host deadline and receipt checks at persistence.
-Remaining acceptance covers full service-restart recovery and purpose-revision/
-transcript ordering. A live managed subscription exchange is verified. Reuse native conversation storage, composer and model
-loop throughout; do not build a second chat implementation.
+Browser recovery now survives a full service crash, preserving drafts/history
+and marking interrupted messages uncertain without replay. Remaining acceptance
+covers purpose-revision/transcript ordering. A live managed subscription exchange
+is verified. Reuse native conversation storage, composer and model loop throughout; do not build a second chat implementation.
 
 AN-72 is Todo after AN-77. Its accepted creation/detail/initial-review and private
 filesystem/Plane setup evidence remains intact at `82241f4`. The managed writing

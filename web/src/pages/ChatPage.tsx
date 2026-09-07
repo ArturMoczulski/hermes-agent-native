@@ -36,7 +36,7 @@ import { ChatSidebar } from "@/components/ChatSidebar";
 import { ChatSessionList } from "@/components/ChatSessionList";
 import { usePageHeader } from "@/contexts/usePageHeader";
 import { useI18n } from "@/i18n";
-import { api } from "@/lib/api";
+import { api, fetchJSON } from "@/lib/api";
 import { latchChatActivation } from "@/lib/chat-activation";
 import { copyTextToClipboard } from "@/lib/clipboard";
 import { normalizeSessionTitle } from "@/lib/chat-title";
@@ -1137,6 +1137,7 @@ export default function ChatPage({ isActive = true, managedAgent }: ChatPageProp
     // it. `ticketSuperseded` invalidates a late ticket result so a timed-out
     // attempt cannot open a socket behind the replacement this schedules.
     let ticketSuperseded = false;
+    const connectionAbort = new AbortController();
     let ticketTimer: ReturnType<typeof setTimeout> | null = null;
     const clearTicketTimer = () => {
       if (ticketTimer) {
@@ -1164,6 +1165,7 @@ export default function ChatPage({ isActive = true, managedAgent }: ChatPageProp
     // Give up on the ticket phase and hand off to the ordinary backoff.
     const failTicketAttempt = () => {
       ticketSuperseded = true;
+      connectionAbort.abort();
       clearTicketTimer();
       connectInFlightRef.current = false;
       scheduleReconnect(null);
@@ -1196,6 +1198,16 @@ export default function ChatPage({ isActive = true, managedAgent }: ChatPageProp
 
       let url: string;
       try {
+        if (managedAgentId) {
+          // A rejected WS upgrade can surface only as 1006, hiding the 401
+          // after service restart. This owner-authenticated read lets the
+          // existing guarded reload acquire the new dashboard token. It
+          // neither creates a session nor resends a saved message.
+          await fetchJSON(`/api/agent-native/agents/${encodeURIComponent(managedAgentId)}`, {
+            signal: connectionAbort.signal,
+          });
+          if (unmounting || ticketSuperseded) return;
+        }
         url = await api.buildWsUrl("/api/pty", params);
       } catch (err) {
         if (unmounting || ticketSuperseded) return;
@@ -1539,6 +1551,7 @@ export default function ChatPage({ isActive = true, managedAgent }: ChatPageProp
       clearConnectingTimer();
       clearTicketTimer();
       ticketSuperseded = true;
+      connectionAbort.abort();
       connectInFlightRef.current = false;
       // Phase 5.3: ``ws`` is local to the IIFE that opens it (the gated-mode
       // ticket fetch makes the open async). The cleanup runs at the outer
