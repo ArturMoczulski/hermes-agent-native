@@ -55,6 +55,34 @@ Active, waiting, finished, failed, and cancelled work must be distinguishable.
 These are meaningful distinctions, not a required vocabulary for a task board.
 Reporting a result and accepting it as meeting the objective are also distinct.
 
+## Shared work and results
+
+These concepts apply to every profession. The agent retains its identity and
+purpose across projects and assignments. Each attempt records one execution of
+work; ending an attempt does not itself complete an assignment or the purpose.
+An assignment can have several attempts and results, and a result can contain
+several saved outputs or no saved file.
+
+A result records what was achieved or learned, its evidence, the producing agent,
+assignment and attempt, relevant purpose/criteria revisions, and uncertainty.
+Distinguish saved content, a reference to content elsewhere, and an observed
+outcome such as a completed planning change. An agent's claim or an unverified
+link does not establish that an action occurred or a file exists.
+
+A saved output has a stable identity, title, format, immutable version, creation
+record and origin. A story, report, audio recording and software patch are
+examples; none requires a special agent type. Evaluation identifies the exact
+result and criteria reviewed. Preserve revisions and their evaluations. Saving,
+submitting, accepting an assignment and fulfilling the purpose remain separate.
+Discovery, a legitimate wait or a request for clarification may produce no saved
+output. Record the actual outcome and next condition rather than requiring a
+fabricated file or declaring the assignment accepted.
+
+Domain methods and quality criteria come from the purpose, assignment and
+approved skills. The shared framework must not instruct every agent to write
+fiction, require a story to finish an attempt, or select authority by profession.
+See [Work and results](10-user-experience.md#work-and-results) for presentation.
+
 ## Delegating to children
 
 An agent can create children within its authority. Each child can create children

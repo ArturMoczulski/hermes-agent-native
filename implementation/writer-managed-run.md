@@ -5,6 +5,14 @@ Hermes engine and dashboard. This is the first autonomous-work checkpoint of the
 [writer milestone](fantasy-writer-milestone.md), not completion of its cadence,
 steering or recovery requirements.
 
+## Next refinement
+
+The owner requested a [shared work and output model](shared-agent-work.md) after
+viewing the demo. Fiction-specific execution instructions, story-only completion
+and the Stories data/UI are current implementation limitations. The next planned
+work removes them while retaining this checkpoint's records and verification.
+The remainder of this document describes the implemented bounded writer.
+
 ## Owner experience
 
 Create an agent with a writing purpose. To enable its initial work, also provide
@@ -103,5 +111,6 @@ keys. The regression held a real native writer through at least six actual agent
 GET polls: RED grew to 13 Pause buttons. Distinct stable work/story keys restored
 one of each panel and control. All six writer Playwright scenarios and the
 production web build passed, including actual worker/socket cancellation.
-AN-72's bounded checkpoint is complete; AN-73 is next. Cadence, resume, richer
+AN-72's bounded checkpoint is complete. The shared-work plan places AN-78/79
+before AN-73's continuing conversation work. Cadence, resume, richer
 inspection and the full writer journey remain outside this checkpoint.

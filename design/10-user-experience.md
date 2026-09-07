@@ -177,6 +177,19 @@ parent escalation chain; opening an inbox does not change that route.
 
 ## Work and results
 
+Use the same agent and Work interface for a writer, analyst, musician or builder.
+The common vocabulary is work, results, saved outputs, evaluations and decisions.
+“Saved stories” is example content, not a shared navigation or data requirement.
+A result may include saved outputs; it may instead describe a verified action,
+learning or a wait condition. The [shared result rules](03-projects-and-delegation.md#shared-work-and-results)
+define those distinctions.
+
+Choose a viewer from the output's supported format, not the agent's profession.
+The same Markdown reader opens a story or report. Text, image and audio viewers
+are reusable capabilities, with an honest open/download fallback for other
+formats. Output content cannot install an executable viewer or grant permissions.
+
+
 Provide project and assignment lists and a board where useful. Each item has a
 purpose/outcome, coordinator, implementer, criteria, dependencies, status and
 evidence. Project grouping does not redefine the agent tree or confer authority.

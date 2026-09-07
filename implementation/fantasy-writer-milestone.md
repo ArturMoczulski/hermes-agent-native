@@ -39,6 +39,16 @@ the model in the writer's workspace without granting a general shell. Inspect
 actual reuse seams before selecting the smallest implementation. No Builder
 repository mount or computer-use dependency belongs on this path.
 
+## Current owner refinement
+
+After the live first-story proof, the owner requested a universal shared work
+and result workflow. [AN-78/79](shared-agent-work.md#plane-work-mapping) now precede
+further conversation/inspection work. Generalize the bounded executor and saved
+outputs, then prove a writer and supplied-material analyst use the same surface.
+Do not remove the original writer's cadence, steering, evaluation or recovery
+acceptance. The table below retains original slices and their evidence; the shared
+refinement supplies reusable foundations for its unfinished rows.
+
 ## Delivery order
 
 Each row is a reviewable outcome delivered through several small red/green loops.
@@ -50,7 +60,7 @@ the first execution slice and retain it as every later slice is added.
 | 1 | Talk through existing Hermes chat before autonomous work (AN-77) | Repair `/chat` and verify native input/reply. Then bind stable framework agent identity, current protected purpose and retained Hermes session; enforce authenticated, idempotent submission and visible pending/reply/failure. Reconnect/restart preserve conversation. Managed conversation works without Plane readiness and cannot start project work or expose project tools. No duplicate React chat or model loop. |
 | 2 | Create → first managed story → visible result and Pause (AN-72) | Retain accepted identity/private filesystem/Plane setup. Use the configured model and explicit finite run limits; cadence follows in AN-75; bind protected purpose, current scoped plan, skills, authority and allowed tools to one service-owned Hermes run. Persist actions and a story artifact. Existing Agents UI opens a real activity/result view. Actual Pause terminates active execution. |
 | 3 | Continuing Chat and owner steering (AN-73) | Extend the same conversation across work runs: explicit handling states, proactive question/answer, root pending list, feedback, purpose revision stopping/replanning and pause-preserving conversation. Reconnect does not duplicate messages or runs. |
-| 4 | Inspect Activity, Sessions and Stories (AN-74) | Agent detail views backed by the same event/run/artifact records: current work, cadence and freshness, activation cause, session history, expandable tools/results/errors, story versions and evaluations, Plane links. No synthetic telemetry or hidden-reasoning promise. |
+| 4 | Inspect agent Activity, Sessions and output versions (AN-74) | Agent detail views backed by the same event/run/artifact records: current work, cadence and freshness, activation cause, session history, expandable tools/results/errors, story versions and evaluations, Plane links. No synthetic telemetry or hidden-reasoning promise. |
 | 5 | Continue purpose across bounded turns (AN-75) | Configured cadence and one active work attempt; load fresh Plane context, evaluate results and whole purpose, choose a new clear step or wait/ask/retire. Survive browser closure, model/Plane failure and service restart; reconcile before retry, retain questions, never wake paused work. |
 | 6 | Demonstrate the complete owner journey (AN-76) | Run the product acceptance with a real configured model and isolated writer data: create, first story, chat/feedback, question/answer, another autonomous step, activity/artifacts, actual pause/resume, purpose edit and restart. Record evidence and limits; distinguish model quality from integration checks. |
 
@@ -70,14 +80,14 @@ outcomes, not additional parallel copies of the broad capability backlog.
 | --- | --- |
 | [AN-77](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/f6c3b3a6-3b7b-424e-9e9b-a75da73f0425/) | Repair existing Hermes chat, then bind managed-agent conversation before autonomous work |
 | [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/) | Create a writer and show its first managed story with Pause |
-| [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/) | Chat with the writer and steer its ongoing work |
-| [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/) | Inspect writer activity, sessions and saved story versions |
+| [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/) | Connect agent conversations, decisions and work steering |
+| [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/) | Inspect agent activity, sessions and output versions |
 | [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/) | Continue the writer purpose on cadence and recover interrupted work |
 | [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/) | Demonstrate a real autonomous writer through the owner interface |
 
 AN-72's bounded acceptance criteria are met. The live demo video is verified
 and AN-72 is Done in Plane, with evidence read back through its API.
-AN-73 is the next implementation slice. AN-77 is Todo: the owner explicitly
+AN-78 then AN-79 are next; AN-73 follows on their shared records and views. AN-77 is Todo: the owner explicitly
 deferred its remaining purpose/transcript ordering after the native chat/restart
 checkpoint.
 Plane's installed public API cannot remove the existing dependency relation; both
@@ -105,7 +115,7 @@ explicitly configured. Isolated fixture settings support test-first implementati
   freshness, never the Builder account or installation credentials. Load the
   project-management skill; link attempts/artifacts/evaluations to real work IDs.
 - Current grants checked at model/tool/effect boundaries. Allow only the model,
-  private story tools, needed Plane operations and framework conversation/control
+  private output tools, needed Plane operations and framework conversation/control
   operations. Nonselected native scheduling, delegation, auxiliary dispatch and
   other activation routes are unavailable for this managed profile. Full generic
   integration is later; no exposed bypass is acceptable now.

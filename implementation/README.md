@@ -33,6 +33,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 
 | Document | Purpose |
 | --- | --- |
+| [Shared agent work](shared-agent-work.md) | Next refinement: common execution, results and Saved outputs, proven by writer and analyst. |
 | [Managed writer run](writer-managed-run.md) | Current bounded native execution, Plane planning, story versions, Pause and limits. |
 | [Fantasy-writer milestone](fantasy-writer-milestone.md) | Current cycle: create, chat, observe, save stories and continue; bounded delivery slices. |
 | [Specification coverage in Plane](plane-roadmap-coverage.md) | Milestone modules, rolling cycle policy and specification/scenario-to-work links; live Plane owns status. |
@@ -93,7 +94,10 @@ separates documented features from the proposed additions.
 The owner selected an earlier [fantasy-writer milestone](fantasy-writer-milestone.md).
 Create a purpose-driven ordinary root, see its real writing activity and saved
 stories, converse and steer, then observe it continue on cadence with local restart
-recovery. The current cycle delivers that complete narrow experience. The first
+recovery. The current cycle delivers that complete experience through shared work and
+results. After the first story proof, generalize the existing executor/output
+contract and also prove a supplied-material analyst on the same interface; follow
+[shared work delivery](shared-agent-work.md) before further writer-specific work. The first
 saved story is an intermediate checkpoint, not the full milestone.
 
 The [delivery plan](delivery-plan.md#engineering-sequence-and-evidence) retains M0–M7

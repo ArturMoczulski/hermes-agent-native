@@ -64,9 +64,12 @@ forwarded into managed sandboxes. The future adapter must enforce narrower scope
 The original AN-1 through AN-16 records remain, with native dependency links.
 The full design is mapped into capability modules and a product-decision module;
 see the [coverage index](../implementation/plane-roadmap-coverage.md). The current
-cycle 03 is **Fantasy writer — create, chat and observe**. Its acceptance is in the
+cycle 03 is **Shared agent work and the fantasy writer**. Its acceptance is in the
 [writer specification](../design/14-first-writer-milestone.md), with the delivery
 sequence in [implementation](../implementation/fantasy-writer-milestone.md).
+After the first-story proof, the [shared work/output refinement](../implementation/shared-agent-work.md)
+adds AN-78/79 before further conversation/inspection work, with a nonwriter
+validation case. Existing writer and First Builder acceptance remain intact.
 
 Cycles 01/02 retain accepted evidence. Cycle 03 is explicitly re-scoped from the
 unachieved controlled-Builder goal to the earlier usable writer. The AN-16/M7

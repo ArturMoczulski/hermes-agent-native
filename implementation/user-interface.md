@@ -1,5 +1,11 @@
 # User interface implementation and reuse
 
+Owner refinement, 2026-09-07: prioritize the [shared work/output plan](shared-agent-work.md)
+following the bounded writer demo. Reuse the common Agent, Work, result, decision
+and child contracts below. “Saved outputs” is the shared collection; story content
+uses its supported format viewer. No profession-specific shell or duplicate chat.
+This is planned work; the writer remains the current implemented example.
+
 Status: engineering proposal supporting the [UX specification](../design/10-user-experience.md),
 2026-09-05. The Hermes fork is selected; the following UI integration still needs
 implementation and validation. The original source review did not launch the

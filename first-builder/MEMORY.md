@@ -124,3 +124,12 @@ contradictory instructions or store secrets here.
   distinct, and verify a held active run over actual polling responses before
   testing Pause. Immediate navigation had missed this defect. The regression
   reproduced 13 controls, then passed with one control and confirmed worker death.
+
+- **Shared agent work — owner clarification (2026-09-07):** after viewing the real
+  writer demo, the owner requested planning for a universal framework interface:
+  Work, results/Saved outputs, plans, decisions and children must be common across
+  agents. Domain instructions belong to purpose and approved skills, not a shared
+  fiction-only executor. The next planned checkpoint uses writer and analyst on
+  supplied material, including meaningful work without a file. Existing writer
+  evidence remains accepted. No runtime implementation was requested in this turn.
+  See [shared delivery](../implementation/shared-agent-work.md).

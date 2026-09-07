@@ -13,12 +13,30 @@ Plane plans and evidence, and the First Builder instructions and planning skill.
 Inherited Hermes documentation and old prototype research are implementation
 context, not a mandate to implement every upstream feature or old plan.
 
+## Latest refinement — shared agent work
+
+Owner direction after the live writer demo, 2026-09-07: the common framework and
+interface must serve different purposes. [Shared-work delivery](shared-agent-work.md)
+now precedes further writer-specific work. Added [AN-78](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/4b7a3d8b-a48d-4e0b-9e01-0645a126cffd/)
+for bounded execution/results and [AN-79](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/d4143b70-112e-421d-ad5a-288dfc92b48c/)
+for shared Work/Saved outputs, both Todo in cycle **03 — Shared agent work and the
+fantasy writer**. AN-73/74 retain their identities and now describe generic
+conversation/decision/inspection behavior. AN-71/76 add a bounded analyst proof
+without waiving full writer acceptance. AN-72 stays Done; AN-77 remains deferred.
+
+AN-78 links selected AN-7/9/18/24/26/48 behavior; AN-79 links AN-6/43/47/48.
+Existing child/delegation/escalation/monitor and Inbox records stay the source for
+those later capabilities, with references to the common work/result model. No
+new child or decision implementation is claimed. Existing modules aggregate the
+same new items; no duplicate work board or calendar dates were introduced.
+This current sequence supersedes historical next-action notes below.
+
 ## Milestones and modules
 
 Plane Community modules retain M0–M7 as capability groups. The owner now selects
 the earlier **Autonomous fantasy writer** milestone ([AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/)),
 before the M7 First Builder handoff. The writer uses scoped ordinary-root execution,
-Chat/Activity/Stories, Plane planning and continuing cadence. M7 then adds protected
+Chat/Work/Activity/Saved outputs, Plane planning and continuing cadence. M7 then adds protected
 repository development and a real TDD improvement; full M3–M6 completion is not a
 blanket prerequisite for either narrow handoff.
 
@@ -53,7 +71,7 @@ Advance on accepted outcomes or explicit re-scope, never elapsed time.
    evidence and its original stable records.
 2. **Scoped writes and recoverable planning — accepted host scope:** retain AN-20/22
    and AN-3's bounded recovery evidence; runtime integration remains unfinished.
-3. **Fantasy writer: create, chat and observe — current:** [AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/)
+3. **Shared agent work and the fantasy writer — current:** [AN-71](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/6a70b94c-2c1f-483f-9c7c-93cd1a55cd05/)
    aggregates [AN-72](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/887162ef-fc5e-49e5-a53a-4db81b5b1d13/), [AN-73](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/af1fd8d1-d834-47cb-8058-43311469688c/), [AN-74](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/2c4884af-2513-4c0b-908d-e2df1cb39686/), [AN-75](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/05338859-4138-411a-a36e-222ebdc8c420/), [AN-76](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/issues/cce1926f-51cb-4476-a658-a8d3553d1126/).
    Preserve accepted AN-17 audit in the cycle. AN-66/70 record explicit first-use
    timing and limit configuration; re-scoping does not approve their defaults.

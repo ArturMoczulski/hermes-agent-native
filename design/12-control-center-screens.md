@@ -146,7 +146,11 @@ blocked branch, rather than one misleading status for the entire organization.
 ## 5. Agent details
 
 Use the same inspector from Chat and Monitor, with an expanded page when needed.
-The header always identifies the agent and parent path. Sections:
+The header always identifies the agent and parent path. This is one shared
+interface for all agents. Name the work area **Work** and its content collection
+**Saved outputs**; use **Results** for the wider outcome and evaluation view.
+A story is an output title/type within those views, not a separate agent screen.
+Sections:
 
 | Section | Contents and controls |
 | --- | --- |
@@ -164,6 +168,19 @@ JSON box. Owner control is expressed through purpose edits, work updates and
 lifecycle operations; historical evidence must not be rewritten by changing a badge.
 Changing model preserves identity and accumulated work. Show when a saved setting
 will take effect; do not imply that an in-flight operation already uses it.
+
+The compact agent Work area shows the actual Plane project/cycle, current
+assignment and criteria, current attempt and limits, recent results and
+**Open planning project**. Saved outputs show title, format, version, producing
+agent/work and evaluation links. Use **Open output**, **Download** where available,
+and format-appropriate controls such as audio playback. The result detail below
+owns the complete review interaction; do not maintain duplicate result records.
+
+Link **Decisions** to the same requests used by Chat and Inbox, and **Children**
+to the same parentage used by Monitor. A feature not yet supplied by the backend
+must be described as unavailable, not as an empty successful list. Do not add
+working-looking child creation or decision controls before their operations exist.
+A supported feature with no records has a genuine empty state.
 
 ## 6. Inbox
 
@@ -361,7 +378,12 @@ operations and deduplicates messages and decisions.
 ## Build order and unresolved policy dependencies
 
 The current delivery target is the [fantasy-writer milestone](14-first-writer-milestone.md):
-one root with Chat, Activity and Stories before the complete organization console.
+one root using shared Chat, Work, Activity and Saved outputs before the complete
+organization console. Following the first story demonstration, generalize its
+work/result contract and show a nonwriter using the same controls before adding
+further domain-specific behavior. [Shared-work delivery](../implementation/shared-agent-work.md)
+sets the engineering sequence; full child supervision and the global Inbox retain
+their existing delivery dependencies.
 
 Build complete small workflows, following [continuous TDD](../first-builder/PRACTICES.md):
 

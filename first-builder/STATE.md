@@ -5,8 +5,7 @@ Active repository: `/Users/arturmoczulski/Projects/hermes-agent-native`.
 
 ## Current focus
 
-Owner reprioritization: the current undated cycle 03 is now **Fantasy writer —
-create, chat and observe**, before the First Builder handoff. The
+Owner reprioritization: the current undated cycle 03 is now **Shared agent work and the fantasy writer**, before the First Builder handoff. The
 [writer specification](../design/14-first-writer-milestone.md) and
 [delivery plan](../implementation/fantasy-writer-milestone.md) define its complete
 acceptance: ordinary root creation and immediate work, real saved stories,
@@ -14,7 +13,7 @@ durable chat/questions/steering, activity/session inspection, cadence, evaluatio
 actual pause and basic restart recovery. One story is only an autonomous-work checkpoint.
 
 Read [Plane](PLANE.md) for live state: AN-71 aggregates the writer milestone.
-**AN-72 is Done in Plane; AN-73 is next.** The captioned live demo video is
+**AN-72 is Done in Plane; AN-78 then AN-79 are next, before AN-73.** The captioned live demo video is
 verified, and the completed item retains its evidence and scope. The owner
 deferred AN-77's remaining purpose-revision/transcript ordering; AN-77 remains
 Todo with accepted native chat, receipts, deadlines and full-service-restart
@@ -32,10 +31,41 @@ live UI Pause. The original three preview agents remain unchanged and unconfigur
 for project work. The main demo used explicit limits of 300 seconds and 20 model
 steps; these values apply to that demonstration, not unattended or global defaults.
 
-Next: AN-73's conversation, questions and steering during work. AN-74 covers detailed inspection
+Next: the owner requested planning only to generalize the framework after the
+writer demo. [Shared work delivery](../implementation/shared-agent-work.md) is the
+next plan: AN-78 removes common fiction instructions and story-only completion,
+adds shared result/output records and preserves current demo data; AN-79 exposes
+one Work/Saved outputs flow for writer and supplied-material analyst. Both are
+Todo, with no runtime implementation started. AN-73 then continues conversation,
+questions and steering using those same records. AN-74 covers detailed inspection
 and AN-75 cadence/resume/recovery. AN-76 and the full writer milestone remain open.
 The First Builder still runs through the external coding environment. Earlier
 next-step entries below are historical.
+
+## Shared work planning — current owner direction
+
+The owner identified profession-specific UI and asked for shared Work, results,
+plans, decisions and children, using Saved outputs instead of Saved stories.
+The existing product already specifies generic concepts; this update clarifies
+their relationships and selects delivery rather than adding a parallel design.
+The writer remains the complete first usable-agent example, with an analyst and
+plan-only outcome added to prove that the common executor and result model are
+generic. Unsupported decision/child operations must be labeled unavailable.
+
+Plane adds AN-78 (shared bounded execution/results, urgent) and AN-79 (shared
+Work/output UI), both Todo, to undated cycle 03 and existing capability modules.
+Existing AN-73/74 records adopt generic names; AN-71/76 gain the generality proof.
+Selected broad planning/skill/output/child/Inbox records receive scope links;
+accepted AN-72 and deferred AN-77 are preserved. Full teams, global Inbox, media
+viewing and continuity retain their existing accountable work rather than being
+implemented as placeholder screens. No code, runtime state, skills or grants were
+changed, and no tests or model calls were run for this documentation-only plan.
+
+Verification: 165 local documentation links/anchors resolve; whitespace checks
+pass. Plane API readback confirms the two unique Todo items, their dependencies
+and cycle/module membership, preserved completed/deferred states, and null dates
+on every cycle. Independent design review found no contradictions in the selected
+work/result, evaluation, capability or child-boundary contracts.
 
 ## AN-72 live demonstration — completed bounded checkpoint
 

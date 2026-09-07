@@ -31,6 +31,19 @@ Interaction defaults retain the UX document's review status.
 | UX-19 | Use keyboard navigation or a narrow screen through creation, chat and an inbox response. | Controls remain reachable and labeled, focus returns sensibly, selection is clear and meaning does not depend on color. | Cross-cutting UX |
 | UX-20 | Loading fails, search matches nothing, or an artifact is unavailable. | Loading/error/empty/filtered-empty are distinct; drafts are retained where appropriate, retry is safe, and missing content is not represented as empty success. | 13, 20 |
 
+## Shared-work generality checks
+
+These supplement the existing numbered scenarios without changing their IDs.
+They are requirements, not claims that the current writer implementation passes.
+
+| Case | Required evidence |
+| --- | --- |
+| Writer and analyst | Different purposes and approved domain instructions use the same create/detail/Work routes. The analyst reports on supplied material and is never told to produce fiction. |
+| Shared outputs | Both agents' Markdown results use the same viewer and retain assignment, attempt, format, version and evaluation links across reload. Unsupported, missing and denied content have distinct states. |
+| Work without a file | A verified planning change or useful discovery can be recorded without a dummy story. A pending clarification or wait is not false success. No outcome implicitly accepts the assignment or retires its agent. |
+| Decisions and children | The same request identity is used across views. Missing backend support is shown as unavailable; registered children later use shared identity, work/results and actual subtree controls under UX-05–UX-11. |
+| Owner control | Both domains preserve scope, limits, real stopping, versions and unknown-effect handling. Reading an output cannot execute it or authorize a new run. |
+
 ## Evidence required during implementation
 
 For a user-facing increment, write the relevant Playwright acceptance test before

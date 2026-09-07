@@ -4,13 +4,14 @@ The owner selected the Hermes fork and Plane. The live
 [Plane project](first-builder/PLANE.md) owns actionable items, priorities,
 dependencies and cycles. Read it before selecting work; this is not another board.
 
-The current undated cycle 03 is **Fantasy writer — create, chat and observe**.
+The current undated cycle 03 is **Shared agent work and the fantasy writer**.
 The owner moved this earlier usable-agent milestone ahead of the First Builder:
 create an ordinary root from a purpose, talk to it, see it write and save stories,
 steer its work, inspect activity/sessions, then observe useful continuation on cadence.
 The first saved story is a checkpoint; continuing conversation, real stopping,
 evaluation and basic recovery belong in the completed milestone.
 
+- Next refinement: [shared agent work and outputs](implementation/shared-agent-work.md).
 - Product acceptance: [first writer](design/14-first-writer-milestone.md).
 - Delivery slices and scope: [writer implementation](implementation/fantasy-writer-milestone.md).
 - Full requirements: [design](design/README.md).
@@ -44,8 +45,12 @@ plan and saved a verified story. A separate live browser Pause stopped its actua
 native worker. The original three preview agents remain unchanged. See
 [managed writing](implementation/writer-managed-run.md) for scope and evidence.
 The demo's explicit 300-second/20-step limits are not global defaults. The
-captioned video is verified and AN-72 is Done in Plane. AN-73 is next:
-proactive questions and steering during work.
+captioned video is verified and AN-72 is Done in Plane. The owner then requested
+planning to make the framework universal. AN-78 is next for shared bounded work
+and results, followed by AN-79 for Work/Saved outputs. Both are Todo. AN-73 then
+connects proactive questions and steering to the shared work. The writer and an
+analyst on supplied material must use the same path; a useful outcome need not
+produce a story or a file. This turn changes planning only.
 AN-74–76 retain detailed inspection, continuity and full milestone acceptance.
 See [Builder state](first-builder/STATE.md) for the exact handoff.
 

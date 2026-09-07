@@ -13,6 +13,12 @@ work and talk to it. It starts discovery and planning immediately, produces save
 stories, evaluates them and returns to its purpose without a queue of human prompts.
 Fantasy writing is the acceptance example, not a hard-coded profession or agent type.
 
+Owner clarification, 2026-09-07: the first story proof must now become a shared
+work and result workflow. Also demonstrate an analyst reporting on supplied
+material through the same creation, planning, output-reading and stopping paths.
+This adds a generality checkpoint; it does not remove the writer's continuation,
+conversation or recovery requirements, or require a custom screen per profession.
+
 The first checkpoint is one real saved story with visible activity and stopping.
 The milestone also requires continuing conversation, proactive questions, a later
 autonomous review and recovery. A single prompt/response is insufficient.
@@ -41,7 +47,7 @@ before real unattended activation. A cadence interval is not a cycle estimate.
 ## Screens and controls
 
 Reuse the existing web application. Keep an Agents roster and one agent detail
-page with Chat, Activity and Stories views. The same stable identity, current-work
+page with shared Chat, Work, Activity and Saved outputs views. The same stable identity, current-work
 summary, purpose, cadence, pending-question count and Pause/Resume controls remain
 visible across these views. Refreshing or switching views never starts new work.
 
@@ -50,7 +56,7 @@ visible across these views. Refreshing or switching views never starts new work.
 | Agents | Create from name and purpose; show setup/queued/planning/working/waiting/paused/failure and last observed activity. Creation retries retain one identity and one initial activation. Selecting a row opens that agent. No second start prompt. |
 | Chat | Durable owner conversation across execution sessions, readable replies and progress summaries, story links, proactive question cards, message composer, honest sent/handled/error state. Preserve drafts and history on reconnect. |
 | Activity | Current assignment and stage, active session/run, activation cause, start/end times, last observation, cadence/last/next review or suspension reason. Show history with expandable model/tool actions, outcomes, errors, interruptions and recovery. Link each session to its work, messages and artifacts. |
-| Stories | Open saved drafts and revisions, with title, version, creation time, originating assignment/session, evaluation against the brief and revision feedback. Link the underlying Plane project/cycle/item; do not build another board. |
+| Saved outputs | Open saved outputs (story drafts and revisions in this example), with title, version, creation time, originating assignment/session, evaluation against the brief and revision feedback. Link the underlying Plane project/cycle/item; do not build another board. |
 | Agent controls | Inspect purpose and effective capabilities; explicit Pause, Resume and purpose editing. A purpose edit stops affected active work, preserves prior results and replans under the new revision when otherwise eligible. Show stopping until actual execution cessation is observed. |
 
 “What is it thinking about?” is represented by its recorded plan, short decision
@@ -75,7 +81,7 @@ question list in the agent page is enough here; the global multi-agent Inbox fol
 1. On a configured installation, create a writer with the ongoing purpose above.
    Observe its real setup and initial planning; do not send a separate work prompt.
 2. Inspect the brief and first writing assignment in its Plane project. Follow the
-   live session and recorded actions. Open a saved story from Stories and see its
+   live session and recorded actions. Open a saved story from Saved outputs and see its
    explicit evaluation against the current criteria.
 3. Send feedback while it works. See durable receipt and handling, then a reply or
    corresponding revision. In a clarification case, answer one proactive question;
