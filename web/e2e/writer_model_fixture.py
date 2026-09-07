@@ -2,7 +2,7 @@
 import json
 import re
 
-SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select', 'progress_report'}
+SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select', 'progress_report', 'work_feedback'}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'
@@ -65,6 +65,27 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_FEEDBACK_HOLD' in purpose:
+        target = _planning(messages)['discovery']['id']
+        if index == 0:
+            name, arguments = 'work_item_select', {'item_id': target}
+        elif index == 1:
+            name, arguments = 'work_feedback', {}
+        elif index == 2:
+            direction = result(1)['pending'][0]
+            name, arguments = 'output_publish', {'item_id': target, 'title': 'Owner-directed draft',
+                'content': 'Applied direction: ' + direction['text'], 'format': 'text'}
+        elif index == 3:
+            name, arguments = 'work_feedback', {'feedback_id': result(1)['pending'][0]['id'],
+                'response': 'Saved the requested direction in output ' + result(2)['output_id']}
+        elif index == 4:
+            name, arguments = 'result_record', {'item_id':target, 'summary':'Owner-directed draft ready for review',
+                'outcome':'submitted','evaluation':'Applied the requested direction; owner review remains required.',
+                'outputs':[{'output_id':result(2)['output_id'],'version':result(2)['version']}]}
+        else:
+            return {'role': 'assistant', 'content': 'The revised draft is ready for owner review.'}
+        return {'role': 'assistant', 'content': None, 'tool_calls': [{'id': f'writer_fixture_{index}', 'type': 'function',
+            'function': {'name': name, 'arguments': json.dumps(arguments)}}]}
     analyst = 'E2E_ANALYST_' in purpose
     plaintext = 'E2E_ANALYST_TEXT' in purpose
     file_free = ('discovery' if 'E2E_ANALYST_DISCOVERY' in purpose else
@@ -163,7 +184,9 @@ def handle_writer_request(handler, body, server, model_name):
         key = 'E2E_PROGRESS_CHECKPOINTS'
     if 'E2E_OUTPUT_LINK_HOLD' in system_text and phase == 8:
         key = 'E2E_OUTPUT_LINK_HOLD'
-    hold = key is not None and (reselect or 'E2E_WRITER_' in key or phase >= 7)
+    if 'E2E_FEEDBACK_HOLD' in system_text and phase == 1:
+        key = 'E2E_FEEDBACK_HOLD'
+    hold = key is not None and (reselect or 'E2E_WRITER_' in key or key == 'E2E_FEEDBACK_HOLD' or phase >= 7)
     evidence = getattr(server, 'writer_requests', None)
     if evidence is None:
         evidence = server.writer_requests = []
@@ -179,7 +202,7 @@ def handle_writer_request(handler, body, server, model_name):
         server.holds.enter(key)
         if not server.holds.wait(key, handler.connection):
             return True
-        message = (next_reply(messages, system_text) if (reselect and phase == 7) or key == 'E2E_OUTPUT_LINK_HOLD' else
+        message = (next_reply(messages, system_text) if (reselect and phase == 7) or key in ('E2E_OUTPUT_LINK_HOLD', 'E2E_FEEDBACK_HOLD') else
                    {'role': 'assistant', 'content': server.holds.evidence(key)['late_reply']})
     else:
         try:

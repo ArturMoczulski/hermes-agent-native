@@ -28,7 +28,8 @@ CREATE TABLE IF NOT EXISTS agent_native_work_effects (
 from agent_native.result_store import RESULT_SCHEMA
 from agent_native.work_focus import FOCUS_SCHEMA
 from agent_native.progress import PROGRESS_SCHEMA
-WORK_SCHEMA += RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA
+from agent_native.feedback import SCHEMA as FEEDBACK_SCHEMA
+WORK_SCHEMA += RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA
 
 TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
 

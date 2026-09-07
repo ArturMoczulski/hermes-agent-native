@@ -258,3 +258,34 @@ def update_progress_settings(agent_id: str, body: ProgressSettings, actor=Depend
             raise HTTPException(409, str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(422, str(exc)) from exc
+
+
+class WorkFeedbackBody(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    request_id: str = Field(min_length=1, max_length=128)
+    expected_revision: int = Field(strict=True, ge=1)
+    text: str = Field(min_length=1, max_length=4000)
+
+
+@router.get('/{agent_id}/feedback')
+def read_work_feedback(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.feedback import recent
+    with connect_closing(board='default') as conn:
+        try:
+            return recent(conn, agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+
+
+@router.post('/{agent_id}/feedback', status_code=201)
+def submit_work_feedback(agent_id: str, body: WorkFeedbackBody, actor=Depends(owner_session)):
+    from agent_native.feedback import submit
+    with connect_closing(board='default') as conn:
+        try:
+            return submit(conn, actor=actor, agent_id=agent_id, **body.model_dump())
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc

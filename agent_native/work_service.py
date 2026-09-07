@@ -71,7 +71,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select','progress_report')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select','progress_report','work_feedback')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -113,6 +113,10 @@ class _Run:
                             (message,message,_now(),self.work['id']))
                         state.event(conn,self.work['id'],'work.unknown',message)
                 raise
+        elif tool == 'work_feedback':
+            from agent_native.feedback import worker
+            result = worker(conn, validate=self.validate, agent_id=self.work['agent_id'],
+                            run_id=self.work['id'], arguments=args)
         elif tool == 'progress_report':
             from agent_native.progress import checkpoint
             result = checkpoint(conn, validate=self.validate, planning=planning,
@@ -197,6 +201,8 @@ class _Run:
                                'substantive work and whenever you switch tasks. The framework posts a work-selection progress comment; '
                                'do not duplicate that start update. Use progress_report for meaningful checkpoints, details and blockers as you work. '
                                'Owner verbosity controls delivery, and direct comment.create is not available to this worker. '
+                               'Call work_feedback with empty arguments before substantive work and publication to read owner direction. '
+                               'Apply it within current purpose and grants, then report handling with work_feedback; never claim acceptance. '
                                'Save any produced text or Markdown '
                                'with output_publish; use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
                                'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '

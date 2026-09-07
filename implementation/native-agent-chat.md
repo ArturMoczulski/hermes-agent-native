@@ -197,3 +197,29 @@ The scripted browser workflow completes work, opens native chat and receives a
 reply naming the saved output ID without restarting work. Focused storage tests
 cover pause, identity scope, revoked purpose and transcript-sidecar preservation.
 This demonstrates integration, not autonomous judgment or feedback application.
+
+## AN-73: explicit feedback for work
+
+The agent detail page now has a **Feedback for work** control, separate from the
+native conversation composer. It records trusted owner direction under the current
+purpose revision, with a request identity for replay, and lists the latest twenty
+receipts. Same-request/different-content reuse conflicts. Earlier-purpose feedback
+remains visible but inapplicable. Submitting direction never starts, resumes or
+interrupts execution; use Pause for immediate interruption.
+
+The scoped `work_feedback` tool reads up to twenty pending applicable entries,
+oldest first. Workers are instructed to check before substantive work and publication.
+After reading an entry, that run can record how it handled it. The UI labels this
+**Agent reports handled**, not accepted or independently verified. Receipt and
+handling events are recorded on the existing run. A paused or completed run does
+not consume newly submitted feedback; subsequent eligible execution/cadence remains
+separate work. This increment does not classify ordinary chat as work instructions
+or implement proactive questions. Feedback drafts/request identity are retained
+only in the mounted form; submitted receipts are durable in framework storage.
+
+Verification: real scoped broker tests cover replay, changed-request conflicts,
+owner/purpose checks, recorded events and pause; API tests cover authenticated
+receipt access and no implicit activation. The new native-worker browser case
+submits direction through the control, observes the handling report and reads its
+content in the saved output. External inference is scripted. The existing
+output/result/Plane-link/native-chat browser workflow also passes with the new tool.

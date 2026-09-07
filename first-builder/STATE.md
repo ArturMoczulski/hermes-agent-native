@@ -1,3 +1,30 @@
+## AN-73 explicit owner feedback — 2026-09-07
+
+Added Feedback for work on agent details, durable purpose-scoped owner receipts,
+request replay/conflict checks, scoped work_feedback read/handling tool and work
+activity events. Workers are instructed to check before substantive work/publication.
+Handled is an agent report, not acceptance. Submit does not clear Pause or initiate
+work. Old-purpose entries remain visible/inapplicable. Ordinary native chat is
+unchanged. No new run/cadence capability is claimed; feedback after completion
+remains pending until eligible execution exists. Draft recovery across form remount
+is not implemented; submitted receipts persist.
+
+Evidence: domain red /tmp/an73-feedback-red.log; owner/purpose guard passed in
+/tmp/an73-feedback-green.log. Replay/handling/pause/events passed in
+/tmp/an73-feedback-events-green.log; API auth/no-start passed in
+/tmp/an73-feedback-api.log. Native browser feedback-to-saved-output passed (7.0s)
+in /tmp/an73-feedback-browser-accepted.log. Existing output+chat regression passed
+(11.9s), /tmp/an73-feedback-regression.log. Earlier browser failures caught the
+missing control, JSON content-type header and a fixture missing result submission;
+none were counted as passing. No paid inference or broad suites.
+
+Production build and scoped Ruff passed. Idle preview updated on the same home/DB;
+/tmp/an73-feedback-preview.log.
+
+Next AN-73 increment: proactive questions, durable owner answers and applicability
+checks tied to affected work. AN-80 remains explicitly deferred; AN-75 continuation
+follows this minimum conversation flow.
+
 ## AN-73 work-aware native conversation — 2026-09-07
 
 Owner approved moving AN-73 ahead of AN-80 refinements. Plane: AN-73 In Progress,
