@@ -1,3 +1,22 @@
+## AN-73 work-aware native conversation — 2026-09-07
+
+Owner approved moving AN-73 ahead of AN-80 refinements. Plane: AN-73 In Progress,
+AN-80 Backlog, explicitly unfinished. WIP one. First increment supplies native
+chat with bounded local current-work, assignment and saved-output/result references
+per message using the existing API-content sidecar. No Plane requests, file reads,
+work grants, feedback application or automatic resumption. Old purpose work is excluded.
+
+Verification: new domain test failed before implementation; targeted work/pause
+case then passed (/tmp/an73-context-green.log). Isolation/revocation/stable transcript
+sidecar case passed (/tmp/an73-context-boundaries.log). Extended native-worker
+Playwright flow passed in 11.9s (/tmp/an73-browser-green.log): completed output then
+native chat reply naming its exact ID; work stayed completed. Initial browser run
+stalled before reply and is not counted as a valid behavior-red result. External
+model is scripted, no paid inference. Scoped Ruff and diff checks passed; no
+frontend production source changed, so no redundant build. Idle preview restarted,
+/tmp/an73-context-preview.log. Next: durable feedback handling and proactive questions.
+AN-75 cadence/continuation follows the minimum conversation flow.
+
 ## AN-80 pending Outputs sections — 2026-09-07
 
 Implemented the non-destructive fallback: the agent detail page exposes pending

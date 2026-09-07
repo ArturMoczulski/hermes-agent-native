@@ -140,6 +140,14 @@ def native_model_server():
                 if not server.holds.wait(hold_marker, self.connection):
                     return
                 answer = server.holds.evidence(hold_marker)['late_reply']
+            elif 'AN73 describe recorded work' in last_user:
+                marker = 'AGENT_NATIVE_WORK_SNAPSHOT\n'
+                try:
+                    context = json.JSONDecoder().raw_decode(last_user.split(marker, 1)[1])[0]
+                    work = context['work']
+                    answer = 'Recorded work: ' + work['state'] + '; output ' + work['outputs'][0]['output_id']
+                except (KeyError, IndexError, ValueError, TypeError):
+                    answer = 'Work context unavailable.'
             elif 'Managed conversation test: what is your purpose?' in last_user and len(purposes) == 1:
                 answer = 'My purpose: ' + purposes[0]
             elif ('Managed conversation test: remember our conversation?' in last_user and len(purposes) == 1

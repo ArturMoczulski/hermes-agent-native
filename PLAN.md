@@ -5,12 +5,12 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
-**AN-27 model/provider selection and AN-83 reasoning effort are complete. AN-80 is in progress.**
-Work selection and configurable checkpoint/detail/blocker reporting are implemented.
-Exact-version output links, result notices and final attempt outcomes are implemented.
-Pending Outputs-section references are visible; automatic rich-description merging
-requires conditional-write support absent from the current Plane API.
-Owner delivery reconciliation is the next actionable increment.
+**AN-73 conversations and work steering is now In Progress, by owner direction.**
+First increment: native chat receives bounded local assignment/output/result context
+for each message, with no work authority. Next: durable feedback and proactive questions.
+AN-80 remains unfinished in Backlog: comments/output links and pending description
+references are implemented; uncertain-delivery reconciliation and safe description
+merging are deferred. AN-75 cadence/continuation follows the minimum conversation flow.
 The reasoning-default clarification is complete: actionable labels and explicit Astra Low.
 See [model settings and verification](implementation/agent-model-selection.md).
 The owner moved this earlier usable-agent milestone ahead of the First Builder:

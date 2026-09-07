@@ -132,6 +132,23 @@ test('saved output link is present in Plane before finish and opens the exact ve
     await expect(resultLink).toHaveAttribute('href', `http://127.0.0.1:19220/agents/${id}#result-${resultId}`);
     await resultLink.click();
     await expect(page.locator(`#result-${resultId}`)).toBeInViewport();
+    let terminal = '';
+    page.on('websocket', socket => {
+      if (new URL(socket.url()).pathname === '/api/pty') socket.on('framereceived', ({ payload }) => {
+        terminal += typeof payload === 'string' ? payload : payload.toString('utf8');
+      });
+    });
+    await page.getByRole('link', { name: 'Chat with agent', exact: true }).click();
+    await expect.poll(async () => (await (await request.get(`${backend}/__e2e__/native-chat-evidence`, { headers })).json()).managed_ready_ids,
+      { timeout: 45000 }).toContain(id);
+    await page.locator('.xterm-helper-textarea').focus();
+    await page.keyboard.type('AN73 describe recorded work');
+    const attach = await page.evaluate(() => window.localStorage.getItem('hermes.pty.token.chat'));
+    await expect.poll(async () => (await (await request.get(`${backend}/__e2e__/managed-delivery/${id}?attach_token=${attach}`, { headers })).json()).composer?.draft?.input).toBe('AN73 describe recorded work');
+    await page.keyboard.press('Enter');
+    await expect.poll(() => terminal, { timeout: 45000 }).toContain(`Recorded work: completed; output ${output.output_id}`);
+    expect((await (await request.get(api, { headers })).json()).work.state).toBe('completed');
+
 
   } finally {
     await request.post(`${api}/work/pause`, { headers });

@@ -860,6 +860,10 @@ def build_turn_context(
         original_user_message=original_user_message, messages=messages,
         conversation_history=conversation_history,
     )
+    from agent_native.chat_context import context_for
+    work_context = context_for(agent)
+    if work_context:
+        plugin_user_context = '\n\n'.join(part for part in (plugin_user_context, work_context) if part)
     plugin_user_context = _merge_gateway_notes(
         agent, messages, current_turn_user_idx, plugin_user_context
     )

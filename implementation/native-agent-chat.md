@@ -176,3 +176,24 @@ scripts/run_tests.sh tests/hermes_cli/test_agent_native_chat.py tests/hermes_cli
 scripts/run_tests.sh tests/tui_gateway/test_managed_chat_deadline.py tests/state/test_managed_chat_attempt.py tests/agent/test_managed_chat_attempt_policy.py --file-retries 0
 npm run build --workspace web
 ```
+
+## AN-73: read-only work context
+
+Each owner turn now receives a bounded snapshot from that agent's local control
+records: run state, selected assignment identity/name/observation time, up to ten
+recent output-version references and ten result summaries. No file content is
+loaded, no Plane request is made, and agent reports do not become owner acceptance.
+Missing work and work from a previous purpose revision are distinguished. Paused
+work remains paused. This increment does not apply feedback or answer decisions.
+
+Use Hermes's existing per-user-message API sidecar: context is supplied to the
+model while visible owner text stays unchanged, and historical sidecars retain
+the exact earlier context. The protected system prompt stays stable. Data is
+labelled as observations, not instructions or authority; tool denial is unchanged.
+The snapshot has an observation time and explicitly does not claim refreshed
+Plane state. A purpose change revokes the binding before further use.
+
+The scripted browser workflow completes work, opens native chat and receives a
+reply naming the saved output ID without restarting work. Focused storage tests
+cover pause, identity scope, revoked purpose and transcript-sidecar preservation.
+This demonstrates integration, not autonomous judgment or feedback application.
