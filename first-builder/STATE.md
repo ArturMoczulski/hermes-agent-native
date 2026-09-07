@@ -1,3 +1,26 @@
+## AN-84 incoming Plane discussion — 2026-09-07
+
+Owner promoted comment review after AN-73 question posting. Added work_comments
+for the selected item: paginated external reads, durable comment-version reviews,
+bounded pending/context excerpts, correlated replies or explicit no-reply decisions.
+Protected host receipts identify own/other agent comments despite shared accounts;
+recognized automated replies cannot receive automatic replies. Edited/deleted
+comments require rereview. Pause and current-purpose admission remain enforced.
+Review events appear in Activity; outgoing delivery appears in Plane progress.
+
+Evidence: /tmp/an84-red.log reproduced unsupported work_comments. Two focused
+integration cases passed in /tmp/an84-green.log; stale/no-reply/scope case passed in
+/tmp/an84-review.log; shared-account/loop case passed in /tmp/an84-provenance.log.
+Native browser workflow passed (4.7s) in /tmp/an84-browser-final.log. Earlier browser
+attempts exposed fixture startup timeout and missing result_record, both corrected.
+Scoped Ruff and diff checks passed. No paid inference or broad suites. Preview
+restarted while idle with existing frontend build; no production frontend changes.
+
+AN-84 remains in progress for broader acceptance/recovery review. This is in-run
+review via tool instructions, not a background poller or guaranteed immediate
+notification. AN-75 supplies cadence/check-in continuation. Unknown replies remain
+unretried pending AN-80 reconciliation. Plane comments are not trusted owner answers.
+
 ## AN-73 questions mirrored to Plane — 2026-09-07
 
 Owner required questions in item comments too. New questions atomically enqueue

@@ -71,7 +71,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select','progress_report','work_feedback','work_question')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -113,6 +113,10 @@ class _Run:
                             (message,message,_now(),self.work['id']))
                         state.event(conn,self.work['id'],'work.unknown',message)
                 raise
+        elif tool == 'work_comments':
+            from agent_native.comments import worker
+            result = worker(conn, validate=self.validate, planning=planning, agent_id=self.work['agent_id'],
+                            run_id=self.work['id'], arguments=args)
         elif tool == 'work_question':
             from agent_native.questions import worker
             result = worker(conn, validate=self.validate, inspect=planning.inspect, agent_id=self.work['agent_id'],

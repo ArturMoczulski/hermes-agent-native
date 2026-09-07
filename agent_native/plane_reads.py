@@ -26,7 +26,7 @@ _FIELDS = {
     'project': ('id', 'workspace', 'name', 'identifier', 'description', 'created_at', 'updated_at'),
     'item': _COMMON + ('name', 'description_html', 'sequence_id', 'state', 'priority',
                        'parent', 'start_date', 'target_date'),
-    'comment': _COMMON + ('issue', 'comment_html', 'actor', 'access', 'edited_at'),
+    'comment': _COMMON + ('issue', 'comment_html', 'actor', 'access', 'edited_at', 'external_id', 'external_source'),
     'attachment': _COMMON + ('issue', 'is_uploaded', 'created_by'),
     'cycle': _COMMON + ('name', 'description', 'start_date', 'end_date', 'owned_by'),
     'state': _COMMON + ('name', 'description', 'group', 'color', 'sequence', 'default'),

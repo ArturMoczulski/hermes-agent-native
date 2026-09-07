@@ -89,3 +89,8 @@ Follow small TDD increments and the existing Playwright setup, using
 [named test cases by default](first-builder/PRACTICES.md#targeted-verification-by-default). Keep one active
 implementation slice, no cycle dates or duration estimates. Runtime cadence and
 finite limits must be explicitly configured before launch; open defaults remain open.
+
+Owner promoted AN-84 (incoming Plane comment review/replies) next, after the AN-73
+question-comment increment. AN-84 now supplies scoped in-run discussion review;
+AN-75 still owns cadence wake-up/continuation. See Builder state for verification
+and remaining acceptance. Keep cycles undated.

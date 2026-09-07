@@ -149,6 +149,9 @@ class _PlanningSession:
         args = validate_arguments('resource.inspect', arguments)
         return self._writer.inspect(self._context, args['kind'], args.get('resource_id'))
 
+    def comments(self, item_id):
+        return self._writer._reads.list_comments(self._context, item_id)
+
     def execute(self, operation_id, operation, arguments):
         return self._writer.execute(self._context, operation_id, operation, arguments)
 

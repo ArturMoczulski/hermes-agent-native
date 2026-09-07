@@ -2,7 +2,7 @@
 import json
 import re
 
-SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select', 'progress_report', 'work_feedback', 'work_question'}
+SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'
@@ -65,6 +65,24 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_COMMENTS_HOLD' in purpose:
+        target = _planning(messages)['discovery']['id']
+        if index == 0:
+            name, arguments = 'work_item_select', {'item_id':target}
+        elif index == 1:
+            name, arguments = 'work_comments', {'item_id':target}
+        elif index == 2:
+            comment = result(1)['pending'][0]
+            name, arguments = 'work_comments', {'item_id':target,'review_id':comment['id'],
+                'response':'I will revise the draft to address your comment.','reply':True}
+        elif index == 3:
+            name, arguments = 'work_comments', {'item_id':target}
+        elif index == 4:
+            name, arguments = 'result_record', {'item_id':target,'summary':'Reviewed incoming discussion','outcome':'discovery','evaluation':'Reply posted; no draft changes claimed.','outputs':[]}
+        else:
+            return {'role':'assistant','content':'Comment reviewed and replied to.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_QUESTION_HOLD' in purpose:
         target = _planning(messages)['discovery']['id']
         if index == 0:
@@ -206,7 +224,9 @@ def handle_writer_request(handler, body, server, model_name):
         key = 'E2E_FEEDBACK_HOLD'
     if 'E2E_QUESTION_HOLD' in system_text and phase == 2:
         key = 'E2E_QUESTION_HOLD'
-    hold = key is not None and (reselect or 'E2E_WRITER_' in key or key in ('E2E_FEEDBACK_HOLD', 'E2E_QUESTION_HOLD') or phase >= 7)
+    if 'E2E_COMMENTS_HOLD' in system_text and phase == 1:
+        key = 'E2E_COMMENTS_HOLD'
+    hold = key is not None and (reselect or 'E2E_WRITER_' in key or key in ('E2E_FEEDBACK_HOLD', 'E2E_QUESTION_HOLD', 'E2E_COMMENTS_HOLD') or phase >= 7)
     evidence = getattr(server, 'writer_requests', None)
     if evidence is None:
         evidence = server.writer_requests = []
@@ -222,7 +242,7 @@ def handle_writer_request(handler, body, server, model_name):
         server.holds.enter(key)
         if not server.holds.wait(key, handler.connection):
             return True
-        message = (next_reply(messages, system_text) if (reselect and phase == 7) or key in ('E2E_OUTPUT_LINK_HOLD', 'E2E_FEEDBACK_HOLD', 'E2E_QUESTION_HOLD') else
+        message = (next_reply(messages, system_text) if (reselect and phase == 7) or key in ('E2E_OUTPUT_LINK_HOLD', 'E2E_FEEDBACK_HOLD', 'E2E_QUESTION_HOLD', 'E2E_COMMENTS_HOLD') else
                    {'role': 'assistant', 'content': server.holds.evidence(key)['late_reply']})
     else:
         try:

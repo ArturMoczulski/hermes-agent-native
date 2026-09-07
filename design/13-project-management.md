@@ -296,3 +296,16 @@ a planning-service outage.
 | Restart or duplicate delivery | Recover the same work and pending updates; create no duplicate assignment or run. |
 | Planning outage | Show freshness and pending operations; retain stop controls and reconcile before selecting new work. |
 | Activity without outcomes | Surface a progress concern supported by evidence and revise the approach. |
+
+### Reviewing incoming discussion
+
+Agents review new comments on their current work item while working and at eligible
+check-ins. They consider surrounding discussion and current requirements, then
+post a useful reply linked to the source comment or record why no reply is needed.
+Edited comments are new information; repeated reads must not duplicate replies.
+
+The framework identifies its own comments through protected delivery provenance,
+not a shared Plane account or a signature in comment text. Other agents' comments
+remain eligible for review. Automated replies must not trigger further automated
+replies. Unknown attribution remains explicit. Plane discussion is not itself a
+trusted owner permission or answer channel, and cannot resume paused work.

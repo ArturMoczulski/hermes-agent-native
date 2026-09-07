@@ -147,6 +147,17 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         return {'hold_entered': bool(hold and hold['entered'].is_set()),
                 'project_gets': sum(r['method'] == 'GET' and r['path'] == path for r in plane.requests)}
 
+    @app.post('/__e2e__/comment/{agent_id}')
+    def external_comment(request: Request, agent_id: str):
+        _require_token(request)
+        from uuid import uuid4
+        project=next(p for p in plane.projects.values() if p.get('external_id')==agent_id)
+        item=next(i for i in plane.items.values() if i['project']==project['id'])
+        comment={'id':str(uuid4()),'workspace':item['workspace'],'project':project['id'],
+                 'issue':item['id'],'actor':plane.user,'comment_html':'<p>Please revise the draft.</p>'}
+        plane.comments[comment['id']]=comment
+        return comment
+
     @app.get('/__e2e__/writer-evidence/{agent_id}')
     def writer_evidence(request: Request, agent_id: str):
         _require_token(request)

@@ -266,3 +266,23 @@ is visible in Plane progress. Existing pre-feature questions are not backfilled.
 Answers still use Questions for you; incoming Plane-comment interpretation is AN-84.
 The native browser test verifies the question comment exists before answering;
 focused tests cover lost acknowledgements and question/intent rollback together.
+
+### Incoming Plane discussion (AN-84)
+
+Managed workers have a scoped `work_comments` operation for their selected item.
+Reads use the existing bounded/paginated Plane adapter and persist comment-version
+reviews across runs. Up to 20 pending reviews and ten surrounding comments are
+returned with bounded excerpts. The model chooses a useful reply or an explicit
+no-reply decision. Replies reference the source comment ID and use the existing
+progress intent/delivery journal. Lost acknowledgements remain unknown, not resent.
+
+Host mutation receipts and prepared content identify originating agents even with
+a shared API account. Own comments are omitted; recognized automated replies cannot
+receive another automatic reply. A changed/deleted source must be reviewed again
+before a new decision. Activity records receipt and review; Plane delivery remains
+visible in the existing progress panel. Comments do not become trusted owner answers.
+
+This increment supplies review during admitted work through tool instructions.
+It does not run a background poller, wake a paused agent or guarantee immediate
+notification during a long model call. Cadence/check-in dispatch remains AN-75;
+unknown-write reconciliation remains the existing AN-80 follow-up.
