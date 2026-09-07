@@ -1,3 +1,22 @@
+## AN-80 verbosity and checkpoints — 2026-09-07
+
+Owner-only per-agent progress settings now persist concise/standard/detailed
+with stale-edit protection and default Standard. A private managed progress_report
+tool reports bounded summary, evidence and next action on the selected item.
+Checkpoint/detail delivery follows the current preference; blockers are retained.
+Direct managed comment.create is refused to keep reporting on this path. Prior
+suppressed and delivered receipts are not reinterpreted when preferences change.
+
+Red: missing settings editor and API functions. Green: real native-worker browser
+case saves/reloads Detailed and sees both checkpoint/detail comments before the
+worker finishes (5.0s). Domain verbosity case passed. Five focused delivery/settings/scope checks subsequently passed;
+scoped Ruff and production TypeScript/Vite build passed. The idle preview was
+refreshed and its built Standard preference editor visually verified. Evidence:
+/tmp/an80-verbosity-{red,green}.log and /tmp/an80-verbosity-browser-{red,green}.log.
+Next AN-80 work: saved-output linking, end-of-attempt outcomes, preserved rich
+Outputs sections, and owner reconciliation with outage/stop acceptance. AN-80
+remains In Progress; AN-73 follows. No live inference was used for these checks.
+
 ## AN-80 work-selection progress increment — 2026-09-07
 
 AN-80 is In Progress. A new explicit work selection now atomically stores a

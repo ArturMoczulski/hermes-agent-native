@@ -206,3 +206,9 @@ the actual external Plane fixture comment, host attempt attribution, confirmed
 UI delivery state, reload without duplication, and Pause. This verifies the
 first AN-80 increment; it does not establish later verbosity, output linking or
 reconciliation behavior.
+
+The `owner verbosity persists and governs native checkpoint reporting` case
+saves Detailed through the real owner API, reloads it, and holds a native worker
+after two progress tools. Both checkpoint and detail comments must already exist
+in the external Plane fixture. Supporting targeted Python cases verify filtering,
+blockers, stable receipts, selected-item scope and owner-only stale-edit handling.

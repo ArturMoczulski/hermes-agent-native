@@ -1,3 +1,4 @@
+import { AgentProgressSettings } from "@/components/AgentProgressSettings";
 import { useEffect, useRef, useState } from "react";
 import { Link, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
@@ -88,6 +89,7 @@ export default function AgentDetailPage() {
             mutationVersion.current += 1;
             setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
           }} />
+        <AgentProgressSettings key={`progress-settings:${agent.id}`} agentId={agent.id} />
         <WorkControls key={`work:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {

@@ -270,3 +270,25 @@ and an owner reconciliation flow remain open. The focused browser test holds a
 real worker after selection and verifies that Plane already contains the comment;
 reloading does not duplicate it, and Pause stops the run. Local scripted model
 and external Plane fixtures incur no paid inference.
+
+### AN-80 second increment: owner verbosity and checkpoints
+
+Each agent has an owner-only reporting preference with a revision: concise,
+standard (initial value), or detailed. The agent detail editor persists it with
+stale-edit protection. Changes govern subsequent reports, not past receipts.
+The managed worker uses `progress_report` for checkpoint, detail or blocker
+updates on its currently selected item. Summaries, reported evidence and next
+actions are bounded; comments carry host-supplied agent/item/attempt identity.
+The model supplies reported evidence, not independent verification.
+
+Standard delivers checkpoints; detailed also delivers smaller updates. Concise
+suppresses both. Blockers and host selection updates remain unconditional.
+Suppressed tool receipts stay suppressed on replay after a preference change.
+Managed direct `comment.create` is refused so it cannot bypass this reporting
+control; the scoped host adapter still uses that operation for actual delivery.
+Saved-output references and end-of-attempt outcomes remain the next increment.
+
+A focused browser case saves Detailed, reloads, then holds a real native worker
+with both checkpoint and detail comments already in the Plane fixture. Supporting
+checks cover concise/standard filtering, blockers, stable replay, wrong-item
+rejection, stale/invalid settings and unauthenticated requests. No paid inference.

@@ -2,7 +2,7 @@
 import json
 import re
 
-SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select'}
+SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select', 'progress_report'}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'
@@ -105,6 +105,11 @@ def next_reply(messages, purpose):
                                     'expected_cycle_id': result(4)['cycle_id']})
     elif index == 6:
         name, arguments = 'work_item_select', {'item_id': item()}
+    elif 'E2E_PROGRESS_CHECKPOINTS' in purpose and index in (7, 8):
+        name, arguments = 'progress_report', {'item_id': item(),
+            'kind': 'checkpoint' if index == 7 else 'detail',
+            'summary': 'Outline prepared' if index == 7 else 'Scene beats checked',
+            'evidence': 'Three scenes outlined with a resolution.', 'next_action': 'Draft the opening.'}
     elif 'E2E_PLAN_RESELECT' in purpose and index == 7:
         name, arguments = 'work_item_select', {'item_id': item()}
     elif 'E2E_PLAN_RESELECT' in purpose and index == 8:
@@ -154,6 +159,8 @@ def handle_writer_request(handler, body, server, model_name):
         return True
     reselect = 'E2E_PLAN_RESELECT' in system_text
     key = ('E2E_PLAN_RESELECT_BEFORE' if phase == 7 else 'E2E_PLAN_RESELECT_AFTER') if reselect and phase in (7, 8) else (marker.group(0) if marker else None)
+    if 'E2E_PROGRESS_CHECKPOINTS' in system_text and phase >= 9:
+        key = 'E2E_PROGRESS_CHECKPOINTS'
     hold = key is not None and (reselect or 'E2E_WRITER_' in key or phase >= 7)
     evidence = getattr(server, 'writer_requests', None)
     if evidence is None:

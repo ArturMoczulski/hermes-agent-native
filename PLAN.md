@@ -6,8 +6,8 @@ dependencies and cycles. Read it before selecting work; this is not another boar
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
 **AN-27 model/provider selection and AN-83 reasoning effort are complete. AN-80 is in progress.**
-Its first increment reports work selection in Plane during execution; verbosity,
-additional progress/outcome events, output links and reconciliation remain open.
+Work selection and configurable checkpoint/detail/blocker reporting are implemented.
+Output links, final outcomes and reconciliation remain open.
 The reasoning-default clarification is complete: actionable labels and explicit Astra Low.
 See [model settings and verification](implementation/agent-model-selection.md).
 The owner moved this earlier usable-agent milestone ahead of the First Builder:

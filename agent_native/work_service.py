@@ -71,7 +71,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select','progress_report')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -94,6 +94,8 @@ class _Run:
         elif tool == 'plane_operation_execute':
             if set(args) != {'operation','arguments'}:
                 raise ValueError('Planning effect requires operation and arguments')
+            if args['operation'] == 'comment.create':
+                raise ValueError('Use progress_report for managed progress comments')
             from agent_native.plane_writes import PlaneWriteError
             try:
                 result = planning.execute(operation_id,args['operation'],args['arguments'])
@@ -111,13 +113,17 @@ class _Run:
                             (message,message,_now(),self.work['id']))
                         state.event(conn,self.work['id'],'work.unknown',message)
                 raise
+        elif tool == 'progress_report':
+            from agent_native.progress import checkpoint
+            result = checkpoint(conn, validate=self.validate, planning=planning,
+                                agent_id=self.work['agent_id'], run_id=self.work['id'], call_id=call_id, arguments=args)
         elif tool == 'work_item_select':
             from agent_native.work_focus import select
             result = select(conn, validate=self.validate, inspect=planning.inspect,
                             agent_id=self.work['agent_id'], run_id=self.work['id'],
                             call_id=call_id, arguments=args)
-            from agent_native.progress import deliver_selection
-            deliver_selection(conn, planning, self.validate, result['selection_id'])
+            from agent_native.progress import deliver
+            deliver(conn, planning, self.validate, result['selection_id'])
         elif tool == 'output_publish':
             from agent_native.output_store import publish
             required = {'title','content','item_id','format'}
@@ -141,6 +147,7 @@ class _Run:
                          (json.dumps(result),self.work['id'],call_id))
             summary = (('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
+                       ('Progress report: '+result['status']) if tool=='progress_report' else
                        'Plane: '+args.get('operation','inspected '+args.get('kind','resource')))
             if tool != 'work_item_select':
                 # Selection and its event commit together; receipt recovery must
@@ -180,7 +187,8 @@ class _Run:
                                'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
                                'Choose useful work appropriate to your purpose and the supplied material. Use work_item_select before '
                                'substantive work and whenever you switch tasks. The framework posts a work-selection progress comment; '
-                               'do not duplicate that start update. Continue reporting meaningful progress through Plane comments. '
+                               'do not duplicate that start update. Use progress_report for meaningful checkpoints, details and blockers as you work. '
+                               'Owner verbosity controls delivery, and direct comment.create is not available to this worker. '
                                'Save any produced text or Markdown '
                                'with output_publish; use output_id only when revising an existing output. Record paths in Plane. '
                                'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
@@ -189,7 +197,7 @@ class _Run:
                                'Leave the task nonterminal for owner review; '
                                'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
                                'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+
-                               '\nSupported Plane operation argument contracts:\n'+json.dumps(_CONTRACTS))
+                               '\nSupported Plane operation argument contracts:\n'+json.dumps({k: v for k, v in _CONTRACTS.items() if k != 'comment.create'}))
                     skill = (Path(__file__).resolve().parents[1] / 'skills/productivity/plane-project-management/SKILL.md').read_text()
                     attempt = {'run_id':self.work['id'],'agent_id':root['id'],'soul_revision':root['soul_revision'],
                                'name':root['name'],'purpose':root['purpose'],'workspace':str(self.workspace),

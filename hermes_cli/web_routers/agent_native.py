@@ -228,3 +228,33 @@ def set_agent_model(agent_id: str, body: ChangeModel, actor=Depends(owner_sessio
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+class ProgressSettings(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    verbosity: str = Field(strict=True, min_length=1, max_length=16)
+    expected_revision: int = Field(strict=True, ge=1)
+
+
+@router.get('/{agent_id}/progress-settings')
+def progress_settings(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.progress import get_settings
+    with connect_closing(board='default') as conn:
+        try:
+            return get_settings(conn, agent_id)
+        except KeyError as exc:
+            raise HTTPException(404, 'Agent not found') from exc
+
+
+@router.put('/{agent_id}/progress-settings')
+def update_progress_settings(agent_id: str, body: ProgressSettings, actor=Depends(owner_session)):
+    from agent_native.progress import change_settings
+    with connect_closing(board='default') as conn:
+        try:
+            return change_settings(conn, actor=actor, agent_id=agent_id, **body.model_dump())
+        except KeyError as exc:
+            raise HTTPException(404, 'Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
