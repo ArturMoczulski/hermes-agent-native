@@ -319,3 +319,32 @@ def answer_work_question(agent_id: str, question_id: str, body: WorkAnswerBody, 
             raise HTTPException(status_code=409,detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=422,detail=str(exc)) from exc
+
+
+class CadenceSettings(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    expected_revision: int = Field(strict=True, ge=1)
+    interval_seconds: int = Field(strict=True, ge=1, le=2592000)
+    enabled: bool = Field(strict=True)
+
+
+@router.post('/{agent_id}/cadence')
+def configure_cadence(agent_id: str, body: CadenceSettings, actor=Depends(owner_session)):
+    from agent_native.cadence import configure
+    with connect_closing(board='default') as conn:
+        try:
+            return configure(conn,actor=actor,agent_id=agent_id,**body.model_dump())
+        except KeyError as exc:
+            raise HTTPException(status_code=404,detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409,detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422,detail=str(exc)) from exc
+
+
+@router.get('/{agent_id}/attempts')
+def list_attempts(agent_id: str, actor=Depends(owner_session)):
+    with connect_closing(board='default') as conn:
+        identity.get_root(conn,actor=actor,agent_id=agent_id)
+        return [dict(zip(('id','state','summary','created_at','finished_at','session_id'),r)) for r in conn.execute(
+            'SELECT id,state,summary,created_at,finished_at,session_id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 20',(agent_id,))]

@@ -65,6 +65,32 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_CADENCE' in purpose:
+        planning = _planning(messages)
+        target = planning['discovery']['id']
+        previous = planning.get('saved_outputs', [])
+        if index == 0:
+            name, arguments = 'work_item_select', {'item_id':target}
+        elif index == 1:
+            name, arguments = 'work_comments', {'item_id':target}
+        elif index == 2:
+            pending = result(1)['pending']
+            name, arguments = 'output_publish', {'item_id':target,'title':'Cadence draft','format':'text',
+                'content':planning['saved_output_excerpts'][0]['content']+'\nRevised after Plane feedback.' if pending else 'Initial cadence draft.'}
+            if previous:
+                arguments['output_id'] = previous[0]['output_id']
+        elif index == 3:
+            pending = result(1)['pending']
+            name, arguments = 'work_comments', {'item_id':target}
+            if pending:
+                arguments.update(review_id=pending[0]['id'],response='Saved a revision using your feedback.',reply=True)
+        elif index == 4:
+            name, arguments = 'result_record', {'item_id':target,'summary':'Draft saved for review','outcome':'submitted',
+                'evaluation':'Scripted draft for owner review','outputs':[{'output_id':result(2)['output_id'],'version':result(2)['version']}]}
+        else:
+            return {'role':'assistant','content':'Draft saved.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_COMMENTS_HOLD' in purpose:
         target = _planning(messages)['discovery']['id']
         if index == 0:

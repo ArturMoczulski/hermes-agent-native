@@ -128,3 +128,11 @@ are flagged for review rather than presented as proven failure. The timing and
 criteria for detection remain to be specified for different kinds of work;
 the capability itself is required. Recurring concerns remain linked so a new
 check-in does not produce an unrelated duplicate alert.
+
+### Check-in continuity and controls
+
+Check-ins retain separate attempt history and recover current planning context,
+prior results, saved work and pending discussion. An interval missed while the
+service was unavailable does not create a backlog of duplicate attempts. Disabling
+cadence prevents future check-ins; pausing also stops current work. Uncertain
+side effects must be resolved before automatically continuing dependent work.

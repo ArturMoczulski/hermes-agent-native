@@ -1,3 +1,4 @@
+import { AgentCadence } from '@/components/AgentCadence';
 import { WorkQuestions } from '@/components/WorkQuestions';
 import { WorkFeedback } from '@/components/WorkFeedback';
 import { AgentProgressSettings } from "@/components/AgentProgressSettings";
@@ -98,6 +99,7 @@ export default function AgentDetailPage() {
             mutationVersion.current += 1;
             setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
           }} />
+        <AgentCadence key={`cadence:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} />
         <WorkQuestions key={`questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} />
         <WorkFeedback key={`feedback:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} />
         <PlanningWork key={`planning:${agent.id}:${agent.soul_revision}:${agent.setup?.activation_id}`} agent={agent} />
@@ -238,7 +240,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
         <dt className="text-muted-foreground">Model calls</dt><dd>{work.model_calls}</dd>
         <dt className="text-muted-foreground">Session</dt><dd className="break-all">{work.session_id}</dd>
       </dl>
-      <p className="text-xs text-muted-foreground">This is one bounded run. Automatic continuation and resume are not enabled yet.</p>
+      <p className="text-xs text-muted-foreground">Each attempt is bounded. Configure Thinking cadence for automatic check-ins after completed work.</p>
     </> : <form onSubmit={(event) => { event.preventDefault(); void perform("start"); }} className="space-y-4">
       <p className="text-sm text-muted-foreground">Set both limits to let this agent work on its purpose in its private workspace. Work waits for setup if needed.</p>
       <div className="grid gap-4 sm:grid-cols-2">

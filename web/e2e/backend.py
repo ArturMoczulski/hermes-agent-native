@@ -166,7 +166,7 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         from hermes_state import SessionDB
         with connect_closing(Path(home)/'kanban.db') as conn:
             work = read_work(conn,agent_id)
-            pid = conn.execute('SELECT worker_pid FROM agent_native_work_runs WHERE agent_id=?',(agent_id,)).fetchone()
+            pid = conn.execute('SELECT worker_pid FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
         alive = False
         if pid and pid[0]:
             try:

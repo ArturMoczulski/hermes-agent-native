@@ -15,7 +15,7 @@ def snapshot(binding):
             'WHERE agent_id=? AND soul_revision=? ORDER BY (answer IS NULL) DESC,created_at DESC,id DESC LIMIT 5',
             (binding.agent_id,binding.soul_revision))]
         result['question_note'] = 'Up to five local questions; task applicability must be checked before using answers.'
-        row = conn.execute('SELECT id,state,soul_revision FROM agent_native_work_runs WHERE agent_id=?',
+        row = conn.execute('SELECT id,state,soul_revision FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',
                            (binding.agent_id,)).fetchone()
         if row and row[2] == binding.soul_revision:
             from agent_native.work_focus import read_focus

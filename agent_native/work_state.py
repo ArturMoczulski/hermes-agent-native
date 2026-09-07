@@ -7,8 +7,8 @@ from agent_native.identity import OWNER, ConflictError, _now, _require_owner
 
 WORK_SCHEMA = """
 CREATE TABLE IF NOT EXISTS agent_native_work_runs (
- id TEXT PRIMARY KEY, agent_id TEXT NOT NULL UNIQUE REFERENCES agent_native_agents(id),
- activation_id TEXT NOT NULL UNIQUE REFERENCES agent_native_initial_activations(id),
+ id TEXT PRIMARY KEY, agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
+ activation_id TEXT NOT NULL REFERENCES agent_native_initial_activations(id),
  soul_revision INTEGER NOT NULL, session_id TEXT NOT NULL UNIQUE,
  limits TEXT NOT NULL, state TEXT NOT NULL,
  model_calls INTEGER NOT NULL DEFAULT 0, stop_requested INTEGER NOT NULL DEFAULT 0,
@@ -30,8 +30,9 @@ from agent_native.work_focus import FOCUS_SCHEMA
 from agent_native.progress import PROGRESS_SCHEMA
 from agent_native.feedback import SCHEMA as FEEDBACK_SCHEMA
 from agent_native.questions import SCHEMA as QUESTIONS_SCHEMA
+from agent_native.cadence import SCHEMA as CADENCE_SCHEMA
 from agent_native.comments import SCHEMA as COMMENTS_SCHEMA
-WORK_SCHEMA += COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA
+WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA
 
 TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
 
@@ -46,7 +47,7 @@ def event(conn, run_id, kind, summary):
 
 
 def read_work(conn, agent_id):
-    row = conn.execute('SELECT * FROM agent_native_work_runs WHERE agent_id=?', (agent_id,)).fetchone()
+    row = conn.execute('SELECT * FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1', (agent_id,)).fetchone()
     if row is None:
         return None
     names = [c[1] for c in conn.execute('PRAGMA table_info(agent_native_work_runs)')]
@@ -119,6 +120,7 @@ def request_pause(conn, *, actor, agent_id):
         work = read_work(conn,agent_id)
         if not work:
             raise ConflictError('This agent has no configured work run')
+        conn.execute('UPDATE agent_native_cadence SET enabled=0 WHERE agent_id=?',(agent_id,))
         if work['state'] in TERMINAL or work['state'] == 'stopping':
             return work
         state = 'paused' if work['state'] == 'queued' else 'stopping'

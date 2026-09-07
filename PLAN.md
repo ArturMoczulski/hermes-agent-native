@@ -94,3 +94,9 @@ Owner promoted AN-84 (incoming Plane comment review/replies) next, after the AN-
 question-comment increment. AN-84 now supplies scoped in-run discussion review;
 AN-75 still owns cadence wake-up/continuation. See Builder state for verification
 and remaining acceptance. Keep cycles undated.
+
+AN-75 is now the owner's next active priority: opt-in cadence and retained attempts
+bring the agent beyond a single run. The first cadence increment includes bounded
+check-ins, prior-work context, Plane-feedback revision and visible attempt history.
+Recovery/resume and whole-purpose lifecycle acceptance remain subsequent work;
+see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.

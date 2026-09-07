@@ -51,7 +51,7 @@ def submit(conn, *, actor, agent_id, expected_revision, request_id, text):
             conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,text,status,created_at) VALUES(?,?,?,?,?,?,?)',
                          (key,agent_id,expected_revision,request_id,text,'pending',_now()))
             from agent_native.work_state import event
-            run = conn.execute('SELECT id FROM agent_native_work_runs WHERE agent_id=?',(agent_id,)).fetchone()
+            run = conn.execute('SELECT id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if run:
                 event(conn,run[0],'work.feedback_received','Owner feedback received: '+key)
         return _rows(conn,agent_id,'AND id=?',(key,))[0]

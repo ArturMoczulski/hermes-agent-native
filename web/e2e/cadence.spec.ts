@@ -1,0 +1,38 @@
+import {test,expect} from '@playwright/test';
+const backend='http://127.0.0.1:19219';
+const headers={'X-Hermes-Session-Token':'agent-native-local-e2e-only'};
+test('cadence starts a separate attempt that revises saved work from Plane feedback',async({page,request})=>{
+  test.setTimeout(90000);
+  await page.addInitScript(()=>{window.__HERMES_SESSION_TOKEN__='agent-native-local-e2e-only';});
+  await request.put(`${backend}/__e2e__/plane-config`,{headers,data:{enabled:true}});
+  const created=await request.post(`${backend}/api/agent-native/agents`,{headers,data:{request_id:crypto.randomUUID(),name:'Continuing writer',purpose:'Revise drafts using feedback. E2E_CADENCE',work:{timeout_seconds:180,max_iterations:12}}});
+  expect(created.status()).toBe(201);
+  const {id}=await created.json();const api=`${backend}/api/agent-native/agents/${id}`;
+  const current=async()=>(await(await request.get(api,{headers})).json());
+  try{
+    await expect.poll(async()=>(await current()).work.state,{timeout:30000}).toBe('completed');
+    const first=(await current()).work;
+    await request.post(`${backend}/__e2e__/comment/${id}`,{headers});
+    await page.goto(`/agents/${id}`);
+    const cadence=page.getByRole('region',{name:'Thinking cadence',exact:true});
+    await cadence.getByLabel('Check-in interval (seconds)').fill('2');
+    await cadence.getByRole('button',{name:'Enable or update cadence'}).click();
+    await expect(cadence).toContainText('Enabled · every 2 seconds');
+    await expect.poll(async()=>{const a=await current();return a.work.id!==first.id&&a.work.state==='completed';},{timeout:30000}).toBe(true);
+    await cadence.getByRole('button',{name:'Disable cadence'}).click();
+    await expect(cadence).toContainText('Automatic check-ins are off');
+    const latest=(await current()).work;
+    expect(latest.session_id).not.toBe(first.session_id);
+    expect(latest.outputs.some((o:{version:number})=>o.version===2)).toBe(true);
+    const output=latest.outputs.find((o:{version:number})=>o.version===2);
+    const saved=await(await request.get(`${api}/outputs/${output.output_id}/versions/2`,{headers})).json();
+    expect(saved.content).toContain('Initial cadence draft.');
+    expect(saved.content).toContain('Revised after Plane feedback.');
+    const history=await(await request.get(`${api}/attempts`,{headers})).json();
+    expect(history).toHaveLength(2);
+    await expect(cadence.getByText(first.id,{exact:true})).toBeVisible();
+    await expect(cadence.getByText(latest.id,{exact:true})).toBeVisible();
+    const proof=await(await request.get(`${backend}/__e2e__/writer-evidence/${id}`,{headers})).json();
+    expect(proof.comments.some((c:{comment_html:string})=>c.comment_html.includes('Saved a revision using your feedback.'))).toBe(true);
+  }finally{await request.post(`${api}/work/pause`,{headers});}
+});

@@ -206,7 +206,21 @@ class _Run:
                 with open_planning(db_path=self.service.db_path,home=self.service.home,
                                    agent_id=root['id'],binding_id=binding,validate=self.validate) as planning:
                     snapshot = planning.snapshot()
-                    initial = ('Begin your initial project work from your protected purpose. Use the supplied planning skill. '
+                    from agent_native.result_store import list_results
+                    from agent_native.output_store import list_outputs
+                    from agent_native.questions import recent as recent_questions
+                    snapshot['previous_results'] = list_results(conn,root['id'])[:10]
+                    snapshot['saved_outputs'] = list_outputs(conn,root['id'])[:10]
+                    snapshot['saved_output_excerpts'] = []
+                    from agent_native.output_store import read_output
+                    for output in snapshot['saved_outputs'][:3]:
+                        planning.inspect({'kind':'item','resource_id':output['item_id']})
+                        saved = read_output(conn,root['id'],output['output_id'],output['version'],workspace=self.workspace)
+                        snapshot['saved_output_excerpts'].append({'output_id':saved['output_id'],'version':saved['version'],
+                            'content':saved['content'][:8000],'truncated':len(saved['content'])>8000})
+                    snapshot['questions'] = recent_questions(conn,root['id'])
+                    snapshot['continuation_note'] = 'Review earlier results and outputs; do not repeat finished work. Read work_feedback and current Plane comments with work_comments before substantive work. Waiting is a valid result; do not invent new work.'
+                    initial = ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
                                'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
                                'Choose useful work appropriate to your purpose and the supplied material. Use work_item_select before '
                                'substantive work and whenever you switch tasks. The framework posts a work-selection progress comment; '
@@ -388,6 +402,8 @@ class WorkService:
             except PermissionError:
                 run.stop('Work paused or its execution authority ended.')
         with connect_closing(self.db_path) as conn:
+            from agent_native.cadence import queue_due
+            queue_due(conn,busy_agents={run.work['agent_id'] for run in self.runs.values()})
             rows = conn.execute("SELECT w.agent_id FROM agent_native_work_runs w JOIN agent_native_setup s ON s.agent_id=w.agent_id "
                                 "WHERE w.state='queued' AND s.status='ready'").fetchall()
             for (agent_id,) in rows:

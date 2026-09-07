@@ -1,3 +1,29 @@
+## AN-75 cadence continuation — 2026-09-07
+
+Owner selected cadence as highest-impact next work. Added opt-in Thinking cadence
+controls (explicit seconds), distinct retained work attempts/native sessions, due
+admission with one-active-attempt constraint, and latest-20 attempt history.
+Prior completed work receives fresh Plane context, recent results/references,
+verified bounded output excerpts and questions. Work can proceed, ask or wait.
+Pause disables scheduling; active/failed/unknown/stale-purpose work and unresolved
+progress delivery cannot trigger another attempt. Missed intervals coalesce.
+
+TDD: /tmp/an75-red.log reproduced missing cadence. Two named admission cases passed
+in /tmp/an75-green.log; legacy FK/history preservation passed in
+/tmp/an75-migration.log; real service restart/no replay passed in
+/tmp/an75-restart.log. Native Playwright cadence → new session → Plane feedback →
+version-2 draft using original content → disable/history passed in
+/tmp/an75-browser-final.log (9.5s). Private copy of preview DB migrated with all
+three runs retained, integrity_check=ok and no foreign-key errors. No paid model
+calls or broad suites. Scoped Ruff and diff checks passed. Production web build
+passed (/tmp/an75-build.log). Idle preview restarted, /agents returned HTTP 200,
+foreign-key checks passed and enabled schedule count remains zero.
+
+AN-75 remains In Progress for broader lifecycle acceptance. No owner resume or
+uncertain-outcome resolution is added; those states require review. Purpose
+retirement and full autonomous-quality evaluation remain later. Do not enable
+cadence on existing preview agents without the owner's explicit configuration.
+
 ## AN-84 incoming Plane discussion — 2026-09-07
 
 Owner promoted comment review after AN-73 question posting. Added work_comments

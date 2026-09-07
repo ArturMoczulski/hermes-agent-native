@@ -286,3 +286,27 @@ This increment supplies review during admitted work through tool instructions.
 It does not run a background poller, wake a paused agent or guarantee immediate
 notification during a long model call. Cadence/check-in dispatch remains AN-75;
 unknown-write reconciliation remains the existing AN-80 follow-up.
+
+### Cadence continuation (AN-75)
+
+The owner can opt in through Thinking cadence on the agent page, choosing an
+interval in seconds. Existing agents remain off. Check-ins reuse configured run
+limits and snapshot current model settings for each new attempt. The host admits
+one due attempt only after the previous attempt completed and its interval elapsed;
+active work and pending/unknown comment delivery block continuation. Missed
+intervals coalesce into one attempt. Paused, failed, uncertain and stale-purpose
+attempts require owner review; enabling cadence cannot override them. Disabling
+cadence stops future check-ins; Pause also disables cadence and stops active work.
+
+Each attempt retains a distinct ID, native session, events and receipts. The
+legacy uniqueness on agent/activation is migrated with foreign-key preservation;
+a partial unique index enforces one active attempt per agent. The page exposes the
+latest 20 attempts. New sessions receive fresh Plane context, recent results,
+output references, up to three verified output excerpts (8,000 characters each,
+explicitly marked when truncated), and questions. The agent can work, ask, or
+record waiting; the timer does not decide artistic quality or accept results.
+
+A service restart preserves settings and completed work. In-flight attempts become
+unknown and cannot be replayed automatically. This initial release does not add
+owner resolution/resume for failed or uncertain attempts, full-purpose retirement,
+or unlimited artifact context. These remain separate lifecycle/recovery work.
