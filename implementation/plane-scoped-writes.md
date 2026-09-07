@@ -101,6 +101,14 @@ business fields must match the requested values, including literal HTML text,
 undated cycle fields and preserved cycle ownership. Creation/comment attribution
 and update attribution must match the configured Plane service identity.
 
+During managed work, a `PlaneWriteConflict` confirmed rejected before delivery is
+returned as a retained `status: conflict` tool result, with `write_attempted: false`.
+The agent must inspect current content and relationships and decide whether a new
+operation is appropriate. This covers editor-only HTML changes without hiding real
+edits or automatically replaying writes. Repeating the original tool-call ID returns
+the same conflict receipt. Unknown delivery and authority failures still stop work.
+A new operation remains subject to normal authority and source checks.
+
 These checks are advisory conflict detection, not atomic compare-and-swap.
 Plane can change between the read and write; a fingerprint cannot lock the remote
 resource. It also does not prove that a changed brief is owner-authorized or that

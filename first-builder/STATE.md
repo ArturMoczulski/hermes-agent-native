@@ -1,3 +1,16 @@
+## AN-85 recoverable Plane conflicts — 2026-09-08
+
+Owner's Fantasy Wizard Series stopped on cycle.assign after Plane added editor
+attributes to the unchanged description. Exact source checking remains intact;
+known pre-write PlaneWriteConflict now becomes a durable conflict tool result,
+allowing fresh inspection and a new decision within the same bounded attempt.
+Unknown delivery still blocks all later admission. No automatic write replay.
+
+TDD: broker and native-browser tests reproduced failure. Three focused Python
+cases pass (recovery, actual content rejection, unknown-delivery revocation).
+Playwright plane-conflict.spec.ts 'native work rereads' passes (8.3s). Scoped Ruff
+passes. AN-86 removal and AN-87 recreation follow before updating the live agent.
+
 ## Fresh live self-driven screenshare — 2026-09-08
 
 Recorded the owner-requested narrated demo with live Astra Low and local Plane.

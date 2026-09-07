@@ -96,11 +96,19 @@ class _Run:
                 raise ValueError('Planning effect requires operation and arguments')
             if args['operation'] == 'comment.create':
                 raise ValueError('Use progress_report for managed progress comments')
-            from agent_native.plane_writes import PlaneWriteError
+            from agent_native.plane_writes import PlaneWriteError, PlaneWriteConflict
             try:
                 result = planning.execute(operation_id,args['operation'],args['arguments'])
             except PlaneWriteError as exc:
-                if exc.outcome == 'unknown':
+                if isinstance(exc, PlaneWriteConflict) and exc.outcome == 'rejected':
+                    # A known pre-write rejection is task data, not revocation.
+                    # Retain this call's receipt; a fresh decision needs a new call.
+                    result = {'status':'conflict','operation_id':operation_id,
+                              'write_attempted':False,
+                              'message':'Plane changed or the requested relationship conflicts with current state. No write was sent. Inspect the affected resource and current relationships, then reassess the task before issuing a new operation. Do not repeat stale arguments.'}
+                    state.event(conn,self.work['id'],'work.conflict',
+                                'Plane rejected '+args['operation']+' before writing; fresh inspection required.')
+                elif exc.outcome == 'unknown':
                     # The mutation journal retains the original operation. Revoke
                     # this run before another model request or effect is admitted;
                     # neither settlement nor a retry may relabel it as failed.
@@ -112,7 +120,9 @@ class _Run:
                             'error=?,summary=?,finished_at=? WHERE id=?',
                             (message,message,_now(),self.work['id']))
                         state.event(conn,self.work['id'],'work.unknown',message)
-                raise
+                    raise
+                else:
+                    raise
         elif tool == 'work_comments':
             from agent_native.comments import worker
             result = worker(conn, validate=self.validate, planning=planning, agent_id=self.work['agent_id'],
@@ -171,7 +181,8 @@ class _Run:
             summary = (('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
-                       'Plane: '+args.get('operation','inspected '+args.get('kind','resource')))
+                       ('Plane conflict: fresh inspection required' if result.get('status')=='conflict' else
+                        'Plane: '+args.get('operation','inspected '+args.get('kind','resource'))))
             if tool != 'work_item_select':
                 # Selection and its event commit together; receipt recovery must
                 # not emit a second change or make an old item current again.
