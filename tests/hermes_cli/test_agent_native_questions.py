@@ -1,0 +1,78 @@
+import pytest
+from agent_native.identity import OWNER, ConflictError
+from tests.hermes_cli.test_agent_native_work_effects import broker, effect  # noqa: F401
+from tests.hermes_cli.test_agent_native_work_focus import select
+
+
+def ask(s, call='ask'):
+    return s.run._effect(s.conn,s.planning,effect(s,call,'work_question',{
+        'item_id':s.setup['discovery_item_id'],'topic':'ending','question':'Should the ending be hopeful?'}))
+
+
+def test_question_deduplicates_and_owner_answer_is_durable_without_resuming(broker):
+    from agent_native import questions
+    s=broker
+    select(s)
+    q=ask(s)
+    assert ask(s,'ask-again')['id']==q['id']
+    assert q['answer'] is None
+    s.run.stop()
+    args=dict(actor=OWNER,agent_id=s.root['id'],question_id=q['id'],expected_revision=1,answer='Yes, hopeful.')
+    assert questions.answer(s.conn,**args)['answer']=='Yes, hopeful.'
+    assert questions.answer(s.conn,**args)['answer']=='Yes, hopeful.'
+    with pytest.raises(ConflictError):
+        questions.answer(s.conn,**{**args,'answer':'No'})
+    assert s.conn.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(s.work['id'],)).fetchone()[0]=='paused'
+    with pytest.raises(PermissionError):
+        s.run._effect(s.conn,s.planning,effect(s,'read-paused','work_question',{'question_id':q['id']}))
+
+
+def test_question_answer_is_read_only_for_current_item_criteria(broker):
+    from agent_native import questions
+    s=broker
+    select(s)
+    q=ask(s)
+    questions.answer(s.conn,actor=OWNER,agent_id=s.root['id'],question_id=q['id'],expected_revision=1,answer='Yes')
+    read=lambda call: s.run._effect(s.conn,s.planning,effect(s,call,'work_question',{'question_id':q['id']}))
+    assert read('read')['answer']=='Yes'
+    s.plane.items[s.setup['discovery_item_id']]['description_html']='<p>Changed requirements</p>'
+    with pytest.raises(ConflictError):
+        read('changed-read')
+
+
+def test_question_owner_scope_and_chat_share_the_same_answer(broker):
+    from agent_native import questions, identity
+    from agent_native.chat import issue_binding
+    from agent_native.chat_context import snapshot
+    s=broker
+    select(s)
+    q=ask(s)
+    args=dict(actor=OWNER,agent_id=s.root['id'],question_id=q['id'],expected_revision=1,answer='A hopeful ending')
+    with pytest.raises(PermissionError):
+        questions.answer(s.conn,**{**args,'actor':'owner'})
+    with pytest.raises(KeyError):
+        questions.answer(s.conn,**{**args,'agent_id':'another-agent'})
+    questions.answer(s.conn,**args)
+    binding=issue_binding(actor=OWNER,agent_id=s.root['id'],db_path=s.db_path,storage_root=s.home/'agents')
+    observed=snapshot(binding)['questions'][0]
+    assert observed['id']==q['id'] and observed['answer']==args['answer']
+    s.run.stop()
+    identity.revise_soul(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,purpose='New purpose')
+    assert questions.recent(s.conn,s.root['id'])[0]['applicable'] is False
+    with pytest.raises(ConflictError):
+        questions.answer(s.conn,**{**args,'expected_revision':2})
+
+
+from tests.hermes_cli.test_agent_native_chat_api import client  # noqa: E402,F401
+
+
+def test_question_api_requires_owner_and_scopes_missing_records(client):
+    c,token=client
+    root=c.post('/api/agent-native/agents',json={'request_id':'question-api','name':'Writer','purpose':'Write'}).json()
+    path='/api/agent-native/agents/'+root['id']+'/questions'
+    assert c.get(path).json()==[]
+    args={'expected_revision':1,'answer':'Yes'}
+    assert c.post(path+'/missing/answer',json=args).status_code==404
+    c.headers.pop('X-Hermes-Session-Token')
+    assert c.get(path).status_code in (401,403)
+    assert c.post(path+'/missing/answer',json=args).status_code in (401,403)

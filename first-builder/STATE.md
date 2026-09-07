@@ -1,3 +1,27 @@
+## AN-73 proactive work questions — 2026-09-07
+
+Added scoped work_question ask/read, durable question identity per agent/purpose/
+item fingerprint/topic, immutable owner answers and Questions for you cards with
+Plane item links. Native chat observes the same records. Worker answer reads
+revalidate current item fingerprint and active authority. Answering cannot resume
+paused/completed work; subsequent attempts remain AN-75. Question/answer events
+retain originating attempts. Ordinary chat is not an answer-submission channel.
+
+TDD: /tmp/an73-questions-red.log and /tmp/an73-question-context-red.log reproduced
+missing behavior. Three domain cases passed across /tmp/an73-questions-green.log
+and /tmp/an73-question-context-green.log; API auth/scoping passed in
+/tmp/an73-question-api.log. Question/answer/reload/saved-output browser passed
+(8.3s), /tmp/an73-questions-browser-final.log. Feedback regression passed (7.4s),
+/tmp/an73-question-feedback-regression.log. No paid inference or broad suites.
+
+Production build, scoped Ruff and diff checks passed. Idle preview restarted with
+the same data; /tmp/an73-questions-preview.log.
+
+Next: assess AN-73 minimum acceptance and proceed to AN-75 cadence/continuation,
+so retained answers can inform subsequent eligible work. AN-84 comment review is
+queued separately. AN-80 remains unfinished/deferred. Do not call this full
+conversation steering/cadence acceptance or automatically enable existing agents.
+
 ## AN-73 explicit owner feedback — 2026-09-07
 
 Added Feedback for work on agent details, durable purpose-scoped owner receipts,

@@ -10,6 +10,11 @@ def snapshot(binding):
               'source': 'local framework records; Plane has not been refreshed', 'work': None}
     with connect_closing(binding._db_path) as conn:
         conn.execute('BEGIN')
+        result['questions'] = [dict(zip(('id','item_id','question','answer'), row)) for row in conn.execute(
+            'SELECT id,item_id,substr(question,1,1000),substr(answer,1,1000) FROM agent_native_questions '
+            'WHERE agent_id=? AND soul_revision=? ORDER BY (answer IS NULL) DESC,created_at DESC,id DESC LIMIT 5',
+            (binding.agent_id,binding.soul_revision))]
+        result['question_note'] = 'Up to five local questions; task applicability must be checked before using answers.'
         row = conn.execute('SELECT id,state,soul_revision FROM agent_native_work_runs WHERE agent_id=?',
                            (binding.agent_id,)).fetchone()
         if row and row[2] == binding.soul_revision:

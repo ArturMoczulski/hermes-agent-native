@@ -289,3 +289,33 @@ def submit_work_feedback(agent_id: str, body: WorkFeedbackBody, actor=Depends(ow
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except ValueError as exc:
             raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+class WorkAnswerBody(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    expected_revision: int = Field(strict=True,ge=1)
+    answer: str = Field(min_length=1,max_length=4000)
+
+
+@router.get('/{agent_id}/questions')
+def read_work_questions(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.questions import recent
+    with connect_closing(board='default') as conn:
+        try:
+            return recent(conn,agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404,detail='Agent not found') from exc
+
+
+@router.post('/{agent_id}/questions/{question_id}/answer')
+def answer_work_question(agent_id: str, question_id: str, body: WorkAnswerBody, actor=Depends(owner_session)):
+    from agent_native.questions import answer
+    with connect_closing(board='default') as conn:
+        try:
+            return answer(conn,actor=actor,agent_id=agent_id,question_id=question_id,**body.model_dump())
+        except KeyError as exc:
+            raise HTTPException(status_code=404,detail='Question not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409,detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422,detail=str(exc)) from exc

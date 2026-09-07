@@ -223,3 +223,35 @@ receipt access and no implicit activation. The new native-worker browser case
 submits direction through the control, observes the handling report and reads its
 content in the saved output. External inference is scripted. The existing
 output/result/Plane-link/native-chat browser workflow also passes with the new tool.
+
+## AN-73: proactive questions and retained answers
+
+Workers can use `work_question` to ask about the selected authorized item or read
+an answer. Questions retain agent, purpose revision, attempt, item and observed
+item fingerprint. An identical topic/question against the same item fingerprint
+reuses its identity; changing the wording under that key conflicts. A changed
+item fingerprint permits a fresh question and invalidates use of the old answer.
+Fingerprint comparison is a read-side applicability check, not atomic Plane write
+protection or a guarantee that the task cannot change after observation.
+
+**Questions for you** on agent details lists up to twenty records, unanswered
+first, with the affected Plane item link and an owner answer control. Answers are
+immutable: an identical retry returns the receipt; different replacement text
+conflicts. Earlier-purpose records stay visible and cannot be answered. The worker
+rechecks purpose, selected item, active-run authority and live Plane fingerprint
+before reading an applicable answer. Answering never resumes or starts work.
+Question and answer events are recorded with the originating attempt.
+
+Native chat receives up to five bounded question/answer observations from those
+same records. It can discuss them but cannot execute project tools or accept
+answers through unclassified conversation text. Missing answers are not approval.
+Workers are instructed to do independent work or record a waiting result rather
+than spin on a question. A completed/paused attempt retains later answers without
+launching another attempt; autonomous continuation is AN-75, not this increment.
+A global Inbox, parent escalation and editing/retracting answers remain later work.
+
+Verification uses scoped HTTP/SQLite broker tests for deduplication, immutable
+answers, pause, changed item criteria, agent/owner/purpose scope and shared chat
+identity. The native-worker browser case asks, accepts an owner answer, reloads
+and uses that answer in a saved draft. A second browser case protects feedback
+handling. External inference is scripted, not a model-quality evaluation.

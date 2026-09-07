@@ -29,7 +29,8 @@ from agent_native.result_store import RESULT_SCHEMA
 from agent_native.work_focus import FOCUS_SCHEMA
 from agent_native.progress import PROGRESS_SCHEMA
 from agent_native.feedback import SCHEMA as FEEDBACK_SCHEMA
-WORK_SCHEMA += RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA
+from agent_native.questions import SCHEMA as QUESTIONS_SCHEMA
+WORK_SCHEMA += RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA
 
 TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
 

@@ -8,7 +8,9 @@ The current undated cycle 03 is **Shared agent work and the fantasy writer**.
 **AN-73 conversations and work steering is now In Progress, by owner direction.**
 Native chat has bounded local work context. Explicit Feedback for work now stores
 owner direction and worker handling reports without resuming work.
-Next: proactive questions and durable answers tied to affected work.
+Proactive questions and durable answers now share scoped records with native chat.
+Next: review the minimum AN-73 acceptance and proceed to AN-75 cadence/continuation;
+answers do not yet schedule subsequent attempts. AN-84 Plane comment review remains queued.
 AN-80 remains unfinished in Backlog: comments/output links and pending description
 references are implemented; uncertain-delivery reconciliation and safe description
 merging are deferred. AN-75 cadence/continuation follows the minimum conversation flow.

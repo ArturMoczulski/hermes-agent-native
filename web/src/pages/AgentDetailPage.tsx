@@ -1,3 +1,4 @@
+import { WorkQuestions } from '@/components/WorkQuestions';
 import { WorkFeedback } from '@/components/WorkFeedback';
 import { AgentProgressSettings } from "@/components/AgentProgressSettings";
 import { useEffect, useRef, useState } from "react";
@@ -97,6 +98,7 @@ export default function AgentDetailPage() {
             mutationVersion.current += 1;
             setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
           }} />
+        <WorkQuestions key={`questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} />
         <WorkFeedback key={`feedback:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} />
         <PlanningWork key={`planning:${agent.id}:${agent.soul_revision}:${agent.setup?.activation_id}`} agent={agent} />
         {agent.work && <section aria-label="Plane progress" className="space-y-3 rounded-xl border p-5">
