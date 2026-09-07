@@ -4,7 +4,6 @@ import json
 from uuid import uuid4
 
 from agent_native.identity import ConflictError
-from agent_native.work_focus import read_focus
 from hermes_cli.kanban_db_connect import write_txn
 
 SCHEMA = """
@@ -43,9 +42,8 @@ def worker(conn, *, validate, planning, agent_id, run_id, arguments):
     from agent_native.work_state import event
     item=arguments['item_id']
     validate(conn)
-    focus=read_focus(conn,run_id)
-    if not focus or focus['item_id']!=item:
-        raise PermissionError('Review comments only on the selected work item')
+    # Execution focus is not project authority. The scoped adapter validates the
+    # requested item before returning discussion; replies keep that item's ID.
     comments=planning.comments(item)
     with write_txn(conn):
         validate(conn)

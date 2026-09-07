@@ -336,3 +336,20 @@ in Plane. A second preflight GET or a framework-only lock is insufficient becaus
 human editors do not participate in that lock. Do not introduce direct Plane DB
 writes or claim current fingerprint checks solve this race. Owner reconciliation
 of uncertain comments is the next independent delivery increment.
+
+
+## Related-task discussion and failed-attempt recovery
+
+Execution focus identifies the task receiving work; it does not narrow authorized
+project discussion to that single item. `work_comments` validates the requested
+item through the scoped Plane adapter, supports related-item review/replies, and
+keeps the current focus unchanged. Reply records stay bound to the exact item,
+comment version, agent and run. Other projects remain inaccessible.
+
+Owner POST `/{agent_id}/work/retry` under the agents API takes `expected_revision`
+and `expected_run_id`. Only the latest failed attempt can start a fresh recovery,
+with a distinct retained session and unchanged limits. Repeating the request
+returns the same recovery ID; it never redelivers failed tool calls. Changed soul,
+removed agent, active work and pending/unknown Plane outcomes prevent recovery.
+This is currently an API operation, not a dashboard retry button. Cadence remains
+unchanged; after successful recovery an enabled cadence can continue normally.

@@ -65,6 +65,22 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_RELATED_COMMENTS' in purpose:
+        target = _planning(messages)['discovery']['id']
+        if index == 0:
+            name, arguments = operation('item.create', {'name':'Draft next story'})
+        elif index == 1:
+            name, arguments = 'work_item_select', {'item_id':result(0)['resource']['id']}
+        elif index == 2:
+            name, arguments = 'work_comments', {'item_id':target}
+        elif index == 3:
+            name, arguments = 'work_comments', {'item_id':result(0)['resource']['id']}
+        elif index == 4:
+            name, arguments = 'result_record', {'item_id':result(0)['resource']['id'],'summary':'Reviewed foundation while working on next story','outcome':'discovery','evaluation':'Both discussions read without switching assignment.','outputs':[]}
+        else:
+            return {'role':'assistant','content':'Reviewed foundation while working on next story.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_CONFLICT_RECOVERY' in purpose:
         target = _planning(messages)['discovery']['id']
         if index == 0:

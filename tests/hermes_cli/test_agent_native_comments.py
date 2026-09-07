@@ -65,7 +65,8 @@ def test_review_rejects_stale_comment_and_can_record_no_reply(broker):
     assert invoke(s,'no-reply',{**args,'review_id':r['id'],'response':'Informational context retained; no reply needed.','reply':False})['status']=='reviewed_without_reply'
     assert len(s.plane.comments)==before
     assert invoke(s,'again',args)['pending']==[]
-    with pytest.raises(PermissionError):
+    from agent_native.plane_reads import PlaneReadError
+    with pytest.raises(PlaneReadError):
         invoke(s,'wrong-item',{'item_id':str(uuid4())})
 
 
@@ -92,3 +93,30 @@ def test_other_agent_shared_account_is_reviewed_but_reply_loops_are_blocked(brok
     s.conn.execute("INSERT INTO agent_native_progress(operation_id,source_id,agent_id,run_id,item_id,summary,text,status,created_at) VALUES(?,?,?,?,?,?,?,'confirmed','now')",(operation,'comment-reply:other',other['id'],s.work['id'],args['item_id'],'reply','reply'))
     with pytest.raises(PermissionError):
         invoke(s,'loop',{**args,'review_id':pending[0]['id'],'response':'Replying to your reply','reply':True})
+
+
+def test_related_item_discussion_does_not_change_current_assignment(broker):
+    from agent_native.work_focus import read_focus
+    s=broker
+    related=external(s)
+    new=s.run._effect(s.conn,s.planning,effect(s,'new-task'))['resource']['id']
+    s.run._effect(s.conn,s.planning,effect(s,'select-new','work_item_select',{'item_id':new}))
+    pending=invoke(s,'related',{'item_id':related['issue']})['pending']
+    assert pending[0]['comment_id']==related['id']
+    assert invoke(s,'reply-related',{'item_id':related['issue'],'review_id':pending[0]['id'],'response':'I will use this in the next story.','reply':True})['status']=='confirmed'
+    assert read_focus(s.conn,s.work['id'])['item_id']==new
+    reply=next(c for c in s.plane.comments.values() if 'I will use this' in c['comment_html'])
+    assert reply['issue']==related['issue']
+
+
+def test_related_discussion_cannot_read_another_project(broker):
+    from agent_native.plane_reads import PlaneReadError
+    s=broker
+    select(s)
+    foreign=str(uuid4())
+    s.plane.items[foreign]={'id':foreign,'project':str(uuid4())}
+    before=len(s.plane.requests)
+    with pytest.raises(PlaneReadError):
+        invoke(s,'foreign',{'item_id':foreign})
+    assert not any('/comments/' in r['path'] for r in s.plane.requests[before:])
+    assert s.conn.execute('SELECT count(*) FROM agent_native_comment_reviews').fetchone()[0]==0

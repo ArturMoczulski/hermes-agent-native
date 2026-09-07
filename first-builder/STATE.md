@@ -1,3 +1,16 @@
+## Related-task comments and retained recovery — 2026-09-08
+
+Second writer run 1c543cad-c666-433a-9a4e-47dc94be82d0 failed after selecting
+its drafting task and reading the previous foundation item's comments. Removed
+the erroneous focus-equality guard; project adapter still authorizes each item,
+reply version/identity and execution admission remain checked. Focus is unchanged.
+
+Unit and native browser red reproduced failure; four focused comment cases pass,
+including cross-item reply/focus preservation and cross-project denial. Browser
+related-comments.spec.ts passes (8.1s). Owner failed-work retry API adds a distinct
+idempotent attempt without replay; seven guard cases and one HTTP case pass.
+Live recovery of existing e6ff85a9 follows deployment; foundation retained.
+
 ## AN-87 recreated writer succeeds live — 2026-09-08
 
 Final active Fantasy Wizard Series: e6ff85a9-35e8-4357-9165-0be91bb382f4.

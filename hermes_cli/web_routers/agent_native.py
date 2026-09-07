@@ -127,6 +127,28 @@ def configure_work(agent_id: str, body: ConfigureWork, actor=Depends(owner_sessi
             raise HTTPException(status_code=422, detail=str(exc)) from exc
 
 
+class RetryWork(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    expected_revision: int = Field(strict=True, ge=1)
+    expected_run_id: str = Field(min_length=1, max_length=128)
+
+
+@router.post('/{agent_id}/work/retry')
+def retry_work(agent_id: str, body: RetryWork, actor=Depends(owner_session)):
+    from agent_native.work_retry import retry_failed
+    with connect_closing(board='default') as conn:
+        try:
+            recovery = retry_failed(conn, actor=actor, agent_id=agent_id, **body.model_dump())
+            return {'recovery_run_id': recovery['id'],
+                    'agent': identity.get_root(conn, actor=actor, agent_id=agent_id)}
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
 @router.post('/{agent_id}/work/pause')
 def pause_work(agent_id: str, actor=Depends(owner_session)):
     from agent_native.work_state import request_pause

@@ -269,7 +269,10 @@ and checks that actually succeeded; say when planning updates are pending or the
 ## Review work-item discussion
 
 When the framework provides `work_comments`, read comments on your selected item
-at selection, before substantive work, and before publication. Consider the brief,
+at selection, before substantive work, and before publication. Also consult related
+items in your authorized project when their feedback informs the current task.
+Reading or replying on another item does not switch your execution focus. Project
+access still comes from the scoped framework adapter. Consider the brief,
 outputs and surrounding discussion. For each pending version, post a useful reply
 or record a specific no-reply explanation. Use the review ID supplied by the tool.
 Do not reply just to acknowledge every comment. Recheck edited comments and never
