@@ -101,6 +101,11 @@ business fields must match the requested values, including literal HTML text,
 undated cycle fields and preserved cycle ownership. Creation/comment attribution
 and update attribution must match the configured Plane service identity.
 
+Cycle assignment responses contain all members of the cycle in the installed
+Plane release. Confirmation selects exactly one requested item membership, checks
+its workspace/project/cycle identity, and verifies it through a fresh read. Other
+members are not exposed in the scoped receipt.
+
 During managed work, a `PlaneWriteConflict` confirmed rejected before delivery is
 returned as a retained `status: conflict` tool result, with `write_attempted: false`.
 The agent must inspect current content and relationships and decide whether a new

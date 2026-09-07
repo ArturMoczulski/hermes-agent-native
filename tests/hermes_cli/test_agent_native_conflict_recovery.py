@@ -18,3 +18,15 @@ def test_rejected_conflict_is_retained_and_fresh_inspection_can_continue(broker)
     stale['arguments']['arguments']['expected_item_fingerprint']=fresh['fingerprint']
     assert s.run._effect(s.conn,s.planning,stale)['status']=='confirmed'
     assert s.plane.memberships[item]['cycle']==cycle
+
+
+def test_cycle_assignment_confirms_target_among_existing_cycle_members(broker):
+    s=broker
+    cycle=s.run._effect(s.conn,s.planning,effect(s,'cycle',arguments={'operation':'cycle.create','arguments':{'name':'Multiple tasks'}}))['resource']['id']
+    other=s.run._effect(s.conn,s.planning,effect(s,'other'))['resource']['id']
+    for index,item in enumerate((s.setup['discovery_item_id'],other)):
+        seen=s.planning.inspect({'kind':'item','resource_id':item})
+        result=s.run._effect(s.conn,s.planning,effect(s,f'assign-{index}',arguments={'operation':'cycle.assign','arguments':{'item_id':item,'cycle_id':cycle,'expected_cycle_id':None,'expected_item_fingerprint':seen['fingerprint']}}))
+        assert result['status']=='confirmed'
+        assert result['resource']['issue']==item
+    assert len(s.plane.memberships)==2

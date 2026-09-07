@@ -448,9 +448,16 @@ class PlaneWrites:
         grant_created=True,
     ):
         if kind == "membership":
-            if not isinstance(raw, list) or len(raw) != 1:
+            # Plane returns the entire cycle after assignment, not only the
+            # requested item. Confirm exactly one matching membership and never
+            # expose unrelated members through this scoped receipt.
+            if not isinstance(raw, list):
                 raise PlaneWriteError("Unexpected cycle assignment response")
-            record = self._membership(raw[0], scope, args["cycle_id"], resource_id)
+            matches = [member for member in raw if isinstance(member, dict)
+                       and member.get("issue") == resource_id]
+            if len(matches) != 1:
+                raise PlaneWriteError("Unexpected cycle assignment response")
+            record = self._membership(matches[0], scope, args["cycle_id"], resource_id)
             observed = self._memberships(context, resource_id)
             if len(observed) != 1 or observed[0] != record:
                 raise PlaneWriteError("Cycle assignment could not be confirmed")

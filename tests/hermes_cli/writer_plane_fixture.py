@@ -92,7 +92,7 @@ def _route(server, request):
                 member = {'id': str(uuid4()), **common, 'issue': iid, 'cycle': rid}
                 server.memberships[iid] = member
                 result.append(member)
-            return 200, {}, result
+            return 200, {}, [m for m in server.memberships.values() if m['cycle']==rid]
         iid = parts[9]
         member = server.memberships.get(iid)
         if member is None or member['cycle'] != rid:

@@ -1,3 +1,16 @@
+## AN-88 live Plane response mismatch — 2026-09-08
+
+First recreation f205bad2-735d-4cf5-9022-44b01edec273 successfully recovered the
+original pre-write conflict, then stopped unknown on assignment of a second item.
+Installed Plane /code/plane/api/views/cycle.py POST returns all cycle members;
+the adapter incorrectly expected one. It now selects the unique requested member,
+validates its scope and confirms it through the existing fresh read. The HTTP
+fixture now matches actual Plane. Unknown historical operation is not replayed.
+
+Two focused broker cases passed after a valid red. Native Playwright conflict
+recovery now also assigns into a populated cycle and passes (8.6s). Ruff passes.
+AN-87 live recreation continues after deployment; no output success claimed yet.
+
 ## AN-86 removal and blocked cadence — 2026-09-08
 
 Added owner-confirmed Remove agent with retained history/Plane records and no
