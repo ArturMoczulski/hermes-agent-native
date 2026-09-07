@@ -40,6 +40,12 @@ behavior; they do not require a particular profession, workflow, or application.
 | [The First Builder](08-first-builder.md) | How does the framework eventually develop itself? |
 | [Open decisions](07-open-decisions.md) | Which product choices still need agreement? |
 
+## Loose ideas
+
+[Brainstorming notes](ideas/README.md) preserve possible future directions separately
+from the specification chapters. They are non-normative, even where their wording
+is unmarked: recording an idea does not adopt it or schedule implementation.
+
 ## The product promise
 
 Creating an agent with a purpose starts its work immediately, including any

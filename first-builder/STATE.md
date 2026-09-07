@@ -46,6 +46,15 @@ inspection and paginated activity; AN-75 cadence/resume/recovery. AN-76 and the 
 writer milestone remain open. The First Builder still runs through the external
 coding environment. Earlier next-step entries below are historical.
 
+## Owner brainstorm captured — 2026-09-07
+
+Saved [foundational skills and parallel internal roles](../design/ideas/2026-09-07-foundational-skills-and-internal-roles.md)
+in the new non-normative ideas folder. It preserves shared versus specialized
+skills, concurrent communication/work/review roles, and the speculative one-way
+subconscious-signal analogy. Architecture, defaults and signal visibility remain
+open. The owner requested notes only; no runtime or delivery priority changed.
+AN-80 remains next. Verification: documentation consistency and local links.
+
 ## Readable end-to-end demonstration — AN-81 complete
 
 The owner requested a video of all implemented framework browser scenarios, with

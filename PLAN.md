@@ -15,6 +15,7 @@ evaluation and basic recovery belong in the completed milestone.
 - Product acceptance: [first writer](design/14-first-writer-milestone.md).
 - Delivery slices and scope: [writer implementation](implementation/fantasy-writer-milestone.md).
 - Full requirements: [design](design/README.md).
+- Unadopted design ideas: [brainstorming notes](design/ideas/README.md); these do not change delivery priorities.
 - Capability roadmap: [delivery plan](implementation/delivery-plan.md).
 - Work traceability: [Plane coverage](implementation/plane-roadmap-coverage.md).
 - Session evidence: [Builder state](first-builder/STATE.md).
