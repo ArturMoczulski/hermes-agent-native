@@ -1,3 +1,21 @@
+## MiniMax Token Plan connection — 2026-09-08
+
+The owner connected the local Agent Native preview to a MiniMax Monthly Ultra
+Token Plan. Its subscription key is stored only in the protected preview profile
+at `~/.hermes-agent-native-preview/.env` as `MINIMAX_API_KEY`; the mistaken entry
+created in generic `~/.hermes` was removed. MiniMax's read-only Token Plan status
+endpoint returned HTTP 200. After restarting only the dashboard on port 19221
+with the existing preview home/database, the real Agent Native model picker shows
+the configured `minimax` provider and MiniMax-M3, M2.7, M2.5, M2.1 and M2. The
+existing GPT-6 Astra creation default was intentionally left unchanged. No model
+inference, agent creation, repository secret, or paid balance call was used.
+
+The operational lesson is recorded in `ops/dashboard/README.md`: credentials must
+be placed in the profile serving the preview, and the process must restart to load
+new environment secrets. The subscription key appeared in owner chat and should
+be rotated after setup review; rotation requires replacing the same protected
+entry and restarting the idle preview.
+
 ## Automatic temporary Plane read recovery — 2026-09-08
 
 AN-75 increment: managed Plane GET429/502/503/504 retries stay in the same

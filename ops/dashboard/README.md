@@ -76,6 +76,14 @@ the latest chat selection remain visible separately. Reload the preview after an
 upgrade to load the new controls. No model request is made simply by saving a
 choice. See [model behavior](../../design/15-model-selection.md).
 
+Provider credentials must be saved in the profile that runs the preview,
+`$HERMES_HOME/.env` (currently `~/.hermes-agent-native-preview/.env`). A key in
+the generic `~/.hermes` profile does not configure this dashboard. MiniMax Token
+Plan uses `MINIMAX_API_KEY` with the `sk-cp-…` subscription key. Restart the
+identified idle dashboard process after adding or rotating the key; the agent
+picker then exposes the configured `minimax` provider and its M-series models.
+Keep subscription keys out of Git, logs, work items, and managed workspaces.
+
 ## Reconnect input regression
 
 The first native chat browser proof also found that PTY reattachment's Ctrl+L
