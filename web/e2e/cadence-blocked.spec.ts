@@ -20,3 +20,25 @@ test('a normal run time limit remains eligible for the next cadence attempt',asy
     await expect(cadence).toContainText('limit_reached');
   }finally{await request.post(`${api}/work/pause`,{headers});}
 });
+
+test('a settled failed attempt continues automatically on cadence',async({page,request})=>{
+  test.setTimeout(60000);
+  await page.addInitScript(()=>{window.__HERMES_SESSION_TOKEN__='agent-native-local-e2e-only';});
+  await request.put(`${backend}/__e2e__/plane-config`,{headers,data:{enabled:false}});
+  const r=await request.post(`${backend}/api/agent-native/agents`,{headers,data:{
+    request_id:crypto.randomUUID(),name:'Self-recovering writer',purpose:'Write a story.',
+    work:{timeout_seconds:30,max_iterations:1}}});
+  expect(r.status()).toBe(201);const a=await r.json();const api=`${backend}/api/agent-native/agents/${a.id}`;
+  try{
+    expect((await request.post(`${api}/cadence`,{headers,data:{expected_revision:1,enabled:true,interval_seconds:2}})).ok()).toBe(true);
+    await request.put(`${backend}/__e2e__/plane-config`,{headers,data:{enabled:true}});
+    await expect.poll(async()=>{
+      const attempts=await(await request.get(`${api}/attempts`,{headers})).json();
+      return attempts.some((attempt:{state:string})=>attempt.state==='retryable_failure')&&attempts.length>=2;
+    },{timeout:30000}).toBe(true);
+    await page.goto(`/agents/${a.id}?view=full`);
+    const cadence=page.getByRole('region',{name:'Thinking cadence',exact:true});
+    await expect(cadence).toContainText('retryable_failure');
+    await expect(cadence).not.toContainText('Check-ins blocked');
+  }finally{await request.post(`${api}/work/pause`,{headers});}
+});

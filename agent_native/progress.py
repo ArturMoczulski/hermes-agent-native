@@ -209,7 +209,8 @@ def terminal(conn, run_id):
     if not focus:
         return
     row = conn.execute('SELECT agent_id,state FROM agent_native_work_runs WHERE id=?', (run_id,)).fetchone()
-    if not row or row[1] not in ('completed', 'interrupted', 'limit_reached', 'paused', 'failed', 'unknown'):
+    if not row or row[1] not in ('completed', 'interrupted', 'limit_reached', 'paused',
+                                 'retryable_failure', 'failed', 'unknown'):
         return
     _evidence_intent(conn, source_id='terminal:'+run_id,
                      record={'agent_id': row[0], 'run_id': run_id, 'item_id': focus['item_id']},

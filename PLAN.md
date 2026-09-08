@@ -63,7 +63,10 @@ with focused backend and browser coverage. Restart recovery now records a settle
 process interruption explicitly and lets enabled cadence begin a fresh attempt;
 it never replays the interrupted process, and any effect or Plane delivery without
 a settled receipt remains outcome-unknown for owner review. Owner pause remains
-terminal and cannot auto-recover. Recovery after failed work remains unfinished.
+terminal and cannot auto-recover. Cadence failures now receive the same conservative
+classification: a stopped attempt with fully settled effects becomes retryable and
+continues in a fresh session at the next check-in; all other failures remain blocked.
+Repeated failures remain visible as separate attempts for later no-progress policy.
 A normal per-attempt runtime limit is now recorded separately
 from owner pause and remains eligible for a later cadence attempt; legacy timeout
 records are repaired on startup. Agent creation uses 180 seconds and 50 model
@@ -156,5 +159,5 @@ and remaining acceptance. Keep cycles undated.
 AN-75 remains active behind the immediate AN-9 acceptance slice: opt-in cadence
 and retained attempts bring the agent beyond a single run. The first cadence increment includes bounded
 check-ins, prior-work context, Plane-feedback revision and visible attempt history.
-Failed-attempt recovery and whole-purpose lifecycle acceptance remain subsequent work;
+Whole-purpose lifecycle acceptance and activity-without-progress policy remain subsequent work;
 see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.

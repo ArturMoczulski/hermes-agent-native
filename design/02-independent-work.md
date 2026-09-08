@@ -142,3 +142,11 @@ steps. Reaching a normal attempt limit ends that attempt and records the reason;
 it does not mean that the owner paused the agent or that its ongoing purpose is
 finished. An enabled cadence may start a later bounded attempt. An explicit owner
 pause remains a separate state and prevents ordinary cadence continuation.
+
+A failed attempt also does not necessarily end autonomous work. When the worker
+has stopped and every attempted side effect has a settled outcome, the framework
+may classify the failure as retryable. Enabled cadence then starts a fresh attempt
+with current purpose and project state; it does not replay the failed process.
+Failures with an unsettled effect, changed authority, an explicit review gate, or
+another uncertain outcome remain blocked for owner review. Attempt history keeps
+the failure and the reason in either case.

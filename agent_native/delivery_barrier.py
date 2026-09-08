@@ -22,10 +22,10 @@ def unresolved_terminal_notices(conn, agent_id):
             expected_summary = 'Attempt '+str(terminal_state)
             expected_text = (f'Agent: {agent_id}\nAttempt: {run_id}\nWork item: {item}\n{expected_summary}\n'
                 'This is the bounded attempt status, not acceptance of the assignment or completion of the agent purpose. Review saved evidence and any unresolved delivery before continuing.')
-            if (source != 'terminal:'+run_id or not run or terminal_state not in ('failed','interrupted','limit_reached')
+            if (source != 'terminal:'+run_id or not run or terminal_state not in ('failed','interrupted','limit_reached','retryable_failure')
                     or summary != expected_summary or text != expected_text or url is not None or label is not None):
                 raise ValueError
-            if status == 'pending' and terminal_state in ('interrupted','limit_reached'):
+            if status == 'pending' and terminal_state in ('interrupted','limit_reached','retryable_failure'):
                 if (conn.execute('SELECT 1 FROM agent_native_plane_mutations WHERE operation_id=?',(opid,)).fetchone()
                         or conn.execute('SELECT 1 FROM agent_native_work_effects WHERE operation_id=?',(opid,)).fetchone()):
                     raise ValueError

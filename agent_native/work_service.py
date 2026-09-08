@@ -49,6 +49,12 @@ def _recoverable_interruption(conn, run_id):
     return True
 
 
+def _cadence_can_retry(conn, agent_id, run_id):
+    cadence = conn.execute('SELECT enabled FROM agent_native_cadence WHERE agent_id=?',
+                           (agent_id,)).fetchone()
+    return bool(cadence and cadence[0]) and _recoverable_interruption(conn, run_id)
+
+
 def _initial_context(snapshot, contracts, autonomy_policy=None):
     """Build the managed-work instruction with a clear planning/output boundary."""
     return ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
@@ -119,10 +125,8 @@ class _Run:
             with connect_closing(self.service.db_path) as conn, write_txn(conn):
                 row = conn.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(self.work['id'],)).fetchone()
                 if row[0] not in state.TERMINAL:
-                    cadence_enabled = conn.execute(
-                        'SELECT enabled FROM agent_native_cadence WHERE agent_id=?',
-                        (self.work['agent_id'],)).fetchone()
-                    can_continue = recoverable and bool(cadence_enabled and cadence_enabled[0]) and _recoverable_interruption(conn, self.work['id'])
+                    can_continue = recoverable and _cadence_can_retry(
+                        conn, self.work['agent_id'], self.work['id'])
                     target = ('limit_reached' if timed_out else 'interrupted' if can_continue else 'paused') if dead else 'unknown'
                     conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,finished_at=?,summary=? WHERE id=?',
                                  (target,_now(),reason,self.work['id']))
@@ -409,7 +413,10 @@ class _Run:
                 return
             results = [result for result in current['results'] if result['run_id'] == self.work['id']]
             success = dead and frame.get('type')=='turn.end' and bool(results)
-            target = 'completed' if success else ('failed' if dead else 'unknown')
+            target = ('completed' if success else
+                      ('retryable_failure' if dead and _cadence_can_retry(
+                          conn, self.work['agent_id'], self.work['id']) else
+                       'failed' if dead else 'unknown'))
             if success:
                 summary = self.final_text or results[0]['summary']
             elif not dead:
@@ -429,7 +436,8 @@ class _Run:
         with connect_closing(self.service.db_path) as conn, write_txn(conn):
             current = state.read_work(conn,self.work['agent_id'])
             if current['state'] not in state.TERMINAL:
-                target = 'failed' if dead else 'unknown'
+                target = ('retryable_failure' if dead and _cadence_can_retry(
+                    conn, self.work['agent_id'], self.work['id']) else 'failed') if dead else 'unknown'
                 message = 'Work stopped; '+reason+'. Inspect activity before retrying any uncertain operation.'
                 conn.execute('UPDATE agent_native_work_runs SET state=?,error=?,finished_at=? WHERE id=?',
                              (target,message,_now(),self.work['id']))

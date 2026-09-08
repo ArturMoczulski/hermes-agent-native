@@ -135,3 +135,62 @@ def test_service_restart_keeps_unreceipted_effect_unknown(broker):
             assert cadence.queue_due(reopened,now='2099-01-01T00:00:00+00:00')==[]
     finally:
         service.stop()
+
+
+def test_cadence_queues_fresh_attempt_after_retryable_failure(broker):
+    from agent_native import cadence, work_state
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    s.conn.execute("UPDATE agent_native_work_runs SET state='retryable_failure',"
+                   "error='Provider connection ended before completion',"
+                   "finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",(s.work['id'],))
+
+    queued=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+
+    assert len(queued)==1
+    assert work_state.read_work(s.conn,s.root['id'])['state']=='queued'
+    assert [row[0] for row in s.conn.execute(
+        'SELECT state FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid',
+        (s.root['id'],)).fetchall()]==['retryable_failure','queued']
+
+
+@pytest.mark.parametrize('settled,expected',[(True,'retryable_failure'),(False,'failed')])
+def test_failed_cadence_run_is_classified_retryable_only_after_effects_settle(broker,settled,expected):
+    from agent_native import cadence, work_state
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    if not settled:
+        s.conn.execute('INSERT INTO agent_native_work_effects VALUES(?,?,?,?,NULL)',
+                       (s.work['id'],'unsettled','unsettled-operation','fingerprint'))
+
+    s.run.finish(s.conn,{'type':'turn.error'})
+
+    work=work_state.read_work(s.conn,s.root['id'])
+    assert work['state']==expected
+    assert any(event['kind']=='work.'+expected for event in work['events'])
+
+
+def test_retryable_failure_terminal_notice_is_informational_not_a_cadence_gate(broker):
+    from agent_native import cadence, progress
+    from hermes_cli.kanban_db_connect import write_txn
+    from tests.hermes_cli.test_agent_native_work_focus import select
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    select(s)
+    s.conn.execute("UPDATE agent_native_work_runs SET state='retryable_failure',"
+                   "finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",(s.work['id'],))
+    with write_txn(s.conn):
+        progress.terminal(s.conn,s.work['id'])
+
+    queued=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+
+    assert len(queued)==1
+    notice=s.conn.execute('SELECT operation_id,status FROM agent_native_progress WHERE source_id=?',
+                          ('terminal:'+s.work['id'],)).fetchone()
+    assert notice[1]=='pending'
+    assert notice[0] in s.conn.execute(
+        "SELECT summary FROM agent_native_work_events WHERE run_id=? AND kind='work.notification_unresolved'",
+        (queued[0],)).fetchone()[0]

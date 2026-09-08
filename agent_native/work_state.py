@@ -34,7 +34,7 @@ from agent_native.cadence import SCHEMA as CADENCE_SCHEMA
 from agent_native.comments import SCHEMA as COMMENTS_SCHEMA
 WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA
 
-TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'failed', 'unknown'})
+TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 
 
 def migrate_legacy_time_limits(conn):
@@ -84,7 +84,8 @@ def event(conn, run_id, kind, summary):
     with write_txn(conn, allow_nested=True):
         conn.execute('INSERT INTO agent_native_work_events(run_id,kind,summary,created_at) VALUES (?,?,?,?)',
                      (run_id, kind, summary, _now()))
-        if kind in ('work.completed', 'work.paused', 'work.interrupted', 'work.limit_reached', 'work.failed', 'work.unknown'):
+        if kind in ('work.completed', 'work.paused', 'work.interrupted', 'work.limit_reached',
+                    'work.retryable_failure', 'work.failed', 'work.unknown'):
             from agent_native.progress import terminal
             terminal(conn, run_id)
 

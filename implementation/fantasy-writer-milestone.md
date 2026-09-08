@@ -64,6 +64,11 @@ the first execution slice and retain it as every later slice is added.
 | 5 | Continue purpose across bounded turns (AN-75) | Configured cadence and one active work attempt; load fresh Plane context, evaluate results and whole purpose, choose a new clear step or wait/ask/retire. Survive browser closure, model/Plane failure and service restart; reconcile before retry, retain questions, never wake paused work. |
 | 6 | Demonstrate the complete owner journey (AN-76) | Run the product acceptance with a real configured model and isolated writer data: create, first story, chat/feedback, question/answer, another autonomous step, activity/artifacts, actual pause/resume, purpose edit and restart. Record evidence and limits; distinguish model quality from integration checks. |
 
+AN-75 classifies failure before continuation. A confirmed-stopped attempt with
+settled effects becomes retryable when cadence is enabled; the next check-in starts
+a new attempt and session. Unknown effects, uncertain delivery, changed authority
+and owner pause remain blocking, and no failed process is replayed.
+
 The creation/detail/initial activation and setup increments are already accepted
 as partial AN-72 evidence. Native selected-agent conversation and restart recovery are now accepted checkpoints.
 The owner deferred remaining purpose/transcript ordering and selected the first

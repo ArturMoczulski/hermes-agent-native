@@ -1,3 +1,20 @@
+## Safe automatic recovery after failed cadence attempts — 2026-09-08
+
+AN-75 now separates retryable failures from failures requiring owner review. When
+cadence is enabled, a confirmed-stopped attempt whose model/tool effects and Plane
+progress deliveries are fully settled becomes `retryable_failure`. The configured
+check-in starts a fresh attempt and session while retaining the failed attempt;
+the failed process is never replayed. An unsettled effect, uncertain delivery,
+changed authority, explicit owner pause or ordinary non-cadence failure remains
+blocked. The dashboard presents the eligible state as recovery waiting for the
+next check-in and keeps every attempt visible.
+
+TDD evidence: the two new cadence cases failed before implementation. Eleven focused
+cadence tests and 45 combined cadence/result/manual-retry tests, TypeScript typecheck,
+focused ESLint and the native Playwright scenario all pass. The browser test uses
+the installed Chromium and verifies a real one-step failed worker, a later distinct
+attempt, retained `retryable_failure` history and no false blocked warning.
+
 ## Planning records are not saved outputs — 2026-09-08
 
 The Fantasy World Setting Builder incorrectly published a Cycle 02 task
