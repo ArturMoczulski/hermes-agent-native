@@ -118,7 +118,7 @@ class WorkContext:
     def _request(self, method, params):
         try:
             return self.request(method, params, self.deadline_monotonic)
-        except Exception:
+        except PermissionError:
             self._revoked.set()
             raise
 

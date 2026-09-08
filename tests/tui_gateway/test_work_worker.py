@@ -133,7 +133,8 @@ def worker(tmp_path, model):
         'compression': {'enabled': True},
         'context': {'engine': 'unwanted-work-fixture-plugin'},
     }))
-    state = SimpleNamespace(frames=[], controls=[], effects=[], result=None, allowed=True, denied_boundary=None, tool_names=TOOL_NAMES)
+    state = SimpleNamespace(frames=[], controls=[], effects=[], result=None, allowed=True,
+                            denied_boundary=None, reject_tool_once=None, tool_names=TOOL_NAMES)
     def receive(frame):
         state.frames.append(frame)
         if frame.get('method') == 'work.admit':
@@ -141,6 +142,11 @@ def worker(tmp_path, model):
             host.send_work_result(frame['id'], {'ok': state.allowed and frame['params']['boundary'] != state.denied_boundary, 'result': {}, 'error': 'Work revoked'})
         elif frame.get('method') == 'work.effect':
             state.effects.append(frame)
+            if state.reject_tool_once == frame['params']['tool']:
+                state.reject_tool_once = None
+                host.send_work_result(frame['id'], {'ok': False, 'revoked': False,
+                    'error': 'Work operation was invalid (ValueError).'})
+                return
             host.send_work_result(frame['id'], {'ok': state.allowed, 'result': {
                 'item_id': '11111111-1111-4111-8111-111111111111',
                 'output_id': '22222222-2222-4222-8222-222222222222', 'version': 1, 'saved': True}, 'error': 'Work revoked'})
@@ -158,8 +164,13 @@ def worker(tmp_path, model):
                      'skill_text': 'Use the project board. Record acceptance criteria before executing work.'}
     state.host, state.home, state.workspace = host, home, workspace
     def start():
+        selection={'kind':'work','attempt_id':run_id,'agent_id':state.attempt['agent_id'],
+                   'provider':'custom:work-fixture','model':'work-fixture','revision':1,
+                   'source':'override','created_at':'2000-01-01T00:00:00+00:00',
+                   'reasoning_effort':'default'}
         host.submit_turn({'sid': state.attempt['session_id'], 'request_id': run_id,
-                          'session_key': state.attempt['session_id'], 'work_attempt': state.attempt},
+                          'session_key': state.attempt['session_id'], 'work_attempt': state.attempt,
+                          'model_selection':selection},
                          on_complete=lambda frame: setattr(state, 'result', frame))
     state.start = start
     try:
@@ -178,7 +189,7 @@ def test_native_work_loop_has_scoped_tools_parent_admission_and_canonical_histor
     assert all(f['params']['run_id'] == worker.attempt['run_id'] for f in worker.controls + worker.effects)
     system_prompts = []
     for request in model.requests:
-        assert {t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'work_item_select', 'output_publish', 'result_record'}
+        assert {t['function']['name'] for t in request['tools']} == worker.tool_names
         text = json.dumps(request['messages'])
         assert worker.attempt['purpose'] in text and worker.attempt['skill_text'] in text
         assert 'PRIVATE_HOST_SOUL_MUST_NOT_LEAK' not in text
@@ -213,6 +224,23 @@ def test_native_analyst_can_report_a_result_without_a_saved_file(worker, model):
             frame['params']['tool_call_id'] for frame in worker.effects]
 
 
+def test_invalid_effect_does_not_revoke_later_model_and_result_calls(worker,model):
+    model.tools=['output_publish','result_record']
+    worker.reject_tool_once='output_publish'
+
+    worker.start()
+    result=eventually(lambda:worker.result,bool)
+
+    assert result['type']=='turn.end',result
+    assert [frame['params']['tool'] for frame in worker.effects]==model.tools
+    assert len([frame for frame in worker.controls if frame['params']['boundary']=='model'])==3
+    with SessionDB(worker.home/'state.db') as db:
+        messages=db.get_messages_as_conversation(worker.attempt['session_id'])
+        tool_messages=[message for message in messages if message['role']=='tool']
+        assert 'invalid' in tool_messages[0]['content'].lower()
+        assert messages[-1]['content']==model.final_response
+
+
 @pytest.mark.parametrize('tool', ['terminal', 'execute_code', 'delegate_task', 'memory', 'tool_call'])
 def test_native_work_does_not_dispatch_provider_invented_ambient_tool(worker, model, tool):
     model.tools = [tool]
@@ -221,7 +249,7 @@ def test_native_work_does_not_dispatch_provider_invented_ambient_tool(worker, mo
     assert model.requests, worker.result
     assert not worker.effects
     assert not (worker.workspace / 'forbidden-work-tool-ran').exists()
-    assert all({t['function']['name'] for t in request['tools']} == {'plane_resource_inspect', 'plane_operation_execute', 'work_item_select', 'output_publish', 'result_record'} for request in model.requests)
+    assert all({t['function']['name'] for t in request['tools']} == worker.tool_names for request in model.requests)
 
 
 def test_native_work_model_admission_denial_makes_no_provider_request(worker, model):

@@ -1,3 +1,19 @@
+## Recoverable managed tool validation — 2026-09-08
+
+Live MiniMax agent `6448d803-15c8-4fe9-b707-8dadc37211cc` saved and reported
+its 13.7 KB canon, then one invalid `output_publish` call caused the private
+compute host to treat a validation error as revoked authority and fail the whole
+attempt. The work RPC now distinguishes ordinary operation rejection from actual
+permission, transport, pause and deadline revocation. A validation error returns
+to the model as a tool result so it can correct its next call; real authority loss
+still latches and stops execution.
+
+The focused native worker regression reproduced the failure before the fix and
+now passes with normal execution and authority-denial controls. After deployment,
+supported recovery attempt `75693154-cfd9-5331-9f53-a3b04eb6f1a0` on the same
+agent completed in five MiniMax calls: it reused the intact saved canon, evaluated
+all criteria and recorded a submitted result. Owner acceptance remains separate.
+
 ## Normal run-limit continuation and creation defaults — 2026-09-08
 
 AN-75 now distinguishes a normal bounded-attempt deadline from an owner pause.

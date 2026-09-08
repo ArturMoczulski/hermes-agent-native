@@ -102,6 +102,8 @@ class ComputeHost:
             self._transport.write({'jsonrpc': '2.0', 'method': method, 'id': request_id, 'params': params})
             result = pending.get(timeout=max(.001, deadline - time.monotonic()))
             if not isinstance(result, dict) or result.get('ok') is not True:
+                if isinstance(result, dict) and result.get('revoked') is False:
+                    raise ValueError(str(result.get('error') or 'Work operation was rejected'))
                 raise PermissionError('Work authority or effect was denied by the service')
             return result.get('result')
         except queue.Empty as exc:

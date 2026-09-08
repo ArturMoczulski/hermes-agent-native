@@ -293,7 +293,8 @@ class _Run:
                                 reply = {'ok':True,'result':result}
                             except Exception as exc:
                                 # Never return credentials/HTTP response bodies in errors.
-                                reply = {'ok':False,'error':'Work operation could not be admitted or confirmed ('+type(exc).__name__+').'}
+                                reply = {'ok':False,'revoked':isinstance(exc,PermissionError),
+                                         'error':'Work operation could not be admitted or confirmed ('+type(exc).__name__+').'}
                                 with write_txn(conn):
                                     state.event(conn,self.work['id'],'work.operation_failed',reply['error'])
                             self.host.send_work_result(frame['id'],reply)
