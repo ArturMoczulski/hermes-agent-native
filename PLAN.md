@@ -5,6 +5,13 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
+**AN-9 result acceptance is now the owner's immediate priority.** Add a trusted,
+version-bound owner workflow to accept a submitted result or request revisions;
+the decision must wake the cadence agent and either unlock dependent work or
+deliver the requested change. The live Fantasy World Setting Builder is the first
+end-to-end case: its Canon v0.1 is saved and evaluated, while Cycle 02 correctly
+waits for owner review. Plane Done alone remains insufficient, and accepting one
+result does not declare the agent's whole purpose complete.
 AN-90 fixes continuation reads: complete immutable saved outputs and stale-question
 applicability without terminating work. Targeted regression and native browser proof
 pass. Follow-up Plane429 failure prompted local600/minute capacity and bounded
@@ -107,8 +114,8 @@ question-comment increment. AN-84 now supplies scoped in-run discussion review;
 AN-75 still owns cadence wake-up/continuation. See Builder state for verification
 and remaining acceptance. Keep cycles undated.
 
-AN-75 is now the owner's next active priority: opt-in cadence and retained attempts
-bring the agent beyond a single run. The first cadence increment includes bounded
+AN-75 remains active behind the immediate AN-9 acceptance slice: opt-in cadence
+and retained attempts bring the agent beyond a single run. The first cadence increment includes bounded
 check-ins, prior-work context, Plane-feedback revision and visible attempt history.
 Recovery/resume and whole-purpose lifecycle acceptance remain subsequent work;
 see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.

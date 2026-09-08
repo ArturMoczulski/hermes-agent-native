@@ -1,3 +1,14 @@
+## Owner result acceptance is the immediate priority — 2026-09-08
+
+The live Fantasy World Setting Builder demonstrates the missing workflow. It has
+saved and evaluated Canon v0.1, but its next planned item explicitly depends on
+owner review. Healthy cadence attempts therefore report `waiting` without creating
+duplicate outputs or starting the dependent cycle. Plane AN-9 is now urgent in
+undated Cycle 03. The next slice adds version-bound **Accept result** and
+**Request revision** controls, durable trusted decisions, stale-decision rejection,
+and prompt cadence wake-up. Acceptance of an assignment result remains distinct
+from whole-purpose completion or agent retirement.
+
 ## Active cadence status distinct from attempt completion — 2026-09-08
 
 The agent header previously displayed the latest bounded attempt state as the
