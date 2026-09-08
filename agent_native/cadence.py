@@ -73,7 +73,7 @@ def queue_due(conn, *, now=None, busy_agents=()):
             root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
             previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if (not previous or root[0]!=revision or previous[2]!=revision
-                    or previous[4] not in ('completed','interrupted','limit_reached','retryable_failure')): continue
+                    or previous[4] not in ('completed','interrupted','limit_reached','retryable_failure','paused')): continue
             if previous[5] and datetime.fromisoformat(now)<datetime.fromisoformat(previous[5])+timedelta(seconds=interval): continue
             if conn.execute("SELECT 1 FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')",(agent_id,)).fetchone(): continue
             from agent_native.delivery_barrier import unresolved_terminal_notices, record_notices

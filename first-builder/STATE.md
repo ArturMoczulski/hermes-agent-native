@@ -1,3 +1,17 @@
+## Stacked-pause resume — 2026-09-08
+
+AN-37 now gives the owner an explicit Resume action for an agent's own subtree pause.
+The host removes only that pause source, so a descendant paused separately remains
+paused. A durable baseline preserves whether each affected agent's cadence was enabled
+before the first stacked pause; cadence is restored only after the final applicable
+pause clears. Eligible agents become due for fresh reconsideration, while an old
+interrupted process is never replayed and an attempt still stopping cannot overlap.
+
+The compact and full views expose Resume on the agent that originated the pause and
+show a clear confirmation with resumed and independently paused counts. Focused
+evidence: eight backend lifecycle tests, TypeScript typecheck, and a Playwright stacked
+pause/resume owner journey pass.
+
 ## Accountable parent child replacement — 2026-09-08
 
 AN-37's replacement lifecycle is now available to managed parent agents. The bounded

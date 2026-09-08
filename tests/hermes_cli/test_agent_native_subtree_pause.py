@@ -4,7 +4,7 @@ import pytest
 from agent_native import cadence
 from agent_native.identity import OWNER, ConflictError, create_root, get_root
 from agent_native.work_retry import retry_failed
-from agent_native.work_state import configure as configure_work, request_pause
+from agent_native.work_state import configure as configure_work, request_pause, request_resume
 from tests.hermes_cli.test_agent_native_api import BODY, URL, client  # noqa: F401
 from tests.hermes_cli.test_agent_native_work_effects import broker  # noqa: F401
 
@@ -115,3 +115,69 @@ def test_pause_api_acknowledges_affected_subtree(client):
     assert response.json()['pause']['paused'] is True
     assert response.json()['subtree_pause']['affected_agent_ids'] == [parent['id'], child['id']]
     assert client.get(f"{URL}/{child['id']}").json()['pause']['paused'] is True
+
+
+def test_resume_removes_only_its_pause_cause_and_restores_original_cadence(broker):
+    s = broker
+    child = create_child(s.conn, s.root, 'resume-child', 'Child')
+    grandchild = create_child(s.conn, child, 'resume-grandchild', 'Grandchild')
+    for agent in (s.root, child, grandchild):
+        cadence.configure(
+            s.conn, actor=OWNER, agent_id=agent['id'], expected_revision=1,
+            interval_seconds=60, enabled=True,
+        )
+    request_pause(s.conn, actor=OWNER, agent_id=s.root['id'])
+    request_pause(s.conn, actor=OWNER, agent_id=child['id'])
+
+    resumed = request_resume(s.conn, actor=OWNER, agent_id=s.root['id'])
+
+    assert resumed['resumed_agent_ids'] == [s.root['id']]
+    assert set(resumed['still_paused_agent_ids']) == {child['id'], grandchild['id']}
+    assert resumed['cadence_restored_agent_ids'] == [s.root['id']]
+    assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['cadence']['enabled'] is True
+    for agent_id in (child['id'], grandchild['id']):
+        current = get_root(s.conn, actor=OWNER, agent_id=agent_id)
+        assert current['pause']['sources'][0]['source_agent_id'] == child['id']
+        assert current['cadence']['enabled'] is False
+
+    child_resume = request_resume(s.conn, actor=OWNER, agent_id=child['id'])
+    assert child_resume['resumed_agent_ids'] == [child['id'], grandchild['id']]
+    assert child_resume['still_paused_agent_ids'] == []
+    assert set(child_resume['cadence_restored_agent_ids']) == {child['id'], grandchild['id']}
+    queued = cadence.queue_due(s.conn, now='2099-01-01T00:00:00+00:00')
+    assert len(queued) == 2
+    assert get_root(s.conn, actor=OWNER, agent_id=child['id'])['work']['state'] == 'queued'
+    assert get_root(s.conn, actor=OWNER, agent_id=grandchild['id'])['work']['state'] == 'queued'
+    assert request_resume(s.conn, actor=OWNER, agent_id=child['id'])['affected_agent_ids'] == []
+
+
+def test_resume_keeps_cadence_off_when_it_was_off_before_pause(broker):
+    s = broker
+    child = create_child(s.conn, s.root, 'manual-child', 'Manual child')
+    request_pause(s.conn, actor=OWNER, agent_id=child['id'])
+
+    resumed = request_resume(s.conn, actor=OWNER, agent_id=child['id'])
+
+    assert resumed['resumed_agent_ids'] == [child['id']]
+    assert resumed['cadence_restored_agent_ids'] == []
+    assert get_root(s.conn, actor=OWNER, agent_id=child['id'])['cadence']['enabled'] is False
+
+
+def test_resume_api_returns_subtree_acknowledgment(client):
+    parent = client.post(URL, json={
+        **BODY, 'request_id': 'resume-api-parent',
+        'work': {'timeout_seconds': 30, 'max_iterations': 2},
+    }).json()
+    child = client.post(URL, json={
+        **BODY, 'request_id': 'resume-api-child', 'name': 'Child',
+        'parent_id': parent['id'],
+        'work': {'timeout_seconds': 30, 'max_iterations': 2},
+    }).json()
+    client.post(f"{URL}/{parent['id']}/work/pause")
+
+    response = client.post(f"{URL}/{parent['id']}/work/resume")
+
+    assert response.status_code == 200
+    assert response.json()['pause']['paused'] is False
+    assert response.json()['subtree_resume']['resumed_agent_ids'] == [parent['id'], child['id']]
+    assert client.get(f"{URL}/{child['id']}").json()['pause']['paused'] is False

@@ -11,6 +11,10 @@ CREATE TABLE IF NOT EXISTS agent_native_agent_pauses (
 );
 CREATE INDEX IF NOT EXISTS agent_native_pause_sources
  ON agent_native_agent_pauses(source_agent_id, agent_id);
+CREATE TABLE IF NOT EXISTS agent_native_pause_baselines (
+ agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
+ cadence_was_enabled INTEGER NOT NULL CHECK(cadence_was_enabled IN (0,1))
+);
 """
 
 
@@ -54,6 +58,14 @@ def request_pause(conn, *, actor, agent_id):
         stopping = []
         newly_paused = []
         for current_id in agent_ids:
+            cadence = conn.execute(
+                'SELECT enabled FROM agent_native_cadence WHERE agent_id=?', (current_id,),
+            ).fetchone()
+            conn.execute(
+                'INSERT OR IGNORE INTO agent_native_pause_baselines '
+                '(agent_id,cadence_was_enabled) VALUES(?,?)',
+                (current_id, int(bool(cadence and cadence[0]))),
+            )
             inserted = conn.execute(
                 'INSERT OR IGNORE INTO agent_native_agent_pauses '
                 '(agent_id,source_agent_id,requested_at) VALUES(?,?,?)',
@@ -93,4 +105,57 @@ def request_pause(conn, *, actor, agent_id):
             'newly_paused_agent_ids': newly_paused,
             'stopping_agent_ids': stopping,
             'sources': sources,
+        }
+
+
+def request_resume(conn, *, actor, agent_id):
+    """Remove this agent's pause cause without clearing independent causes."""
+    _require_owner(actor)
+    with write_txn(conn):
+        require_active(conn, agent_id)
+        paused_by_source = {row[0] for row in conn.execute(
+            'SELECT agent_id FROM agent_native_agent_pauses WHERE source_agent_id=?',
+            (agent_id,),
+        ).fetchall()}
+        affected = [current_id for current_id in _subtree(conn, agent_id)
+                    if current_id in paused_by_source]
+        conn.execute(
+            'DELETE FROM agent_native_agent_pauses WHERE source_agent_id=?', (agent_id,),
+        )
+        resumed = []
+        still_paused = []
+        cadence_restored = []
+        now = _now()
+        for current_id in affected:
+            if read_pause(conn, current_id)['paused']:
+                still_paused.append(current_id)
+                continue
+            baseline = conn.execute(
+                'SELECT cadence_was_enabled FROM agent_native_pause_baselines WHERE agent_id=?',
+                (current_id,),
+            ).fetchone()
+            if baseline and baseline[0]:
+                conn.execute(
+                    'UPDATE agent_native_cadence SET enabled=1,next_due=? WHERE agent_id=?',
+                    (now, current_id),
+                )
+                cadence_restored.append(current_id)
+            conn.execute(
+                'DELETE FROM agent_native_pause_baselines WHERE agent_id=?', (current_id,),
+            )
+            resumed.append(current_id)
+            latest = conn.execute(
+                'SELECT id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',
+                (current_id,),
+            ).fetchone()
+            if latest:
+                from agent_native.work_state import event
+                event(conn, latest[0], 'work.resumed',
+                      'Owner resumed the applicable pause; interrupted work will not be replayed.')
+        return {
+            'source_agent_id': agent_id,
+            'affected_agent_ids': affected,
+            'resumed_agent_ids': resumed,
+            'still_paused_agent_ids': still_paused,
+            'cadence_restored_agent_ids': cadence_restored,
         }

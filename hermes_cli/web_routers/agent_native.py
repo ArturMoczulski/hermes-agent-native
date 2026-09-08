@@ -219,6 +219,21 @@ def pause_work(agent_id: str, actor=Depends(owner_session)):
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@router.post('/{agent_id}/work/resume')
+def resume_work(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.work_state import request_resume
+    with connect_closing(board='default') as conn:
+        try:
+            subtree_resume = request_resume(conn, actor=actor, agent_id=agent_id)
+            agent = identity.get_root(conn, actor=actor, agent_id=agent_id)
+            agent['subtree_resume'] = subtree_resume
+            return agent
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 @router.get('/{agent_id}/stories/{story_id}/versions/{version}')
 def read_story(agent_id: str, story_id: str, version: int, actor=Depends(owner_session)):
     from agent_native.story_store import read_story as read

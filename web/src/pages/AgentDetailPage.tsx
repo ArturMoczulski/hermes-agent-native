@@ -34,6 +34,7 @@ export default function AgentDetailPage() {
   const [refreshError, setRefreshError] = useState(false);
   const [reload, setReload] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [resumeNotice, setResumeNotice] = useState<string | null>(null);
   const mutationVersion = useRef(0);
   const [loaded, setLoaded] = useState<LoadedAgent>({ key: "" });
   const key = `${agentId}:${reload}`;
@@ -126,7 +127,14 @@ export default function AgentDetailPage() {
             </Link>
           </div>
         </header>
-        {agent.pause?.paused && <PauseSummary agent={agent} />}
+        {resumeNotice && <p role="status" className="rounded-xl border border-green-500/50 bg-green-500/5 p-4">{resumeNotice}</p>}
+        {agent.pause?.paused && <PauseSummary agent={agent} onMutationStart={() => { mutationVersion.current += 1; }} onResumed={(result) => {
+          mutationVersion.current += 1;
+          setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
+          const resumed = result.subtree_resume?.resumed_agent_ids.length ?? 0;
+          const retained = result.subtree_resume?.still_paused_agent_ids.length ?? 0;
+          setResumeNotice(`Automatic work resumed for ${resumed} agent${resumed === 1 ? "" : "s"}.${retained ? ` ${retained} independently paused descendant${retained === 1 ? " remains" : "s remain"} paused.` : ""}`);
+        }} />}
         {agent.replacement?.role === "successor" && <ReplacementSummary agent={agent} />}
         {agent.retirement && <RetirementSummary agent={agent} />}
         {!fullView ? <CompactAgentView agent={agent} /> : <>
@@ -259,15 +267,26 @@ function ReplacementSummary({ agent }: { agent: Agent }) {
   </section>;
 }
 
-function PauseSummary({ agent }: { agent: Agent }) {
+function PauseSummary({ agent, onMutationStart, onResumed }: { agent: Agent; onMutationStart: () => void; onResumed: (agent: Agent) => void }) {
   const ownPause = agent.pause?.sources.some((source) => source.source_agent_id === agent.id);
   const ancestor = agent.pause?.sources.find((source) => source.source_agent_id !== agent.id);
+  const [resuming, setResuming] = useState(false);
+  const [error, setError] = useState(false);
+  async function resume() {
+    setResuming(true); setError(false); onMutationStart();
+    try {
+      onResumed(await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/work/resume`, { method: "POST" }));
+    } catch { setError(true); }
+    finally { setResuming(false); }
+  }
   return <section role="status" aria-label="Agent paused" className="space-y-2 rounded-xl border border-amber-500/50 bg-amber-500/5 p-5">
     <h2 className="font-semibold">Automatic work is paused</h2>
     <p>{ownPause
       ? "This agent and every active descendant are paused. Thinking cadence and new autonomous work will not restart until the applicable pause is resumed."
       : <>This agent is paused through ancestor <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(ancestor?.source_agent_id ?? "")}`}>{ancestor?.source_agent_id}</Link>. Thinking cadence and new autonomous work will not restart until that pause is resumed.</>}</p>
     {agent.work?.state === "stopping" && <p>The current work process is still stopping; its history remains available.</p>}
+    {ownPause && <Button disabled={resuming} onClick={() => void resume()}>{resuming ? "Resuming…" : "Resume automatic work"}</Button>}
+    {error && <p role="alert">Could not resume automatic work. Reload and try again; repeating this request is safe.</p>}
   </section>;
 }
 

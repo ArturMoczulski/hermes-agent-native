@@ -39,6 +39,7 @@ export type Agent = {
   replacement?: { id: string; role: "predecessor" | "successor"; predecessor_id?: string; successor_id?: string; reason: string; handoff: string; created_at: string } | null;
   pause?: { paused: boolean; sources: { source_agent_id: string; requested_at: string }[] };
   subtree_pause?: { source_agent_id: string; affected_agent_ids: string[]; newly_paused_agent_ids: string[]; stopping_agent_ids: string[] };
+  subtree_resume?: { source_agent_id: string; affected_agent_ids: string[]; resumed_agent_ids: string[]; still_paused_agent_ids: string[]; cadence_restored_agent_ids: string[] };
   model_selection?: ModelSelection | null;
   model_activity?: ModelActivity[];
   autonomy: AutonomySettings;
@@ -177,6 +178,12 @@ export function agentWorkStatus(agent: Agent): string {
   if (work.state === "queued" && agent.setup?.status !== "ready") return "Waiting for setup";
   if (agent.cadence?.enabled && ["interrupted", "retryable_failure"].includes(work.state)) {
     return "Recovering · waiting for next check-in";
+  }
+  if (agent.cadence?.enabled && work.state === "paused") {
+    return "Active · reconsidering after pause";
+  }
+  if (!agent.pause?.paused && work.state === "paused") {
+    return "Automatic work off";
   }
   if (agent.cadence?.enabled && ["completed", "limit_reached"].includes(work.state)) {
     return "Active · waiting for next check-in";

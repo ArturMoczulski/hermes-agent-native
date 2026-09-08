@@ -176,6 +176,11 @@ def request_pause(conn, *, actor, agent_id):
     return pause_subtree(conn, actor=actor, agent_id=agent_id)
 
 
+def request_resume(conn, *, actor, agent_id):
+    from agent_native.subtree_lifecycle import request_resume as resume_subtree
+    return resume_subtree(conn, actor=actor, agent_id=agent_id)
+
+
 def validate(conn, run_id):
     row = conn.execute('SELECT w.state,w.stop_requested,w.soul_revision,a.soul_revision '
                        'FROM agent_native_work_runs w JOIN agent_native_agents a ON a.id=w.agent_id '

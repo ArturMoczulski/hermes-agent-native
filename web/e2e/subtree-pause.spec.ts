@@ -33,3 +33,30 @@ test('owner pause visibly and durably pauses an entire active agent subtree', as
   expect(childState.execution).toBe('paused');
   expect(childState.work.state).toBe('paused');
 });
+
+test('owner resume clears only its stacked pause and confirms the result', async ({ page, request }) => {
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only'; });
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: false } });
+  const create = (data: Record<string, unknown>) => request.post(`${backend}/api/agent-native/agents`, {
+    headers,
+    data: {
+      request_id: crypto.randomUUID(), name: 'Resume hierarchy',
+      purpose: 'Continue useful work until the owner pauses it.',
+      work: { timeout_seconds: 180, max_iterations: 50 },
+      ...data,
+    },
+  });
+  const parent = await (await create({})).json();
+  const child = await (await create({ parent_id: parent.id, name: 'Independently paused child' })).json();
+  expect((await request.post(`${backend}/api/agent-native/agents/${parent.id}/work/pause`, { headers })).ok()).toBeTruthy();
+  expect((await request.post(`${backend}/api/agent-native/agents/${child.id}/work/pause`, { headers })).ok()).toBeTruthy();
+
+  await page.goto(`/agents/${parent.id}`);
+  await page.getByRole('button', { name: 'Resume automatic work' }).click();
+
+  await expect(page.getByText('Automatic work resumed for 1 agent. 1 independently paused descendant remains paused.', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Execution status')).not.toHaveText('Paused');
+  const childState = await (await request.get(`${backend}/api/agent-native/agents/${child.id}`, { headers })).json();
+  expect(childState.pause.sources).toHaveLength(1);
+  expect(childState.pause.sources[0].source_agent_id).toBe(child.id);
+});
