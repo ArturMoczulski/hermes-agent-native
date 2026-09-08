@@ -5,13 +5,9 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
-**The compact agent operating view is now the immediate priority.** The default page
-must lead with applicable owner questions/decisions, ongoing lifecycle state, current
-work, recent purpose-level outputs linked to Plane, and compact recent activity. Move
-configuration and destructive controls into dialogs and retain the current exhaustive
-surface as Full view. Separate lifecycle from the latest attempt outcome and give clear
-confirmation after cadence changes; disabling cadence must visibly say that automatic
-work is off rather than leaving the primary status as Completed.
+The compact agent operating view and deliverable-review workflow are complete. Select
+the next actionable item from Plane after reconciling the remaining cycle acceptance;
+do not infer a new priority from this repository summary.
 AN-93 is complete. Compact view places applicable owner questions before output decisions
 and progress concerns in Compact view. A labeled Current/Latest work card follows the
 attention area with the ongoing stage, latest bounded-attempt outcome and direct Plane
@@ -26,7 +22,7 @@ changes may be reported as results with no file. The only exception is an
 assignment that explicitly requests a planning document as its deliverable. A
 clean replacement agent proved this behavior with a Plane-only planning result
 and one actual World Bible output.
-**AN-9 deliverable review is now the owner's immediate priority.** Separate bounded
+**AN-9 deliverable review is complete.** It separates bounded
 attempt records from reviewable purpose-level outputs. Attempt summaries, planning,
 discovery and waiting/blocked records remain operational history and never imply an
 owner approval request. Show Accept / Request revision only on an exact output version
@@ -46,8 +42,7 @@ for a submitted result that names at least one exact output version. Ordinary
 results and balanced-autonomy deliverables do not expose decision controls, and
 the owner API rejects attempts to accept them. The compact view surfaces only
 currently gated deliverables; Full view retains all evaluations and prior decisions.
-Explicit assignment- and policy-authored gates beyond autonomy level 1 remain the
-next AN-9 increment.
+Assignment- and policy-authored gates are covered independently of autonomy level.
 The owner-policy half is implemented: Agent settings can require review of every
 submitted deliverable independently of autonomy level. The policy is revisioned,
 frozen onto admission, visible to the worker, and stored as the exact result gate

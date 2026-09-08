@@ -1,3 +1,19 @@
+## Deliverable review acceptance complete — 2026-09-09
+
+AN-9 is complete. The owner workflow distinguishes operational attempt history from
+reviewable purpose-level outputs, exposes decisions only for an exact required output
+version, and labels optional review without blocking autonomous continuation. Owner,
+assignment and autonomy-authored gates preserve the frozen criteria revision; stale
+decisions are rejected, and Accept or Request revision wakes cadence when work can
+continue.
+
+The final deterministic browser matrix covers ordinary discovery history, waiting
+history, exact-output acceptance and revision, optional review, and Level 5 progression
+across distinct assignments. It also asserts that accepting one output preserves the
+agent identity, purpose and active lifecycle rather than completing or retiring the
+whole agent. Twenty-eight focused backend tests and five Playwright journeys pass
+without a paid model.
+
 ## Compact human operating view complete — 2026-09-09
 
 AN-93's first focused refinement makes an applicable unanswered owner question the

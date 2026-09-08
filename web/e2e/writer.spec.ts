@@ -95,6 +95,10 @@ test('a writer purpose uses shared output and result records without a chat prom
   await page.getByRole('link', { name: 'Compact view', exact: true }).click()
   const afterViewSwitch = await get()
   expect(afterViewSwitch.work).toMatchObject({ id: beforeViewSwitch.work.id, state: beforeViewSwitch.work.state, session_id: beforeViewSwitch.work.session_id, model_calls: beforeViewSwitch.work.model_calls })
+  expect(afterViewSwitch).toMatchObject({
+    id, purpose: 'Write original fantasy stories about a glass dragon and a moonlit citadel.',
+    retirement: null, removed_at: null,
+  })
   const proof = await (await request.get(`${backend}/__e2e__/writer-evidence/${id}`, { headers })).json()
   expect(proof.file_content).toBe(saved.content)
   expect(proof.items.some((i: {name:string}) => i.name === 'Write The Silver Gate')).toBeTruthy()
