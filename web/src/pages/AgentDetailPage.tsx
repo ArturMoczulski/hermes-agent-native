@@ -462,6 +462,7 @@ function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpd
   return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
         <DialogHeader><DialogTitle>Agent settings</DialogTitle><DialogDescription>Changes apply to this agent. Current work keeps the settings it started with.</DialogDescription></DialogHeader>
+        <PurposeSettings agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
         <AgentModelControls agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
         <AgentProgressSettings agentId={agent.id} />
         <AgentAutonomySettings agentId={agent.id} />
@@ -469,6 +470,40 @@ function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpd
         <AgentCadence agentId={agent.id} revision={agent.soul_revision} />
       </DialogContent>
     </Dialog>;
+}
+
+function PurposeSettings({ agent, onMutationStart, onUpdate }: {
+  agent: Agent; onMutationStart: () => void; onUpdate: (agent: Agent) => void;
+}) {
+  const [purpose, setPurpose] = useState(agent.purpose);
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  const changed = purpose.trim() !== agent.purpose;
+  async function save(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !changed || !purpose.trim()) return;
+    setBusy(true); setMessage(""); onMutationStart();
+    try {
+      const updated = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/purpose`, {
+        method: "PATCH", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expected_revision: agent.soul_revision, purpose: purpose.trim() }),
+      });
+      onUpdate(updated);
+      setPurpose(updated.purpose);
+      setMessage("Purpose changed. Obsolete work authority ended; retained history still belongs to the earlier revision.");
+    } catch {
+      setMessage("Could not change the purpose. Reload the current revision and try again.");
+    } finally { setBusy(false); }
+  }
+  return <form aria-label="Purpose settings" onSubmit={(event) => void save(event)} className="space-y-3 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">Purpose</h2>
+    <p className="text-sm text-muted-foreground">Changing purpose immediately ends authority for work using the previous revision. Prior history and outputs remain available.</p>
+    <Label htmlFor="agent-purpose-setting">Agent purpose</Label>
+    <textarea id="agent-purpose-setting" className="min-h-28 w-full rounded-md border bg-background p-3" value={purpose}
+      onChange={(event) => { setPurpose(event.target.value); setMessage(""); }} required maxLength={20000} disabled={busy} />
+    <Button type="submit" disabled={busy || !changed || !purpose.trim()}>{busy ? "Changing purpose…" : "Change purpose and stop obsolete work"}</Button>
+    {message && <p role="status" className="text-sm">{message}</p>}
+  </form>;
 }
 
 function AssignmentReviewSettings({agent,onUpdate}:{agent:Agent;onUpdate:(agent:Agent)=>void}) {

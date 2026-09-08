@@ -8,6 +8,11 @@ The current undated cycle 03 is **Shared agent work and the fantasy writer**.
 The compact agent operating view and deliverable-review workflow are complete. Select
 the next actionable item from Plane after reconciling the remaining cycle acceptance;
 do not infer a new priority from this repository summary.
+AN-76 is now active for the complete owner journey. Its first missing product control
+is implemented as a focused slice: Agent settings can revise the protected purpose
+without replacing the stable agent identity, using the current purpose revision as a
+compare-and-swap guard. The next slice must prove immediate stopping of held obsolete
+work and prepare fresh current-purpose planning before the final real-model journey.
 AN-93 is complete. Compact view places applicable owner questions before output decisions
 and progress concerns in Compact view. A labeled Current/Latest work card follows the
 attention area with the ongoing stage, latest bounded-attempt outcome and direct Plane

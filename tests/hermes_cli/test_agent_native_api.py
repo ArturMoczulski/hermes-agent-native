@@ -55,6 +55,24 @@ def test_invalid_and_conflicting_requests(client):
     assert client.get(URL + '/missing').status_code == 404
 
 
+def test_owner_revises_purpose_with_compare_and_swap_and_retains_identity(client):
+    root = client.post(URL, json=BODY).json()
+    path = URL + '/' + root['id'] + '/purpose'
+    revised = client.patch(path, json={
+        'expected_revision': 1,
+        'purpose': 'Compose a progressive metal album',
+    })
+    assert revised.status_code == 200
+    assert revised.json()['id'] == root['id']
+    assert revised.json()['purpose'] == 'Compose a progressive metal album'
+    assert revised.json()['soul_revision'] == 2
+    assert client.patch(path, json={
+        'expected_revision': 1,
+        'purpose': 'Overwrite from a stale page',
+    }).status_code == 409
+    assert client.get(URL + '/' + root['id']).json()['purpose'] == 'Compose a progressive metal album'
+
+
 def test_missing_auth_rejected_on_all_paths(client):
     client.headers.pop('X-Hermes-Session-Token')
     assert client.get(URL).status_code == 401

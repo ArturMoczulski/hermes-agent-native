@@ -1,3 +1,18 @@
+## Owner purpose revision begins AN-76 — 2026-09-09
+
+The complete owner-journey audit exposed a real missing control: the dashboard displayed
+purpose but offered replacement as the only way to change direction. The authenticated
+API and Agent settings now let the owner revise an existing agent's protected purpose.
+The write is bound to the exact current revision, rejects stale clients, increments the
+soul revision, preserves the stable agent ID and retained history, and makes older work
+authority invalid immediately.
+
+Focused evidence: the API test failed with 405 before implementation, then the purpose,
+conflict and authentication cases passed. A Playwright journey changes the purpose in
+the settings dialog, reloads it from the service, verifies revision 2 and the unchanged
+agent address, and passes. TypeScript plus focused ESLint and Ruff pass. Next: prove a
+held obsolete worker stops and establish the current-purpose setup/replan transition.
+
 ## Work-service restart continuity browser proof — 2026-09-09
 
 AN-75 now has a native Playwright journey across the managed work-service lifecycle.

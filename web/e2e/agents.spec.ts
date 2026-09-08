@@ -40,6 +40,26 @@ test('creation opens its agent detail and retains one startup request across rel
   });
 });
 
+test('owner changes an agent purpose from settings without replacing its identity', async ({ page, request }) => {
+  const original = await (await request.post(api, { headers, data: {
+    request_id: crypto.randomUUID(), name: 'Revisable writer', purpose: 'Write stories about a glass city.',
+  } })).json();
+  await page.goto(`/agents/${original.id}`);
+  await page.getByRole('button', { name: 'Agent settings', exact: true }).click();
+  const settings = page.getByRole('dialog', { name: 'Agent settings' });
+  const purpose = settings.getByLabel('Agent purpose', { exact: true });
+  await purpose.fill('Write stories about a floating glass city.');
+  await settings.getByRole('button', { name: 'Change purpose and stop obsolete work', exact: true }).click();
+  await expect(settings.getByRole('status')).toContainText('Purpose changed');
+  const revised = await (await request.get(`${api}/${original.id}`, { headers })).json();
+  expect(revised).toMatchObject({ id: original.id, soul_revision: 2, purpose: 'Write stories about a floating glass city.' });
+  await page.keyboard.press('Escape');
+  await page.getByRole('button', { name: 'Agent settings', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Agent settings' }).getByLabel('Agent purpose', { exact: true }))
+    .toHaveValue('Write stories about a floating glass city.');
+  await expect(page).toHaveURL(new RegExp(`/agents/${original.id}$`));
+});
+
 test('owner creates a child and sees the durable agent tree', async ({ page, request }) => {
   const parent = await (await request.post(api, { headers, data: {
     request_id: crypto.randomUUID(), name: 'Metal artist', purpose: 'Develop a metal music career.',
