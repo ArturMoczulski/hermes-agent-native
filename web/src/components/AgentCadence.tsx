@@ -13,6 +13,7 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
   const [error,setError]=useState('');
   const [recovery,setRecovery]=useState<{id:string;revision:number}>();
   const [recoveryStatus,setRecoveryStatus]=useState('');
+  const [saveStatus,setSaveStatus]=useState('');
   async function retryWork(){
     if(!recovery)return;
     setBusy(true);setError('');
@@ -36,8 +37,13 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
     return()=>{active=false;clearInterval(timer);};
   },[api]);
   async function save(enabled:boolean){
-    setBusy(true);setError('');
-    try{setCadence(await fetchJSON<Cadence>(`${api}/cadence`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expected_revision:revision,interval_seconds:Number(seconds||cadence?.interval_seconds),enabled})}));}
+    setBusy(true);setError('');setSaveStatus('');
+    try{
+      setCadence(await fetchJSON<Cadence>(`${api}/cadence`,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({expected_revision:revision,interval_seconds:Number(seconds||cadence?.interval_seconds),enabled})}));
+      setSaveStatus(enabled
+        ? 'Automatic check-ins enabled. This agent can start new work on its own.'
+        : 'Automatic check-ins disabled. This agent will not start new work on its own.');
+    }
     catch{setError('Could not update cadence. Check the interval and current work; paused, failed or uncertain work needs review.');}
     finally{setBusy(false);}
   }
@@ -53,6 +59,7 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
     <Button disabled={busy||!Number(seconds||cadence?.interval_seconds)} onClick={()=>{void save(true);}}>Enable or update cadence</Button>
     <Button disabled={busy||!cadence?.enabled} onClick={()=>{void save(false);}}>Disable cadence</Button>
     {error&&<p role="alert">{error}</p>}
+    {saveStatus&&<p role="status">{saveStatus}</p>}
     {attempts[0]?.state==='failed'&&!recovery&&<Button disabled={busy} onClick={()=>{setRecovery({id:attempts[0].id,revision});setRecoveryStatus('');setError('');}}>Retry failed work</Button>}
     {recovery&&<div role="group" aria-label="Review failed work recovery" className="space-y-2 border rounded p-3">
       <p>Previous attempts and saved outputs are preserved. Recovery starts a new attempt using this agent's current model and existing execution limits. Review the failure before continuing. Uncertain task changes block recovery.</p>

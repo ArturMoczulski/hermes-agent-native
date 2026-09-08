@@ -6,6 +6,7 @@ import { AgentAutonomySettings } from "@/components/AgentAutonomySettings";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@nous-research/ui/ui/components/dialog";
 import { agentsEndpoint, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
@@ -19,6 +20,8 @@ type LoadedAgent = { key: string; agent?: Agent; error?: string };
 
 export default function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
+  const [pageSearchParams] = useSearchParams();
+  const fullView = pageSearchParams.get("view") === "full";
   const { setTitle } = usePageHeader();
   const [retryError, setRetryError] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
@@ -97,8 +100,20 @@ export default function AgentDetailPage() {
             <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
           </div>
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
-          {!agent.removed_at && <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>}
+          <div className="flex flex-wrap gap-2">
+            {!agent.removed_at && <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>}
+            <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline"
+              to={fullView ? `/agents/${encodeURIComponent(agent.id)}` : `/agents/${encodeURIComponent(agent.id)}?view=full`}>
+              {fullView ? "Compact view" : "Full view"}
+            </Link>
+          </div>
         </header>
+        {!fullView ? <CompactAgentView agent={agent}
+          onMutationStart={() => { mutationVersion.current += 1; }}
+          onUpdate={(result) => {
+            mutationVersion.current += 1;
+            setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
+          }} /> : <>
         {agent.removed_at ? <p role="status">Agent removed. Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
           <Button onClick={() => setConfirmRemove(true)}>Remove agent</Button>
           {confirmRemove && <div className="space-y-3">
@@ -202,9 +217,63 @@ export default function AgentDetailPage() {
         </section>
         <WorkResults key={`results:${agent.id}`} agent={agent} />
         <SavedOutputs key={`outputs:${agent.id}`} agent={agent} />
+        </>}
       </>}
     </div>
   );
+}
+
+function CompactAgentView({ agent, onMutationStart, onUpdate }: {
+  agent: Agent;
+  onMutationStart: () => void;
+  onUpdate: (agent: Agent) => void;
+}) {
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const work = agent.work;
+  const events = [...(work?.events ?? [])].reverse().slice(0, 20);
+  const planeUrl = agent.setup?.project_id && agent.setup.plane_origin && agent.setup.workspace_slug
+    ? `${agent.setup.plane_origin}/${encodeURIComponent(agent.setup.workspace_slug)}/projects/${encodeURIComponent(agent.setup.project_id)}/issues/`
+    : null;
+  return <div className="space-y-6">
+    {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} />}
+    <section aria-label="Agent overview" className="space-y-4 rounded-xl border p-5">
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <p className="text-sm text-muted-foreground">Ongoing state</p>
+          <h2 className="text-xl font-semibold">{agentWorkStatus(agent)}</h2>
+          {work && <p className="text-sm text-muted-foreground">Latest attempt: {work.state.replace('_', ' ')}</p>}
+        </div>
+        {!agent.removed_at && <Button onClick={() => setSettingsOpen(true)}>Agent settings</Button>}
+      </div>
+      {work?.focus ? <div className="space-y-1">
+        <p className="text-sm text-muted-foreground">{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current work" : "Latest work"}</p>
+        <h3 className="font-semibold">{work.focus.name}</h3>
+        <PlanningItemLink agent={agent} itemId={work.focus.item_id} />
+      </div> : <p className="text-sm">No work item is currently selected.</p>}
+      {planeUrl && <a className="inline-block text-sm underline underline-offset-4" href={planeUrl} target="_blank" rel="noreferrer">Open project in Plane</a>}
+    </section>
+    <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} />
+    <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
+      <h2 className="text-lg font-semibold">Recent activity</h2>
+      {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+        <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th></tr></thead>
+        <tbody>{events.map(event => <tr key={event.id} className="border-t">
+          <td className="whitespace-nowrap p-2"><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></td>
+          <td className="p-2">{event.summary}</td>
+        </tr>)}</tbody>
+      </table></div> : <p>No execution activity recorded yet.</p>}
+      <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
+    </section>
+    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+      <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
+        <DialogHeader><DialogTitle>Agent settings</DialogTitle><DialogDescription>Changes apply to this agent. Current work keeps the settings it started with.</DialogDescription></DialogHeader>
+        <AgentModelControls agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
+        <AgentProgressSettings agentId={agent.id} />
+        <AgentAutonomySettings agentId={agent.id} />
+        <AgentCadence agentId={agent.id} revision={agent.soul_revision} />
+      </DialogContent>
+    </Dialog>
+  </div>;
 }
 
 function WorkControls({ agent, onMutationStart, onUpdate }: {
@@ -350,9 +419,10 @@ function PlanningItemLink({ agent, itemId }: { agent: Agent; itemId: string }) {
     href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/${encodeURIComponent(itemId)}/`}>Open work item</a>;
 }
 
-function SavedOutputs({ agent }: { agent: Agent }) {
+function SavedOutputs({ agent, limit }: { agent: Agent; limit?: number }) {
   const [searchParams, setSearchParams] = useSearchParams();
-  const outputs = agent.work?.outputs ?? [];
+  const allOutputs = agent.work?.outputs ?? [];
+  const outputs = limit == null ? allOutputs : allOutputs.slice(0, limit);
   const outputId = searchParams.get("output");
   const version = searchParams.get("version");
   const hasSelection = outputId !== null || version !== null;

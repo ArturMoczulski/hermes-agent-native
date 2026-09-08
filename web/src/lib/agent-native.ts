@@ -154,6 +154,9 @@ export function agentWorkStatus(agent: Agent): string {
   if (agent.cadence?.enabled && ["completed", "limit_reached"].includes(work.state)) {
     return "Active · waiting for next check-in";
   }
+  if (agent.cadence && !agent.cadence.enabled && ["completed", "limit_reached"].includes(work.state)) {
+    return "Automatic work off";
+  }
   const labels: Record<AgentWork["state"], string> = {
     queued: "Queued", preparing: "Preparing", running: "Running", stopping: "Stopping",
     paused: "Paused", limit_reached: "Run limit reached", completed: "Completed", failed: "Failed", unknown: "Outcome unknown",

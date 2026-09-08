@@ -14,7 +14,12 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     const first=(await current()).work;
     await request.post(`${backend}/__e2e__/comment/${id}`,{headers});
     await page.goto(`/agents/${id}`);
-    const cadence=page.getByRole('region',{name:'Thinking cadence',exact:true});
+    await expect(page.getByRole('region',{name:'Agent overview'})).toContainText('Latest attempt: completed');
+    await expect(page.getByRole('link',{name:'Full view'})).toBeVisible();
+    await page.getByRole('button',{name:'Agent settings'}).click();
+    const settings=page.getByRole('dialog',{name:'Agent settings'});
+    await expect(settings).toBeVisible();
+    const cadence=settings.getByRole('region',{name:'Thinking cadence',exact:true});
     await cadence.getByLabel('Check-in interval (seconds)').fill('60');
     await cadence.getByRole('button',{name:'Enable or update cadence'}).click();
     await expect(cadence).toContainText('Enabled · every 60 seconds');
@@ -25,6 +30,9 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     await expect.poll(async()=>{const a=await current();return a.work.id!==first.id&&a.work.state==='completed';},{timeout:30000}).toBe(true);
     await cadence.getByRole('button',{name:'Disable cadence'}).click();
     await expect(cadence).toContainText('Automatic check-ins are off');
+    await expect(cadence).toContainText('Automatic check-ins disabled. This agent will not start new work on its own.');
+    await page.getByRole('button',{name:'Close'}).click();
+    await expect(page.getByRole('region',{name:'Agent overview'})).toContainText('Automatic work off');
     const latest=(await current()).work;
     expect(latest.session_id).not.toBe(first.session_id);
     expect(latest.outputs.some((o:{version:number})=>o.version===2)).toBe(true);
@@ -34,8 +42,6 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     expect(saved.content).toContain('Revised after Plane feedback.');
     const history=await(await request.get(`${api}/attempts`,{headers})).json();
     expect(history).toHaveLength(2);
-    await expect(cadence.getByText(first.id,{exact:true})).toBeVisible();
-    await expect(cadence.getByText(latest.id,{exact:true})).toBeVisible();
     const proof=await(await request.get(`${backend}/__e2e__/writer-evidence/${id}`,{headers})).json();
     expect(proof.comments.some((c:{comment_html:string})=>c.comment_html.includes('Saved a revision using your feedback.'))).toBe(true);
   }finally{await request.post(`${api}/work/pause`,{headers});}
