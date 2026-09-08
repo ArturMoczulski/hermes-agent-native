@@ -173,6 +173,12 @@ and retained attempts bring the agent beyond a single run. The first cadence inc
 check-ins, prior-work context, Plane-feedback revision and visible attempt history.
 Whole-purpose lifecycle acceptance and activity-without-progress policy remain subsequent work;
 see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.
+The first whole-purpose lifecycle slice is now implemented: a managed agent records
+an immutable `continue`, `wait`, `clarify`, or `retire_candidate` judgment with the
+protected purpose revision, evidence, remaining obligations, uncertainty and next
+action. Later attempts receive those records and the compact view shows the latest.
+This does not yet retire an agent; lifecycle enforcement and subtree/obligation checks
+remain the next AN-75 increment.
 
 AN-67's recommended threshold and response are now owner-approved in
 [activity-without-progress detection](implementation/no-progress-detection.md).

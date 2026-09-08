@@ -263,6 +263,7 @@ function CompactAgentView({ agent }: { agent: Agent }) {
       {work?.focus && <><span aria-hidden="true">·</span><span>{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current" : "Latest"} work:</span>
         <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} /></>}
     </div>
+    <PurposeEvaluation agent={agent} />
     <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} compact />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
       <h2 className="text-lg font-semibold">Recent activity</h2>
@@ -276,6 +277,19 @@ function CompactAgentView({ agent }: { agent: Agent }) {
       <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
     </section>
   </div>;
+}
+
+function PurposeEvaluation({agent}:{agent:Agent}) {
+  const value=agent.work?.purpose_evaluations?.[0];
+  if(!value)return null;
+  const labels={continue:"Continue working",wait:"Waiting with purpose active",clarify:"Clarification needed",retire_candidate:"Purpose may be complete"};
+  return <section aria-label="Purpose evaluation" className="space-y-3 rounded-xl border p-5">
+    <div className="flex flex-wrap items-center justify-between gap-2"><h2 className="text-lg font-semibold">Purpose evaluation</h2><span className="rounded-full border px-3 py-1 text-sm">{labels[value.judgment]}</span></div>
+    <p><strong>Next:</strong> {value.next_action}</p>
+    {!!value.remaining_obligations.length&&<div><h3 className="text-sm font-semibold">Remaining obligations</h3><ul className="list-disc pl-5 text-sm">{value.remaining_obligations.map(item=><li key={item}>{item}</li>)}</ul></div>}
+    {value.uncertainty&&<p className="text-sm"><strong>Uncertainty:</strong> {value.uncertainty}</p>}
+    <time className="text-xs text-muted-foreground" dateTime={value.created_at}>{new Date(value.created_at).toLocaleString()}</time>
+  </section>;
 }
 
 function ProgressConcernAttention({ agent }: { agent: Agent }) {

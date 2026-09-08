@@ -34,7 +34,8 @@ from agent_native.cadence import SCHEMA as CADENCE_SCHEMA
 from agent_native.comments import SCHEMA as COMMENTS_SCHEMA
 from agent_native.progress_concerns import SCHEMA as CONCERNS_SCHEMA
 from agent_native.assignment_review import SCHEMA as ASSIGNMENT_REVIEW_SCHEMA
-WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA
+from agent_native.purpose_evaluation import SCHEMA as PURPOSE_EVALUATION_SCHEMA
+WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA
 
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 
@@ -110,6 +111,8 @@ def read_work(conn, agent_id):
     from agent_native.result_store import list_results
     result['outputs'] = list_outputs(conn, agent_id)
     result['results'] = list_results(conn, agent_id)
+    from agent_native.purpose_evaluation import list_evaluations
+    result['purpose_evaluations'] = list_evaluations(conn,agent_id)
     from agent_native.work_focus import read_focus
     result['focus'] = read_focus(conn, result['id'])
     from agent_native.progress import recent

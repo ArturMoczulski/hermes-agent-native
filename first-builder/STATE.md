@@ -1,3 +1,14 @@
+## Durable whole-purpose evaluation — 2026-09-08
+
+AN-75 now has an explicit `purpose_evaluate` managed-work operation. It stores an
+immutable judgment (`continue`, `wait`, `clarify`, or `retire_candidate`) bound to the
+run and protected purpose revision, with evidence, remaining obligations, uncertainty
+and next action. A retirement candidate cannot retain listed obligations. Later work
+attempts receive recent evaluations, and the compact agent view presents the latest
+lifecycle judgment separately from assignment results and attempt completion. These
+records count as meaningful progress for cadence-loop detection. Actual retirement
+and its subtree/acceptance safeguards remain later work.
+
 ## Assignment-bound deliverable review — 2026-09-08
 
 AN-9 now supports an owner review requirement for the agent's exact selected Plane

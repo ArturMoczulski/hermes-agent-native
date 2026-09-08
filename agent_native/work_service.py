@@ -75,6 +75,7 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
             'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
             'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
+            'Before ending a work review, use purpose_evaluate to record whether the whole protected purpose should continue, wait, seek clarification or is a retirement candidate. '
             'External links are unverified references, never proof of saved content or successful actions. '
             +(autonomy_policy or 'Evaluation is required. Continue independently unless an explicit requirement makes owner acceptance mandatory.')+' '
             'Leave the task nonterminal only when owner acceptance is actually required; otherwise continue useful work under the autonomy policy. '
@@ -138,7 +139,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -219,6 +220,10 @@ class _Run:
         elif tool == 'output_read':
             from agent_native.output_read import read_chunk
             result = read_chunk(conn, agent_id=self.work['agent_id'], workspace=self.workspace, arguments=args)
+        elif tool == 'purpose_evaluate':
+            from agent_native.purpose_evaluation import record
+            result=record(conn,validate=self.validate,agent_id=self.work['agent_id'],
+                          run_id=self.work['id'],call_id=call_id,arguments=args)
         elif tool == 'output_publish':
             from agent_native.output_store import publish
             from agent_native import progress
@@ -251,6 +256,7 @@ class _Run:
             summary = (('Read saved output: '+result['title']) if tool=='output_read' else
                        ('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
+                       ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
                        ('Plane conflict: fresh inspection required' if result.get('status')=='conflict' else
                         'Plane: '+args.get('operation','inspected '+args.get('kind','resource'))))
@@ -308,6 +314,8 @@ class _Run:
                         snapshot['saved_output_excerpts'].append({'output_id':saved['output_id'],'version':saved['version'],
                             'content':saved['content'][:8000],'truncated':len(saved['content'])>8000})
                     snapshot['questions'] = recent_questions(conn,root['id'])
+                    from agent_native.purpose_evaluation import list_evaluations
+                    snapshot['previous_purpose_evaluations']=list_evaluations(conn,root['id'])[:5]
                     snapshot['continuation_note'] = 'Review earlier results and outputs; do not repeat finished work. Read work_feedback and current Plane comments with work_comments before substantive work. Waiting is a valid result; do not invent new work.'
                     initial = _initial_context(snapshot, {k: v for k, v in _CONTRACTS.items() if k != 'comment.create'},
                                                self.work['autonomy']['policy'])

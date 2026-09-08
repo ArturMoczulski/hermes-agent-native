@@ -136,6 +136,7 @@ export function outputVersionLink(agentId: string, output: OutputReference): str
 }
 
 export type AgentWork = {
+  purpose_evaluations?: { id:string; run_id:string; soul_revision:number; purpose:string; judgment:"continue"|"wait"|"clarify"|"retire_candidate"; evidence:string[]; remaining_obligations:string[]; uncertainty:string|null; next_action:string; created_at:string }[];
   output_sections?: { item_id: string; status: "pending"; reason: "conditional_write_unavailable"; text: string;
     entries: { source_id: string; summary: string; comment_status: "pending" | "confirmed" | "failed" | "unknown"; link_url: string | null; link_label: string | null }[] }[];
   progress?: { operation_id: string; source_id: string; item_id: string; summary: string; status: "pending" | "confirmed" | "failed" | "unknown"; comment_id: string | null; created_at: string; link_url?: string | null; link_label?: string | null }[];

@@ -137,6 +137,9 @@ def suspend_if_stalled(conn, agent_id):
             or conn.execute(
                 'SELECT 1 FROM agent_native_output_versions WHERE run_id=?', (run_id,)
             ).fetchone()
+            or conn.execute(
+                'SELECT 1 FROM agent_native_purpose_evaluations WHERE run_id=?',(run_id,)
+            ).fetchone()
         ):
             break
         kind = candidate
