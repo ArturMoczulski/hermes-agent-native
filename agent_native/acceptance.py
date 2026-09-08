@@ -76,7 +76,8 @@ def decide(conn, *, actor, agent_id, result_id, request_id, decision,
                           'Owner requested revision of result '+result_id+': '+note, 'pending', _now()))
         # A decision is actionable input. An enabled cadence may pick it up now,
         # while its normal busy/terminal admission guards still apply.
-        conn.execute('UPDATE agent_native_cadence SET next_due=? WHERE agent_id=? AND enabled=1', (_now(), agent_id))
+        from agent_native.cadence import wake
+        wake(conn, agent_id, 'owner_result_decision')
         run = conn.execute('SELECT id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1', (agent_id,)).fetchone()
         if run:
             from agent_native.work_state import event

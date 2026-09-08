@@ -1,3 +1,18 @@
+## Durable actionable-input cadence wake — 2026-09-08
+
+AN-75 now distinguishes a routine scheduled check-in from a prompt reconsideration
+requested by durable actionable input. Owner question answers, owner result decisions,
+direct-parent result evaluations and newly submitted child results create one retained
+wake signal for an enabled cadence agent. The signal remains while work is busy or a
+gate still applies, survives restart, bypasses the ordinary post-attempt interval once,
+and is consumed atomically only when a fresh attempt is admitted. Disabled cadence is
+never enabled implicitly, and ordinary check-ins retain their configured spacing.
+
+A direct child's new result now wakes its parent so a long-running manager can inspect
+and evaluate delegated work without waiting for a distant daily cadence. Focused TDD
+reproduced the full-interval delay before implementation. Thirty cadence, question,
+acceptance and child-supervision regressions plus focused Ruff pass.
+
 ## Output-centered owner review — 2026-09-08
 
 AN-9 now places owner decisions beside the exact immutable saved-output version under

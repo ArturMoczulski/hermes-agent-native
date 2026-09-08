@@ -212,10 +212,8 @@ def evaluate(conn, *, validate, parent_id, parent_run_id, call_id, arguments):
             )
         # Every parent evaluation is actionable context for the child's next
         # review; normal cadence busy and lifecycle guards still decide admission.
-        conn.execute(
-            'UPDATE agent_native_cadence SET next_due=? WHERE agent_id=? AND enabled=1',
-            (created_at, child_id),
-        )
+        from agent_native.cadence import wake
+        wake(conn, child_id, 'parent_result_evaluation', requested_at=created_at)
         from agent_native.work_state import event
         event(conn, parent_run_id, 'work.child_result_' + decision,
               f'{decision.replace("_", " ").title()} child result {result_id}.')

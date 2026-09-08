@@ -1,4 +1,5 @@
 """Parents observe descendant evidence and evaluate direct-child results."""
+from datetime import datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -65,6 +66,32 @@ def test_parent_inspects_descendant_work_and_reads_exact_output(broker):
     assert overview['outputs'][0]['output_id'] == saved['output_id']
     assert content['content'] == 'Verified child evidence.'
     assert content['next_offset'] is None
+
+
+def test_new_child_result_wakes_parent_after_busy_work_without_waiting_full_cadence(broker):
+    from agent_native import cadence
+
+    s = broker
+    _, result, _ = child_result(s)
+    finished_at = result['created_at']
+    reconsider_at = (datetime.fromisoformat(finished_at) + timedelta(seconds=1)).isoformat()
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='completed',finished_at=? WHERE id=?",
+        (finished_at, s.work['id']),
+    )
+
+    [queued] = cadence.queue_due(s.conn, now=reconsider_at)
+
+    assert queued != s.work['id']
+    assert s.conn.execute(
+        'SELECT count(*) FROM agent_native_cadence_wakes WHERE agent_id=?',
+        (s.root['id'],),
+    ).fetchone()[0] == 0
+    summary = s.conn.execute(
+        "SELECT summary FROM agent_native_work_events WHERE run_id=? AND kind='work.queued'",
+        (queued,),
+    ).fetchone()[0]
+    assert 'child_result' in summary
 
 
 def test_managed_worker_receives_child_supervision_tools():

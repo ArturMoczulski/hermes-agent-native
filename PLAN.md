@@ -85,6 +85,11 @@ a settled receipt remains outcome-unknown for owner review. Owner pause remains
 terminal and cannot auto-recover. Cadence failures now receive the same conservative
 classification: a stopped attempt with fully settled effects becomes retryable and
 continues in a fresh session at the next check-in; all other failures remain blocked.
+Actionable-input wake-up is now durable and distinct from routine interval scheduling.
+Owner answers, owner result decisions, parent evaluations and new direct-child results
+make enabled cadence promptly eligible after current work settles, even when the normal
+interval is long. The retained wake survives busy work and restart, is consumed only
+with fresh admission, and never enables disabled cadence.
 Repeated failures remain visible as separate attempts for later no-progress policy.
 A normal per-attempt runtime limit is now recorded separately
 from owner pause and remains eligible for a later cadence attempt; legacy timeout

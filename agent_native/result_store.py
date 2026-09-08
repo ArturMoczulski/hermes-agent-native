@@ -176,6 +176,12 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
                      '(id,agent_id,run_id,item_id,call_id,request_sha256,record_json,record_sha256,created_at) '
                      'VALUES (?,?,?,?,?,?,?,?,?)',
                      (record['id'],agent_id,run_id,args['item_id'],call_id,request_hash,encoded,_hash(encoded),record['created_at']))
+        parent = conn.execute(
+            'SELECT parent_id FROM agent_native_agent_parents WHERE agent_id=?', (agent_id,),
+        ).fetchone()
+        if parent:
+            from agent_native.cadence import wake
+            wake(conn, parent[0], 'child_result', requested_at=record['created_at'])
         if record_progress is not None:
             record_progress(conn, record)
             validate(conn)
