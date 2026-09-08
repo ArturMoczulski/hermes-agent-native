@@ -137,3 +137,12 @@ The unknown receipt remains unknown and is never resent. This exception does not
 cover questions, output links, ordinary progress, or task/project changes. The same
 classification permits cadence after the owner-recovered attempt completes;
 failed work itself still requires owner recovery.
+
+### Owner recovery control
+
+Thinking cadence exposes Retry failed work for the latest failed attempt. The
+owner reviews the attempt and confirms Start recovery. The request pins the
+failed attempt and purpose revision; repeating an unconfirmed request cannot
+create another recovery. A rejected request shows a review message. Paused and
+unknown work are not eligible. This manual control does not implement automatic
+dependency recovery; AN-75 tracks that remaining work.

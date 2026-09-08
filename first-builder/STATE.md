@@ -1,3 +1,16 @@
+## Owner failed-work recovery UI — 2026-09-08
+
+AN-75 now exposes Retry failed work in Thinking cadence for failed attempts.
+Owner reviews the pinned failed attempt, then Start recovery calls the existing
+revision-checked/idempotent API. Old history and outputs remain. A rejected or
+unconfirmed response stays visible without claiming success; retry retains the
+same failed-attempt identity. Paused/unknown attempts are not offered recovery.
+Playwright RED showed the missing control; GREEN verifies a real failed native
+fixture run, visible409 rejection, then real recovery with exactly two retained
+attempts. The existing owner/idempotent API case also passes. No paid models used.
+AN-77 priority corrected to low because its remaining work is owner-deferred.
+AN-75 remains In Progress: automatic dependency recovery is the next increment.
+
 ## Luna recovery completed — 2026-09-08
 
 Recovery ca1d3f61-bdda-5af0-8dd0-eecdfa1e0ab4 completed with10 model calls

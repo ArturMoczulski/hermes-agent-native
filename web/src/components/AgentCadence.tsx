@@ -11,6 +11,20 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
   const [seconds,setSeconds]=useState('');
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
+  const [recovery,setRecovery]=useState<{id:string;revision:number}>();
+  const [recoveryStatus,setRecoveryStatus]=useState('');
+  async function retryWork(){
+    if(!recovery)return;
+    setBusy(true);setError('');
+    try{
+      await fetchJSON(`/api/agent-native/agents/${agentId}/work/retry`,{
+        method:'POST',headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({expected_revision:recovery.revision,expected_run_id:recovery.id})});
+      setRecovery(undefined);setRecoveryStatus('Recovery requested. A new attempt will inspect current work before continuing.');
+    }catch{
+      setError('Recovery was not confirmed. Unresolved Plane delivery, changed purpose, or newer work may block it. Review activity and refresh; retrying this request keeps the same recovery identity.');
+    }finally{setBusy(false);}
+  }
   const api=`/api/agent-native/agents/${agentId}`;
   useEffect(()=>{
     let active=true;
@@ -39,6 +53,14 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
     <Button disabled={busy||!Number(seconds||cadence?.interval_seconds)} onClick={()=>{void save(true);}}>Enable or update cadence</Button>
     <Button disabled={busy||!cadence?.enabled} onClick={()=>{void save(false);}}>Disable cadence</Button>
     {error&&<p role="alert">{error}</p>}
+    {attempts[0]?.state==='failed'&&!recovery&&<Button disabled={busy} onClick={()=>{setRecovery({id:attempts[0].id,revision});setRecoveryStatus('');setError('');}}>Retry failed work</Button>}
+    {recovery&&<div role="group" aria-label="Review failed work recovery" className="space-y-2 border rounded p-3">
+      <p>Previous attempts and saved outputs are preserved. Recovery starts a new attempt using this agent's current model and existing execution limits. Review the failure before continuing. Uncertain task changes block recovery.</p>
+      <p className="text-xs break-all">Failed attempt: {recovery.id}</p>
+      <Button disabled={busy} onClick={()=>{void retryWork();}}>Start recovery</Button>
+      <Button disabled={busy} onClick={()=>{setRecovery(undefined);setError('');}}>Cancel</Button>
+    </div>}
+    {recoveryStatus&&<p role="status">{recoveryStatus}</p>}
     <h3 className="font-semibold">Recent attempts</h3>
     <p className="text-sm">Latest 20 attempts, newest first.</p>
     <ul>{attempts.map(a=><li key={a.id} className="border-t py-2"><span>{a.state}</span> · <time>{new Date(a.created_at).toLocaleString()}</time><p>{a.summary}</p><code className="text-xs break-all">{a.id}</code></li>)}</ul>
