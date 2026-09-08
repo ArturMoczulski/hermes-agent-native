@@ -56,6 +56,8 @@ def _read(conn, agent_id):
     from agent_native import model_settings
     root['model_selection'] = model_settings.get_selection(conn, agent_id)
     root['model_activity'] = model_settings.activity(conn, agent_id)
+    from agent_native.autonomy import get_settings as get_autonomy
+    root['autonomy'] = get_autonomy(conn, agent_id)
     if root['work'] is not None:
         root['execution'] = root['work']['state']
     return root
@@ -69,7 +71,7 @@ def _event(conn, root, kind):
     )
 
 
-def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None):
+def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None, autonomy_level=5):
     """Persist identity, first-review intent and event together; never launch a worker.
 
     The intent records the creating owner's request, not execution authority or
@@ -84,6 +86,8 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
     original_work = limits_json(work) if work is not None else None
     from agent_native import model_settings
     original_model = model_settings.creation_input(model_selection)
+    from agent_native import autonomy
+    autonomy_level = autonomy.validate_level(autonomy_level)
     with write_txn(conn):
         previous = conn.execute(
             'SELECT id, name, initial_purpose FROM agent_native_agents WHERE request_id = ?',
@@ -105,6 +109,9 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
             ).fetchone()
             if (saved_model[0] if saved_model else None) != original_model:
                 raise ConflictError('Creation request already used with a different model selection')
+            saved_autonomy = conn.execute('SELECT level FROM agent_native_creation_autonomy WHERE agent_id=?', (previous[0],)).fetchone()
+            if (saved_autonomy[0] if saved_autonomy else autonomy.DEFAULT_LEVEL) != autonomy_level:
+                raise ConflictError('Creation request already used with a different autonomy level')
             return _read(conn, previous[0])
         agent_id = str(uuid4())
         conn.execute(
@@ -123,6 +130,7 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
             (str(uuid4()), agent_id, 'creation', _now()),
         )
         model_settings.initialize_agent(conn, agent_id, model_selection)
+        autonomy.initialize_agent(conn, agent_id, autonomy_level)
         from agent_native.startup import queue_setup
         queue_setup(conn, agent_id)
         if work is not None:

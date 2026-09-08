@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import type { FormEvent } from "react";
 import { Link, useNavigate } from "react-router";
-import { agentsEndpoint as endpoint, agentWorkStatus, validWorkLimits, validModelChoice, modelChoiceLabel, type Agent, type WorkLimits, type ModelChoice, type DefaultAgentModel } from "@/lib/agent-native";
+import { agentsEndpoint as endpoint, agentWorkStatus, validWorkLimits, validModelChoice, modelChoiceLabel, autonomyLabels, type Agent, type WorkLimits, type ModelChoice, type DefaultAgentModel } from "@/lib/agent-native";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
@@ -9,7 +9,7 @@ import { fetchJSON, HERMES_BASE_PATH } from "@/lib/api";
 import { usePageHeader } from "@/contexts/usePageHeader";
 import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentModelControls";
 
-type PendingCreation = { request_id: string; name: string; purpose: string; work?: WorkLimits; model_selection?: ModelChoice };
+type PendingCreation = { request_id: string; name: string; purpose: string; work?: WorkLimits; model_selection?: ModelChoice; autonomy_level: number };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
 const defaultWorkLimits: WorkLimits = { timeout_seconds: 180, max_iterations: 50 };
 
@@ -20,11 +20,12 @@ function restoreCreation(): PendingCreation | null {
       && typeof value.name === "string" && value.name.trim() && value.name.length <= 200
       && typeof value.purpose === "string" && value.purpose.trim() && value.purpose.length <= 20000
       && (value.work === undefined || validWorkLimits(value.work))
-      && (value.model_selection === undefined || validModelChoice(value.model_selection))) {
+      && (value.model_selection === undefined || validModelChoice(value.model_selection))
+      && Number.isInteger(value.autonomy_level) && value.autonomy_level >= 1 && value.autonomy_level <= 5) {
       return { request_id: value.request_id, name: value.name, purpose: value.purpose,
         ...(value.model_selection ? { model_selection: { provider: value.model_selection.provider, model: value.model_selection.model,
           ...(value.model_selection.reasoning_effort !== undefined ? { reasoning_effort: value.model_selection.reasoning_effort } : {}) } } : {}),
-        ...(value.work ? { work: { timeout_seconds: value.work.timeout_seconds, max_iterations: value.work.max_iterations } } : {}) };
+        ...(value.work ? { work: { timeout_seconds: value.work.timeout_seconds, max_iterations: value.work.max_iterations } } : {}), autonomy_level: value.autonomy_level };
     }
   } catch { /* Storage can be unavailable; submission will check before any write. */ }
   return null;
@@ -40,6 +41,7 @@ export default function AgentsPage() {
   const [modelSelection, setModelSelection] = useState<ModelChoice | null>(initialRequest?.model_selection ?? null);
   const [choosingModel, setChoosingModel] = useState(false);
   const [purpose, setPurpose] = useState(initialRequest?.purpose ?? "");
+  const [autonomyLevel, setAutonomyLevel] = useState(initialRequest?.autonomy_level ?? 5);
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(initialRequest?.work?.timeout_seconds ?? defaultWorkLimits.timeout_seconds));
   const [modelSteps, setModelSteps] = useState(String(initialRequest?.work?.max_iterations ?? defaultWorkLimits.max_iterations));
   const workLimits = { timeout_seconds: Number(timeoutSeconds), max_iterations: Number(modelSteps) };
@@ -80,10 +82,11 @@ export default function AgentsPage() {
     if (pending.current?.name !== name.trim() || pending.current?.purpose !== purpose.trim()
       || pending.current?.work?.timeout_seconds !== work?.timeout_seconds
       || pending.current?.work?.max_iterations !== work?.max_iterations
+      || pending.current?.autonomy_level !== autonomyLevel
       || pending.current?.model_selection?.provider !== modelSelection?.provider
       || pending.current?.model_selection?.model !== modelSelection?.model
       || (pending.current?.model_selection?.reasoning_effort ?? "default") !== (modelSelection?.reasoning_effort ?? "default")) {
-      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), work, ...(modelSelection ? { model_selection: modelSelection } : {}) };
+      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), work, autonomy_level: autonomyLevel, ...(modelSelection ? { model_selection: modelSelection } : {}) };
     }
     try {
       // Persist before POST: a committed response can be lost across a reload.
@@ -108,6 +111,7 @@ export default function AgentsPage() {
       setTimeoutSeconds(String(defaultWorkLimits.timeout_seconds));
       setModelSteps(String(defaultWorkLimits.max_iterations));
       setModelSelection(null);
+      setAutonomyLevel(5);
       pending.current = null;
       void navigate(`/agents/${encodeURIComponent(agent.id)}`);
     } catch {
@@ -146,6 +150,14 @@ export default function AgentsPage() {
           </div>
           <p className="text-xs text-muted-foreground">Each agent keeps its own selection. You can change it later in agent details.</p>
         </fieldset>
+        <div className="space-y-2">
+          <Label htmlFor="new-agent-autonomy">Autonomy</Label>
+          <select id="new-agent-autonomy" value={autonomyLevel} disabled={saving} className="w-full rounded-md border bg-background px-3 py-2"
+            onChange={event => setAutonomyLevel(Number(event.target.value))}>
+            {Object.entries(autonomyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+          </select>
+          <p className="text-xs text-muted-foreground">Highly autonomous is the default. The agent keeps working and asks only when a decision is critical or outside its authority.</p>
+        </div>
         <details className="rounded-lg border p-4">
           <summary className="cursor-pointer text-sm font-medium">Advanced work limits <span className="ml-2 text-muted-foreground">· 3 minutes · 50 model steps by default</span></summary>
           <fieldset className="mt-4 space-y-3" disabled={saving}>

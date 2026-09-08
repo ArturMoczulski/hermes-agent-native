@@ -19,7 +19,7 @@ from hermes_cli.kanban_db_connect import connect_closing, write_txn
 _log = logging.getLogger(__name__)
 
 
-def _initial_context(snapshot, contracts):
+def _initial_context(snapshot, contracts, autonomy_policy=None):
     """Build the managed-work instruction with a clear planning/output boundary."""
     return ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
             'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
@@ -40,7 +40,8 @@ def _initial_context(snapshot, contracts):
             'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
             'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
             'External links are unverified references, never proof of saved content or successful actions. '
-            'Leave the task nonterminal for owner review; '
+            +(autonomy_policy or 'Evaluation is required. Continue independently unless an explicit requirement makes owner acceptance mandatory.')+' '
+            'Leave the task nonterminal only when owner acceptance is actually required; otherwise continue useful work under the autonomy policy. '
             'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
             'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+
             '\nSupported Plane operation argument contracts:\n'+json.dumps(contracts))
@@ -270,7 +271,8 @@ class _Run:
                             'content':saved['content'][:8000],'truncated':len(saved['content'])>8000})
                     snapshot['questions'] = recent_questions(conn,root['id'])
                     snapshot['continuation_note'] = 'Review earlier results and outputs; do not repeat finished work. Read work_feedback and current Plane comments with work_comments before substantive work. Waiting is a valid result; do not invent new work.'
-                    initial = _initial_context(snapshot, {k: v for k, v in _CONTRACTS.items() if k != 'comment.create'})
+                    initial = _initial_context(snapshot, {k: v for k, v in _CONTRACTS.items() if k != 'comment.create'},
+                                               self.work['autonomy']['policy'])
                     skill = (Path(__file__).resolve().parents[1] / 'skills/productivity/plane-project-management/SKILL.md').read_text()
                     attempt = {'run_id':self.work['id'],'agent_id':root['id'],'soul_revision':root['soul_revision'],
                                'name':root['name'],'purpose':root['purpose'],'workspace':str(self.workspace),
@@ -447,6 +449,10 @@ class WorkService:
                         continue
                     from agent_native.model_settings import snapshot_attempt
                     work['model_selection'] = snapshot_attempt(conn, agent_id, 'work', work['id'])
+                    from agent_native.autonomy import snapshot_attempt as snapshot_autonomy, policy
+                    admission_id = str(uuid4())
+                    work['autonomy'] = snapshot_autonomy(conn, agent_id, work['id'], admission_id)
+                    work['autonomy']['policy'] = policy(work['autonomy']['level'])
                     conn.execute("UPDATE agent_native_work_runs SET state='preparing',started_at=? WHERE id=?",(_now(),work['id']))
                     state.event(conn,work['id'],'work.preparing','Reading the prepared project before starting the native worker.')
                 run = _Run(self,work)

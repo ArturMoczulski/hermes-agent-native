@@ -35,6 +35,7 @@ export type Agent = {
   removed_at?: string | null;
   model_selection?: ModelSelection | null;
   model_activity?: ModelActivity[];
+  autonomy: AutonomySettings;
   id: string;
   name: string;
   purpose: string;
@@ -63,6 +64,12 @@ export type Agent = {
     soul_revision: number;
     requested_at: string;
   } | null;
+};
+
+export type AutonomySettings = { level: number; revision: number; updated_at: string | null };
+export const autonomyLabels: Record<number, string> = {
+  1: "1 · Approval-driven", 2: "2 · Cautious", 3: "3 · Balanced",
+  4: "4 · Proactive", 5: "5 · Highly autonomous",
 };
 
 export const agentsEndpoint = "/api/agent-native/agents";

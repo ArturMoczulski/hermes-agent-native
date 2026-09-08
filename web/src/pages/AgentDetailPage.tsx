@@ -2,6 +2,7 @@ import { AgentCadence } from '@/components/AgentCadence';
 import { WorkQuestions } from '@/components/WorkQuestions';
 import { WorkFeedback } from '@/components/WorkFeedback';
 import { AgentProgressSettings } from "@/components/AgentProgressSettings";
+import { AgentAutonomySettings } from "@/components/AgentAutonomySettings";
 import { useEffect, useRef, useState } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
@@ -115,6 +116,7 @@ export default function AgentDetailPage() {
             setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
           }} />
         <AgentProgressSettings key={`progress-settings:${agent.id}`} agentId={agent.id} />
+        <AgentAutonomySettings key={`autonomy:${agent.id}`} agentId={agent.id} />
         <WorkControls key={`work:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {

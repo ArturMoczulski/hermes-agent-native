@@ -55,6 +55,7 @@ class CreateAgent(BaseModel):
     purpose: str = Field(min_length=1, max_length=20000)
     work: WorkLimits | None = None
     model_selection: ModelChoice | None = None
+    autonomy_level: int = Field(default=5, strict=True, ge=1, le=5)
 
 
 @router.get('')
@@ -263,6 +264,37 @@ class ProgressSettings(BaseModel):
     model_config = ConfigDict(extra='forbid')
     verbosity: str = Field(strict=True, min_length=1, max_length=16)
     expected_revision: int = Field(strict=True, ge=1)
+
+
+class AutonomySettings(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    level: int = Field(strict=True, ge=1, le=5)
+    expected_revision: int = Field(strict=True, ge=1)
+
+
+@router.get('/{agent_id}/autonomy')
+def autonomy_settings(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.autonomy import get_settings
+    with connect_closing(board='default') as conn:
+        try:
+            return get_settings(conn, agent_id)
+        except KeyError as exc:
+            raise HTTPException(404, 'Agent not found') from exc
+
+
+@router.put('/{agent_id}/autonomy')
+def update_autonomy_settings(agent_id: str, body: AutonomySettings, actor=Depends(owner_session)):
+    from agent_native.autonomy import change_settings
+    with connect_closing(board='default') as conn:
+        try:
+            change_settings(conn, actor=actor, agent_id=agent_id, **body.model_dump())
+            return identity.get_root(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(404, 'Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
 
 
 @router.get('/{agent_id}/progress-settings')
