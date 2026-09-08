@@ -122,11 +122,18 @@ continue with a reason, change approach, investigate a blocker, or escalate
 through the parent chain. Detection alone must not automatically retire an agent
 or change its purpose.
 
+For the initial failure-loop detector, three consecutive safely retryable cadence
+attempts without a new result, saved output, useful learning, or intervening owner
+direction create one evidence-linked concern and suspend cadence before a fourth
+attempt. The owner can configure the per-agent threshold from two to ten; three is
+the default. Explicit resume resolves the concern and resets that sequence without
+replaying prior work. A later recurrence creates a new concern.
+
 Legitimate waiting, exploration that produces useful learning, and long-running
 work must be distinguishable from repetition without progress. Uncertain cases
 are flagged for review rather than presented as proven failure. The timing and
-criteria for detection remain to be specified for different kinds of work;
-the capability itself is required. Recurring concerns remain linked so a new
+criteria for broader detection remain to be specified for different kinds of
+work. Recurring concerns remain linked so a new
 check-in does not produce an unrelated duplicate alert.
 
 ### Check-in continuity and controls

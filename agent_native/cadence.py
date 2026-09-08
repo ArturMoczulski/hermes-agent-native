@@ -33,6 +33,10 @@ def configure(conn, *, actor, agent_id, expected_revision, interval_seconds, ena
         from agent_native.work_state import read_work, event
         work=read_work(conn,agent_id)
         if not work: raise ConflictError('Configure bounded work before enabling cadence')
+        if enabled and conn.execute(
+                "SELECT 1 FROM agent_native_progress_concerns WHERE agent_id=? AND status='open'",
+                (agent_id,)).fetchone():
+            raise ConflictError('Review the open progress concern before resuming cadence')
         if enabled and work['state'] in ('paused','failed','unknown','stopping'):
             raise ConflictError('Work requires owner review before cadence can be enabled')
         due=(datetime.fromisoformat(_now())+timedelta(seconds=interval_seconds)).isoformat()
@@ -49,6 +53,8 @@ def queue_due(conn, *, now=None, busy_agents=()):
     with write_txn(conn):
         for agent_id,revision,interval,due in conn.execute('SELECT agent_id,soul_revision,interval_seconds,next_due FROM agent_native_cadence WHERE enabled=1 AND next_due<=?',(now,)).fetchall():
             if agent_id in busy_agents: continue
+            from agent_native.progress_concerns import suspend_if_stalled
+            if suspend_if_stalled(conn, agent_id): continue
             root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
             previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if (not previous or root[0]!=revision or previous[2]!=revision

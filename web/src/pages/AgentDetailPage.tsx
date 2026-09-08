@@ -255,6 +255,7 @@ function CompactAgentView({ agent }: { agent: Agent }) {
     && !event.summary.startsWith("Plane: inspected ")
   ).reverse().slice(0, 20);
   return <div className="space-y-6">
+    <ProgressConcernAttention agent={agent} />
     <WorkResults agent={agent} attentionOnly />
     {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
     <div aria-label="Current agent summary" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
@@ -275,6 +276,41 @@ function CompactAgentView({ agent }: { agent: Agent }) {
       <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
     </section>
   </div>;
+}
+
+function ProgressConcernAttention({ agent }: { agent: Agent }) {
+  const concern = agent.progress_concerns?.find((entry) => entry.status === "open");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
+  if (!concern && !status) return null;
+  async function resume() {
+    if (!concern || busy) return;
+    setBusy(true); setError("");
+    try {
+      await fetchJSON(agentsEndpoint + "/" + encodeURIComponent(agent.id) + "/progress-concerns/" + encodeURIComponent(concern.id) + "/resume", {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expected_revision: agent.soul_revision, request_id: crypto.randomUUID() }),
+      });
+      setStatus("Automatic work resumed. The next attempt will use current purpose and project state.");
+    } catch {
+      setError("Could not confirm resume. Reload the agent before trying again.");
+    } finally { setBusy(false); }
+  }
+  return <section aria-label="Needs your attention" className="space-y-3 rounded-xl border border-amber-500/50 bg-amber-500/5 p-5">
+    <h2 className="text-lg font-semibold">Needs your attention</h2>
+    {concern && <>
+      <h3 className="font-medium">Repeated work without progress</h3>
+      <p>{concern.summary}</p>
+      <p className="text-sm text-muted-foreground">{concern.attempt_ids.length} consecutive attempts are linked as evidence. Automatic work is suspended.</p>
+      <details className="rounded border p-3 text-sm"><summary className="cursor-pointer">Review supporting attempts</summary>
+        <ul className="mt-2 space-y-1">{concern.attempt_ids.map((attemptId) => <li key={attemptId}><code className="break-all">{attemptId}</code></li>)}</ul>
+      </details>
+      <Button disabled={busy} onClick={() => { void resume(); }}>{busy ? "Resuming…" : "Resume automatic work"}</Button>
+    </>}
+    {status && <p role="status">{status}</p>}
+    {error && <p role="alert">{error}</p>}
+  </section>;
 }
 
 function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpdate }: {

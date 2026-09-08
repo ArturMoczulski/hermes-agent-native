@@ -44,6 +44,8 @@ export type Agent = {
   created_at: string;
   work: AgentWork | null;
   cadence?: { enabled: boolean; interval_seconds: number | null; next_due: string | null };
+  progress_concerns?: ProgressConcern[];
+  progress_concern_settings?: { failure_threshold: number };
   setup: {
     activation_id: string;
     status: "queued" | "preparing" | "blocked" | "failed" | "unresolved" | "ready" | "superseded";
@@ -64,6 +66,17 @@ export type Agent = {
     soul_revision: number;
     requested_at: string;
   } | null;
+};
+
+export type ProgressConcern = {
+  id: string;
+  kind: "repeated_unproductive_failure";
+  status: "open" | "resolved";
+  attempt_ids: string[];
+  summary: string;
+  created_at: string;
+  resolved_at: string | null;
+  response: string | null;
 };
 
 export type AutonomySettings = { level: number; revision: number; updated_at: string | null };

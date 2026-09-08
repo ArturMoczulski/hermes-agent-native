@@ -1,8 +1,9 @@
 # Activity-without-progress detection decision
 
-This document prepares the owner decision tracked by Plane AN-67 and the first
-implementation slice of AN-51. Detection is required by the product specification;
-the threshold and automatic response are not yet adopted.
+Status: **Option B approved by the owner on 2026-09-08.**
+
+This document records the owner decision tracked by Plane AN-67 and the first
+implementation slice of AN-51.
 
 ## First detectable pattern
 
@@ -32,7 +33,7 @@ operation is taking too long.
 
 ## Recommended behavior
 
-Adopt option B as the initial framework default. Store the threshold as an
+Option B is the initial framework default. Store the threshold as an
 owner-controlled per-agent setting with a default of 3 and an allowed range of
 2–10. The first UI may use the default without exposing customization; exposing
 the setting belongs in Agent settings rather than the compact operating view.

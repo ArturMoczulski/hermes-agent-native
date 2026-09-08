@@ -32,7 +32,8 @@ from agent_native.feedback import SCHEMA as FEEDBACK_SCHEMA
 from agent_native.questions import SCHEMA as QUESTIONS_SCHEMA
 from agent_native.cadence import SCHEMA as CADENCE_SCHEMA
 from agent_native.comments import SCHEMA as COMMENTS_SCHEMA
-WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA
+from agent_native.progress_concerns import SCHEMA as CONCERNS_SCHEMA
+WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA
 
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 

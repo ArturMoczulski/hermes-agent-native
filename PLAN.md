@@ -162,9 +162,9 @@ check-ins, prior-work context, Plane-feedback revision and visible attempt histo
 Whole-purpose lifecycle acceptance and activity-without-progress policy remain subsequent work;
 see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.
 
-AN-67 now has a concrete threshold decision in
+AN-67's recommended threshold and response are now owner-approved in
 [activity-without-progress detection](implementation/no-progress-detection.md).
-The recommended first AN-51 slice counts only consecutive safely retryable cadence
+The first AN-51 slice counts only consecutive safely retryable cadence
 failures with no result, output, useful learning or new owner direction; after three,
-it records one concern and suspends cadence. Implementation remains blocked until
-the owner adopts a threshold and response, as required by the existing AN-67 item.
+it records one concern and suspends cadence. The owner-controlled threshold defaults
+to three, accepts two through ten, and explicit resume resolves and resets the sequence.

@@ -23,7 +23,8 @@ behavior or introduce implementation choices.
 | Retained-work operations (AN-68) | What retention periods, export/deletion controls and deliberate transfers outside replacement should be supported? | Retain history/results/unfinished-work records; no automatic reassignment or erasure. Operational choices remain open separately from the accepted lifespan and cancellation rules. |
 | Resume and project pause | How does subtree resume treat separately paused descendants? Does project pause stop only work belonging to that project? | Preserve separate descendant pauses; project pause scope remains open. |
 | Timing and interruptions | Which events prompt immediate reconsideration? How are missed check-ins and reminders handled? | Answers and results can enable prompt reconsideration; redundant timer reviews can be combined without losing messages. |
-| Capacity limits and progress detection settings | What existing resource controls apply, and what evidence and timing identify activity without progress? | Progress detection and review are required; exact thresholds and resource defaults remain open. |
+| Capacity limits | What installation-wide worker and child defaults apply, and how is capacity allocated fairly across roots? | Exact resource defaults remain open. |
+| Broader progress detection | Which domain-aware signals identify repeated replanning and unresolved delegation without misclassifying legitimate exploration or waiting? | The initial repeated-failure rule is resolved below; broader signals remain open. |
 
 The earlier writer milestone and subsequent Builder handoff use **AN-70** for
 explicit local runtime limits, required before real managed admission. This now
@@ -39,6 +40,16 @@ concern work and children after stopping, not whether stopping happens.
 
 Retirement is settled: retiring an agent retires every descendant. They do not
 automatically remain active or get reassigned.
+
+## Resolved: initial activity-without-progress threshold
+
+The owner approved AN-67's balanced rule on 2026-09-08. Three consecutive safely
+retryable cadence attempts without a new result, saved output, useful learning or
+new owner direction create one progress concern and suspend cadence. The threshold
+is owner-controlled per agent from two to ten and defaults to three. Owner resume
+resolves the concern, resets the sequence and starts only a fresh eligible attempt.
+It never replays an attempt or uncertain side effect. Broader progress heuristics
+and general capacity defaults remain open.
 
 ## Resolved: autonomy and permissions
 

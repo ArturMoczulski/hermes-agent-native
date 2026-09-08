@@ -1,3 +1,18 @@
+## Initial no-progress concern and suspension — 2026-09-08
+
+The owner explicitly approved AN-67 option B: three consecutive safely retryable
+cadence failures with no new result, saved output, useful learning or owner direction
+create one durable concern and suspend cadence before a fourth attempt. The threshold
+is stored per agent, defaults to three and accepts two through ten. Compact agent view
+places the concern first, identifies its evidence attempts and offers explicit
+idempotent Resume automatic work. Resume resolves the concern, resets the sequence and
+enables a fresh cadence attempt without replaying prior work.
+
+Playwright RED observed eight attempts, cadence still enabled and zero concerns before
+implementation. GREEN verifies exactly three attempts, one concern, suspended cadence,
+the owner-facing warning and successful resume. Focused persistence tests cover
+deduplication, output/result reset, configurable threshold and idempotent resume.
+
 ## Safe automatic recovery after failed cadence attempts — 2026-09-08
 
 AN-75 now separates retryable failures from failures requiring owner review. When

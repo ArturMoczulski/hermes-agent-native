@@ -411,6 +411,17 @@ class CadenceSettings(BaseModel):
     enabled: bool = Field(strict=True)
 
 
+class ProgressConcernSettings(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    failure_threshold: int = Field(strict=True, ge=2, le=10)
+
+
+class ResumeProgressConcern(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    expected_revision: int = Field(strict=True, ge=1)
+    request_id: str = Field(min_length=1, max_length=128)
+
+
 @router.post('/{agent_id}/cadence')
 def configure_cadence(agent_id: str, body: CadenceSettings, actor=Depends(owner_session)):
     from agent_native.cadence import configure
@@ -419,6 +430,36 @@ def configure_cadence(agent_id: str, body: CadenceSettings, actor=Depends(owner_
             return configure(conn,actor=actor,agent_id=agent_id,**body.model_dump())
         except KeyError as exc:
             raise HTTPException(status_code=404,detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409,detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422,detail=str(exc)) from exc
+
+
+@router.post('/{agent_id}/progress-concerns/settings')
+def configure_progress_concerns(agent_id: str, body: ProgressConcernSettings,
+                                actor=Depends(owner_session)):
+    from agent_native.progress_concerns import configure
+    with connect_closing(board='default') as conn:
+        try:
+            return configure(conn,actor=actor,agent_id=agent_id,**body.model_dump())
+        except KeyError as exc:
+            raise HTTPException(status_code=404,detail='Agent not found') from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422,detail=str(exc)) from exc
+
+
+@router.post('/{agent_id}/progress-concerns/{concern_id}/resume')
+def resume_progress_concern(agent_id: str, concern_id: str,
+                            body: ResumeProgressConcern, actor=Depends(owner_session)):
+    from agent_native.progress_concerns import resume
+    with connect_closing(board='default') as conn:
+        try:
+            resume(conn,actor=actor,agent_id=agent_id,concern_id=concern_id,
+                   **body.model_dump())
+            return identity.get_root(conn,actor=actor,agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404,detail='Progress concern not found') from exc
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409,detail=str(exc)) from exc
         except ValueError as exc:

@@ -58,6 +58,9 @@ def _read(conn, agent_id):
     root['model_activity'] = model_settings.activity(conn, agent_id)
     from agent_native.autonomy import get_settings as get_autonomy
     root['autonomy'] = get_autonomy(conn, agent_id)
+    from agent_native.progress_concerns import list_concerns, settings as concern_settings
+    root['progress_concerns'] = list_concerns(conn, agent_id)
+    root['progress_concern_settings'] = concern_settings(conn, agent_id)
     if root['work'] is not None:
         root['execution'] = root['work']['state']
     return root
