@@ -1,3 +1,14 @@
+## Existing writer recovery completed — 2026-09-08
+
+With 4b95190 deployed, recovery c3dbecc7-eac7-5f95-a27a-d67b671150de on the
+same e6ff85a9-35e8-4357-9165-0be91bb382f4 completed (10 model calls, no error).
+Saved The Bell That Remembered — opening adventure and continuity ledger v1,
+output 7e4b401c-7d70-4ce1-b0dc-d9b3f2dee526, verified through the read API.
+Result and evaluation recorded; foundation and all previous history retained.
+30-second cadence remains enabled. This evidence is completed recovery, not only
+admission. Task remains In Progress for owner review; no literary/lore acceptance
+claimed. AN-89 closed with tests and live result in Plane.
+
 ## Related-task comments and retained recovery — 2026-09-08
 
 Second writer run 1c543cad-c666-433a-9a4e-47dc94be82d0 failed after selecting
