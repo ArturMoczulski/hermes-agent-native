@@ -21,3 +21,8 @@ judgment, obligations, uncertainty and next action.
 Purpose evaluation is meaningful progress for cadence-loop detection. It cannot be
 used as empty status churn: the record is explicit evidence and a lifecycle decision,
 while semantic repetition across otherwise valid records remains future AN-51 work.
+`clarify` must reference an applicable unanswered framework question. While that
+question remains unanswered, cadence stays enabled but does not queue redundant work
+attempts. A trusted owner answer makes the next cadence review immediately eligible;
+it never resumes an owner-paused agent. `wait` leaves the ordinary configured cadence
+in place so the agent can review the dependency or continuing service later.

@@ -9,6 +9,12 @@ lifecycle judgment separately from assignment results and attempt completion. Th
 records count as meaningful progress for cadence-loop detection. Actual retirement
 and its subtree/acceptance safeguards remain later work.
 
+The next enforcement slice distinguishes waiting from clarification. `clarify` requires
+an exact applicable unanswered framework question; cadence does not queue another
+attempt until the trusted owner answer arrives, then becomes immediately eligible.
+Owner-paused work stays paused. `wait` preserves configured cadence for a later review.
+Three focused lifecycle tests and the broader question/cadence/worker regressions pass.
+
 ## Assignment-bound deliverable review — 2026-09-08
 
 AN-9 now supports an owner review requirement for the agent's exact selected Plane

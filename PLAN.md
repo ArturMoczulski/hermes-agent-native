@@ -179,6 +179,10 @@ protected purpose revision, evidence, remaining obligations, uncertainty and nex
 action. Later attempts receive those records and the compact view shows the latest.
 This does not yet retire an agent; lifecycle enforcement and subtree/obligation checks
 remain the next AN-75 increment.
+Clarification enforcement is now connected: the judgment must name an applicable
+unanswered framework question, cadence suppresses redundant attempts while it is open,
+and the trusted owner answer wakes the next review without overriding owner pause.
+`wait` retains normal cadence. Guarded retirement remains next.
 
 AN-67's recommended threshold and response are now owner-approved in
 [activity-without-progress detection](implementation/no-progress-detection.md).

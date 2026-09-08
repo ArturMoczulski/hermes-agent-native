@@ -1,4 +1,4 @@
-"""Durable work questions and immutable owner answers, without implicit wakeups."""
+"""Durable questions whose trusted answers wake enabled cadence, never paused work."""
 from uuid import uuid4
 from agent_native.identity import _require_owner, _now, ConflictError
 from hermes_cli.kanban_db_connect import write_txn
@@ -45,6 +45,7 @@ def answer(conn,*,actor,agent_id,question_id,expected_revision,answer):
                 raise ConflictError('An answer is already recorded; review it before giving new direction')
             return q
         conn.execute('UPDATE agent_native_questions SET answer=?,answered_at=? WHERE id=?',(answer,_now(),question_id))
+        conn.execute('UPDATE agent_native_cadence SET next_due=? WHERE agent_id=? AND enabled=1',(_now(),agent_id))
         from agent_native.work_state import event
         event(conn,q['run_id'],'work.question_answered','Owner answered question: '+question_id)
         return _get(conn,agent_id,question_id)

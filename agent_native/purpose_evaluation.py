@@ -28,7 +28,7 @@ def list_evaluations(conn,agent_id):
     return values
 
 def record(conn,*,validate,agent_id,run_id,call_id,arguments):
-    required={'judgment','evidence','remaining_obligations','uncertainty','next_action'}
+    required={'judgment','evidence','remaining_obligations','uncertainty','next_action','question_id'}
     if not isinstance(arguments,dict) or set(arguments)!=required: raise ValueError('Purpose evaluation fields are required')
     if arguments['judgment'] not in {'continue','wait','clarify','retire_candidate'}: raise ValueError('Invalid purpose judgment')
     for name in ('evidence','remaining_obligations'):
@@ -37,6 +37,16 @@ def record(conn,*,validate,agent_id,run_id,call_id,arguments):
             raise ValueError('Purpose evaluation requires bounded '+name.replace('_',' '))
     if arguments['judgment']=='retire_candidate' and arguments['remaining_obligations']:
         raise ValueError('Retirement candidate cannot retain remaining obligations')
+    question_id=arguments['question_id']
+    if arguments['judgment']=='clarify':
+        if not isinstance(question_id,str) or not question_id: raise ValueError('Clarification requires a question')
+        question=conn.execute('SELECT soul_revision,answer FROM agent_native_questions WHERE id=? AND agent_id=?',
+                              (question_id,agent_id)).fetchone()
+        revision=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
+        if not question or question[0]!=revision[0] or question[1] is not None:
+            raise ValueError('Clarification requires an applicable unanswered question')
+    elif question_id is not None:
+        raise ValueError('Only clarification can reference a question')
     for name in ('uncertainty','next_action'):
         value=arguments[name]
         if (value is not None and not isinstance(value,str)) or (isinstance(value,str) and len(value)>4000): raise ValueError('Invalid '+name)

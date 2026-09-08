@@ -9,7 +9,7 @@ def ask(s, call='ask'):
         'item_id':s.setup['discovery_item_id'],'topic':'ending','question':'Should the ending be hopeful?'}))
 
 
-def test_question_deduplicates_and_owner_answer_is_durable_without_resuming(broker):
+def test_question_deduplicates_and_answer_does_not_resume_owner_paused_work(broker):
     from agent_native import questions
     s=broker
     select(s)
