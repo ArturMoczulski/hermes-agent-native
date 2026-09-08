@@ -2,7 +2,13 @@
 import json
 import re
 
-SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'output_read', 'result_record', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'}
+SHARED_TOOLS = {
+    'child_create', 'child_inspect', 'child_replace', 'child_result_evaluate',
+    'output_publish', 'output_read', 'plane_operation_execute',
+    'plane_resource_inspect', 'progress_report', 'purpose_evaluate',
+    'purpose_retire', 'result_record', 'work_comments', 'work_feedback',
+    'work_item_select', 'work_question',
+}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'

@@ -7,9 +7,11 @@ versions. Six focused acceptance/cadence tests, Ruff, and TypeScript pass.
 
 The focused writer browser journey exposed and fixed an ordinary-agent startup
 regression from successor handoff support (`replacement: null` was treated as an
-object). Its subsequent deterministic model fixture stopped after one step without a
-result, before reaching the decision UI; that separate fixture failure remains visible
-and was not misreported as acceptance evidence.
+object). The deterministic model fixture had also retained the older managed-tool set,
+so it declined the expanded hierarchy tool contract and returned a generic reply. Its
+contract now includes the bounded child and purpose-lifecycle tools; the complete real
+writer planning, output, gated exact-result acceptance, persistence and reload journey
+passes without a paid model.
 
 ## Stacked-pause resume — 2026-09-08
 
