@@ -1,3 +1,21 @@
+## Atomic subtree retirement — 2026-09-08
+
+AN-37 now applies an agent's verified whole-purpose retirement decision to its complete
+active descendant tree in one transaction. The framework first validates every affected
+agent for unanswered questions, required owner reviews, unresolved managed effects and
+uncertain Plane writes. Any blocker aborts the entire operation. A successful retirement
+disables cadence, stops active work, supersedes setup and makes every affected identity
+read-only while retaining work, outputs, conversations and planning history.
+
+The initiating agent keeps `source=agent`; descendants keep `source=parent` plus the
+deciding parent identity and the exact shared evaluation. Existing single-agent records
+migrate to this provenance model without data loss. The retired child view explains the
+decision and links to the parent. Evidence: eight focused retirement and migration tests,
+31 related API/hierarchy/lifecycle regressions, Ruff, the production web build and a
+focused Playwright provenance journey pass.
+
+Next: explicit agent replacement, then stacked-pause resume.
+
 ## Durable atomic subtree pause — 2026-09-08
 
 AN-37 now implements the owner decision that pausing an agent pauses its entire active

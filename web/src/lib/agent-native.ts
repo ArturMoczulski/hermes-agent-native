@@ -35,7 +35,7 @@ export type Agent = {
   parent_id: string | null;
   child_ids: string[];
   removed_at?: string | null;
-  retirement?: { evaluation_id: string; source: "agent" | "parent" | "owner"; retired_at: string } | null;
+  retirement?: { evaluation_id: string; source: "agent" | "parent" | "owner"; decision_agent_id?: string; retired_at: string } | null;
   pause?: { paused: boolean; sources: { source_agent_id: string; requested_at: string }[] };
   subtree_pause?: { source_agent_id: string; affected_agent_ids: string[]; newly_paused_agent_ids: string[]; stopping_agent_ids: string[] };
   model_selection?: ModelSelection | null;

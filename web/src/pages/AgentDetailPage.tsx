@@ -305,7 +305,9 @@ function RetirementSummary({ agent }: { agent: Agent }) {
       <h2 className="text-lg font-semibold">Agent retired</h2>
       <time className="text-sm text-muted-foreground" dateTime={retirement.retired_at}>{new Date(retirement.retired_at).toLocaleString()}</time>
     </div>
-    <p>The agent ended its ongoing role after the framework verified its latest whole-purpose evaluation. Its history and outputs remain available.</p>
+    <p>{retirement.source === "parent"
+      ? <>This agent retired with its subtree after parent <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(retirement.decision_agent_id ?? "")}`}>{retirement.decision_agent_id}</Link> completed its purpose. Its history and outputs remain available.</>
+      : "The agent ended its ongoing role after the framework verified its latest whole-purpose evaluation. Its history and outputs remain available."}</p>
     {evaluation ? <>
       <p><strong>Final assessment:</strong> {evaluation.next_action}</p>
       {evaluation.evidence.length > 0 && <div><p className="font-medium">Evidence</p><ul className="list-disc space-y-1 pl-5">{evaluation.evidence.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}

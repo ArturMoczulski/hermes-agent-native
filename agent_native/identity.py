@@ -50,8 +50,8 @@ def _read(conn, agent_id):
         'FROM agent_native_initial_activations WHERE agent_id = ?', (agent_id,),
     ).fetchone()
     removed = conn.execute('SELECT removed_at FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone()
-    retired = conn.execute('SELECT evaluation_id,source,retired_at FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone()
-    root['retirement'] = (dict(zip(('evaluation_id','source','retired_at'), retired)) if retired else None)
+    retired = conn.execute('SELECT evaluation_id,source,decision_agent_id,retired_at FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone()
+    root['retirement'] = (dict(zip(('evaluation_id','source','decision_agent_id','retired_at'), retired)) if retired else None)
     root['removed_at'] = removed[0] if removed else None
     root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
                        if startup is not None else None)

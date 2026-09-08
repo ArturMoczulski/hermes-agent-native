@@ -733,6 +733,8 @@ def connect(db_path: Optional[Path] = None, *, board: Optional[str] = None) -> s
                 migrate_links(conn)
                 from agent_native.output_store import migrate_stories
                 migrate_stories(conn)
+                from agent_native.retirement import migrate_subtrees
+                migrate_subtrees(conn)
                 _INITIALIZED_PATHS.add(resolved)
 
         conn, _ = _open_configured(path, _init_if_needed)

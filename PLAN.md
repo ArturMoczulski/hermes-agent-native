@@ -213,8 +213,13 @@ cadence, and routes revision or rejection as applicable child feedback. Owner pa
 now a durable, atomic subtree operation: it disables cadence, stops or pauses active
 attempts, blocks new autonomous work and child creation, preserves attempt history, and
 exposes every applicable pause source. Repeating the request is safe, and a separately
-paused descendant retains its own pause cause for the later resume design. Next: atomic
-subtree retirement, followed by replacement and explicit stacked-pause resume controls.
+paused descendant retains its own pause cause for the later resume design. Verified
+whole-purpose retirement now applies atomically to the entire active descendant tree.
+Every descendant is checked for unanswered questions, required owner reviews and
+unresolved effects before any identity changes; one blocker aborts the operation. The
+parent's evaluation is retained as shared provenance, descendants identify the deciding
+parent, active work is stopped, cadence is disabled and all history remains readable.
+Next: replacement controls, followed by explicit stacked-pause resume controls.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.
