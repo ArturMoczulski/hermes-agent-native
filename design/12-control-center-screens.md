@@ -145,6 +145,23 @@ blocked branch, rather than one misleading status for the entire organization.
 
 ## 5. Agent details
 
+The default agent page is a compact human operating view. It answers, in order:
+Does this agent need me? What is its ongoing lifecycle state? What is it doing now?
+What useful work did it recently finish? Where is its Plane project? Put applicable
+unanswered questions and required decisions first, especially when they block work.
+Show current work and the latest few purpose-level outputs with direct links to their
+Plane work items. Keep recent activity in a newest-first table below the overview.
+
+Do not make the default page an exhaustive dump of configuration, attempt transcripts,
+planning snapshots and result evaluations. Put model, autonomy, cadence, reporting,
+purpose and removal controls in clearly named dialogs. Every mutation gives immediate,
+persistent confirmation and states its effect. For example, disabling cadence says
+**Automatic check-ins disabled; this agent will not start new work on its own**.
+
+Provide a visible **Full view** action for complete diagnostics: all attempts, events,
+planning snapshots, results, outputs and configuration. Switching views changes only
+presentation and never changes work or lifecycle state.
+
 Use the same inspector from Chat and Monitor, with an expanded page when needed.
 The header always identifies the agent and parent path. This is one shared
 interface for all agents. Name the work area **Work** and its content collection
@@ -172,6 +189,9 @@ agent whose latest attempt completed or reached its normal limit remains **Activ
 and waiting for its next check-in; show the attempt outcome in Work and attempt
 history. Do not label the agent itself **Completed** unless its whole purpose has
 been evaluated as fulfilled and its lifecycle has ended.
+When cadence is disabled after a successful attempt, show **Paused** or **Automatic
+work off** as the primary lifecycle state and show **Latest attempt: completed** as a
+secondary fact. A disabled Disable-cadence button is not sufficient confirmation.
 Changing model preserves identity and accumulated work. Show when a saved setting
 will take effect; do not imply that an in-flight operation already uses it.
 See [model selection](15-model-selection.md) for default copying, attempt boundaries

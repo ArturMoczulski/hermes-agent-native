@@ -5,6 +5,13 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
+**The compact agent operating view is now the immediate priority.** The default page
+must lead with applicable owner questions/decisions, ongoing lifecycle state, current
+work, recent purpose-level outputs linked to Plane, and compact recent activity. Move
+configuration and destructive controls into dialogs and retain the current exhaustive
+surface as Full view. Separate lifecycle from the latest attempt outcome and give clear
+confirmation after cadence changes; disabling cadence must visibly say that automatic
+work is off rather than leaving the primary status as Completed.
 AN-91 completed the shared planning/output boundary exposed by the live fantasy
 world agent: Plane owns briefs, cycles, task descriptions, criteria and planning
 notes, while Saved outputs contain the actual purpose-level deliverables. Planning
