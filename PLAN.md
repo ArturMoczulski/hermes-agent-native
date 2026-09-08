@@ -203,8 +203,14 @@ one direct child per idempotent tool-call identity, and the child starts queued 
 immutable parent link plus the parent's frozen model, autonomy level, work limits and
 enabled cadence. The managed operation accepts no credentials or configuration overrides,
 and its audit record binds the child to the parent run, reason and inherited settings.
-The next hierarchy increment makes the accountable parent inspect and evaluate delegated
-results before adding atomic subtree pause, retirement and replacement controls.
+The accountable-parent supervision increment is now implemented. Each fresh parent
+attempt receives a bounded direct-child roster; managed inspection exposes descendant
+status, result/output metadata and verified chunks of exact saved-output versions while
+excluding private reasoning and credentials. Only the direct parent can record an
+immutable accepted, revision-requested or rejected evaluation of an exact submitted
+child result. The evaluation remains separate from human acceptance, wakes the child's
+cadence, and routes revision or rejection as applicable child feedback. Next: atomic
+subtree pause, retirement and replacement controls, preserving history throughout.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

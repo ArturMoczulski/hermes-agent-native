@@ -36,6 +36,9 @@ def _checked(row):
     record = json.loads(row[1])
     if _hash(row[1]) != row[2] or record['id'] != row[0]:
         raise ValueError('Result integrity check failed')
+    # Parent evaluation is separate, mutable supervision state rather than part
+    # of the producing child's immutable report.
+    record['parent_evaluation'] = None
     return record
 
 
@@ -54,6 +57,8 @@ def list_results(conn, agent_id):
             }
         result['acceptance'] = decision['decision'] if decision else 'not_evaluated'
         result['owner_decision'] = decision
+        from agent_native.child_supervision import _evaluation as parent_evaluation
+        result['parent_evaluation'] = parent_evaluation(conn, result['id'])
     return results
 
 
@@ -174,4 +179,5 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
         if record_progress is not None:
             record_progress(conn, record)
             validate(conn)
+    record['parent_evaluation'] = None
     return record

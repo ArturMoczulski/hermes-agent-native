@@ -1,3 +1,25 @@
+## Accountable parent supervision — 2026-09-08
+
+AN-37 now gives every admitted parent a fresh bounded roster of its direct
+children and two managed supervision operations. `child_inspect` lists direct
+children, reads public work evidence anywhere in the parent's descendant scope,
+and verifies exact saved-output content in bounded chunks. It excludes private
+reasoning and credentials. Returned child IDs allow recursive navigation without
+depending on conversation memory.
+
+`child_result_evaluate` binds an immutable accepted, revision-requested or rejected
+evaluation to an exact submitted result. Only the direct parent may decide it;
+ancestors can inspect but cannot bypass the accountable parent. The framework
+verifies the child's immutable result hash, records the parent run and call identity,
+wakes the child's cadence, and turns revision or rejection into applicable feedback.
+Parent evaluation remains separate from any human acceptance gate and from the
+parent's own purpose evaluation.
+
+Evidence: six focused supervision tests and nine directly affected delegation,
+result-return and managed-prompt regressions pass. Ruff passes on the changed
+Python surface. Next: atomic subtree pause, retirement and replacement with full
+history preservation.
+
 ## Managed child delegation — 2026-09-08
 
 AN-37 now lets an admitted parent create a registered direct child through the
