@@ -15,6 +15,7 @@ import { fetchJSON } from "@/lib/api";
 import PlanningWork from "./PlanningWork";
 import { AgentModelControls } from "@/components/AgentModelControls";
 import { usePageHeader } from "@/contexts/usePageHeader";
+import { ExternalLink, Settings } from "lucide-react";
 
 type LoadedAgent = { key: string; agent?: Agent; error?: string };
 
@@ -30,6 +31,7 @@ export default function AgentDetailPage() {
   const [retrying, setRetrying] = useState(false);
   const [refreshError, setRefreshError] = useState(false);
   const [reload, setReload] = useState(0);
+  const [settingsOpen, setSettingsOpen] = useState(false);
   const mutationVersion = useRef(0);
   const [loaded, setLoaded] = useState<LoadedAgent>({ key: "" });
   const key = `${agentId}:${reload}`;
@@ -86,6 +88,9 @@ export default function AgentDetailPage() {
   const setupTitles = { queued: "Setup queued", preparing: "Preparing agent", blocked: "Plane setup required", failed: "Setup needs attention", unresolved: "Setup outcome needs checking", ready: "Workspace and planning ready", superseded: "Setup superseded" };
   const startup = agent?.startup;
   const staleRequest = startup && startup.soul_revision !== agent?.soul_revision;
+  const planeUrl = agent?.setup?.project_id && agent.setup.plane_origin && agent.setup.workspace_slug
+    ? `${agent.setup.plane_origin}/${encodeURIComponent(agent.setup.workspace_slug)}/projects/${encodeURIComponent(agent.setup.project_id)}/issues/`
+    : null;
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
@@ -96,7 +101,11 @@ export default function AgentDetailPage() {
         {refreshError && <p role="alert">Live updates are disconnected. Showing the last confirmed state; reconnect to see current progress.</p>}
         <header className="space-y-3">
           <div className="flex flex-wrap items-center justify-between gap-3">
-            <h1 className="text-2xl font-semibold">{agent.name}</h1>
+            <div className="flex items-center gap-2">
+              <h1 className="text-2xl font-semibold">{agent.name}</h1>
+              {!agent.removed_at && <Button size="icon" className="border-0 bg-transparent shadow-none hover:bg-muted" aria-label="Agent settings" title="Agent settings" onClick={() => setSettingsOpen(true)}><Settings aria-hidden="true" /></Button>}
+              {planeUrl && <a className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted" href={planeUrl} target="_blank" rel="noreferrer" aria-label="Open project in Plane" title="Open project in Plane"><ExternalLink aria-hidden="true" /></a>}
+            </div>
             <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
           </div>
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
@@ -108,12 +117,7 @@ export default function AgentDetailPage() {
             </Link>
           </div>
         </header>
-        {!fullView ? <CompactAgentView agent={agent}
-          onMutationStart={() => { mutationVersion.current += 1; }}
-          onUpdate={(result) => {
-            mutationVersion.current += 1;
-            setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
-          }} /> : <>
+        {!fullView ? <CompactAgentView agent={agent} /> : <>
         {agent.removed_at ? <p role="status">Agent removed. Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
           <Button onClick={() => setConfirmRemove(true)}>Remove agent</Button>
           {confirmRemove && <div className="space-y-3">
@@ -218,40 +222,27 @@ export default function AgentDetailPage() {
         <WorkResults key={`results:${agent.id}`} agent={agent} />
         <SavedOutputs key={`outputs:${agent.id}`} agent={agent} />
         </>}
+        {!agent.removed_at && <AgentSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} agent={agent}
+          onMutationStart={() => { mutationVersion.current += 1; }}
+          onUpdate={(result) => {
+            mutationVersion.current += 1;
+            setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
+          }} />}
       </>}
     </div>
   );
 }
 
-function CompactAgentView({ agent, onMutationStart, onUpdate }: {
-  agent: Agent;
-  onMutationStart: () => void;
-  onUpdate: (agent: Agent) => void;
-}) {
-  const [settingsOpen, setSettingsOpen] = useState(false);
+function CompactAgentView({ agent }: { agent: Agent }) {
   const work = agent.work;
   const events = [...(work?.events ?? [])].reverse().slice(0, 20);
-  const planeUrl = agent.setup?.project_id && agent.setup.plane_origin && agent.setup.workspace_slug
-    ? `${agent.setup.plane_origin}/${encodeURIComponent(agent.setup.workspace_slug)}/projects/${encodeURIComponent(agent.setup.project_id)}/issues/`
-    : null;
   return <div className="space-y-6">
     {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} />}
-    <section aria-label="Agent overview" className="space-y-4 rounded-xl border p-5">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-muted-foreground">Ongoing state</p>
-          <h2 className="text-xl font-semibold">{agentWorkStatus(agent)}</h2>
-          {work && <p className="text-sm text-muted-foreground">Latest attempt: {work.state.replace('_', ' ')}</p>}
-        </div>
-        {!agent.removed_at && <Button onClick={() => setSettingsOpen(true)}>Agent settings</Button>}
-      </div>
-      {work?.focus ? <div className="space-y-1">
-        <p className="text-sm text-muted-foreground">{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current work" : "Latest work"}</p>
-        <h3 className="font-semibold">{work.focus.name}</h3>
-        <PlanningItemLink agent={agent} itemId={work.focus.item_id} />
-      </div> : <p className="text-sm">No work item is currently selected.</p>}
-      {planeUrl && <a className="inline-block text-sm underline underline-offset-4" href={planeUrl} target="_blank" rel="noreferrer">Open project in Plane</a>}
-    </section>
+    <div aria-label="Current agent summary" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
+      {work && <span>Latest attempt: {work.state.replace('_', ' ')}</span>}
+      {work?.focus && <><span aria-hidden="true">·</span><span>{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current" : "Latest"} work:</span>
+        <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} /></>}
+    </div>
     <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
       <h2 className="text-lg font-semibold">Recent activity</h2>
@@ -264,7 +255,14 @@ function CompactAgentView({ agent, onMutationStart, onUpdate }: {
       </table></div> : <p>No execution activity recorded yet.</p>}
       <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
     </section>
-    <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
+  </div>;
+}
+
+function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpdate }: {
+  open: boolean; onOpenChange: (open: boolean) => void; agent: Agent;
+  onMutationStart: () => void; onUpdate: (agent: Agent) => void;
+}) {
+  return <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
         <DialogHeader><DialogTitle>Agent settings</DialogTitle><DialogDescription>Changes apply to this agent. Current work keeps the settings it started with.</DialogDescription></DialogHeader>
         <AgentModelControls agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
@@ -272,8 +270,7 @@ function CompactAgentView({ agent, onMutationStart, onUpdate }: {
         <AgentAutonomySettings agentId={agent.id} />
         <AgentCadence agentId={agent.id} revision={agent.soul_revision} />
       </DialogContent>
-    </Dialog>
-  </div>;
+    </Dialog>;
 }
 
 function WorkControls({ agent, onMutationStart, onUpdate }: {
@@ -412,11 +409,11 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
     </article>;
 }
 
-function PlanningItemLink({ agent, itemId }: { agent: Agent; itemId: string }) {
+function PlanningItemLink({ agent, itemId, label = "Open work item" }: { agent: Agent; itemId: string; label?: string }) {
   const setup = agent.setup;
   if (!setup?.plane_origin || !setup.workspace_slug || !setup.project_id) return null;
   return <a className="inline-block text-sm underline underline-offset-4" target="_blank" rel="noreferrer"
-    href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/${encodeURIComponent(itemId)}/`}>Open work item</a>;
+    href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/${encodeURIComponent(itemId)}/`}>{label}</a>;
 }
 
 function SavedOutputs({ agent, limit }: { agent: Agent; limit?: number }) {

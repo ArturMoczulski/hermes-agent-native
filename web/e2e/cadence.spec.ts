@@ -14,8 +14,9 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     const first=(await current()).work;
     await request.post(`${backend}/__e2e__/comment/${id}`,{headers});
     await page.goto(`/agents/${id}`);
-    await expect(page.getByRole('region',{name:'Agent overview'})).toContainText('Latest attempt: completed');
+    await expect(page.getByLabel('Current agent summary')).toContainText('Latest attempt: completed');
     await expect(page.getByRole('link',{name:'Full view'})).toBeVisible();
+    await expect(page.getByRole('link',{name:'Open project in Plane'})).toBeVisible();
     await page.getByRole('button',{name:'Agent settings'}).click();
     const settings=page.getByRole('dialog',{name:'Agent settings'});
     await expect(settings).toBeVisible();
@@ -32,7 +33,7 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     await expect(cadence).toContainText('Automatic check-ins are off');
     await expect(cadence).toContainText('Automatic check-ins disabled. This agent will not start new work on its own.');
     await page.getByRole('button',{name:'Close'}).click();
-    await expect(page.getByRole('region',{name:'Agent overview'})).toContainText('Automatic work off');
+    await expect(page.getByLabel('Execution status')).toHaveText('Automatic work off');
     const latest=(await current()).work;
     expect(latest.session_id).not.toBe(first.session_id);
     expect(latest.outputs.some((o:{version:number})=>o.version===2)).toBe(true);
