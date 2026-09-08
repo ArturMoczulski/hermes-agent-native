@@ -1,3 +1,12 @@
+## Owner-authored deliverable review policy — 2026-09-08
+
+AN-9 now lets the owner require review of every submitted deliverable for one agent,
+independently of its autonomy level. The revisioned setting lives beside autonomy in
+Agent settings, defaults off, and is frozen onto each admitted attempt. A submitted
+result with an exact saved-output version records `owner_policy` as its gate source;
+the worker also receives the frozen policy. The existing version-bound owner decision
+and cadence enforcement then apply unchanged. Assignment-authored gates remain open.
+
 ## Required result review now gates cadence — 2026-09-08
 
 AN-9's stored `review.required` flag previously changed the UI and decision API but

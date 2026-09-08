@@ -32,12 +32,16 @@ test('owner chooses creation autonomy and revises it in agent details',async({pa
   await page.getByRole('button',{name:'Create agent'}).click();
   await expect(page).toHaveURL(/\/agents\/[0-9a-f-]+$/);
   const id=page.url().split('/').pop()!;
+  await page.getByRole('button',{name:'Agent settings'}).click();
   const setting=page.getByRole('region',{name:'Agent autonomy settings',exact:true});
   await expect(setting.getByLabel('Eagerness to continue independently')).toHaveValue('2');
+  const reviewPolicy=setting.getByLabel('Require owner review for every submitted deliverable');
+  await expect(reviewPolicy).not.toBeChecked();
   await setting.getByLabel('Eagerness to continue independently').selectOption('4');
-  await setting.getByRole('button',{name:'Save autonomy level'}).click();
+  await reviewPolicy.check();
+  await setting.getByRole('button',{name:'Save autonomy policy'}).click();
   await expect(setting).toContainText('next admitted work attempt');
-  expect((await(await request.get(`${backend}/api/agent-native/agents/${id}`,{headers})).json()).autonomy.level).toBe(4);
+  expect((await(await request.get(`${backend}/api/agent-native/agents/${id}`,{headers})).json()).autonomy).toMatchObject({level:4,require_owner_review:true});
   await request.post(`${backend}/api/agent-native/agents/${id}/work/pause`,{headers});
 });
 

@@ -291,6 +291,7 @@ class ProgressSettings(BaseModel):
 class AutonomySettings(BaseModel):
     model_config = ConfigDict(extra='forbid')
     level: int = Field(strict=True, ge=1, le=5)
+    require_owner_review: bool = Field(strict=True)
     expected_revision: int = Field(strict=True, ge=1)
 
 

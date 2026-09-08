@@ -727,6 +727,8 @@ def connect(db_path: Optional[Path] = None, *, board: Optional[str] = None) -> s
                 migrate_kinds(conn)
                 from agent_native.model_settings import migrate_reasoning
                 migrate_reasoning(conn)
+                from agent_native.autonomy import migrate_review_policy
+                migrate_review_policy(conn)
                 from agent_native.progress import migrate_links
                 migrate_links(conn)
                 from agent_native.output_store import migrate_stories

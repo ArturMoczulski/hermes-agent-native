@@ -70,7 +70,7 @@ export type Agent = {
 
 export type ProgressConcern = {
   id: string;
-  kind: "repeated_unproductive_failure";
+  kind: "repeated_unproductive_failure" | "repeated_empty_completion";
   status: "open" | "resolved";
   attempt_ids: string[];
   summary: string;
@@ -79,7 +79,7 @@ export type ProgressConcern = {
   response: string | null;
 };
 
-export type AutonomySettings = { level: number; revision: number; updated_at: string | null };
+export type AutonomySettings = { level: number; require_owner_review: boolean; revision: number; updated_at: string | null };
 export const autonomyLabels: Record<number, string> = {
   1: "1 · Approval-driven", 2: "2 · Cautious", 3: "3 · Balanced",
   4: "4 · Proactive", 5: "5 · Highly autonomous",
@@ -124,7 +124,7 @@ export type WorkResult = {
   summary: string;
   evaluation: { report: string; source: "agent" };
   acceptance: "not_evaluated" | "accepted" | "revision_requested";
-  review: { required: boolean; source: "autonomy" | "legacy"; reason: string | null };
+  review: { required: boolean; source: "autonomy" | "owner_policy" | "legacy"; reason: string | null };
   owner_decision?: { id: string; decision: "accepted" | "revision_requested"; note: string | null; created_at: string } | null;
   outputs: OutputReference[];
   created_at: string;

@@ -41,6 +41,10 @@ the owner API rejects attempts to accept them. The compact view surfaces only
 currently gated deliverables; Full view retains all evaluations and prior decisions.
 Explicit assignment- and policy-authored gates beyond autonomy level 1 remain the
 next AN-9 increment.
+The owner-policy half is implemented: Agent settings can require review of every
+submitted deliverable independently of autonomy level. The policy is revisioned,
+frozen onto admission, visible to the worker, and stored as the exact result gate
+source. Assignment-authored gates remain the next refinement.
 Cadence enforcement now treats an existing required review as an actual gate: no
 new automatic attempt is queued while an exact result awaits its owner decision.
 Accepting or requesting revision resolves that gate and makes the decision immediately

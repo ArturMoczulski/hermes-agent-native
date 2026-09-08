@@ -110,6 +110,25 @@ def test_result_can_link_multiple_outputs_and_unverified_external_reference(brok
     assert result['evaluation'] == {'report': 'Compared 80 to 100; no external research performed.', 'source': 'agent'}
 
 
+def test_owner_review_policy_gates_submitted_output_at_balanced_autonomy(broker):
+    from agent_native import autonomy
+    from agent_native.identity import OWNER
+    s=broker
+    autonomy.change_settings(s.conn,actor=OWNER,agent_id=s.root['id'],level=3,
+                             require_owner_review=True,expected_revision=1)
+    output=s.run._effect(s.conn,s.planning,effect(s,'policy-output','output_publish',{
+        'title':'Policy draft','content':'A complete draft.','format':'markdown',
+        'item_id':s.setup['discovery_item_id']}))
+
+    result=record(s,'policy-result',outcome='submitted',outputs=[{
+        'output_id':output['output_id'],'version':output['version']}])
+
+    assert result['review']=={
+        'required':True,'source':'owner_policy',
+        'reason':'Owner policy requires review of every submitted deliverable.',
+    }
+
+
 def test_approval_driven_attempt_requires_review_for_submitted_output(broker):
     s = broker
     with write_txn(s.conn):

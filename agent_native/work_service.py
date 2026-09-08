@@ -499,7 +499,8 @@ class WorkService:
                     from agent_native.autonomy import snapshot_attempt as snapshot_autonomy, policy
                     admission_id = str(uuid4())
                     work['autonomy'] = snapshot_autonomy(conn, agent_id, work['id'], admission_id)
-                    work['autonomy']['policy'] = policy(work['autonomy']['level'])
+                    work['autonomy']['policy'] = policy(
+                        work['autonomy']['level'], work['autonomy']['require_owner_review'])
                     conn.execute("UPDATE agent_native_work_runs SET state='preparing',started_at=? WHERE id=?",(_now(),work['id']))
                     state.event(conn,work['id'],'work.preparing','Reading the prepared project before starting the native worker.')
                 run = _Run(self,work)

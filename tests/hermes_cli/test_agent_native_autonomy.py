@@ -7,12 +7,17 @@ def test_creation_defaults_to_balanced_autonomy_and_owner_can_change_it(configur
     root = c.post(URL, json=BODY).json()
     path = URL + '/' + root['id'] + '/autonomy'
     assert root['autonomy']['level'] == 3
+    assert root['autonomy']['require_owner_review'] is False
     initial = c.get(path).json()
-    changed = c.put(path, json={'level': 2, 'expected_revision': initial['revision']})
+    changed = c.put(path, json={'level': 2, 'require_owner_review': True,
+                                'expected_revision': initial['revision']})
     assert changed.status_code == 200
     assert changed.json()['autonomy']['level'] == 2
-    assert c.put(path, json={'level': 3, 'expected_revision': initial['revision']}).status_code == 409
-    assert c.put(path, json={'level': 6, 'expected_revision': 2}).status_code == 422
+    assert changed.json()['autonomy']['require_owner_review'] is True
+    assert c.put(path, json={'level': 3, 'require_owner_review': False,
+                             'expected_revision': initial['revision']}).status_code == 409
+    assert c.put(path, json={'level': 6, 'require_owner_review': False,
+                             'expected_revision': 2}).status_code == 422
 
 
 def test_creation_idempotency_includes_autonomy_level(configured):
@@ -33,6 +38,8 @@ def test_attempt_keeps_admitted_autonomy_after_setting_changes(configured):
     run_id = root['work']['id']
     with connect_closing(board='default') as conn:
         first = autonomy.snapshot_attempt(conn, root['id'], run_id, 'admission-one')
-        autonomy.change_settings(conn, actor=OWNER, agent_id=root['id'], level=1, expected_revision=1)
+        autonomy.change_settings(conn, actor=OWNER, agent_id=root['id'], level=1,
+                                 require_owner_review=True, expected_revision=1)
         assert autonomy.snapshot_attempt(conn, root['id'], run_id, 'admission-one') == first
-        assert autonomy.snapshot_attempt(conn, root['id'], run_id, 'admission-two')['level'] == 1
+        second=autonomy.snapshot_attempt(conn, root['id'], run_id, 'admission-two')
+        assert second['level'] == 1 and second['require_owner_review'] is True

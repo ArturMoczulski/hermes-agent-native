@@ -132,16 +132,22 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
                         'ON m.operation_id=e.operation_id WHERE e.run_id=? AND m.status=\'confirmed\' '
                         'ORDER BY m.created_at,m.operation_id', (run_id,))]
         autonomy = conn.execute(
-            'SELECT level FROM agent_native_autonomy_attempts WHERE run_id=? ORDER BY created_at DESC LIMIT 1',
+            'SELECT level,require_owner_review FROM agent_native_autonomy_attempts '
+            'WHERE run_id=? ORDER BY created_at DESC LIMIT 1',
             (run_id,)).fetchone()
         if autonomy is None:
-            autonomy = conn.execute('SELECT level FROM agent_native_autonomy_settings WHERE agent_id=?',
+            autonomy = conn.execute('SELECT level,require_owner_review '
+                                    'FROM agent_native_autonomy_settings WHERE agent_id=?',
                                     (agent_id,)).fetchone()
-        review_required = bool(autonomy and autonomy[0] == 1 and args['outcome'] == 'submitted' and outputs)
+        owner_policy = bool(autonomy and autonomy[1])
+        review_required = bool(autonomy and (autonomy[0] == 1 or owner_policy)
+                               and args['outcome'] == 'submitted' and outputs)
         review = {
             'required': review_required,
-            'source': 'autonomy',
-            'reason': ('Approval-driven autonomy requires owner review of submitted deliverables.'
+            'source': 'owner_policy' if owner_policy and review_required else 'autonomy',
+            'reason': ('Owner policy requires review of every submitted deliverable.'
+                       if owner_policy and review_required else
+                       'Approval-driven autonomy requires owner review of submitted deliverables.'
                        if review_required else None),
         }
         criteria = observation['resource'].get('description_html') or ''

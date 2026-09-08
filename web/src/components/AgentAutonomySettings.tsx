@@ -6,6 +6,7 @@ import { agentsEndpoint, autonomyLabels, type Agent, type AutonomySettings } fro
 export function AgentAutonomySettings({ agentId }: { agentId: string }) {
   const [current, setCurrent] = useState<AutonomySettings | null>(null);
   const [level, setLevel] = useState(3);
+  const [requireReview, setRequireReview] = useState(false);
   const [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");
@@ -14,7 +15,7 @@ export function AgentAutonomySettings({ agentId }: { agentId: string }) {
   useEffect(() => {
     let active = true;
     void fetchJSON<AutonomySettings>(endpoint).then(value => {
-      if (active) { setCurrent(value); setLevel(value.level); setError(false); setMessage(""); }
+      if (active) { setCurrent(value); setLevel(value.level); setRequireReview(value.require_owner_review); setError(false); setMessage(""); }
     }).catch(() => { if (active) { setError(true); setMessage("Autonomy settings unavailable. Reload to try again."); } });
     return () => { active = false; };
   }, [endpoint, reload]);
@@ -23,8 +24,8 @@ export function AgentAutonomySettings({ agentId }: { agentId: string }) {
     setBusy(true); setMessage("");
     try {
       const agent = await fetchJSON<Agent>(endpoint, { method: "PUT", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ level, expected_revision: current.revision }) });
-      setCurrent(agent.autonomy); setLevel(agent.autonomy.level); setError(false);
+        body: JSON.stringify({ level, require_owner_review: requireReview, expected_revision: current.revision }) });
+      setCurrent(agent.autonomy); setLevel(agent.autonomy.level); setRequireReview(agent.autonomy.require_owner_review); setError(false);
       setMessage("Saved. The new level applies to the next admitted work attempt.");
     } catch { setError(true); setMessage("Could not confirm the change. Reload settings before retrying."); }
     finally { setBusy(false); }
@@ -38,7 +39,11 @@ export function AgentAutonomySettings({ agentId }: { agentId: string }) {
       {Object.entries(autonomyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
     </select>
     <p className="text-sm text-muted-foreground">Level 1 asks for acceptance after most deliverables. Level 5 keeps working across outputs and milestones, asking only for extremely consequential decisions, actions outside its authority, or choices unsafe to infer. Explicit owner and policy gates always apply.</p>
-    <Button disabled={!current || busy || error || current.level === level} onClick={() => void save()}>Save autonomy level</Button>
+    <label className="flex items-start gap-3 rounded-md border p-3 text-sm"><input type="checkbox" className="mt-1" checked={requireReview}
+      disabled={!current || busy || error} onChange={event => { setRequireReview(event.target.checked); setMessage(""); }} />
+      <span><strong>Require owner review for every submitted deliverable</strong><br /><span className="text-muted-foreground">This explicit policy applies at every autonomy level and pauses dependent cadence work until you accept or request a revision.</span></span>
+    </label>
+    <Button disabled={!current || busy || error || (current.level === level && current.require_owner_review === requireReview)} onClick={() => void save()}>Save autonomy policy</Button>
     {message && <p role={error ? "alert" : "status"} className="text-sm">{message}</p>}
     {error && <Button disabled={busy} onClick={() => setReload(value => value + 1)}>Reload autonomy settings</Button>}
   </section>;
