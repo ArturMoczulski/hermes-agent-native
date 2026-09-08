@@ -1,3 +1,16 @@
+## Attention-first compact work overview — 2026-09-09
+
+AN-93's first focused refinement makes an applicable unanswered owner question the
+first operating panel in Compact view. Required output decisions follow, then other
+progress concerns. A separate Current/Latest work card states the ongoing stage,
+preserves the bounded attempt outcome as a secondary fact, and links directly to the
+selected Plane work item.
+
+The existing deterministic question journey failed before the new overview existed,
+then passed through question display, owner answer, retained history and saved output.
+TypeScript, focused ESLint and whitespace checks pass. Remaining AN-93 acceptance is a
+consolidated compact/full owner journey across required decisions and inactive states.
+
 ## Mandatory gates override autonomy eagerness — 2026-09-08
 
 AN-92 acceptance is complete. Paired deterministic browser journeys now prove both

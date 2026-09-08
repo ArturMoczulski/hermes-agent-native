@@ -307,14 +307,10 @@ function CompactAgentView({ agent }: { agent: Agent }) {
     && !event.summary.startsWith("Plane: inspected ")
   ).reverse().slice(0, 20);
   return <div className="space-y-6">
-    <ProgressConcernAttention agent={agent} />
-    <WorkResults agent={agent} attentionOnly />
     {!agent.removed_at && !agent.retirement && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
-    <div aria-label="Current agent summary" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
-      {work && <span>Latest attempt: {work.state.replace('_', ' ')}</span>}
-      {work?.focus && <><span aria-hidden="true">·</span><span>{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current" : "Latest"} work:</span>
-        <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} /></>}
-    </div>
+    <WorkResults agent={agent} attentionOnly />
+    <ProgressConcernAttention agent={agent} />
+    <CompactWorkOverview agent={agent} />
     <PurposeEvaluation agent={agent} />
     <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} compact />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
@@ -329,6 +325,27 @@ function CompactAgentView({ agent }: { agent: Agent }) {
       <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
     </section>
   </div>;
+}
+
+function CompactWorkOverview({ agent }: { agent: Agent }) {
+  const work = agent.work;
+  const active = Boolean(work && ["running", "queued", "preparing", "stopping"].includes(work.state));
+  const stage = agent.retirement ? "Retired"
+    : agent.removed_at ? "Removed"
+    : agent.pause?.paused ? "Paused"
+    : work?.state === "running" ? "Working"
+    : ["queued", "preparing"].includes(work?.state ?? "") ? "Starting"
+    : work?.state === "stopping" ? "Stopping"
+    : work?.state === "completed" && agent.cadence?.enabled ? "Waiting for next check-in"
+    : work?.state === "completed" ? "Automatic work off"
+    : work ? work.state.replace("_", " ") : "Not started";
+  return <section aria-label="Current work overview" className="space-y-2 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">{active ? "Current work" : "Latest work"}</h2>
+    <p className="text-sm"><strong>Stage:</strong> {stage}</p>
+    {work && <p className="text-sm text-muted-foreground">Latest attempt: {work.state.replace("_", " ")}</p>}
+    {work?.focus ? <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} />
+      : <p className="text-sm text-muted-foreground">No work item selected.</p>}
+  </section>;
 }
 
 function RetirementSummary({ agent }: { agent: Agent }) {

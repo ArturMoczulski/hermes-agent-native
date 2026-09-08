@@ -13,6 +13,10 @@ test('agent asks a question and uses the retained owner answer in saved work',as
     await page.goto(`/agents/${id}`);
     const questions=page.getByRole('region',{name:'Needs your answer',exact:true});
     await expect(questions).toContainText('What kind of ending would you like?',{timeout:30000});
+    const overview=page.getByRole('region',{name:'Current work overview',exact:true});
+    await expect(overview).toContainText('Stage: Working');
+    await expect(overview.getByRole('link',{name:'Discover purpose and plan first work'})).toHaveAttribute('href',/\/issues\/[0-9a-f-]+\/$/);
+    expect(await questions.evaluate((question, current) => Boolean(question.compareDocumentPosition(current as Node) & Node.DOCUMENT_POSITION_FOLLOWING), await overview.elementHandle())).toBe(true);
     await expect(questions.getByRole('link',{name:'Open affected work item'})).toHaveAttribute('href',/\/issues\/[0-9a-f-]+\/$/);
     await expect.poll(async()=>{const e=await(await request.get(`${backend}/__e2e__/writer-evidence/${id}`,{headers})).json();return e.comments.filter((c:{comment_html:string})=>c.comment_html.includes('What kind of ending would you like?')).length;}).toBe(1);
     await questions.getByLabel('Your answer').fill('A hopeful ending with a reunited family.');

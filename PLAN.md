@@ -12,6 +12,10 @@ configuration and destructive controls into dialogs and retain the current exhau
 surface as Full view. Separate lifecycle from the latest attempt outcome and give clear
 confirmation after cadence changes; disabling cadence must visibly say that automatic
 work is off rather than leaving the primary status as Completed.
+The first AN-93 refinement now places applicable owner questions before output decisions
+and progress concerns in Compact view. A labeled Current/Latest work card follows the
+attention area with the ongoing stage, latest bounded-attempt outcome and direct Plane
+work-item link. The existing question-answer-output browser journey verifies the order.
 AN-91 completed the shared planning/output boundary exposed by the live fantasy
 world agent: Plane owns briefs, cycles, task descriptions, criteria and planning
 notes, while Saved outputs contain the actual purpose-level deliverables. Planning
