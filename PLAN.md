@@ -8,7 +8,8 @@ The current undated cycle 03 is **Shared agent work and the fantasy writer**.
 AN-90 fixes continuation reads: complete immutable saved outputs and stale-question
 applicability without terminating work. Targeted regression and native browser proof
 pass. Follow-up Plane429 failure prompted local600/minute capacity and bounded
-GET-only backoff; recovery of the existing writer on Luna is pending verification.
+GET-only backoff. Existing writer recovery on Luna completed with a saved next
+adventure brief and recorded result; continuing milestone acceptance remains open.
 Owner-directed AN-85–87 address recoverable Plane conflicts, agent removal, and
 recreating the failed Fantasy Wizard Series. Known rejected conflicts now allow
 fresh inspection within the same run; unknown delivery still stops work.

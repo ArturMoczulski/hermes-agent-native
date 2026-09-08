@@ -1,3 +1,13 @@
+## Luna recovery completed — 2026-09-08
+
+Recovery ca1d3f61-bdda-5af0-8dd0-eecdfa1e0ab4 completed with10 model calls
+and no error on openai-codex/gpt-5.6-luna/low. It created the next Waterdeep
+adventure task and saved The Waterdeep Ledger — Adventure Two episode brief,
+output fa450e5a-58a0-42ac-8acd-f82f22348fef version1. Result recorded; full
+story drafting remains next work, not a completed assignment. Same agent/history
+preserved. Local Plane600/minute and bounded read429 backoff deployed. Older
+uncertain failure notification remains explicitly unknown and is not replayed.
+
 ## Bounded read throttle recovery — 2026-09-08
 
 PlaneReads now honors HTTP429 Retry-After for GET only: maximum three attempts
