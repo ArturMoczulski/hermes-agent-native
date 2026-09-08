@@ -177,8 +177,14 @@ The first whole-purpose lifecycle slice is now implemented: a managed agent reco
 an immutable `continue`, `wait`, `clarify`, or `retire_candidate` judgment with the
 protected purpose revision, evidence, remaining obligations, uncertainty and next
 action. Later attempts receive those records and the compact view shows the latest.
-This does not yet retire an agent; lifecycle enforcement and subtree/obligation checks
-remain the next AN-75 increment.
+Guarded root-agent retirement is now implemented as a separate managed operation.
+The agent must cite its latest current-revision `retire_candidate` evaluation, and
+the host independently rejects retirement while uncertainty, remaining obligations,
+unanswered questions, required result reviews, unresolved tool receipts or uncertain
+Plane writes remain. Success disables cadence, invalidates earlier work authority and
+preserves the evaluation and all history. The present runtime exposes root agents only;
+subtree review and cascade remain part of the hierarchy increment rather than being
+simulated in this root-only data model.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

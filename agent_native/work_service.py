@@ -139,7 +139,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -224,6 +224,10 @@ class _Run:
             from agent_native.purpose_evaluation import record
             result=record(conn,validate=self.validate,agent_id=self.work['agent_id'],
                           run_id=self.work['id'],call_id=call_id,arguments=args)
+        elif tool == 'purpose_retire':
+            from agent_native.retirement import retire
+            result=retire(conn,validate=self.validate,agent_id=self.work['agent_id'],
+                          run_id=self.work['id'],call_id=call_id,arguments=args)
         elif tool == 'output_publish':
             from agent_native.output_store import publish
             from agent_native import progress
@@ -257,6 +261,7 @@ class _Run:
                        ('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
                        ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
+                       ('Retired agent from purpose evaluation') if tool=='purpose_retire' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
                        ('Plane conflict: fresh inspection required' if result.get('status')=='conflict' else
                         'Plane: '+args.get('operation','inspected '+args.get('kind','resource'))))

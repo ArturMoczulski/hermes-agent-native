@@ -44,7 +44,9 @@ def _read(conn, agent_id):
         'FROM agent_native_initial_activations WHERE agent_id = ?', (agent_id,),
     ).fetchone()
     removed = conn.execute('SELECT removed_at FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone()
-    root['removed_at'] = removed[0] if removed else None
+    retired = conn.execute('SELECT evaluation_id,source,retired_at FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone()
+    root['retirement'] = (dict(zip(('evaluation_id','source','retired_at'), retired)) if retired else None)
+    root['removed_at'] = removed[0] if removed else (retired[2] if retired else None)
     root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
                        if startup is not None else None)
     from agent_native.startup import read_setup
@@ -188,13 +190,16 @@ def list_roots(conn, *, actor):
     """Installation roster; only the trusted owner may enumerate roots."""
     _require_owner(actor)
     return [_read(conn, row[0]) for row in conn.execute(
-        'SELECT id FROM agent_native_agents WHERE id NOT IN (SELECT agent_id FROM agent_native_removals) ORDER BY created_at, id'
+        'SELECT id FROM agent_native_agents WHERE id NOT IN (SELECT agent_id FROM agent_native_removals) '
+        'AND id NOT IN (SELECT agent_id FROM agent_native_retirements) ORDER BY created_at, id'
     ).fetchall()]
 
 
 def require_active(conn, agent_id):
     if conn.execute('SELECT 1 FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone():
         raise ConflictError('Agent removed; its retained history is read-only')
+    if conn.execute('SELECT 1 FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone():
+        raise ConflictError('Agent retired; its retained history is read-only')
 
 
 def remove_root(conn, *, actor, agent_id):
