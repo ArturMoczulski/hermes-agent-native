@@ -12,13 +12,20 @@ changes may be reported as results with no file. The only exception is an
 assignment that explicitly requests a planning document as its deliverable. A
 clean replacement agent proved this behavior with a Plane-only planning result
 and one actual World Bible output.
-**AN-9 result acceptance is now the owner's immediate priority.** Add a trusted,
-version-bound owner workflow to accept a submitted result or request revisions;
+**AN-9 deliverable review is now the owner's immediate priority.** Separate bounded
+attempt records from reviewable purpose-level outputs. Attempt summaries, planning,
+discovery and waiting/blocked records remain operational history and never imply an
+owner approval request. Show Accept / Request revision only on an exact output version
+when an explicit owner or policy gate actually requires a decision; optional review
+must not block cadence. Add a trusted, version-bound owner workflow to accept a gated
+deliverable or request revisions;
 the decision must wake the cadence agent and either unlock dependent work or
 deliver the requested change. The live Fantasy World Setting Builder is the first
-end-to-end case: its Canon v0.1 is saved and evaluated, while Cycle 02 correctly
-waits for owner review. Plane Done alone remains insufficient, and accepting one
-result does not declare the agent's whole purpose complete.
+end-to-end case: its discovery result must appear as history without acceptance
+controls, while its Cosmology Foundation Draft v1 is the reviewable output. At
+balanced autonomy, optional review of that draft must not stop later cadence runs.
+Plane Done alone remains insufficient when a real gate exists, and accepting one
+output does not declare the agent's whole purpose complete.
 AN-92 now defines the paired owner-controlled autonomy policy: five eagerness
 levels from approval-driven through highly autonomous, with Level 3 as the new-agent
 default. The level controls when review blocks continuation; it never weakens an
