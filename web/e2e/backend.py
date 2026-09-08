@@ -109,6 +109,17 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
 
     app.router.routes.insert(0, app.router.routes.pop())
 
+    @app.post('/__e2e__/restart-work-service')
+    def restart_work_service(request: Request):
+        """Exercise production work-service shutdown/recovery without restarting HTTP."""
+        _require_token(request)
+        from agent_native.work_service import start_service as start_work_service
+        app.state.agent_work_service.stop()
+        app.state.agent_work_service = start_work_service()
+        return {'restarted': True}
+
+    app.router.routes.insert(0, app.router.routes.pop())
+
     @app.patch('/__e2e__/planning-control/{agent_id}')
     def planning_control(request: Request, agent_id: str, body: dict):
         """Alter only the external Plane fixture; production state stays real."""

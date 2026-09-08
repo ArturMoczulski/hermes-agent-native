@@ -1,3 +1,17 @@
+## Work-service restart continuity browser proof — 2026-09-09
+
+AN-75 now has a native Playwright journey across the managed work-service lifecycle.
+The test holds a real provider request during active work, restarts the same production
+service used by the dashboard, and verifies that the old run is retained as
+`interrupted` while cadence admits exactly one distinct attempt. The stopped process is
+never replayed, agent identity is preserved, and the owner view remains eligible for
+continuation rather than reporting a cadence block.
+
+The production lifespan now keeps the active service on application state so shutdown
+always targets the current instance; the restart route exists only in the disposable E2E
+backend. Evidence: one focused Playwright case, two focused backend restart cases,
+TypeScript, focused ESLint and Ruff, and whitespace checks pass.
+
 ## Deliverable review acceptance complete — 2026-09-09
 
 AN-9 is complete. The owner workflow distinguishes operational attempt history from
