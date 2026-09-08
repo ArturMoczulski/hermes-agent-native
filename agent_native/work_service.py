@@ -19,6 +19,33 @@ from hermes_cli.kanban_db_connect import connect_closing, write_txn
 _log = logging.getLogger(__name__)
 
 
+def _initial_context(snapshot, contracts):
+    """Build the managed-work instruction with a clear planning/output boundary."""
+    return ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
+            'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
+            'Choose useful work appropriate to your purpose and the supplied material. Use work_item_select before '
+            'substantive work and whenever you switch tasks. The framework posts a work-selection progress comment; '
+            'do not duplicate that start update. Use progress_report for meaningful checkpoints, details and blockers as you work. '
+            'Owner verbosity controls delivery, and direct comment.create is not available to this worker. '
+            'When clarification is needed, use work_question on the selected item and reuse its stable topic; '
+            'read answers by question_id. Never treat a missing answer as permission. Do independent work or record a waiting result instead of polling repeatedly. '
+            'Call work_feedback with empty arguments before substantive work and publication to read owner direction. '
+            'Apply it within current purpose and grants, then report handling with work_feedback; never claim acceptance. '
+            'Keep project briefs, cycle and module descriptions, task descriptions, acceptance criteria, dependencies, planning notes and progress updates in Plane. '
+            'They are not saved outputs unless the purpose or selected assignment explicitly requests a planning document as its deliverable. '
+            'Use output_publish only for the actual purpose-level work product, such as the requested story, analysis, design, recording or other deliverable. '
+            'A confirmed planning change is a valid result with an empty outputs list. '
+            'Use output_read to read complete prior output versions when excerpts are truncated. Use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
+            'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
+            'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
+            'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
+            'External links are unverified references, never proof of saved content or successful actions. '
+            'Leave the task nonterminal for owner review; '
+            'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
+            'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+
+            '\nSupported Plane operation argument contracts:\n'+json.dumps(contracts))
+
+
 class _Run:
     def __init__(self, service, work):
         from tui_gateway.host_supervisor import HostSupervisor
@@ -243,26 +270,7 @@ class _Run:
                             'content':saved['content'][:8000],'truncated':len(saved['content'])>8000})
                     snapshot['questions'] = recent_questions(conn,root['id'])
                     snapshot['continuation_note'] = 'Review earlier results and outputs; do not repeat finished work. Read work_feedback and current Plane comments with work_comments before substantive work. Waiting is a valid result; do not invent new work.'
-                    initial = ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
-                               'Create or refine a short project brief, an undated outcome cycle and an actionable task with acceptance criteria. '
-                               'Choose useful work appropriate to your purpose and the supplied material. Use work_item_select before '
-                               'substantive work and whenever you switch tasks. The framework posts a work-selection progress comment; '
-                               'do not duplicate that start update. Use progress_report for meaningful checkpoints, details and blockers as you work. '
-                               'Owner verbosity controls delivery, and direct comment.create is not available to this worker. '
-                               'When clarification is needed, use work_question on the selected item and reuse its stable topic; '
-                               'read answers by question_id. Never treat a missing answer as permission. Do independent work or record a waiting result instead of polling repeatedly. '
-                               'Call work_feedback with empty arguments before substantive work and publication to read owner direction. '
-                               'Apply it within current purpose and grants, then report handling with work_feedback; never claim acceptance. '
-                               'Save any produced text or Markdown '
-                               'with output_publish; use output_read to read complete prior versions when excerpts are truncated. Use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
-                               'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
-                               'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
-                               'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
-                               'External links are unverified references, never proof of saved content or successful actions. '
-                               'Leave the task nonterminal for owner review; '
-                               'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
-                               'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+
-                               '\nSupported Plane operation argument contracts:\n'+json.dumps({k: v for k, v in _CONTRACTS.items() if k != 'comment.create'}))
+                    initial = _initial_context(snapshot, {k: v for k, v in _CONTRACTS.items() if k != 'comment.create'})
                     skill = (Path(__file__).resolve().parents[1] / 'skills/productivity/plane-project-management/SKILL.md').read_text()
                     attempt = {'run_id':self.work['id'],'agent_id':root['id'],'soul_revision':root['soul_revision'],
                                'name':root['name'],'purpose':root['purpose'],'workspace':str(self.workspace),

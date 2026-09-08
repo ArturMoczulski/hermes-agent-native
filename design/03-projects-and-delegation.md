@@ -78,6 +78,15 @@ Discovery, a legitimate wait or a request for clarification may produce no saved
 output. Record the actual outcome and next condition rather than requiring a
 fabricated file or declaring the assignment accepted.
 
+Project-management records are not saved outputs merely because they contain
+text. Project briefs, cycle goals, task descriptions, acceptance criteria,
+dependencies, planning notes and progress updates belong in the planning system.
+Save them as outputs only when producing that planning document is itself the
+purpose-level deliverable requested by the owner. Otherwise, record the planning
+change as an observed result with no saved file. An agent must not fill the
+owner-facing outputs library with descriptions of work it intends to do instead
+of the actual work product.
+
 Domain methods and quality criteria come from the purpose, assignment and
 approved skills. The shared framework must not instruct every agent to write
 fiction, require a story to finish an attempt, or select authority by profession.

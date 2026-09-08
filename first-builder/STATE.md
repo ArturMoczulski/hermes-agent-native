@@ -1,3 +1,14 @@
+## Planning records are not saved outputs — 2026-09-08
+
+The Fantasy World Setting Builder incorrectly published a Cycle 02 task
+description as output `c846f7d8-eb4b-42be-9e82-e0c88d7900e3` v1 instead of
+keeping that scaffolding solely in Plane and producing the actual race catalog.
+AN-91 records the cross-agent defect. Product design, the Plane skill and the
+managed-work prompt now reserve Saved outputs for purpose-level deliverables;
+confirmed planning changes can be results with no file. An explicit assignment
+for a planning document remains the exception. The focused prompt regression and
+Ruff pass. Existing immutable output history is retained as evidence.
+
 ## Owner result acceptance is the immediate priority — 2026-09-08
 
 The live Fantasy World Setting Builder demonstrates the missing workflow. It has

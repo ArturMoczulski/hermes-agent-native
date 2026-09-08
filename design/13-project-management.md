@@ -188,6 +188,14 @@ A later version receives a new immutable version reference. Earlier versions and
 their progress comments remain inspectable. Useful discovery or planning work without
 a tangible file records its result and evidence without creating a dummy attachment.
 
+Keep the planning record in Plane. A project brief, cycle or module description,
+work-item body, acceptance criteria, dependency note, status update or proposed
+next task is planning data, not an output from the agent's purpose. Write it to the
+corresponding Plane resource and record the confirmed planning change in the
+result. Do not publish a second Markdown copy through the framework output store.
+The exception is an assignment whose requested deliverable is itself a planning
+document; that exception must be explicit in the purpose or current work item.
+
 ### Questions in work-item comments
 
 Post new agent questions as comments on the affected Plane work item as well as

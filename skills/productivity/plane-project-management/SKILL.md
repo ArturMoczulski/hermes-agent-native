@@ -171,6 +171,15 @@ an unverified external reference with a saved output or actual uploaded attachme
 If opening/attaching is unsupported, record the available verified reference and
 state the missing capability. Do not claim a path-only comment is an attachment.
 
+Keep project-management material in Plane. Briefs, cycle/module descriptions,
+work-item descriptions, acceptance criteria, dependencies, planning notes,
+progress reports and proposed next tasks are not purpose-level saved outputs.
+Create or update the appropriate Plane resource and record that confirmed change
+as a result with no output file. Use the output store only for the actual work
+product—such as the story, analysis, design, recording or code artifact requested
+by the assignment. Publish planning material as an output only when the owner or
+the current assignment explicitly asks for a planning document as the deliverable.
+
 At handoff or attempt end, provide an **Outputs** section at the end of the item's
 description with the saved versions, result/evaluation link and review status.
 Use the supported output-linking operation when available. Preserve the brief,
