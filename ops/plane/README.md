@@ -143,3 +143,12 @@ task for new ordinary roots. It uses a protected, explicitly configured host
 connection; routine Builder project-management credentials are not reused by agents.
 See [writer setup](../../implementation/writer-startup-setup.md) for the exact
 configuration, current human-account requirement, recovery behavior and limits.
+
+## Agent API request budget
+
+The local deployment defaults to `API_KEY_RATE_LIMIT=600/minute`, configurable in
+the private `plane.env`. The previous 60/minute limit throttled a single managed
+writer: scoped item inspection also checks cycles and dependencies, while progress
+and monitoring add requests. This is a local installation setting, not an LLM
+quota. It does not remove throttling; clients must still honor HTTP 429 backoff.
+Apply changes with `up -d --no-deps api` using the Compose prefix above.

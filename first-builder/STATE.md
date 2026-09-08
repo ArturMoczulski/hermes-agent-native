@@ -1,3 +1,13 @@
+## Plane throttling confirmed — 2026-09-08
+
+Recovery a5afd795-5d68-5d4f-9c63-563cbb3db9f4 read the complete saved story
+and posted progress, then failed: Plane API logs show cycles GET HTTP429 at
+00:21:08. Existing 60/minute API key limit was too low for scoped inspection,
+progress and monitoring. Owner authorized raising it; local Compose default and
+private env now600/minute, verified in API container after recreation and HTTP200.
+Agent model explicitly changed to openai-codex/gpt-5.6-luna/low, revision2.
+Bounded GET backoff and live recovery remain in progress under AN-90.
+
 ## Recovery notification gate — 2026-09-08
 
 Live AN-90 retry exposed unknown delivery of terminal failure notice
