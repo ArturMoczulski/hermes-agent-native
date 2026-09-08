@@ -1,3 +1,17 @@
+## Accountable parent control of child autonomy — 2026-09-08
+
+AN-92 now lets an admitted parent configure the autonomy eagerness level of one exact
+direct child. The managed operation requires the child's current setting revision and
+a bounded reason, applies only to future child attempts, and records the deciding
+parent, parent run, tool-call identity, prior/resulting revisions and reason. Replays
+are idempotent; changed or stale requests fail closed.
+
+The operation cannot target grandchildren, siblings or unrelated agents and cannot
+change purpose, grants, model, cadence, identity or descendants. It preserves an
+owner-authored require-every-deliverable-review policy, so parent administration cannot
+weaken an explicit human gate. Twenty focused autonomy, hierarchy and managed-prompt
+tests, the managed-tool Playwright journey, TypeScript, ESLint and Ruff pass.
+
 ## Autonomous progression across assignments — 2026-09-08
 
 AN-9, AN-75 and AN-92 now have a deterministic owner-browser proof that Level 5

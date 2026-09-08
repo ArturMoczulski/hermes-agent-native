@@ -27,7 +27,7 @@ test('a supplied-data analyst plans and records a report through the shared work
     { timeout: 30000 }).toBeGreaterThan(0)
   const observed = (await evidence()).model_requests.find((r: {system_text:string}) => r.system_text.includes(marker))
   expect(observed.tools).toEqual([
-    'child_create', 'child_inspect', 'child_replace', 'child_result_evaluate',
+    'child_autonomy_configure', 'child_create', 'child_inspect', 'child_replace', 'child_result_evaluate',
     'output_publish', 'output_read', 'plane_operation_execute', 'plane_resource_inspect',
     'progress_report', 'purpose_evaluate', 'purpose_retire', 'result_record',
     'work_comments', 'work_feedback', 'work_item_select', 'work_question',

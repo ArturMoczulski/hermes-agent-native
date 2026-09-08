@@ -141,7 +141,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -175,6 +175,10 @@ class _Run:
             from agent_native.child_supervision import evaluate
             result=evaluate(conn,validate=self.validate,parent_id=self.work['agent_id'],
                             parent_run_id=self.work['id'],call_id=call_id,arguments=args)
+        elif tool == 'child_autonomy_configure':
+            from agent_native.child_autonomy import configure
+            result=configure(conn,validate=self.validate,parent_id=self.work['agent_id'],
+                             parent_run_id=self.work['id'],call_id=call_id,arguments=args)
         elif tool == 'plane_resource_inspect':
             result = planning.inspect(args)
         elif tool == 'plane_operation_execute':

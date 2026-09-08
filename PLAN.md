@@ -73,6 +73,10 @@ default. The level controls when review blocks continuation; it never weakens an
 explicit owner, assignment, authority or mandatory-policy gate. AN-9 supplies the
 Accept / Request revision workflow when the resulting gate is genuinely required,
 and AN-75 resumes cadence work after the decision.
+An accountable parent can now configure one direct child's eagerness level for future
+attempts through a revision-bound, reasoned and idempotent managed operation. It cannot
+target deeper or unrelated agents, change other configuration, or clear an explicit
+owner deliverable-review policy.
 AN-90 fixes continuation reads: complete immutable saved outputs and stale-question
 applicability without terminating work. Targeted regression and native browser proof
 pass. Follow-up Plane429 failure prompted local600/minute capacity and bounded

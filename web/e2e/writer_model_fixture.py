@@ -3,7 +3,7 @@ import json
 import re
 
 SHARED_TOOLS = {
-    'child_create', 'child_inspect', 'child_replace', 'child_result_evaluate',
+    'child_autonomy_configure', 'child_create', 'child_inspect', 'child_replace', 'child_result_evaluate',
     'output_publish', 'output_read', 'plane_operation_execute',
     'plane_resource_inspect', 'progress_report', 'purpose_evaluate',
     'purpose_retire', 'result_record', 'work_comments', 'work_feedback',

@@ -53,9 +53,13 @@ def get_settings(conn, agent_id):
     return {'level':row[0],'require_owner_review':bool(row[1]),'revision':row[2],'updated_at':row[3]}
 
 def change_settings(conn, *, actor, agent_id, level, expected_revision,
-                    require_owner_review=None):
+                    require_owner_review=None, _allow_nested=False,
+                    _recorded_actor='owner'):
     _require_owner(actor); level = validate_level(level)
-    with write_txn(conn):
+    if (_recorded_actor != 'owner'
+            and (not isinstance(_recorded_actor, str) or not _recorded_actor.startswith('parent:'))):
+        raise ValueError('Invalid autonomy actor')
+    with write_txn(conn, allow_nested=_allow_nested):
         current = get_settings(conn, agent_id)
         if type(expected_revision) is not int or current['revision'] != expected_revision:
             raise ConflictError('Autonomy setting changed; reload before saving')
@@ -70,7 +74,7 @@ def change_settings(conn, *, actor, agent_id, level, expected_revision,
                      'updated_at=excluded.updated_at',(agent_id,level,int(required),revision,now))
         conn.execute('INSERT INTO agent_native_autonomy_events'
                      '(agent_id,level,require_owner_review,revision,actor,created_at) VALUES(?,?,?,?,?,?)',
-                     (agent_id,level,int(required),revision,'owner',now))
+                     (agent_id,level,int(required),revision,_recorded_actor,now))
         return get_settings(conn, agent_id)
 
 def snapshot_attempt(conn, agent_id, run_id, attempt_id):
