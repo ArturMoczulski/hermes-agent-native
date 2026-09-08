@@ -33,6 +33,14 @@ controls, while its Cosmology Foundation Draft v1 is the reviewable output. At
 balanced autonomy, optional review of that draft must not stop later cadence runs.
 Plane Done alone remains insufficient when a real gate exists, and accepting one
 output does not declare the agent's whole purpose complete.
+The first AN-9 enforcement slice records the review requirement on each result
+from the attempt's frozen autonomy level. Approval-driven level 1 requires review
+for a submitted result that names at least one exact output version. Ordinary
+results and balanced-autonomy deliverables do not expose decision controls, and
+the owner API rejects attempts to accept them. The compact view surfaces only
+currently gated deliverables; Full view retains all evaluations and prior decisions.
+Explicit assignment- and policy-authored gates beyond autonomy level 1 remain the
+next AN-9 increment.
 AN-92 now defines the paired owner-controlled autonomy policy: five eagerness
 levels from approval-driven through highly autonomous, with Level 3 as the new-agent
 default. The level controls when review blocks continuation; it never weakens an

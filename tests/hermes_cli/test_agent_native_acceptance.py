@@ -14,6 +14,7 @@ def _result(c):
               'assignment_fingerprint': 'fingerprint', 'criteria_observed_at': root['created_at'],
               'summary': 'Draft ready', 'outcome': 'submitted', 'evaluation': {'report': 'Meets criteria', 'source': 'agent'},
               'acceptance': 'not_evaluated', 'outputs': [{'output_id': str(uuid4()), 'version': 3}],
+              'review': {'required': True, 'source': 'autonomy', 'reason': 'Approval-driven autonomy requires owner review of submitted deliverables.'},
               'references': [], 'observed_effects': [], 'observed_effect_scope': 'attempt', 'created_at': root['created_at']}
     encoded = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
     from hermes_cli.kanban_db_connect import connect_closing
@@ -48,3 +49,19 @@ def test_revision_request_requires_note_and_becomes_pending_feedback(configured)
     feedback = configured.get(f'{URL}/{root["id"]}/feedback').json()
     assert feedback[0]['status'] == 'pending'
     assert 'Strengthen the ending.' in feedback[0]['text']
+
+
+def test_owner_cannot_accept_result_without_a_review_gate(configured):
+    root, result_id = _result(configured)
+    from hermes_cli.kanban_db_connect import connect_closing
+    with connect_closing(board='default') as conn:
+        row = conn.execute('SELECT record_json FROM agent_native_work_results WHERE id=?', (result_id,)).fetchone()
+        record = json.loads(row[0])
+        record['review'] = {'required': False, 'source': 'autonomy', 'reason': None}
+        encoded = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
+        conn.execute('UPDATE agent_native_work_results SET record_json=?,record_sha256=? WHERE id=?',
+                     (encoded, hashlib.sha256(encoded.encode()).hexdigest(), result_id))
+    response = configured.post(f'{URL}/{root["id"]}/results/{result_id}/decision', json={
+        'request_id': 'accept-optional', 'decision': 'accepted'})
+    assert response.status_code == 422
+    assert response.json()['detail'] == 'This result does not require an owner decision'

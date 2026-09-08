@@ -28,6 +28,7 @@ def test_useful_result_without_file_finishes_attempt_but_does_not_accept_task(br
     assert result['criteria_revision'] == hashlib.sha256(result['criteria_snapshot'].encode()).hexdigest()
     assert result['assignment_fingerprint'] == observed['fingerprint']
     assert result['outcome'] == 'discovery' and result['acceptance'] == 'not_evaluated'
+    assert result['review'] == {'required': False, 'source': 'autonomy', 'reason': None}
     assert result['outputs'] == [] and result['references'] == []
     s.run.finish(s.conn, {'type': 'turn.end'})
     with connect_closing(s.db_path) as reopened:
@@ -107,6 +108,21 @@ def test_result_can_link_multiple_outputs_and_unverified_external_reference(brok
     assert result['references'] == [{'label': 'External report', 'url': 'https://example.com/report', 'verified': False}]
     assert result['observed_effects'] == []
     assert result['evaluation'] == {'report': 'Compared 80 to 100; no external research performed.', 'source': 'agent'}
+
+
+def test_approval_driven_attempt_requires_review_for_submitted_output(broker):
+    s = broker
+    with write_txn(s.conn):
+        s.conn.execute('UPDATE agent_native_autonomy_settings SET level=1 WHERE agent_id=?', (s.root['id'],))
+    output = s.run._effect(s.conn, s.planning, effect(s, 'gated-output', 'output_publish', {
+        'title': 'Gated draft', 'content': 'Review me.', 'format': 'markdown',
+        'item_id': s.setup['discovery_item_id']}))
+    result = record(s, outcome='submitted', outputs=[{'output_id': output['output_id'], 'version': output['version']}])
+    assert result['review'] == {
+        'required': True,
+        'source': 'autonomy',
+        'reason': 'Approval-driven autonomy requires owner review of submitted deliverables.',
+    }
 
 
 @pytest.mark.parametrize('changes', [

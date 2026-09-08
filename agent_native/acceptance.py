@@ -34,6 +34,10 @@ def decide(conn, *, actor, agent_id, result_id, request_id, decision, note=None)
         result = conn.execute('SELECT agent_id,record_json FROM agent_native_work_results WHERE id=?', (result_id,)).fetchone()
         if not result or result[0] != agent_id:
             raise KeyError(result_id)
+        import json
+        record = json.loads(result[1])
+        if not record.get('review', {}).get('required'):
+            raise ValueError('This result does not require an owner decision')
         prior_request = conn.execute('SELECT result_id,decision,note FROM agent_native_result_decisions WHERE request_id=?', (request_id,)).fetchone()
         if prior_request:
             if tuple(prior_request) != (result_id, decision, note):
@@ -45,8 +49,6 @@ def decide(conn, *, actor, agent_id, result_id, request_id, decision, note=None)
         conn.execute('INSERT INTO agent_native_result_decisions VALUES(?,?,?,?,?,?,?,?)',
                      (key, request_id, result_id, agent_id, decision, note, 'owner', _now()))
         if decision == 'revision_requested':
-            import json
-            record = json.loads(result[1])
             feedback_id = str(uuid4())
             conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,text,status,created_at) VALUES(?,?,?,?,?,?,?)',
                          (feedback_id, agent_id, record['soul_revision'], 'result-revision:'+result_id,

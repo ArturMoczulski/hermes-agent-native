@@ -46,6 +46,12 @@ def list_results(conn, agent_id):
     from agent_native.acceptance import get as get_decision
     for result in results:
         decision = get_decision(conn, result['id'])
+        if 'review' not in result:
+            result['review'] = {
+                'required': decision is not None,
+                'source': 'legacy',
+                'reason': 'A prior owner decision is retained.' if decision else None,
+            }
         result['acceptance'] = decision['decision'] if decision else 'not_evaluated'
         result['owner_decision'] = decision
     return results
@@ -125,12 +131,27 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
                         'FROM agent_native_work_effects e JOIN agent_native_plane_mutations m '
                         'ON m.operation_id=e.operation_id WHERE e.run_id=? AND m.status=\'confirmed\' '
                         'ORDER BY m.created_at,m.operation_id', (run_id,))]
+        autonomy = conn.execute(
+            'SELECT level FROM agent_native_autonomy_attempts WHERE run_id=? ORDER BY created_at DESC LIMIT 1',
+            (run_id,)).fetchone()
+        if autonomy is None:
+            autonomy = conn.execute('SELECT level FROM agent_native_autonomy_settings WHERE agent_id=?',
+                                    (agent_id,)).fetchone()
+        review_required = bool(autonomy and autonomy[0] == 1 and args['outcome'] == 'submitted' and outputs)
+        review = {
+            'required': review_required,
+            'source': 'autonomy',
+            'reason': ('Approval-driven autonomy requires owner review of submitted deliverables.'
+                       if review_required else None),
+        }
         criteria = observation['resource'].get('description_html') or ''
         record = {'id': str(uuid4()), 'agent_id': agent_id, 'run_id': run_id, 'item_id': args['item_id'],
                   'soul_revision': work[1], 'purpose': purpose[0], 'criteria_snapshot': criteria,
                   'criteria_revision': _hash(criteria), 'assignment_fingerprint': observation['fingerprint'],
                   'criteria_observed_at': _now(), 'summary': args['summary'], 'outcome': args['outcome'],
                   'evaluation': {'report': args['evaluation'], 'source': 'agent'}, 'acceptance': 'not_evaluated',
+                  'owner_decision': None,
+                  'review': review,
                   'outputs': outputs, 'references': references, 'observed_effects': observed,
                   'observed_effect_scope': 'attempt', 'created_at': _now()}
         encoded = _json(record)

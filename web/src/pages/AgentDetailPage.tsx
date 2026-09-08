@@ -255,6 +255,7 @@ function CompactAgentView({ agent }: { agent: Agent }) {
     && !event.summary.startsWith("Plane: inspected ")
   ).reverse().slice(0, 20);
   return <div className="space-y-6">
+    <WorkResults agent={agent} attentionOnly />
     {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
     <div aria-label="Current agent summary" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
       {work && <span>Latest attempt: {work.state.replace('_', ' ')}</span>}
@@ -364,20 +365,25 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
   </section>;
 }
 
-function WorkResults({ agent }: { agent: Agent }) {
-  const results = agent.work?.results ?? [];
+function WorkResults({ agent, attentionOnly = false }: { agent: Agent; attentionOnly?: boolean }) {
+  const allResults = agent.work?.results ?? [];
+  const results = attentionOnly
+    ? allResults.filter((result) => result.review.required && result.acceptance === "not_evaluated")
+    : allResults;
   const { hash } = useLocation();
   const selectedId = results.find(result => hash === `#result-${result.id}`)?.id;
   useEffect(() => {
     if (selectedId) document.getElementById(`result-${selectedId}`)?.scrollIntoView({ block: "start" });
   }, [selectedId, hash]);
-  const labels: Record<WorkResult["outcome"], string> = {
-    submitted: "Submitted for review", discovery: "Discovery", waiting: "Waiting", blocked: "Blocked",
+  if (attentionOnly && !results.length) return null;
+  const labels: Record<Exclude<WorkResult["outcome"], "submitted">, string> = {
+    discovery: "Discovery", waiting: "Waiting", blocked: "Blocked",
   };
-  return <section aria-label="Work results" className="space-y-4 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">Results</h2>
+  return <section aria-label={attentionOnly ? "Needs your decision" : "Work results"} className={`space-y-4 rounded-xl border p-5 ${attentionOnly ? "border-amber-500/60 bg-amber-500/5" : ""}`}>
+    <h2 className="text-lg font-semibold">{attentionOnly ? "Needs your decision" : "Results"}</h2>
     {!results.length && <p>No results recorded yet.</p>}
-    {results.map((result) => <ResultCard key={result.id} agent={agent} result={result} label={labels[result.outcome]} />)}
+    {results.map((result) => <ResultCard key={result.id} agent={agent} result={result}
+      label={result.outcome === "submitted" ? (result.review.required ? "Awaiting owner review" : "Submitted deliverable") : labels[result.outcome]} />)}
   </section>;
 }
 
@@ -406,7 +412,7 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
       <section aria-label="Agent evaluation" className="space-y-2 text-sm">
         <h4 className="font-semibold">Agent evaluation</h4>
         <pre className="whitespace-pre-wrap break-words font-sans">{result.evaluation.report}</pre>
-        <p className="text-muted-foreground">This is the agent’s assessment. {result.acceptance === "not_evaluated" ? "Owner acceptance has not been evaluated." : result.acceptance === "accepted" ? "The owner accepted this exact result." : "The owner requested a revision."}</p>
+        <p className="text-muted-foreground">This is the agent’s assessment. {result.acceptance === "accepted" ? "The owner accepted this exact result." : result.acceptance === "revision_requested" ? "The owner requested a revision." : result.review.required ? "An owner decision is required for this deliverable." : "No owner decision is required."}</p>
       </section>
       {result.outputs.length ? <ul className="space-y-1 text-sm">{result.outputs.map((output) => {
         const metadata = agent.work?.outputs.find((item) => item.output_id === output.output_id && item.version === output.version);
@@ -415,7 +421,8 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
         </Link></li>;
       })}</ul> : <p className="text-sm text-muted-foreground">No saved outputs for this result.</p>}
       <PlanningItemLink agent={agent} itemId={result.item_id} />
-      {result.acceptance === "not_evaluated" ? <section aria-label="Owner result decision" className="space-y-3 border-t pt-3">
+      {result.acceptance === "not_evaluated" && result.review.required ? <section aria-label="Owner result decision" className="space-y-3 border-t pt-3">
+        {result.review.reason && <p className="text-sm font-medium">{result.review.reason}</p>}
         <p className="text-sm">Accepting applies only to this result and the output versions listed above.</p>
         <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => void decide("accepted")}>Accept result</Button></div>
         <label className="block text-sm">Revision instructions

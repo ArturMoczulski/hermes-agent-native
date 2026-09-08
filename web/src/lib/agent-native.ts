@@ -111,6 +111,7 @@ export type WorkResult = {
   summary: string;
   evaluation: { report: string; source: "agent" };
   acceptance: "not_evaluated" | "accepted" | "revision_requested";
+  review: { required: boolean; source: "autonomy" | "legacy"; reason: string | null };
   owner_decision?: { id: string; decision: "accepted" | "revision_requested"; note: string | null; created_at: string } | null;
   outputs: OutputReference[];
   created_at: string;

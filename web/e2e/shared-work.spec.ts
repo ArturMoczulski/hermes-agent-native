@@ -68,8 +68,9 @@ test('a supplied-data analyst plans and records a report through the shared work
   const outputLink = reader.getByRole('link', { name: 'Link to this version', exact: true })
   await expect(outputLink).toHaveAttribute('href', `/agents/${id}?output=${output.output_id}&version=1`)
   const results = page.getByRole('region', { name: 'Work results', exact: true })
-  await expect(results).toContainText('Submitted for review')
-  await expect(results).toContainText('Acceptance has not been evaluated')
+  await expect(results).toContainText('Submitted deliverable')
+  await expect(results).toContainText('No owner decision is required')
+  await expect(results.getByRole('button', { name: 'Accept result', exact: true })).toHaveCount(0)
   await expect(results).toContainText('Agent evaluation')
   await page.reload()
   await expect(reader).toContainText('Profit: 60 credits')
@@ -87,7 +88,7 @@ test('a supplied-data analyst plans and records a report through the shared work
   await demoCheckpoint(page, test.info(), {
     title: 'Submission is separate from acceptance',
     expected: 'A report must identify its agent evaluation without presenting it as accepted work.',
-    proof: 'Submitted for review, Agent evaluation and Acceptance has not been evaluated are all visible.',
+    proof: 'Submitted deliverable, Agent evaluation and No owner decision is required are all visible.',
     focus: results,
   })
   for (const suffix of ['&version=999', '']) {
@@ -118,6 +119,7 @@ for (const outcome of ['discovery', 'waiting'] as const) {
     await page.getByLabel('Purpose', { exact: true }).fill(
       'Assess whether this fictional sample supports a growth trend: 12 fulfilled orders, revenue 150 credits, costs 90 credits. ' +
       'Only one period has been supplied. Record the missing evidence or a useful scope finding; a file is unnecessary. ' + marker)
+    await page.getByText('Advanced work limits', { exact: false }).click()
     await page.getByLabel('Maximum run time (seconds)', { exact: true }).fill('300')
     await page.getByLabel('Maximum model steps', { exact: true }).fill('20')
     await page.getByRole('button', { name: 'Create agent', exact: true }).click()
@@ -140,11 +142,14 @@ for (const outcome of ['discovery', 'waiting'] as const) {
     expect(proof.worker_alive).toBe(false)
     expect(proof.native_roles).toContain('tool')
     expect(proof.items.every((item: {completed_at?:string|null}) => !item.completed_at)).toBe(true)
+    await expect(page.getByRole('region', { name: 'Needs your decision', exact: true })).toHaveCount(0)
+    await page.goto(`/agents/${id}?view=full`)
     const results = page.getByRole('region', { name: 'Work results', exact: true })
     await expect(results).toContainText(outcome === 'discovery' ? 'Discovery' : 'Waiting')
     await expect(results).toContainText(completed.work.results[0].summary)
     await expect(results).toContainText('No saved outputs for this result')
-    await expect(results).toContainText('Acceptance has not been evaluated')
+    await expect(results).toContainText('No owner decision is required')
+    await expect(results.getByRole('button', { name: 'Accept result', exact: true })).toHaveCount(0)
     await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toContainText('No output versions saved yet')
     await page.reload()
     await expect(results).toContainText(completed.work.results[0].summary)
