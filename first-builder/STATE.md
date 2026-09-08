@@ -1,3 +1,20 @@
+## Accountable parent child replacement — 2026-09-08
+
+AN-37's replacement lifecycle is now available to managed parent agents. The bounded
+`child_replace` operation requires an exact direct-child identity, successor name and
+protected purpose, replacement reason, and selected handoff. It is bound to the live
+parent attempt and native tool-call identity. The host rejects grandchildren, siblings
+and unrelated agents; the parent cannot widen model, autonomy, cadence or run limits.
+
+The old child subtree uses the same fail-closed retirement checks and records
+`source=parent` with the deciding parent identity. Replayed effects resolve to the same
+successor. Managed instructions distinguish replacement from ordinary delegation and
+require an explicit handoff without copying descendants or private memory.
+
+Evidence: four new parent-replacement cases within 20 focused replacement, delegation,
+supervision and prompt tests pass; focused Ruff also passes. Next: explicit stacked-pause
+resume controls.
+
 ## Explicit owner replacement and selected handoff — 2026-09-08
 
 AN-37 now lets the owner replace an active agent through one atomic lifecycle operation.

@@ -4,7 +4,9 @@ import pytest
 from agent_native import cadence
 from agent_native.identity import OWNER, ConflictError, create_root, get_root
 from agent_native.replacement import replace
-from tests.hermes_cli.test_agent_native_work_effects import broker  # noqa: F401
+from agent.work_policy import tool_schemas
+from tests.hermes_cli.test_agent_native_child_delegation import delegate, prepare_frozen_parent
+from tests.hermes_cli.test_agent_native_work_effects import broker, effect  # noqa: F401
 from tests.hermes_cli.test_agent_native_api import BODY, URL, client  # noqa: F401,E402
 
 
@@ -106,3 +108,57 @@ def test_owner_api_replaces_agent_and_replays_after_predecessor_retires(client):
     replay = client.post(f"{URL}/{predecessor['id']}/replace", json=body)
     assert replay.status_code == 201
     assert replay.json()['successor']['id'] == result['successor']['id']
+
+
+def child_replacement(s, child_id, call_id='replace-child'):
+    return s.run._effect(s.conn, s.planning, effect(s, call_id, 'child_replace', {
+        'child_id': child_id, 'name': 'Lore researcher v2',
+        'purpose': 'Continue delegated lore research with a clean context.',
+        'reason': 'The parent selected a new research approach.',
+        'handoff': 'Review the retained lore index and continue the open chronology task.',
+    }))
+
+
+def test_managed_parent_receives_bounded_direct_child_replacement_tool():
+    schema = next(
+        tool['function'] for tool in tool_schemas()
+        if tool['function']['name'] == 'child_replace'
+    )
+
+    assert schema['parameters']['required'] == [
+        'child_id', 'name', 'purpose', 'reason', 'handoff',
+    ]
+    assert schema['parameters']['additionalProperties'] is False
+
+
+def test_accountable_parent_replaces_its_direct_child(broker):
+    s = broker
+    prepare_frozen_parent(s)
+    child_id = delegate(s)['child_id']
+
+    result = child_replacement(s, child_id)
+
+    predecessor = get_root(s.conn, actor=OWNER, agent_id=child_id)
+    successor = get_root(s.conn, actor=OWNER, agent_id=result['successor_id'])
+    assert result['predecessor_id'] == child_id
+    assert predecessor['retirement']['source'] == 'parent'
+    assert predecessor['retirement']['decision_agent_id'] == s.root['id']
+    assert successor['parent_id'] == s.root['id']
+    assert successor['replacement']['handoff'] == result['handoff']
+    assert successor['work']['limits'] == predecessor['work']['limits']
+    assert child_replacement(s, child_id)['successor_id'] == successor['id']
+
+
+def test_parent_cannot_replace_a_non_direct_descendant(broker):
+    s = broker
+    prepare_frozen_parent(s)
+    child_id = delegate(s)['child_id']
+    grandchild = create_root(
+        s.conn, actor=OWNER, request_id='replacement-grandchild', name='Grandchild',
+        purpose='Continue nested work.', parent_id=child_id,
+    )
+
+    with pytest.raises(PermissionError, match='direct child'):
+        child_replacement(s, grandchild['id'])
+
+    assert get_root(s.conn, actor=OWNER, agent_id=grandchild['id'])['retirement'] is None

@@ -224,8 +224,12 @@ creates a distinct successor under the same parent, copies bounded model/autonom
 cadence configuration, records the reason and selected handoff, retires the predecessor
 subtree, and links both identities. It fails closed on unresolved subtree authority and
 replays safely after a lost response. The successor receives the handoff in its managed
-work context; private memory and descendants are not copied. Next: grant a direct parent
-the same bounded child-replacement operation, then add stacked-pause resume controls.
+work context; private memory and descendants are not copied. Accountable parents now
+receive the same operation as `child_replace`, scoped strictly to one direct child and
+bound to the live parent attempt and tool-call identity. The child records the deciding
+parent, replays return the same successor, and attempts to skip the accountable parent
+by targeting a deeper descendant fail without lifecycle changes. Next: explicit
+stacked-pause resume controls.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

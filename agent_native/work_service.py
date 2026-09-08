@@ -73,7 +73,7 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'A confirmed planning change is a valid result with an empty outputs list. '
             'Use output_read to read complete prior output versions when excerpts are truncated. Use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
             'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
-            'Use child_create only for a clearly independent delegated responsibility. Give the child a protected purpose, remain accountable for its work, and do not treat creating it as completing your assignment. '
+            'Use child_create only for a clearly independent delegated responsibility. Give the child a protected purpose, remain accountable for its work, and do not treat creating it as completing your assignment. Use child_replace only when a direct child\'s ongoing responsibility needs a clean successor; select the handoff explicitly. '
             'Use child_inspect to review descendant evidence and child_result_evaluate to evaluate an exact submitted result from your direct child. '
             'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
             'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
@@ -141,7 +141,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('child_create','child_inspect','child_result_evaluate','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -163,6 +163,10 @@ class _Run:
             from agent_native.child_delegation import create
             result=create(conn,validate=self.validate,parent_id=self.work['agent_id'],
                           parent_run_id=self.work['id'],call_id=call_id,arguments=args)
+        elif tool == 'child_replace':
+            from agent_native.replacement import replace_child
+            result=replace_child(conn,validate=self.validate,parent_id=self.work['agent_id'],
+                                 parent_run_id=self.work['id'],call_id=call_id,arguments=args)
         elif tool == 'child_inspect':
             from agent_native.child_supervision import inspect
             result=inspect(conn,validate=self.validate,home=self.service.home,
@@ -272,6 +276,7 @@ class _Run:
             conn.execute('UPDATE agent_native_work_effects SET result=? WHERE run_id=? AND call_id=?',
                          (json.dumps(result),self.work['id'],call_id))
             summary = (('Created child agent: '+result['child_id']) if tool=='child_create' else
+                       ('Replaced child agent: '+result['predecessor_id']+' with '+result['successor_id']) if tool=='child_replace' else
                        ('Inspected descendant: '+result.get('child_id',result.get('child',{}).get('id','unknown'))) if tool=='child_inspect' else
                        ('Evaluated child result: '+result['decision']) if tool=='child_result_evaluate' else
                        ('Read saved output: '+result['title']) if tool=='output_read' else
