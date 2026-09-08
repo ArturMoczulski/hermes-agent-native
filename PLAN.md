@@ -195,11 +195,13 @@ question-comment increment. AN-84 now supplies scoped in-run discussion review;
 AN-75 still owns cadence wake-up/continuation. See Builder state for verification
 and remaining acceptance. Keep cycles undated.
 
-AN-75 is the active continuity item: opt-in cadence and retained attempts bring the
-agent beyond a single run. The first cadence increment includes bounded
+AN-75 is complete: opt-in cadence and retained attempts bring the agent beyond a
+single run. Its continuity behavior includes bounded
 check-ins, prior-work context, Plane-feedback revision and visible attempt history.
-Whole-purpose lifecycle acceptance and activity-without-progress policy remain subsequent work;
-see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.
+whole-purpose evaluation, legitimate waiting and clarification, guarded retirement,
+actionable-input wakeups, bounded recovery, and restart-safe continuation. Broader
+purpose-change handoff remains AN-41, activity-without-progress policy remains AN-51,
+and broader comment acceptance remains AN-84.
 The restart boundary now also has native browser evidence: restarting the actual managed
 work service during a held provider call retains the stopped attempt as interrupted,
 admits exactly one distinct cadence attempt, and leaves cadence eligible without replaying

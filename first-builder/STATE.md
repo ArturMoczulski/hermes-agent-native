@@ -12,6 +12,13 @@ always targets the current instance; the restart route exists only in the dispos
 backend. Evidence: one focused Playwright case, two focused backend restart cases,
 TypeScript, focused ESLint and Ruff, and whitespace checks pass.
 
+This closes AN-75's framework continuity scope. The retained evidence now covers
+ordinary cadence, progression across distinct assignments, actionable owner and child
+input, wait/clarify semantics, bounded limits, retryable failures, transient Plane
+reads, settled service interruption, unresolved-effect blocking, and guarded
+whole-purpose retirement. Purpose-change handoff remains independently tracked by
+AN-41; the complete real-model owner demonstration remains AN-76.
+
 ## Deliverable review acceptance complete — 2026-09-09
 
 AN-9 is complete. The owner workflow distinguishes operational attempt history from
