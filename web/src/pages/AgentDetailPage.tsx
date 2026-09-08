@@ -584,21 +584,6 @@ function WorkResults({ agent, attentionOnly = false }: { agent: Agent; attention
 }
 
 function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult; label: string }) {
-  const [note, setNote] = useState("");
-  const [busy, setBusy] = useState(false);
-  const [message, setMessage] = useState("");
-  async function decide(decision: "accepted" | "revision_requested") {
-    if (busy || (decision === "revision_requested" && !note.trim())) return;
-    setBusy(true); setMessage("");
-    try {
-      await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/results/${encodeURIComponent(result.id)}/decision`, {
-        method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request_id: crypto.randomUUID(), decision, expected_criteria_revision: result.criteria_revision, ...(decision === "revision_requested" ? { note: note.trim() } : {}) }),
-      });
-      setMessage(decision === "accepted" ? "Accepted this exact result and its listed output versions." : "Revision requested. The agent will receive this as trusted feedback on its next cadence attempt.");
-    } catch { setMessage("Could not confirm this decision. Reload the result before retrying."); }
-    finally { setBusy(false); }
-  }
   return <article id={`result-${result.id}`} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">{label}</h3>
@@ -617,16 +602,8 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
         </Link></li>;
       })}</ul> : <p className="text-sm text-muted-foreground">No saved outputs for this result.</p>}
       <PlanningItemLink agent={agent} itemId={result.item_id} />
-      {result.acceptance === "not_evaluated" && result.review.required ? <section aria-label="Owner result decision" className="space-y-3 border-t pt-3">
-        {result.review.reason && <p className="text-sm font-medium">{result.review.reason}</p>}
-        <p className="text-sm">Accepting applies only to this result and the output versions listed above.</p>
-        <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => void decide("accepted")}>Accept result</Button></div>
-        <label className="block text-sm">Revision instructions
-          <textarea value={note} onChange={event => setNote(event.target.value)} disabled={busy} maxLength={4000} rows={3} className="mt-1 w-full rounded border bg-background p-2" />
-        </label>
-        <Button disabled={busy || !note.trim()} onClick={() => void decide("revision_requested")}>Request revision</Button>
-      </section> : result.owner_decision?.note ? <p className="whitespace-pre-wrap text-sm">Owner note: {result.owner_decision.note}</p> : null}
-      {message && <p role="status" className="text-sm">{message}</p>}
+      {result.review.required && result.acceptance === "not_evaluated" && <p className="text-sm font-medium">Open the exact saved output version above to accept it or request revision.</p>}
+      {result.owner_decision?.note && <p className="whitespace-pre-wrap text-sm">Owner note: {result.owner_decision.note}</p>}
     </article>;
 }
 
@@ -667,16 +644,17 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
       <PlanningItemLink agent={agent} itemId={output.item_id} />
       <div><Button onClick={() => select(output)}>Read output</Button></div>
     </article>)}</div>
-    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agentId={agent.id}
+    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent}
       outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
   </section>;
 }
 
 type LoadedOutput = { key: string; output?: OutputVersion; error?: boolean };
 
-function OutputReader({ agentId, outputId, requestedVersion, uniqueSelection, onClose }: {
-  agentId: string; outputId: string | null; requestedVersion: string | null; uniqueSelection: boolean; onClose: () => void;
+function OutputReader({ agent, outputId, requestedVersion, uniqueSelection, onClose }: {
+  agent: Agent; outputId: string | null; requestedVersion: string | null; uniqueSelection: boolean; onClose: () => void;
 }) {
+  const agentId = agent.id;
   const [retry, setRetry] = useState(0);
   const [loaded, setLoaded] = useState<LoadedOutput | null>(null);
   const version = Number(requestedVersion);
@@ -704,14 +682,54 @@ function OutputReader({ agentId, outputId, requestedVersion, uniqueSelection, on
   </div>;
   if (!current?.output) return <p role="status">Loading output…</p>;
   const output = current.output;
+  const result = agent.work?.results.find((candidate) => candidate.outputs.some(
+    (reference) => reference.output_id === output.output_id && reference.version === output.version));
   return <article aria-label="Output reader" className="space-y-4 border-t pt-5">
     <div className="flex items-start justify-between gap-3"><h3 className="text-xl font-semibold">{output.title} · Version {output.version}</h3><Button onClick={onClose}>Close output</Button></div>
     <a className="inline-block text-sm underline underline-offset-4" href={outputVersionLink(agentId, output)}>Link to this version</a>
     {output.format === "markdown" ? <Markdown content={output.content} /> : <pre className="whitespace-pre-wrap break-words text-sm">{output.content}</pre>}
+    {result && <OutputReview agent={agent} result={result} />}
     {output.evaluation != null && <section aria-label="Saved version evaluation" className="space-y-2 border-t pt-4">
       <h4 className="font-semibold">Agent evaluation</h4>
-      <p className="text-xs text-muted-foreground">The agent’s assessment of this saved version. Acceptance has not been evaluated.</p>
+      <p className="text-xs text-muted-foreground">The agent’s assessment of this saved version. It is evidence, not an owner decision.</p>
       <pre className="whitespace-pre-wrap break-words text-sm">{typeof output.evaluation === "string" ? output.evaluation : typeof output.evaluation.report === "string" ? output.evaluation.report : JSON.stringify(output.evaluation, null, 2)}</pre>
     </section>}
   </article>;
+}
+
+function OutputReview({ agent, result }: { agent: Agent; result: WorkResult }) {
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  async function decide(decision: "accepted" | "revision_requested") {
+    if (busy || (decision === "revision_requested" && !note.trim())) return;
+    setBusy(true); setMessage("");
+    try {
+      await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/results/${encodeURIComponent(result.id)}/decision`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: crypto.randomUUID(), decision, expected_criteria_revision: result.criteria_revision, ...(decision === "revision_requested" ? { note: note.trim() } : {}) }),
+      });
+      setMessage(decision === "accepted" ? "Accepted this exact output version." : "Revision requested. The agent will receive your instructions on its next cadence attempt.");
+    } catch { setMessage("Could not confirm this decision. Reload the output before retrying."); }
+    finally { setBusy(false); }
+  }
+  const status = result.acceptance === "accepted" ? "Accepted by owner"
+    : result.acceptance === "revision_requested" ? "Revision requested"
+    : result.review.required ? "Owner approval required" : "Review optional";
+  return <section aria-label="Output review" className="space-y-3 rounded-lg border p-4">
+    <div className="flex flex-wrap items-center justify-between gap-2"><h4 className="font-semibold">Output review</h4><span className="rounded-full border px-3 py-1 text-sm">{status}</span></div>
+    <p className="text-sm">{result.review.required
+      ? result.review.reason ?? "This exact output version requires an owner decision before dependent work continues."
+      : "No owner decision is required. The agent may continue its authorized work."}</p>
+    {result.review.required && result.acceptance === "not_evaluated" && <>
+      <p className="text-sm">Your decision applies only to this result and its listed output versions.</p>
+      <Button disabled={busy} onClick={() => void decide("accepted")}>Accept output</Button>
+      <label className="block text-sm">Revision instructions
+        <textarea value={note} onChange={event => setNote(event.target.value)} disabled={busy} maxLength={4000} rows={3} className="mt-1 w-full rounded border bg-background p-2" />
+      </label>
+      <Button disabled={busy || !note.trim()} onClick={() => void decide("revision_requested")}>Request revision</Button>
+    </>}
+    {result.owner_decision?.note && <p className="whitespace-pre-wrap text-sm">Owner note: {result.owner_decision.note}</p>}
+    {message && <p role="status" className="text-sm">{message}</p>}
+  </section>;
 }

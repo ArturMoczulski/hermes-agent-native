@@ -51,6 +51,11 @@ If Plane criteria change afterward, submission stops with a stale-policy conflic
 until the owner refreshes the gate from a newly observed selection.
 Owner decisions also carry the exact criteria revision displayed by the client; the
 API rejects a stale decision before accepting or requesting revision.
+The review interface is now output-centered: Work results retain evaluation and gate
+history but direct required review to the referenced immutable saved-output version.
+The output reader clearly distinguishes required, optional, accepted and
+revision-requested states, and only a pending required review exposes Accept output or
+Request revision. Focused required-review and balanced-autonomy browser journeys pass.
 Cadence enforcement now treats an existing required review as an actual gate: no
 new automatic attempt is queued while an exact result awaits its owner decision.
 Accepting or requesting revision resolves that gate and makes the decision immediately

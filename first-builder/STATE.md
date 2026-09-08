@@ -1,3 +1,16 @@
+## Output-centered owner review — 2026-09-08
+
+AN-9 now places owner decisions beside the exact immutable saved-output version under
+review. Work results remain operational history: a gated result directs the owner to
+open its referenced output, while optional and ungated results expose no acceptance
+controls. The output reader distinguishes Owner approval required, Review optional,
+Accepted by owner and Revision requested, and required decisions retain the existing
+result, output-version and criteria-revision bindings.
+
+Focused evidence: the deterministic required-review writer journey accepts from the
+output reader and persists the decision, the balanced-autonomy analyst journey shows
+optional review without decision controls, and TypeScript typecheck passes.
+
 ## Criteria-revision-bound owner decisions — 2026-09-08
 
 AN-9 owner acceptance now includes the exact criteria revision displayed with the

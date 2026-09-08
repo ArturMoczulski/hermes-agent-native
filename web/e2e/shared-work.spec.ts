@@ -15,6 +15,7 @@ test('a supplied-data analyst plans and records a report through the shared work
   await page.getByLabel('Purpose', { exact: true }).fill(
     'Analyze this fictional operations sample: 12 fulfilled orders, revenue 150 credits, costs 90 credits. ' +
     'Report profit and margin using only this supplied sample. Do not browse or take external actions. ' + marker)
+  await page.getByText('Advanced work limits', { exact: false }).click()
   await page.getByLabel('Maximum run time (seconds)', { exact: true }).fill('300')
   await page.getByLabel('Maximum model steps', { exact: true }).fill('20')
   await page.getByRole('button', { name: 'Create agent', exact: true }).click()
@@ -25,7 +26,12 @@ test('a supplied-data analyst plans and records a report through the shared work
   await expect.poll(async () => (await evidence()).model_requests.filter((r: {system_text:string}) => r.system_text.includes(marker)).length,
     { timeout: 30000 }).toBeGreaterThan(0)
   const observed = (await evidence()).model_requests.find((r: {system_text:string}) => r.system_text.includes(marker))
-  expect(observed.tools).toEqual(['output_publish', 'plane_operation_execute', 'plane_resource_inspect', 'result_record', 'work_item_select'])
+  expect(observed.tools).toEqual([
+    'child_create', 'child_inspect', 'child_replace', 'child_result_evaluate',
+    'output_publish', 'output_read', 'plane_operation_execute', 'plane_resource_inspect',
+    'progress_report', 'purpose_evaluate', 'purpose_retire', 'result_record',
+    'work_comments', 'work_feedback', 'work_item_select', 'work_question',
+  ])
   expect(observed.initial_context).not.toMatch(/fantasy story|writing task|story_publish/i)
   expect(observed.system_text).not.toContain('planning and story tools')
   await expect.poll(async () => {
@@ -33,7 +39,7 @@ test('a supplied-data analyst plans and records a report through the shared work
     if (['failed', 'unknown'].includes(a.work.state)) throw new Error(JSON.stringify(a.work))
     return a.work.state
   }, { timeout: 60000 }).toBe('completed')
-  await expect(page.getByLabel('Execution status')).toHaveText('Completed')
+  await expect(page.getByLabel('Execution status')).toHaveText('Automatic work off')
   const completed = await get()
   expect(completed.work.outputs).toHaveLength(1)
   expect(completed.work.results).toHaveLength(1)
@@ -56,21 +62,26 @@ test('a supplied-data analyst plans and records a report through the shared work
   expect(proof.cycles).toHaveLength(1)
   expect(proof.cycles[0].start_date ?? null).toBeNull()
   expect(proof.cycles[0].end_date ?? null).toBeNull()
+  await page.goto(`/agents/${id}?view=full`)
   await expect(page.getByRole('region', { name: 'Saved outputs', exact: true })).toBeVisible()
   await page.getByRole('button', { name: 'Read output', exact: true }).click()
   const reader = page.getByRole('article', { name: 'Output reader', exact: true })
   await expect(reader).toContainText('Profit: 60 credits')
   await expect(reader).toContainText('Margin: 40%')
+  const review = reader.getByRole('region', { name: 'Output review', exact: true })
+  await expect(review).toContainText('Review optional')
+  await expect(review).toContainText('No owner decision is required. The agent may continue its authorized work.')
+  await expect(review.getByRole('button', { name: /Accept|revision/i })).toHaveCount(0)
   const outputUrl = new URL(page.url())
   expect(outputUrl.searchParams.get('output')).toBe(output.output_id)
   expect(outputUrl.searchParams.get('version')).toBe('1')
-  expect([...outputUrl.searchParams.keys()].sort()).toEqual(['output', 'version'])
+  expect([...outputUrl.searchParams.keys()].sort()).toEqual(['output', 'version', 'view'])
   const outputLink = reader.getByRole('link', { name: 'Link to this version', exact: true })
   await expect(outputLink).toHaveAttribute('href', `/agents/${id}?output=${output.output_id}&version=1`)
   const results = page.getByRole('region', { name: 'Work results', exact: true })
   await expect(results).toContainText('Submitted deliverable')
   await expect(results).toContainText('No owner decision is required')
-  await expect(results.getByRole('button', { name: 'Accept result', exact: true })).toHaveCount(0)
+  await expect(results.getByRole('button', { name: /Accept|revision/i })).toHaveCount(0)
   await expect(results).toContainText('Agent evaluation')
   await page.reload()
   await expect(reader).toContainText('Profit: 60 credits')
