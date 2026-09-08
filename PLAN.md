@@ -67,7 +67,7 @@ Cadence enforcement now treats an existing required review as an actual gate: no
 new automatic attempt is queued while an exact result awaits its owner decision.
 Accepting or requesting revision resolves that gate and makes the decision immediately
 eligible for the next cadence attempt. Optional review continues without interruption.
-AN-92 now defines the paired owner-controlled autonomy policy: five eagerness
+AN-92 completes the paired owner-controlled autonomy policy: five eagerness
 levels from approval-driven through highly autonomous, with Level 3 as the new-agent
 default. The level controls when review blocks continuation; it never weakens an
 explicit owner, assignment, authority or mandatory-policy gate. AN-9 supplies the
@@ -76,7 +76,9 @@ and AN-75 resumes cadence work after the decision.
 An accountable parent can now configure one direct child's eagerness level for future
 attempts through a revision-bound, reasoned and idempotent managed operation. It cannot
 target deeper or unrelated agents, change other configuration, or clear an explicit
-owner deliverable-review policy.
+owner deliverable-review policy. Paired deterministic browser journeys prove Level 5
+continues between ordinary assignments without approval, while the same level stops at
+an explicit owner gate and resumes only after the exact output version is accepted.
 AN-90 fixes continuation reads: complete immutable saved outputs and stale-question
 applicability without terminating work. Targeted regression and native browser proof
 pass. Follow-up Plane429 failure prompted local600/minute capacity and bounded

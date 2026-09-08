@@ -51,3 +51,55 @@ test('highly autonomous agent advances to a different ready assignment without o
     await request.post(`${api}/work/pause`, { headers })
   }
 })
+
+test('explicit owner review blocks highly autonomous cadence until the exact output is accepted', async ({ page, request }) => {
+  test.setTimeout(90000)
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: false } })
+  const created = await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
+    request_id: crypto.randomUUID(), name: 'Gated autonomous world builder',
+    purpose: 'Continuously develop a coherent fantasy world setting. E2E_AUTONOMOUS_CONTINUATION',
+    autonomy_level: 5, work: { timeout_seconds: 180, max_iterations: 12 },
+  } })
+  expect(created.status()).toBe(201)
+  const { id } = await created.json()
+  const api = `${backend}/api/agent-native/agents/${id}`
+  const current = async () => await (await request.get(api, { headers })).json()
+  try {
+    const configured = await request.put(`${api}/autonomy`, { headers, data: {
+      level: 5, require_owner_review: true, expected_revision: 1,
+    } })
+    expect(configured.ok()).toBe(true)
+    await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+
+    await expect.poll(async () => (await current()).work.state, { timeout: 30000 }).toBe('completed')
+    const first = (await current()).work
+    expect(first.results[0]).toMatchObject({
+      outcome: 'submitted', review: { required: true, source: 'owner_policy' },
+      acceptance: 'not_evaluated',
+    })
+    expect((await request.post(`${api}/cadence`, { headers, data: {
+      expected_revision: 1, enabled: true, interval_seconds: 2,
+    } })).ok()).toBe(true)
+
+    await page.waitForTimeout(4000)
+    expect((await current()).work.id).toBe(first.id)
+    await page.goto(`/agents/${id}?view=full`)
+    await page.getByRole('button', { name: 'Read output', exact: true }).click()
+    const reader = page.getByRole('article', { name: 'Output reader', exact: true })
+    await expect(reader.getByRole('region', { name: 'Output review', exact: true }))
+      .toContainText('Owner approval required')
+    await reader.getByRole('button', { name: 'Accept output', exact: true }).click()
+    await expect(reader).toContainText('Accepted this exact output version.')
+
+    await expect.poll(async () => {
+      const agent = await current()
+      return agent.work.id !== first.id && agent.work.state === 'completed'
+    }, { timeout: 30000 }).toBe(true)
+    const continued = (await current()).work
+    expect(continued.id).not.toBe(first.id)
+    expect(continued.outputs).toHaveLength(2)
+  } finally {
+    await request.post(`${api}/work/pause`, { headers })
+  }
+})

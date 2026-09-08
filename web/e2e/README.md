@@ -204,8 +204,11 @@ are an owner review tool, not the default feature-verification command.
 purpose-level output, leave its review optional, and use a later cadence session to
 select and complete a different ready Plane assignment without owner input. The owner
 view must show both outputs tied to distinct work items and expose no acceptance
-controls. The model is a deterministic local fixture; the case verifies framework
-continuation and review policy rather than creative quality.
+controls. Its paired case applies an explicit owner policy at the same Level 5,
+proves cadence cannot start a second attempt while the exact output remains pending,
+then accepts that version and observes a fresh attempt continue. The model is a
+deterministic local fixture; these cases verify framework continuation and review
+policy rather than creative quality.
 
 ## Work-selection progress
 

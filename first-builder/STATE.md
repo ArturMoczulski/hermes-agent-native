@@ -1,3 +1,15 @@
+## Mandatory gates override autonomy eagerness — 2026-09-08
+
+AN-92 acceptance is complete. Paired deterministic browser journeys now prove both
+sides of Level 5: ordinary purpose-level outputs remain optional review and cadence
+advances to a distinct ready assignment, while an explicit owner-authored deliverable
+gate prevents a second attempt. Accepting that exact output version wakes cadence and
+admits a fresh attempt that continues the purpose.
+
+This closes the five-level autonomy behavior together with revisioned owner settings,
+frozen attempt policy, direct-parent child configuration and mandatory-gate precedence.
+The final focused Playwright journey passes without a paid model.
+
 ## Accountable parent control of child autonomy — 2026-09-08
 
 AN-92 now lets an admitted parent configure the autonomy eagerness level of one exact
