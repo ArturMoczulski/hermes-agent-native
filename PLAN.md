@@ -41,6 +41,10 @@ the owner API rejects attempts to accept them. The compact view surfaces only
 currently gated deliverables; Full view retains all evaluations and prior decisions.
 Explicit assignment- and policy-authored gates beyond autonomy level 1 remain the
 next AN-9 increment.
+Cadence enforcement now treats an existing required review as an actual gate: no
+new automatic attempt is queued while an exact result awaits its owner decision.
+Accepting or requesting revision resolves that gate and makes the decision immediately
+eligible for the next cadence attempt. Optional review continues without interruption.
 AN-92 now defines the paired owner-controlled autonomy policy: five eagerness
 levels from approval-driven through highly autonomous, with Level 3 as the new-agent
 default. The level controls when review blocks continuation; it never weakens an

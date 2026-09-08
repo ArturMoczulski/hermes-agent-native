@@ -1,3 +1,13 @@
+## Required result review now gates cadence — 2026-09-08
+
+AN-9's stored `review.required` flag previously changed the UI and decision API but
+did not actually prevent the cadence scheduler from starting dependent work. Cadence
+now checks for undecided, exact gated results before queuing another attempt. An owner
+acceptance or revision request records the trusted decision, advances `next_due`, and
+allows a fresh attempt; optional results never enter this gate. The focused regression
+starts from a real required result, proves no cadence attempt is queued, accepts the
+result through the owner API, and then proves a new attempt becomes eligible.
+
 ## Silent successful cadence detection — 2026-09-08
 
 AN-51 now also detects cadence attempts that report completion without leaving any

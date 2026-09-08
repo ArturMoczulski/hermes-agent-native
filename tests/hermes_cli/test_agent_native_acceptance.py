@@ -3,6 +3,8 @@ import hashlib
 import json
 from uuid import uuid4
 
+import pytest
+
 from tests.hermes_cli.test_agent_native_model_settings import configured, client, URL, BODY  # noqa: F401
 
 
@@ -65,3 +67,27 @@ def test_owner_cannot_accept_result_without_a_review_gate(configured):
         'request_id': 'accept-optional', 'decision': 'accepted'})
     assert response.status_code == 422
     assert response.json()['detail'] == 'This result does not require an owner decision'
+
+
+@pytest.mark.parametrize('decision,note',[
+    ('accepted',None),('revision_requested','Continue with a stronger ending.'),
+])
+def test_required_review_stops_cadence_until_owner_decides(configured,decision,note):
+    root, result_id = _result(configured)
+    from agent_native import cadence
+    from agent_native.identity import OWNER
+    from hermes_cli.kanban_db_connect import connect_closing
+    with connect_closing(board='default') as conn:
+        cadence.configure(conn,actor=OWNER,agent_id=root['id'],expected_revision=1,
+                          interval_seconds=1,enabled=True)
+        conn.execute("UPDATE agent_native_work_runs SET state='completed',"
+                     "finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+                     (root['work']['id'],))
+        assert cadence.queue_due(conn,now='2099-01-01T00:00:00+00:00')==[]
+
+    path = f'{URL}/{root["id"]}/results/{result_id}/decision'
+    assert configured.post(path,json={
+        'request_id':'resolve-cadence-gate','decision':decision,**({'note':note} if note else {})
+    }).status_code==200
+    with connect_closing(board='default') as conn:
+        assert len(cadence.queue_due(conn,now='2099-01-01T00:00:01+00:00'))==1

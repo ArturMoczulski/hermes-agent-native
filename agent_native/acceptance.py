@@ -1,4 +1,5 @@
 """Version-bound owner decisions for immutable work results."""
+import json
 from uuid import uuid4
 
 from agent_native.identity import ConflictError, _now, _require_owner
@@ -19,6 +20,21 @@ def get(conn, result_id):
                        (result_id,)).fetchone()
     return dict(zip(('id','result_id','agent_id','decision','note','actor','created_at'), row)) if row else None
 
+
+def pending_required(conn, agent_id):
+    """Return exact gated results that still require an owner decision."""
+    pending = []
+    for result_id, encoded in conn.execute(
+        'SELECT r.id,r.record_json FROM agent_native_work_results r '
+        'LEFT JOIN agent_native_result_decisions d ON d.result_id=r.id '
+        'WHERE r.agent_id=? AND d.id IS NULL ORDER BY r.created_at,r.id',
+        (agent_id,),
+    ).fetchall():
+        record = json.loads(encoded)
+        if record.get('review', {}).get('required'):
+            pending.append(result_id)
+    return pending
+
 def decide(conn, *, actor, agent_id, result_id, request_id, decision, note=None):
     _require_owner(actor)
     if decision not in ('accepted','revision_requested'):
@@ -34,7 +50,6 @@ def decide(conn, *, actor, agent_id, result_id, request_id, decision, note=None)
         result = conn.execute('SELECT agent_id,record_json FROM agent_native_work_results WHERE id=?', (result_id,)).fetchone()
         if not result or result[0] != agent_id:
             raise KeyError(result_id)
-        import json
         record = json.loads(result[1])
         if not record.get('review', {}).get('required'):
             raise ValueError('This result does not require an owner decision')

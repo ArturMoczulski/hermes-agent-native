@@ -55,6 +55,8 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if agent_id in busy_agents: continue
             from agent_native.progress_concerns import suspend_if_stalled
             if suspend_if_stalled(conn, agent_id): continue
+            from agent_native.acceptance import pending_required
+            if pending_required(conn, agent_id): continue
             root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
             previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if (not previous or root[0]!=revision or previous[2]!=revision
