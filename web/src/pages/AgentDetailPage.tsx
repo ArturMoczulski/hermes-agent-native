@@ -341,6 +341,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       {work.state === "queued" && agent.setup?.status !== "ready" && <p>The request is saved. Work will begin after the private workspace and Plane project are ready.</p>}
       {work.state === "stopping" && <p role="status">Stopping the current run. Pause will be confirmed after it stops.</p>}
       {work.state === "paused" && <p>The run is paused. It will not restart automatically.</p>}
+      {work.state === "interrupted" && <p>The previous process was interrupted after its effects settled. If thinking cadence is enabled, it will continue in a fresh attempt.</p>}
       {work.state === "limit_reached" && <p>This bounded attempt reached its configured limit. If thinking cadence is enabled, the next check-in can continue the work in a new attempt.</p>}
       {work.state === "completed" && <p>This run has finished. Review its results and saved outputs below. Finishing a run does not mean its work has been accepted.</p>}
       {work.state === "unknown" && <p>The run outcome needs checking before any further work.</p>}

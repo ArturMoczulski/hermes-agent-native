@@ -59,8 +59,12 @@ fresh inspection within the same run; unknown delivery still stops work.
 attempts are implemented; a live agent has picked up Plane feedback and saved a
 revised output without a manual continuation prompt. The demo exposed a false
 cycle-assignment conflict after timestamp-only Plane updates; that is now fixed
-with focused backend and browser coverage. Recovery after interrupted/failed work
-remains unfinished. A normal per-attempt runtime limit is now recorded separately
+with focused backend and browser coverage. Restart recovery now records a settled
+process interruption explicitly and lets enabled cadence begin a fresh attempt;
+it never replays the interrupted process, and any effect or Plane delivery without
+a settled receipt remains outcome-unknown for owner review. Owner pause remains
+terminal and cannot auto-recover. Recovery after failed work remains unfinished.
+A normal per-attempt runtime limit is now recorded separately
 from owner pause and remains eligible for a later cadence attempt; legacy timeout
 records are repaired on startup. Agent creation uses 180 seconds and 50 model
 steps per attempt by default, with overrides collapsed under advanced controls.
@@ -152,5 +156,5 @@ and remaining acceptance. Keep cycles undated.
 AN-75 remains active behind the immediate AN-9 acceptance slice: opt-in cadence
 and retained attempts bring the agent beyond a single run. The first cadence increment includes bounded
 check-ins, prior-work context, Plane-feedback revision and visible attempt history.
-Recovery/resume and whole-purpose lifecycle acceptance remain subsequent work;
+Failed-attempt recovery and whole-purpose lifecycle acceptance remain subsequent work;
 see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.

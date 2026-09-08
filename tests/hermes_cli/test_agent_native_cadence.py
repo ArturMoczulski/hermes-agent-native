@@ -103,17 +103,35 @@ def test_legacy_attempt_migration_preserves_foreign_key_history():
     assert c.execute('PRAGMA foreign_keys').fetchone()[0]==1
 
 
-def test_service_restart_holds_interrupted_attempt_instead_of_replaying(broker):
+def test_service_restart_queues_fresh_cadence_attempt_after_settled_interruption(broker):
     from agent_native import cadence
     from agent_native.work_service import WorkService
     from hermes_cli.kanban_db_connect import connect_closing
     s=broker
-    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,interval_seconds=1,enabled=True)
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,interval_seconds=3600,enabled=True)
+    service=WorkService(s.db_path,s.home).start()
+    try:
+        with connect_closing(s.db_path) as reopened:
+            assert reopened.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(s.work['id'],)).fetchone()[0]=='interrupted'
+            [queued] = cadence.queue_due(reopened,now='2099-01-01T00:00:00+00:00')
+            assert queued != s.work['id']
+            assert reopened.execute('SELECT count(*) FROM agent_native_work_runs').fetchone()[0]==2
+    finally:
+        service.stop()
+
+
+def test_service_restart_keeps_unreceipted_effect_unknown(broker):
+    from agent_native import cadence
+    from agent_native.work_service import WorkService
+    from hermes_cli.kanban_db_connect import connect_closing
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,interval_seconds=3600,enabled=True)
+    s.conn.execute('INSERT INTO agent_native_work_effects VALUES(?,?,?,?,NULL)',
+                   (s.work['id'],'in-flight','operation-in-flight','fingerprint'))
     service=WorkService(s.db_path,s.home).start()
     try:
         with connect_closing(s.db_path) as reopened:
             assert reopened.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(s.work['id'],)).fetchone()[0]=='unknown'
             assert cadence.queue_due(reopened,now='2099-01-01T00:00:00+00:00')==[]
-            assert reopened.execute('SELECT count(*) FROM agent_native_work_runs').fetchone()[0]==1
     finally:
         service.stop()

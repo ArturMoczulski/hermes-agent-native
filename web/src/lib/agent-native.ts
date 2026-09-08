@@ -128,7 +128,7 @@ export type AgentWork = {
   model_selection?: ModelActivity | null;
   id: string;
   focus?: WorkFocus | null;
-  state: "queued" | "preparing" | "running" | "stopping" | "paused" | "limit_reached" | "completed" | "failed" | "unknown";
+  state: "queued" | "preparing" | "running" | "stopping" | "paused" | "interrupted" | "limit_reached" | "completed" | "failed" | "unknown";
   limits: WorkLimits;
   session_id: string;
   model_calls: number;
@@ -152,6 +152,9 @@ export function agentWorkStatus(agent: Agent): string {
   const work = agent.work;
   if (!work) return "Not started";
   if (work.state === "queued" && agent.setup?.status !== "ready") return "Waiting for setup";
+  if (agent.cadence?.enabled && work.state === "interrupted") {
+    return "Recovering · waiting for next check-in";
+  }
   if (agent.cadence?.enabled && ["completed", "limit_reached"].includes(work.state)) {
     return "Active · waiting for next check-in";
   }
@@ -160,7 +163,7 @@ export function agentWorkStatus(agent: Agent): string {
   }
   const labels: Record<AgentWork["state"], string> = {
     queued: "Queued", preparing: "Preparing", running: "Running", stopping: "Stopping",
-    paused: "Paused", limit_reached: "Run limit reached", completed: "Completed", failed: "Failed", unknown: "Outcome unknown",
+    paused: "Paused", interrupted: "Interrupted", limit_reached: "Run limit reached", completed: "Completed", failed: "Failed", unknown: "Outcome unknown",
   };
   return labels[work.state];
 }

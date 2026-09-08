@@ -30,6 +30,25 @@ def _authority_revoked(validate, error):
         return True
 
 
+def _recoverable_interruption(conn, run_id):
+    """Return true only when a fresh attempt cannot duplicate unsettled effects."""
+    if conn.execute(
+            'SELECT 1 FROM agent_native_work_effects WHERE run_id=? AND result IS NULL LIMIT 1',
+            (run_id,)).fetchone():
+        return False
+    if conn.execute(
+            "SELECT 1 FROM agent_native_plane_mutations m "
+            "JOIN agent_native_work_effects e ON e.operation_id=m.operation_id "
+            "WHERE e.run_id=? AND m.status IN ('pending','unknown') LIMIT 1",
+            (run_id,)).fetchone():
+        return False
+    if conn.execute(
+            "SELECT 1 FROM agent_native_progress WHERE run_id=? "
+            "AND status IN ('pending','unknown') LIMIT 1", (run_id,)).fetchone():
+        return False
+    return True
+
+
 def _initial_context(snapshot, contracts, autonomy_policy=None):
     """Build the managed-work instruction with a clear planning/output boundary."""
     return ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
@@ -88,7 +107,7 @@ class _Run:
             raise PermissionError('Work was stopped or reached its time limit')
         state.validate(conn,self.work['id'])
 
-    def stop(self, reason='Owner paused this work.'):
+    def stop(self, reason='Owner paused this work.', *, recoverable=False):
         # No broker/HTTP/database lock may be acquired before process termination.
         self.stopped.set()
         dead = self.host.force_stop(timeout=2)
@@ -100,7 +119,11 @@ class _Run:
             with connect_closing(self.service.db_path) as conn, write_txn(conn):
                 row = conn.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(self.work['id'],)).fetchone()
                 if row[0] not in state.TERMINAL:
-                    target = ('limit_reached' if timed_out else 'paused') if dead else 'unknown'
+                    cadence_enabled = conn.execute(
+                        'SELECT enabled FROM agent_native_cadence WHERE agent_id=?',
+                        (self.work['agent_id'],)).fetchone()
+                    can_continue = recoverable and bool(cadence_enabled and cadence_enabled[0]) and _recoverable_interruption(conn, self.work['id'])
+                    target = ('limit_reached' if timed_out else 'interrupted' if can_continue else 'paused') if dead else 'unknown'
                     conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,finished_at=?,summary=? WHERE id=?',
                                  (target,_now(),reason,self.work['id']))
                     state.event(conn,self.work['id'],'work.'+target,reason if dead else 'Worker stop could not be confirmed.')
@@ -421,12 +444,17 @@ class WorkService:
         self.thread = threading.Thread(target=self.run,name='agent-native-work',daemon=True)
 
     def start(self):
-        # Never replay uncertain work across a service restart.
+        # Never replay an interrupted process. Cadence may start a fresh attempt
+        # only when every prior effect has a settled receipt.
         with connect_closing(self.db_path) as conn, write_txn(conn):
             for (run_id,) in conn.execute("SELECT id FROM agent_native_work_runs WHERE state IN ('preparing','running','stopping')").fetchall():
-                conn.execute("UPDATE agent_native_work_runs SET state='unknown',stop_requested=1,summary=? WHERE id=?",
-                             ('Service restarted during work; outcome requires review.',run_id))
-                state.event(conn,run_id,'work.unknown','Service restarted during work; no automatic retry.')
+                recoverable = _recoverable_interruption(conn, run_id)
+                target = 'interrupted' if recoverable else 'unknown'
+                summary = ('Service restarted during work. The stopped process will not be replayed; cadence may start a fresh attempt.'
+                           if recoverable else 'Service restarted during work; an unsettled effect requires owner review.')
+                conn.execute("UPDATE agent_native_work_runs SET state=?,stop_requested=1,summary=?,finished_at=? WHERE id=?",
+                             (target,summary,_now(),run_id))
+                state.event(conn,run_id,'work.'+target,summary)
         self.thread.start()
         return self
 
@@ -434,7 +462,7 @@ class WorkService:
         self.stopped.set()
         self.thread.join(timeout=3)
         for run in list(self.runs.values()):
-            run.stop('Service stopped this work run.')
+            run.stop('Service stopped this work run; cadence may continue with a fresh attempt.', recoverable=True)
 
     def tick(self):
         for run_id,run in list(self.runs.items()):
