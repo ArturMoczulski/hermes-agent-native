@@ -32,6 +32,8 @@ export function validModelChoice(value: unknown): value is ModelChoice {
 }
 
 export type Agent = {
+  parent_id: string | null;
+  child_ids: string[];
   removed_at?: string | null;
   retirement?: { evaluation_id: string; source: "agent" | "parent" | "owner"; retired_at: string } | null;
   model_selection?: ModelSelection | null;

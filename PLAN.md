@@ -190,6 +190,15 @@ active agents, an explicit retired-agents view keeps retired identities discover
 and a retired detail page shows the exact purpose evaluation and evidence that
 authorized retirement. Retirement and owner removal have distinct labels and
 records; neither permits new chat, settings changes or autonomous work.
+The first M3 hierarchy foundation is now implemented under AN-37. Every agent has
+an immutable direct-parent relationship or is a root; arbitrary nesting is supported,
+creation retries cannot change parentage, and a child cannot be attached to a missing,
+removed or retired parent. The owner can select a parent during creation, inspect
+parent/child links, and browse the recursive active-agent tree. Until atomic subtree
+controls land, removal and self-retirement reject a parent with active descendants so
+the framework cannot leave an active orphan. The next hierarchy increment grants a
+managed parent a scoped child-creation operation with explicit delegated purpose and
+frozen configuration; human-created children remain the only supported path today.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

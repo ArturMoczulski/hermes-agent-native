@@ -58,6 +58,7 @@ class CreateAgent(BaseModel):
     work: WorkLimits | None = None
     model_selection: ModelChoice | None = None
     autonomy_level: int = Field(default=3, strict=True, ge=1, le=5)
+    parent_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
 @router.get('')
@@ -71,6 +72,8 @@ def create_agent(body: CreateAgent, actor=Depends(owner_session)):
     with connect_closing(board='default') as conn:
         try:
             return identity.create_root(conn, actor=actor, **body.model_dump(exclude_unset=True))
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Parent agent not found') from exc
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except ValueError as exc:

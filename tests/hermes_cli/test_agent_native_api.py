@@ -35,6 +35,18 @@ def test_create_list_and_read(client):
     assert agent['execution'] == 'not_started'
 
 
+def test_owner_creates_a_child_and_api_returns_tree_relationships(client):
+    parent = client.post(URL, json=BODY).json()
+    child = client.post(URL, json={**BODY, 'request_id': 'api-child', 'name': 'Composer',
+                                  'purpose': 'Compose songs', 'parent_id': parent['id']})
+    assert child.status_code == 201
+    assert child.json()['parent_id'] == parent['id']
+    assert client.get(f"{URL}/{parent['id']}").json()['child_ids'] == [child.json()['id']]
+    assert {agent['id'] for agent in client.get(URL).json()} == {parent['id'], child.json()['id']}
+    assert client.post(URL, json={**BODY, 'request_id': 'missing-parent',
+                                 'parent_id': 'not-an-agent'}).status_code == 404
+
+
 def test_invalid_and_conflicting_requests(client):
     assert client.post(URL, json={**BODY, 'purpose': ' '}).status_code == 422
     assert client.post(URL, json={**BODY, 'actor': 'owner'}).status_code == 422

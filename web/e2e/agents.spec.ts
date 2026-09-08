@@ -40,6 +40,28 @@ test('creation opens its agent detail and retains one startup request across rel
   });
 });
 
+test('owner creates a child and sees the durable agent tree', async ({ page, request }) => {
+  const parent = await (await request.post(api, { headers, data: {
+    request_id: crypto.randomUUID(), name: 'Metal artist', purpose: 'Develop a metal music career.',
+  } })).json();
+  await page.goto('/agents');
+  await page.getByLabel('Agent name', { exact: true }).fill('Composer');
+  await page.getByLabel('Purpose', { exact: true }).fill('Compose music for the artist.');
+  await page.getByLabel('Parent agent').selectOption(parent.id);
+  const response = page.waitForResponse(value => value.url().endsWith('/api/agent-native/agents') && value.request().method() === 'POST');
+  await page.getByRole('button', { name: 'Create agent', exact: true }).click();
+  const child = await (await response).json();
+  await expect(page.getByText('Child agent ·')).toBeVisible();
+  await expect(page.getByText(parent.id, { exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'All agents', exact: true }).click();
+  const hierarchy = page.getByLabel('Agent hierarchy');
+  await expect(hierarchy.getByRole('link', { name: 'Metal artist' })).toBeVisible();
+  await expect(hierarchy.getByRole('link', { name: 'Composer' })).toBeVisible();
+  const persisted = await (await request.get(`${api}/${child.id}`, { headers })).json();
+  expect(persisted.parent_id).toBe(parent.id);
+  expect((await (await request.get(`${api}/${parent.id}`, { headers })).json()).child_ids).toContain(child.id);
+});
+
 test('retry after a lost response and reload opens the original agent and startup request', async ({ page, request }) => {
   let first: { id: string; startup: { id: string } } | undefined;
   let loseResponse = true;

@@ -10,6 +10,14 @@ CREATE TABLE IF NOT EXISTS agent_native_agents (
     execution TEXT NOT NULL CHECK(execution = 'not_started'),
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_agent_parents (
+    agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
+    parent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
+    created_at TEXT NOT NULL,
+    CHECK(agent_id <> parent_id)
+);
+CREATE INDEX IF NOT EXISTS agent_native_agent_parent_children
+    ON agent_native_agent_parents(parent_id, agent_id);
 CREATE TABLE IF NOT EXISTS agent_native_creation_work (
     agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
     work_limits TEXT

@@ -1,7 +1,7 @@
 """Real Kanban database acceptance for the first protected identity slice."""
 import pytest
 from hermes_cli import kanban_db_connect as kanban_db
-from agent_native.identity import OWNER, ConflictError, create_root, get_root, revise_soul, events
+from agent_native.identity import OWNER, ConflictError, create_root, get_root, remove_root, revise_soul, events
 
 
 @pytest.fixture
@@ -164,3 +164,44 @@ def test_existing_inactive_record_is_not_activated_by_read_or_creation_retry(db)
     assert create(db)['startup'] is None
     assert db.execute('SELECT COUNT(*) FROM agent_native_initial_activations').fetchone()[0] == 0
     assert len(events(db, actor=OWNER, agent_id='old-agent')) == 1
+
+
+def test_owner_creates_an_arbitrarily_nested_agent_tree(db):
+    root = create(db, request_id='tree-root', name='Company leader', purpose='Run the company')
+    child = create_root(db, actor=OWNER, request_id='tree-child', name='Marketing leader',
+                        purpose='Grow demand', parent_id=root['id'])
+    grandchild = create_root(db, actor=OWNER, request_id='tree-grandchild', name='Researcher',
+                             purpose='Research customers', parent_id=child['id'])
+
+    assert child['parent_id'] == root['id']
+    assert grandchild['parent_id'] == child['id']
+    assert get_root(db, actor=OWNER, agent_id=root['id'])['child_ids'] == [child['id']]
+    assert get_root(db, actor=OWNER, agent_id=child['id'])['child_ids'] == [grandchild['id']]
+
+
+def test_creation_request_cannot_move_a_child_between_parents(db):
+    first = create(db, request_id='parent-one', name='First', purpose='First purpose')
+    second = create(db, request_id='parent-two', name='Second', purpose='Second purpose')
+    create_root(db, actor=OWNER, request_id='stable-child', name='Child', purpose='Work', parent_id=first['id'])
+
+    with pytest.raises(ConflictError, match='parent'):
+        create_root(db, actor=OWNER, request_id='stable-child', name='Child', purpose='Work', parent_id=second['id'])
+
+
+def test_child_requires_an_active_direct_parent(db):
+    parent = create(db, request_id='inactive-parent', name='Parent', purpose='Lead')
+    remove_root(db, actor=OWNER, agent_id=parent['id'])
+
+    with pytest.raises(ConflictError, match='removed'):
+        create_root(db, actor=OWNER, request_id='orphan-child', name='Child', purpose='Work', parent_id=parent['id'])
+    with pytest.raises(KeyError):
+        create_root(db, actor=OWNER, request_id='missing-parent-child', name='Child', purpose='Work', parent_id='missing')
+
+
+def test_parent_removal_waits_for_subtree_lifecycle_support(db):
+    parent = create(db, request_id='protected-parent', name='Parent', purpose='Lead')
+    create_root(db, actor=OWNER, request_id='protected-child', name='Child', purpose='Work', parent_id=parent['id'])
+
+    with pytest.raises(ConflictError, match='active children'):
+        remove_root(db, actor=OWNER, agent_id=parent['id'])
+    assert get_root(db, actor=OWNER, agent_id=parent['id'])['removed_at'] is None

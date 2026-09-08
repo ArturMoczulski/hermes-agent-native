@@ -103,3 +103,15 @@ def test_retirement_rejects_an_unresolved_effect_other_than_its_own(broker):
         retire(s, evaluation)
 
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['removed_at'] is None
+
+
+def test_retirement_rejects_an_active_descendant(broker):
+    from agent_native.identity import create_root
+    s = broker
+    create_root(s.conn, actor=OWNER, request_id='retirement-child', name='Child',
+                purpose='Continue delegated work.', parent_id=s.root['id'])
+
+    with pytest.raises(ValueError, match='active descendant'):
+        retire(s, evaluate(s))
+
+    assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['retirement'] is None

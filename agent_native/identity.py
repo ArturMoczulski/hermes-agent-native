@@ -39,6 +39,12 @@ def _read(conn, agent_id):
     if row is None:
         raise KeyError(agent_id)
     root = dict(zip(('id', 'name', 'purpose', 'soul_revision', 'execution', 'created_at'), row))
+    parent = conn.execute('SELECT parent_id FROM agent_native_agent_parents WHERE agent_id=?', (agent_id,)).fetchone()
+    root['parent_id'] = parent[0] if parent else None
+    root['child_ids'] = [child[0] for child in conn.execute(
+        'SELECT agent_id FROM agent_native_agent_parents WHERE parent_id=? ORDER BY created_at,agent_id',
+        (agent_id,),
+    ).fetchall()]
     startup = conn.execute(
         'SELECT id, cause, soul_revision, requested_at '
         'FROM agent_native_initial_activations WHERE agent_id = ?', (agent_id,),
@@ -78,7 +84,8 @@ def _event(conn, root, kind):
     )
 
 
-def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None, autonomy_level=3):
+def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None,
+                autonomy_level=3, parent_id=None):
     """Persist identity, first-review intent and event together; never launch a worker.
 
     The intent records the creating owner's request, not execution authority or
@@ -89,6 +96,10 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
     _require_owner(actor)
     request_id, name, purpose = (_text(v, k) for v, k in
                                  ((request_id, 'request_id'), (name, 'name'), (purpose, 'purpose')))
+    if parent_id is not None:
+        parent_id = _text(parent_id, 'parent_id')
+        if len(parent_id) > 128:
+            raise ValueError('parent_id is too long')
     from agent_native.work_state import configure, limits_json
     original_work = limits_json(work) if work is not None else None
     from agent_native import model_settings
@@ -119,7 +130,16 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
             saved_autonomy = conn.execute('SELECT level FROM agent_native_creation_autonomy WHERE agent_id=?', (previous[0],)).fetchone()
             if (saved_autonomy[0] if saved_autonomy else autonomy.DEFAULT_LEVEL) != autonomy_level:
                 raise ConflictError('Creation request already used with a different autonomy level')
+            saved_parent = conn.execute(
+                'SELECT parent_id FROM agent_native_agent_parents WHERE agent_id=?', (previous[0],),
+            ).fetchone()
+            if (saved_parent[0] if saved_parent else None) != parent_id:
+                raise ConflictError('Creation request already used with a different parent')
             return _read(conn, previous[0])
+        if parent_id is not None:
+            if not conn.execute('SELECT 1 FROM agent_native_agents WHERE id=?', (parent_id,)).fetchone():
+                raise KeyError(parent_id)
+            require_active(conn, parent_id)
         agent_id = str(uuid4())
         conn.execute(
             'INSERT INTO agent_native_agents '
@@ -127,6 +147,9 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
             'VALUES (?, ?, ?, ?, ?, 1, ?, ?)',
             (agent_id, request_id, name, purpose, purpose, 'not_started', _now()),
         )
+        if parent_id is not None:
+            conn.execute('INSERT INTO agent_native_agent_parents(agent_id,parent_id,created_at) VALUES(?,?,?)',
+                         (agent_id, parent_id, _now()))
         conn.execute(
             'INSERT INTO agent_native_creation_work (agent_id, work_limits) VALUES (?, ?)',
             (agent_id, original_work),
@@ -217,6 +240,14 @@ def remove_root(conn, *, actor, agent_id):
         root = _read(conn, agent_id)
         if root['removed_at']:
             return root
+        active_child = conn.execute(
+            'SELECT p.agent_id FROM agent_native_agent_parents p WHERE p.parent_id=? '
+            'AND p.agent_id NOT IN (SELECT agent_id FROM agent_native_removals) '
+            'AND p.agent_id NOT IN (SELECT agent_id FROM agent_native_retirements) LIMIT 1',
+            (agent_id,),
+        ).fetchone()
+        if active_child:
+            raise ConflictError('Agent has active children; retire or remove the subtree together')
         conn.execute('INSERT INTO agent_native_removals VALUES (?,?)', (agent_id, _now()))
         # Revision invalidation stops setup and all previously issued capabilities.
         conn.execute('UPDATE agent_native_agents SET soul_revision=soul_revision+1 WHERE id=?', (agent_id,))

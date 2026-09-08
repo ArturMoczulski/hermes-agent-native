@@ -61,6 +61,14 @@ def retire(conn, *, validate, agent_id, run_id, call_id, arguments):
         from agent_native.acceptance import pending_required
         if pending_required(conn, agent_id):
             raise ValueError('Retirement has a required owner review')
+        active_child = conn.execute(
+            'SELECT p.agent_id FROM agent_native_agent_parents p WHERE p.parent_id=? '
+            'AND p.agent_id NOT IN (SELECT agent_id FROM agent_native_removals) '
+            'AND p.agent_id NOT IN (SELECT agent_id FROM agent_native_retirements) LIMIT 1',
+            (agent_id,),
+        ).fetchone()
+        if active_child:
+            raise ValueError('Retirement has an active descendant')
         unresolved_effect = conn.execute(
             'SELECT 1 FROM agent_native_work_effects e JOIN agent_native_work_runs w ON w.id=e.run_id '
             'WHERE w.agent_id=? AND e.result IS NULL AND NOT (e.run_id=? AND e.call_id=?) LIMIT 1',

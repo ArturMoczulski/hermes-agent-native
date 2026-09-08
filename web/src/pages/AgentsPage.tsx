@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import type { FormEvent } from "react";
+import type { FormEvent, ReactNode } from "react";
 import { Link, useNavigate } from "react-router";
 import { agentsEndpoint as endpoint, agentWorkStatus, validWorkLimits, validModelChoice, modelChoiceLabel, autonomyLabels, type Agent, type WorkLimits, type ModelChoice, type DefaultAgentModel } from "@/lib/agent-native";
 import { Button } from "@nous-research/ui/ui/components/button";
@@ -9,7 +9,7 @@ import { fetchJSON, HERMES_BASE_PATH } from "@/lib/api";
 import { usePageHeader } from "@/contexts/usePageHeader";
 import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentModelControls";
 
-type PendingCreation = { request_id: string; name: string; purpose: string; work?: WorkLimits; model_selection?: ModelChoice; autonomy_level: number };
+type PendingCreation = { request_id: string; name: string; purpose: string; parent_id?: string; work?: WorkLimits; model_selection?: ModelChoice; autonomy_level: number };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
 const defaultWorkLimits: WorkLimits = { timeout_seconds: 180, max_iterations: 50 };
 
@@ -19,12 +19,14 @@ function restoreCreation(): PendingCreation | null {
     if (value && typeof value.request_id === "string" && value.request_id.length > 0 && value.request_id.length <= 128
       && typeof value.name === "string" && value.name.trim() && value.name.length <= 200
       && typeof value.purpose === "string" && value.purpose.trim() && value.purpose.length <= 20000
+      && (value.parent_id === undefined || (typeof value.parent_id === "string" && value.parent_id.length > 0 && value.parent_id.length <= 128))
       && (value.work === undefined || validWorkLimits(value.work))
       && (value.model_selection === undefined || validModelChoice(value.model_selection))
       && Number.isInteger(value.autonomy_level) && value.autonomy_level >= 1 && value.autonomy_level <= 5) {
       return { request_id: value.request_id, name: value.name, purpose: value.purpose,
         ...(value.model_selection ? { model_selection: { provider: value.model_selection.provider, model: value.model_selection.model,
           ...(value.model_selection.reasoning_effort !== undefined ? { reasoning_effort: value.model_selection.reasoning_effort } : {}) } } : {}),
+        ...(value.parent_id ? { parent_id: value.parent_id } : {}),
         ...(value.work ? { work: { timeout_seconds: value.work.timeout_seconds, max_iterations: value.work.max_iterations } } : {}), autonomy_level: value.autonomy_level };
     }
   } catch { /* Storage can be unavailable; submission will check before any write. */ }
@@ -43,6 +45,7 @@ export default function AgentsPage() {
   const [modelSelection, setModelSelection] = useState<ModelChoice | null>(initialRequest?.model_selection ?? null);
   const [choosingModel, setChoosingModel] = useState(false);
   const [purpose, setPurpose] = useState(initialRequest?.purpose ?? "");
+  const [parentId, setParentId] = useState(initialRequest?.parent_id ?? "");
   const [autonomyLevel, setAutonomyLevel] = useState(initialRequest?.autonomy_level ?? 3);
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(initialRequest?.work?.timeout_seconds ?? defaultWorkLimits.timeout_seconds));
   const [modelSteps, setModelSteps] = useState(String(initialRequest?.work?.max_iterations ?? defaultWorkLimits.max_iterations));
@@ -96,10 +99,11 @@ export default function AgentsPage() {
       || pending.current?.work?.timeout_seconds !== work?.timeout_seconds
       || pending.current?.work?.max_iterations !== work?.max_iterations
       || pending.current?.autonomy_level !== autonomyLevel
+      || (pending.current?.parent_id ?? "") !== parentId
       || pending.current?.model_selection?.provider !== modelSelection?.provider
       || pending.current?.model_selection?.model !== modelSelection?.model
       || (pending.current?.model_selection?.reasoning_effort ?? "default") !== (modelSelection?.reasoning_effort ?? "default")) {
-      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), work, autonomy_level: autonomyLevel, ...(modelSelection ? { model_selection: modelSelection } : {}) };
+      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), work, autonomy_level: autonomyLevel, ...(parentId ? { parent_id: parentId } : {}), ...(modelSelection ? { model_selection: modelSelection } : {}) };
     }
     try {
       // Persist before POST: a committed response can be lost across a reload.
@@ -121,6 +125,7 @@ export default function AgentsPage() {
       setAgents((existing) => [...existing.filter((a) => a.id !== agent.id), agent]);
       setName("");
       setPurpose("");
+      setParentId("");
       setTimeoutSeconds(String(defaultWorkLimits.timeout_seconds));
       setModelSteps(String(defaultWorkLimits.max_iterations));
       setModelSelection(null);
@@ -152,6 +157,14 @@ export default function AgentsPage() {
         <div className="space-y-2">
           <Label htmlFor="agent-purpose">Purpose</Label>
           <textarea id="agent-purpose" className="min-h-28 w-full rounded-md border bg-background p-3" value={purpose} onChange={(e) => setPurpose(e.target.value)} required maxLength={20000} disabled={saving} placeholder="What should this agent work toward?" />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="agent-parent">Parent agent</Label>
+          <select id="agent-parent" value={parentId} disabled={saving} className="w-full rounded-md border bg-background px-3 py-2" onChange={event => setParentId(event.target.value)}>
+            <option value="">Root agent — owned directly by you</option>
+            {agents.map(agent => <option key={agent.id} value={agent.id}>{agent.name}</option>)}
+          </select>
+          <p className="text-xs text-muted-foreground">A child remains under your authority and also reports to its direct parent.</p>
         </div>
         <fieldset aria-label="Model for this agent" className="space-y-3 rounded-lg border p-4" disabled={saving}>
           <legend className="px-1 text-sm font-medium">Model for this agent</legend>
@@ -195,14 +208,7 @@ export default function AgentsPage() {
           </Button>
         </div>
         {loading ? <p>Loading agents…</p> : agents.length === 0 && !error ? <p>No agents yet. Create your first agent above.</p> : null}
-        {agents.map((agent) => (
-          <article key={agent.id} className="space-y-3 rounded-xl border p-5">
-            <div className="flex items-center justify-between gap-4"><h3 className="font-semibold"><Link className="underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}`}>{agent.name}</Link></h3><span className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span></div>
-            <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>
-            <p className="break-words text-sm text-muted-foreground">{modelChoiceLabel(agent.model_selection)}</p>
-            <p className="break-all text-xs text-muted-foreground">Agent ID: {agent.id} · Purpose revision {agent.soul_revision}</p>
-          </article>
-        ))}
+        <AgentTree agents={agents} />
         {showRetired && <section aria-label="Retired agents" className="space-y-3 border-t pt-4">
           <h3 className="font-semibold">Retired agents</h3>
           {retiredAgents.length === 0 ? <p className="text-sm text-muted-foreground">No retired agents.</p> : retiredAgents.map(agent => (
@@ -216,4 +222,29 @@ export default function AgentsPage() {
       </section>
     </div>
   );
+}
+
+function AgentTree({ agents }: { agents: Agent[] }) {
+  const ids = new Set(agents.map(agent => agent.id));
+  const children = new Map<string | null, Agent[]>();
+  for (const agent of agents) {
+    const parent = agent.parent_id && ids.has(agent.parent_id) ? agent.parent_id : null;
+    children.set(parent, [...(children.get(parent) ?? []), agent]);
+  }
+  const render = (parent: string | null, depth: number, seen: Set<string>): ReactNode =>
+    (children.get(parent) ?? []).map(agent => {
+      if (seen.has(agent.id)) return null;
+      const nextSeen = new Set(seen).add(agent.id);
+      return <div key={agent.id} className={depth ? "ml-5 border-l pl-4" : ""}>
+        <article className="space-y-3 rounded-xl border p-5">
+          <div className="flex items-center justify-between gap-4"><h3 className="font-semibold"><Link className="underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}`}>{agent.name}</Link></h3><span className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span></div>
+          <p className="text-xs font-medium text-muted-foreground">{agent.parent_id ? "Child agent" : "Root agent"}</p>
+          <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>
+          <p className="break-words text-sm text-muted-foreground">{modelChoiceLabel(agent.model_selection)}</p>
+          <p className="break-all text-xs text-muted-foreground">Agent ID: {agent.id} · Purpose revision {agent.soul_revision}</p>
+        </article>
+        <div className="mt-3 space-y-3">{render(agent.id, depth + 1, nextSeen)}</div>
+      </div>;
+    });
+  return <div aria-label="Agent hierarchy" className="space-y-3">{render(null, 0, new Set())}</div>;
 }

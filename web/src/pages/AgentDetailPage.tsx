@@ -114,7 +114,9 @@ export default function AgentDetailPage() {
             </div>
             <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
           </div>
-          <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
+          <p className="break-all text-xs text-muted-foreground">{agent.parent_id ? "Child agent" : "Root agent"} · {agent.id}</p>
+          {agent.parent_id && <p className="text-sm">Child of <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.parent_id)}`}>{agent.parent_id}</Link></p>}
+          {agent.child_ids.length > 0 && <p className="text-sm">Children: {agent.child_ids.map((childId, index) => <span key={childId}>{index > 0 && ", "}<Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(childId)}`}>{childId}</Link></span>)}</p>}
           <div className="flex flex-wrap gap-2">
             {!inactive && <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>}
             <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline"
