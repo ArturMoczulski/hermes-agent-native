@@ -10,7 +10,7 @@ test('a normal run time limit remains eligible for the next cadence attempt',asy
   try{
     expect((await request.post(`${api}/cadence`,{headers,data:{expected_revision:1,enabled:true,interval_seconds:2}})).ok()).toBe(true);
     const first=a.work.id;
-    await page.goto(`/agents/${a.id}`);
+    await page.goto(`/agents/${a.id}?view=full`);
     await expect.poll(async()=>{
       const attempts=await(await request.get(`${api}/attempts`,{headers})).json();
       return attempts.length>=2&&attempts.some((attempt:{id:string,state:string})=>attempt.id===first&&attempt.state==='limit_reached');
