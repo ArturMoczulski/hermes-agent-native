@@ -54,13 +54,17 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if not previous or root[0]!=revision or previous[2]!=revision or previous[4]!='completed': continue
             if previous[5] and datetime.fromisoformat(now)<datetime.fromisoformat(previous[5])+timedelta(seconds=interval): continue
             if conn.execute("SELECT 1 FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')",(agent_id,)).fetchone(): continue
-            # Do not duplicate a side effect whose acknowledgement is unresolved.
-            if conn.execute("SELECT 1 FROM agent_native_progress WHERE agent_id=? AND status IN ('pending','unknown')",(agent_id,)).fetchone(): continue
+            from agent_native.delivery_barrier import unresolved_terminal_notices, record_notices
+            try:
+                notices = unresolved_terminal_notices(conn, agent_id)
+            except ConflictError:
+                continue
             key=str(uuid4())
             conn.execute('INSERT INTO agent_native_work_runs(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at) VALUES(?,?,?,?,?,?,?,?)',
                 (key,agent_id,previous[1],revision,'an_work_'+uuid4().hex,previous[3],'queued',now))
             conn.execute('UPDATE agent_native_cadence SET next_due=? WHERE agent_id=?',((datetime.fromisoformat(now)+timedelta(seconds=interval)).isoformat(),agent_id))
             event(conn,key,'work.queued','Scheduled check-in: review progress and decide whether to work, ask or wait.')
+            record_notices(conn, key, notices)
             queued.append(key)
     return queued
 

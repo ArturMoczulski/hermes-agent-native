@@ -1,3 +1,14 @@
+## Recovery notification gate — 2026-09-08
+
+Live AN-90 retry exposed unknown delivery of terminal failure notice
+5c5118da-c1e4-4e12-b458-18882d99aba4. No matching remote comment found;
+absence is not proof of rejection. Exact host-generated failed-status notices now
+permit owner retry and later cadence while receipts remain unknown and are never
+resent. All other unresolved delivery blocks admission. Protected preparation,
+source, run, binding, text, payload, and attempted marker must match.
+Six focused notification tests pass, including invalid-provenance rejection and
+cadence after completed recovery. Live recovery verification remains pending.
+
 ## Continuation document and question reads — 2026-09-08
 
 AN-90: Later cadence attempt 0307a1cf-369c-4330-bb53-ef9291de3375 failed

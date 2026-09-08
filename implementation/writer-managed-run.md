@@ -130,3 +130,10 @@ Changed context returns `applicable:false`, withholds any recorded answer, and
 asks the worker to reassess current requirements; it does not fail the run.
 Stored history is unchanged. Asking still requires the selected item. A null
 answer is never approval, and stale reads do not authorize resuming paused work.
+
+Owner recovery may proceed past an uncertain **terminal failure notification**
+only when protected progress and mutation records identify that exact notification.
+The unknown receipt remains unknown and is never resent. This exception does not
+cover questions, output links, ordinary progress, or task/project changes. The same
+classification permits cadence after the owner-recovered attempt completes;
+failed work itself still requires owner recovery.
