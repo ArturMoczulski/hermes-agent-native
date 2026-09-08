@@ -2,7 +2,7 @@
 import json
 import re
 
-SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'result_record', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'}
+SHARED_TOOLS = {'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'output_read', 'result_record', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'}
 STORY_TITLE = 'The Silver Gate'
 STORY_CONTENT = (
     '# The Silver Gate\n\n'
@@ -65,6 +65,35 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_OUTPUT_REVIEW' in purpose:
+        target = _planning(messages)['discovery']['id']
+        content = ('A wizard follows the dragon. 🐉\n' * 750) + 'THE VERIFIED END'
+        if index == 0:
+            name, arguments = 'work_item_select', {'item_id':target}
+        elif index == 1:
+            name, arguments = 'work_question', {'item_id':target,'topic':'review-scope','question':'Should I review the ending?'}
+        elif index == 2:
+            name, arguments = 'plane_resource_inspect', {'kind':'item','resource_id':target}
+        elif index == 3:
+            name, arguments = operation('item.update', {'item_id':target,'description':'Review the complete story including its ending.','expected_fingerprint':result(2)['fingerprint']})
+        elif index == 4:
+            name, arguments = 'work_question', {'question_id':result(1)['id']}
+        elif index == 5:
+            assert result(4)['applicable'] is False and result(4)['answer'] is None
+            name, arguments = 'output_publish', {'item_id':target,'title':'Long story for complete review','format':'text','content':content}
+        elif index == 6:
+            name, arguments = 'output_read', {'output_id':result(5)['output_id'],'version':1,'limit':16000}
+        elif index == 7:
+            assert result(6)['content'] == content[:16000] and result(6)['next_offset'] == 16000
+            name, arguments = 'output_read', {'output_id':result(5)['output_id'],'version':1,'offset':16000,'limit':16000}
+        elif index == 8:
+            assert result(6)['content'] + result(7)['content'] == content
+            assert result(7)['next_offset'] is None
+            name, arguments = 'result_record', {'item_id':target,'summary':'Reviewed full story and reassessed changed criteria','outcome':'discovery','evaluation':'Read both verified chunks including ending; stale clarification withheld.','outputs':[{'output_id':result(5)['output_id'],'version':1}]}
+        else:
+            return {'role':'assistant','content':'Reviewed full story and reassessed changed criteria.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_RELATED_COMMENTS' in purpose:
         target = _planning(messages)['discovery']['id']
         if index == 0:

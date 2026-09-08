@@ -1,3 +1,16 @@
+## Continuation document and question reads — 2026-09-08
+
+AN-90: Later cadence attempt 0307a1cf-369c-4330-bb53-ef9291de3375 failed
+reading a question after its work-item context changed. Earlier continuation had
+asked the owner for a complete saved document because only excerpts were supplied.
+Added agent-scoped output_read of verified immutable versions with bounded Unicode
+chunks and next_offset. Stale question reads return applicable:false and withhold
+old answers, preserving history; fresh project authorization remains required.
+Three targeted question tests and two output broker tests pass. Native browser
+regression reproduced the conflict before the fix and now completes after reading
+a stale question and reconstructing a long saved output across chunks.
+Live same-agent recovery is pending; no recreation or history deletion.
+
 ## Existing writer recovery completed — 2026-09-08
 
 With 4b95190 deployed, recovery c3dbecc7-eac7-5f95-a27a-d67b671150de on the

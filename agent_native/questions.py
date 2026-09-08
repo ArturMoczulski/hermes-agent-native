@@ -56,18 +56,18 @@ def worker(conn,*,validate,inspect,agent_id,run_id,arguments):
         raise ValueError('Ask an item question or read a question by ID')
     from agent_native.work_focus import read_focus
     focus=read_focus(conn,run_id)
-    if not focus:
-        raise ConflictError('Select work before asking questions')
     reading='question_id' in arguments
     if reading:
         q=_get(conn,agent_id,arguments['question_id'])
         item_id=q['item_id']
     else:
+        if not focus:
+            raise ConflictError('Select work before asking questions')
         for key,limit in (('item_id',128),('topic',128),('question',2000)):
             if not isinstance(arguments[key],str) or not arguments[key].strip() or len(arguments[key])>limit or '\x00' in arguments[key]:
                 raise ValueError('Question fields must be bounded text')
         item_id=arguments['item_id']
-    if focus['item_id']!=item_id:
+    if not reading and focus['item_id']!=item_id:
         raise ConflictError('This question is not for the selected work item')
     observation=inspect({'kind':'item','resource_id':item_id})
     with write_txn(conn):
@@ -75,9 +75,12 @@ def worker(conn,*,validate,inspect,agent_id,run_id,arguments):
         revision=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()[0]
         if reading:
             q=_get(conn,agent_id,arguments['question_id'])
-            if q['soul_revision']!=revision or q['fingerprint']!=observation['fingerprint']:
-                raise ConflictError('Question context changed; ask against current requirements')
-            return q
+            applicable=q['soul_revision']==revision and q['fingerprint']==observation['fingerprint']
+            return {**q, 'applicable':applicable,
+                    'has_recorded_answer':q['answer'] is not None,
+                    'answer':q['answer'] if applicable else None,
+                    'context_note':None if applicable else
+                        'Question context changed. Reassess current requirements; any recorded answer is withheld as outdated.'}
         old=conn.execute('SELECT id FROM agent_native_questions WHERE agent_id=? AND soul_revision=? AND item_id=? AND fingerprint=? AND topic=?',
                          (agent_id,revision,item_id,observation['fingerprint'],arguments['topic'])).fetchone()
         if old:

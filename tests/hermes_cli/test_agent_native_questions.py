@@ -36,8 +36,11 @@ def test_question_answer_is_read_only_for_current_item_criteria(broker):
     read=lambda call: s.run._effect(s.conn,s.planning,effect(s,call,'work_question',{'question_id':q['id']}))
     assert read('read')['answer']=='Yes'
     s.plane.items[s.setup['discovery_item_id']]['description_html']='<p>Changed requirements</p>'
-    with pytest.raises(ConflictError):
-        read('changed-read')
+    stale=read('changed-read')
+    assert stale['applicable'] is False and stale['answer'] is None
+    assert stale['has_recorded_answer'] is True
+    assert questions.recent(s.conn,s.root['id'])[0]['answer']=='Yes'
+    assert read('changed-read-again')['applicable'] is False
 
 
 def test_question_owner_scope_and_chat_share_the_same_answer(broker):

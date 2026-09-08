@@ -116,3 +116,17 @@ production web build passed, including actual worker/socket cancellation.
 AN-72's bounded checkpoint is complete. The shared-work plan places AN-78/79
 before AN-73's continuing conversation work. Cadence, resume, richer
 inspection and the full writer journey remain outside this checkpoint.
+
+### Complete output and historical question reads
+
+Managed workers can use `output_read` with an exact output ID and version to read
+their own verified saved documents. Context excerpts are not full-document review.
+Offsets/limits count Unicode characters (16,000 default, 32,000 maximum); follow
+`next_offset` until null. Reading preserves selected work and verifies stored
+content integrity. It accepts no filesystem path or another agent's output.
+
+Reading an owned question rechecks its item's project scope and current context.
+Changed context returns `applicable:false`, withholds any recorded answer, and
+asks the worker to reassess current requirements; it does not fail the run.
+Stored history is unchanged. Asking still requires the selected item. A null
+answer is never approval, and stale reads do not authorize resuming paused work.

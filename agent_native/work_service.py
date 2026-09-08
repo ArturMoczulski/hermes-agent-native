@@ -71,7 +71,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','result_record','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -149,6 +149,9 @@ class _Run:
                             call_id=call_id, arguments=args)
             from agent_native.progress import deliver
             deliver(conn, planning, self.validate, result['selection_id'])
+        elif tool == 'output_read':
+            from agent_native.output_read import read_chunk
+            result = read_chunk(conn, agent_id=self.work['agent_id'], workspace=self.workspace, arguments=args)
         elif tool == 'output_publish':
             from agent_native.output_store import publish
             from agent_native import progress
@@ -178,7 +181,8 @@ class _Run:
             # its response. No subsequent effect is admitted after a stop.
             conn.execute('UPDATE agent_native_work_effects SET result=? WHERE run_id=? AND call_id=?',
                          (json.dumps(result),self.work['id'],call_id))
-            summary = (('Saved output: '+result['title']) if tool=='output_publish' else
+            summary = (('Read saved output: '+result['title']) if tool=='output_read' else
+                       ('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
                        ('Plane conflict: fresh inspection required' if result.get('status')=='conflict' else
@@ -242,7 +246,7 @@ class _Run:
                                'Call work_feedback with empty arguments before substantive work and publication to read owner direction. '
                                'Apply it within current purpose and grants, then report handling with work_feedback; never claim acceptance. '
                                'Save any produced text or Markdown '
-                               'with output_publish; use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
+                               'with output_publish; use output_read to read complete prior versions when excerpts are truncated. Use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
                                'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
                                'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
                                'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
