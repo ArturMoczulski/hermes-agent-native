@@ -38,6 +38,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 | [Shared agent work](shared-agent-work.md) | Next refinement: common execution, results and Saved outputs, proven by writer and analyst. |
 | [Managed writer run](writer-managed-run.md) | Current bounded native execution, Plane planning, story versions, Pause and limits. |
 | [Fantasy-writer milestone](fantasy-writer-milestone.md) | Current cycle: create, chat, observe, save stories and continue; bounded delivery slices. |
+| [Activity-without-progress decision](no-progress-detection.md) | AN-67 threshold and response options for the first AN-51 failure-loop detector. |
 | [Specification coverage in Plane](plane-roadmap-coverage.md) | Milestone modules, rolling cycle policy and specification/scenario-to-work links; live Plane owns status. |
 | [Hermes execution audit](hermes-execution-audit.md) | Pinned upstream/fork baseline, exact patch inventory, native activation map and required managed gates. |
 | [Plane project management](plane-project-management.md) | Selected planning service, source ownership, provisioning and integration sequence. |

@@ -161,3 +161,10 @@ and retained attempts bring the agent beyond a single run. The first cadence inc
 check-ins, prior-work context, Plane-feedback revision and visible attempt history.
 Whole-purpose lifecycle acceptance and activity-without-progress policy remain subsequent work;
 see STATE.md and Plane for verified scope. AN-84 broader acceptance is deferred.
+
+AN-67 now has a concrete threshold decision in
+[activity-without-progress detection](implementation/no-progress-detection.md).
+The recommended first AN-51 slice counts only consecutive safely retryable cadence
+failures with no result, output, useful learning or new owner direction; after three,
+it records one concern and suspends cadence. Implementation remains blocked until
+the owner adopts a threshold and response, as required by the existing AN-67 item.
