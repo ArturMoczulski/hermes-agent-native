@@ -1,3 +1,12 @@
+## Active cadence status distinct from attempt completion — 2026-09-08
+
+The agent header previously displayed the latest bounded attempt state as the
+agent's lifecycle, so a cadence-enabled agent misleadingly appeared Completed
+between check-ins. The header now shows `Active · waiting for next check-in` when
+cadence is enabled and the latest attempt completed or reached its normal limit.
+Individual attempt history retains the exact outcome. Focused Playwright verifies
+the Active waiting state and the later autonomous attempt in one real browser flow.
+
 ## Recoverable managed tool validation — 2026-09-08
 
 Live MiniMax agent `6448d803-15c8-4fe9-b707-8dadc37211cc` saved and reported

@@ -42,6 +42,7 @@ export type Agent = {
   execution: "not_started" | AgentWork["state"];
   created_at: string;
   work: AgentWork | null;
+  cadence?: { enabled: boolean; interval_seconds: number | null; next_due: string | null };
   setup: {
     activation_id: string;
     status: "queued" | "preparing" | "blocked" | "failed" | "unresolved" | "ready" | "superseded";
@@ -142,6 +143,9 @@ export function agentWorkStatus(agent: Agent): string {
   const work = agent.work;
   if (!work) return "Not started";
   if (work.state === "queued" && agent.setup?.status !== "ready") return "Waiting for setup";
+  if (agent.cadence?.enabled && ["completed", "limit_reached"].includes(work.state)) {
+    return "Active · waiting for next check-in";
+  }
   const labels: Record<AgentWork["state"], string> = {
     queued: "Queued", preparing: "Preparing", running: "Running", stopping: "Stopping",
     paused: "Paused", limit_reached: "Run limit reached", completed: "Completed", failed: "Failed", unknown: "Outcome unknown",

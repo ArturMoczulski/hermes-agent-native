@@ -167,6 +167,11 @@ Sections:
 Runtime state is an observed record with named actions, not a generic editable
 JSON box. Owner control is expressed through purpose edits, work updates and
 lifecycle operations; historical evidence must not be rewritten by changing a badge.
+Agent lifecycle and the latest bounded attempt are separate facts. A cadence-enabled
+agent whose latest attempt completed or reached its normal limit remains **Active**
+and waiting for its next check-in; show the attempt outcome in Work and attempt
+history. Do not label the agent itself **Completed** unless its whole purpose has
+been evaluated as fulfilled and its lifecycle has ended.
 Changing model preserves identity and accumulated work. Show when a saved setting
 will take effect; do not imply that an in-flight operation already uses it.
 See [model selection](15-model-selection.md) for default copying, attempt boundaries

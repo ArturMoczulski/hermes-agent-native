@@ -15,6 +15,10 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     await request.post(`${backend}/__e2e__/comment/${id}`,{headers});
     await page.goto(`/agents/${id}`);
     const cadence=page.getByRole('region',{name:'Thinking cadence',exact:true});
+    await cadence.getByLabel('Check-in interval (seconds)').fill('60');
+    await cadence.getByRole('button',{name:'Enable or update cadence'}).click();
+    await expect(cadence).toContainText('Enabled · every 60 seconds');
+    await expect(page.getByLabel('Execution status')).toHaveText('Active · waiting for next check-in');
     await cadence.getByLabel('Check-in interval (seconds)').fill('2');
     await cadence.getByRole('button',{name:'Enable or update cadence'}).click();
     await expect(cadence).toContainText('Enabled · every 2 seconds');
