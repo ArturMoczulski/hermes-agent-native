@@ -28,9 +28,9 @@ def test_existing_retirement_records_migrate_to_subtree_provenance():
     migrate_subtrees(conn)
 
     assert conn.execute(
-        'SELECT agent_id,evaluation_id,source,decision_agent_id,retired_at '
+        'SELECT agent_id,evaluation_id,replacement_id,source,decision_agent_id,retired_at '
         'FROM agent_native_retirements'
-    ).fetchone() == ('root', 'evaluation', 'agent', 'root', 'then')
+    ).fetchone() == ('root', 'evaluation', None, 'agent', 'root', 'then')
 
 
 def evaluate(s, *, uncertainty=None):

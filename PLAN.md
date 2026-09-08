@@ -219,7 +219,13 @@ Every descendant is checked for unanswered questions, required owner reviews and
 unresolved effects before any identity changes; one blocker aborts the operation. The
 parent's evaluation is retained as shared provenance, descendants identify the deciding
 parent, active work is stopped, cadence is disabled and all history remains readable.
-Next: replacement controls, followed by explicit stacked-pause resume controls.
+The first explicit replacement control is now implemented for the owner: it atomically
+creates a distinct successor under the same parent, copies bounded model/autonomy/work/
+cadence configuration, records the reason and selected handoff, retires the predecessor
+subtree, and links both identities. It fails closed on unresolved subtree authority and
+replays safely after a lost response. The successor receives the handoff in its managed
+work context; private memory and descendants are not copied. Next: grant a direct parent
+the same bounded child-replacement operation, then add stacked-pause resume controls.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

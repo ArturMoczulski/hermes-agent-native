@@ -4,8 +4,8 @@ import { WorkFeedback } from '@/components/WorkFeedback';
 import { AgentProgressSettings } from "@/components/AgentProgressSettings";
 import { AgentAutonomySettings } from "@/components/AgentAutonomySettings";
 import { useEffect, useRef, useState } from "react";
-import type { ReactNode } from "react";
-import { Link, useLocation, useParams, useSearchParams } from "react-router";
+import type { FormEvent, ReactNode } from "react";
+import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@nous-research/ui/ui/components/dialog";
 import { agentsEndpoint, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
@@ -25,6 +25,7 @@ export default function AgentDetailPage() {
   const [pageSearchParams] = useSearchParams();
   const fullView = pageSearchParams.get("view") === "full";
   const { setTitle } = usePageHeader();
+  const navigate = useNavigate();
   const [retryError, setRetryError] = useState<string | null>(null);
   const [removing, setRemoving] = useState(false);
   const [confirmRemove, setConfirmRemove] = useState(false);
@@ -126,9 +127,12 @@ export default function AgentDetailPage() {
           </div>
         </header>
         {agent.pause?.paused && <PauseSummary agent={agent} />}
+        {agent.replacement?.role === "successor" && <ReplacementSummary agent={agent} />}
         {agent.retirement && <RetirementSummary agent={agent} />}
         {!fullView ? <CompactAgentView agent={agent} /> : <>
-        {inactive ? <p role="status">{agent.retirement ? 'Agent retired after its purpose evaluation. ' : 'Agent removed. '}Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
+        {inactive ? <p role="status">{agent.retirement ? 'Agent retired. ' : 'Agent removed. '}Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Agent lifecycle actions" className="space-y-5 rounded-xl border p-5">
+          <ReplacementControls agent={agent} onReplaced={(successorId) => void navigate(`/agents/${encodeURIComponent(successorId)}`)} />
+          <div className="space-y-3 border-t pt-5">
           <Button onClick={() => setConfirmRemove(true)}>Remove agent</Button>
           {confirmRemove && <div className="space-y-3">
             <p>Remove this agent and stop its work? This cannot be undone.</p>
@@ -137,6 +141,7 @@ export default function AgentDetailPage() {
             <Button disabled={removing} onClick={() => setConfirmRemove(false)}>Cancel</Button>
           </div>}
           {removeError && <p role="alert">Could not confirm removal. Reload or retry; repeating removal is safe.</p>}
+          </div>
         </section>}
         {!inactive && <><AgentModelControls key={`model:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
@@ -243,6 +248,17 @@ export default function AgentDetailPage() {
   );
 }
 
+function ReplacementSummary({ agent }: { agent: Agent }) {
+  const replacement = agent.replacement;
+  if (!replacement || replacement.role !== "successor") return null;
+  return <section aria-label="Replacement handoff" className="space-y-2 rounded-xl border p-5">
+    <h2 className="font-semibold">Successor agent</h2>
+    <p>This is a clean agent identity replacing <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(replacement.predecessor_id ?? "")}`}>{replacement.predecessor_id}</Link>. Review the predecessor's retained work and outputs when they are relevant.</p>
+    <p><strong>Handoff reason:</strong> {replacement.reason}</p>
+    <p className="whitespace-pre-wrap"><strong>Selected handoff:</strong> {replacement.handoff}</p>
+  </section>;
+}
+
 function PauseSummary({ agent }: { agent: Agent }) {
   const ownPause = agent.pause?.sources.some((source) => source.source_agent_id === agent.id);
   const ancestor = agent.pause?.sources.find((source) => source.source_agent_id !== agent.id);
@@ -305,15 +321,54 @@ function RetirementSummary({ agent }: { agent: Agent }) {
       <h2 className="text-lg font-semibold">Agent retired</h2>
       <time className="text-sm text-muted-foreground" dateTime={retirement.retired_at}>{new Date(retirement.retired_at).toLocaleString()}</time>
     </div>
-    <p>{retirement.source === "parent"
+    <p>{agent.replacement?.role === "predecessor"
+      ? <>The owner replaced this agent and retired its former subtree. Successor: <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.replacement.successor_id ?? "")}`}>{agent.replacement.successor_id}</Link>. Its history and outputs remain available.</>
+      : retirement.source === "parent"
       ? <>This agent retired with its subtree after parent <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(retirement.decision_agent_id ?? "")}`}>{retirement.decision_agent_id}</Link> completed its purpose. Its history and outputs remain available.</>
       : "The agent ended its ongoing role after the framework verified its latest whole-purpose evaluation. Its history and outputs remain available."}</p>
+    {agent.replacement?.role === "predecessor" && <p><strong>Replacement reason:</strong> {agent.replacement.reason}</p>}
     {evaluation ? <>
       <p><strong>Final assessment:</strong> {evaluation.next_action}</p>
       {evaluation.evidence.length > 0 && <div><p className="font-medium">Evidence</p><ul className="list-disc space-y-1 pl-5">{evaluation.evidence.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
       <p className="text-sm text-muted-foreground">No remaining obligations, unanswered questions, required reviews, unresolved effects, or recorded uncertainty blocked retirement.</p>
-    </> : <p className="text-sm text-muted-foreground">Retirement evaluation {retirement.evaluation_id}</p>}
+    </> : retirement.evaluation_id ? <p className="text-sm text-muted-foreground">Retirement evaluation {retirement.evaluation_id}</p> : null}
   </section>;
+}
+
+function ReplacementControls({ agent, onReplaced }: { agent: Agent; onReplaced: (successorId: string) => void }) {
+  const [open, setOpen] = useState(false);
+  const [name, setName] = useState(`${agent.name} successor`);
+  const [purpose, setPurpose] = useState(agent.purpose);
+  const [reason, setReason] = useState("");
+  const [handoff, setHandoff] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState("");
+  const requestId = useRef(crypto.randomUUID());
+  async function submit(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !name.trim() || !purpose.trim() || !reason.trim() || !handoff.trim()) return;
+    setBusy(true); setError("");
+    try {
+      const result = await fetchJSON<{ successor: Agent }>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/replace`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: requestId.current, name: name.trim(), purpose: purpose.trim(), reason: reason.trim(), handoff: handoff.trim() }),
+      });
+      onReplaced(result.successor.id);
+    } catch { setError("Could not confirm replacement. Review unresolved questions and decisions, then retry the same request."); }
+    finally { setBusy(false); }
+  }
+  return <div className="space-y-3">
+    <Button onClick={() => setOpen(value => !value)} aria-expanded={open}>Replace agent</Button>
+    {open && <form aria-label="Replace agent" className="space-y-3" onSubmit={event => void submit(event)}>
+      <p className="text-sm">A clean successor will start under the same parent with copied model, autonomy, cadence and run limits. This agent and its descendants will retire; their history remains linked and readable.</p>
+      <label className="block text-sm">Successor name<Input value={name} onChange={event => setName(event.target.value)} maxLength={200} disabled={busy} /></label>
+      <label className="block text-sm">Successor purpose<textarea className="mt-1 min-h-28 w-full rounded-md border bg-background p-3" value={purpose} onChange={event => setPurpose(event.target.value)} maxLength={20000} disabled={busy} /></label>
+      <label className="block text-sm">Reason for replacement<textarea className="mt-1 w-full rounded-md border bg-background p-3" value={reason} onChange={event => setReason(event.target.value)} maxLength={4000} disabled={busy} /></label>
+      <label className="block text-sm">Selected handoff<textarea className="mt-1 min-h-24 w-full rounded-md border bg-background p-3" value={handoff} onChange={event => setHandoff(event.target.value)} maxLength={8000} disabled={busy} placeholder="Relevant context, outputs and unfinished assignments the successor should inspect" /></label>
+      <Button type="submit" disabled={busy || !name.trim() || !purpose.trim() || !reason.trim() || !handoff.trim()}>{busy ? "Replacing…" : "Create successor and retire old subtree"}</Button>
+      {error && <p role="alert">{error}</p>}
+    </form>}
+  </div>;
 }
 
 function PurposeEvaluation({agent}:{agent:Agent}) {

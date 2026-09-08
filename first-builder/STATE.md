@@ -1,3 +1,23 @@
+## Explicit owner replacement and selected handoff — 2026-09-08
+
+AN-37 now lets the owner replace an active agent through one atomic lifecycle operation.
+The successor is a distinct identity under the same parent. It receives the predecessor's
+current bounded model, autonomy, work-limit and enabled-cadence configuration plus an
+explicit owner-authored purpose, replacement reason and selected handoff. The handoff is
+included in managed work context; private memory and descendants are not copied.
+
+The predecessor and its active descendants retire with retained history. Existing
+unanswered questions, required owner decisions or uncertain effects anywhere in that
+subtree block the whole transition. Immutable predecessor/successor links make retries
+idempotent even after the old identity becomes read-only. The full agent view provides
+the replacement form, then navigates to a successor banner linking back to retained work;
+the predecessor links forward and explains why it ended.
+
+Evidence: 12 focused replacement and retirement tests, 38 related API/lifecycle/
+delegation/prompt regressions, Ruff, the production build and a real Playwright owner
+replacement journey pass. Next: expose the same bounded operation to an accountable
+direct parent, then implement stacked-pause resume.
+
 ## Atomic subtree retirement — 2026-09-08
 
 AN-37 now applies an agent's verified whole-purpose retirement decision to its complete

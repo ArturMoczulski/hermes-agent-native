@@ -16,7 +16,8 @@ def owner_session(request: Request):
     from hermes_cli.web_server import _require_token
     _require_token(request)
     agent_id = request.path_params.get('agent_id')
-    if agent_id and request.method not in ('GET', 'HEAD', 'DELETE'):
+    replacement_retry = request.url.path.endswith('/replace')
+    if agent_id and request.method not in ('GET', 'HEAD', 'DELETE') and not replacement_retry:
         with connect_closing(board='default') as conn:
             try:
                 identity.require_active(conn, agent_id)
@@ -61,6 +62,15 @@ class CreateAgent(BaseModel):
     parent_id: str | None = Field(default=None, min_length=1, max_length=128)
 
 
+class ReplaceAgent(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    request_id: str = Field(min_length=1, max_length=128)
+    name: str = Field(min_length=1, max_length=200)
+    purpose: str = Field(min_length=1, max_length=20000)
+    reason: str = Field(min_length=1, max_length=4000)
+    handoff: str = Field(min_length=1, max_length=8000)
+
+
 @router.get('')
 def list_agents(lifecycle: Literal['active', 'retired'] = 'active', actor=Depends(owner_session)):
     with connect_closing(board='default') as conn:
@@ -74,6 +84,23 @@ def create_agent(body: CreateAgent, actor=Depends(owner_session)):
             return identity.create_root(conn, actor=actor, **body.model_dump(exclude_unset=True))
         except KeyError as exc:
             raise HTTPException(status_code=404, detail='Parent agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post('/{agent_id}/replace', status_code=201)
+def replace_agent(agent_id: str, body: ReplaceAgent, actor=Depends(owner_session)):
+    from agent_native.replacement import replace
+    with connect_closing(board='default') as conn:
+        try:
+            return replace(
+                conn, actor=actor, predecessor_id=agent_id,
+                **body.model_dump(),
+            )
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
         except ValueError as exc:

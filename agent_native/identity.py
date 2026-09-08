@@ -50,8 +50,8 @@ def _read(conn, agent_id):
         'FROM agent_native_initial_activations WHERE agent_id = ?', (agent_id,),
     ).fetchone()
     removed = conn.execute('SELECT removed_at FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone()
-    retired = conn.execute('SELECT evaluation_id,source,decision_agent_id,retired_at FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone()
-    root['retirement'] = (dict(zip(('evaluation_id','source','decision_agent_id','retired_at'), retired)) if retired else None)
+    retired = conn.execute('SELECT evaluation_id,replacement_id,source,decision_agent_id,retired_at FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone()
+    root['retirement'] = (dict(zip(('evaluation_id','replacement_id','source','decision_agent_id','retired_at'), retired)) if retired else None)
     root['removed_at'] = removed[0] if removed else None
     root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
                        if startup is not None else None)
@@ -71,6 +71,20 @@ def _read(conn, agent_id):
     root['progress_concern_settings'] = concern_settings(conn, agent_id)
     from agent_native.assignment_review import list_policies
     root['assignment_review_policies'] = list_policies(conn, agent_id)
+    predecessor = conn.execute(
+        'SELECT id,predecessor_id,reason,handoff,created_at FROM agent_native_replacements '
+        'WHERE successor_id=?', (agent_id,),
+    ).fetchone()
+    successor = conn.execute(
+        'SELECT id,successor_id,reason,handoff,created_at FROM agent_native_replacements '
+        'WHERE predecessor_id=?', (agent_id,),
+    ).fetchone()
+    root['replacement'] = (
+        dict(zip(('id', 'predecessor_id', 'reason', 'handoff', 'created_at'), predecessor), role='successor')
+        if predecessor else
+        dict(zip(('id', 'successor_id', 'reason', 'handoff', 'created_at'), successor), role='predecessor')
+        if successor else None
+    )
     if root['work'] is not None:
         root['execution'] = root['work']['state']
     from agent_native.subtree_lifecycle import read_pause

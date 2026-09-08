@@ -108,8 +108,8 @@ def test_retired_roster_is_separate_from_active_and_removed_agents(client):
         conn.execute('INSERT INTO agent_native_purpose_evaluations VALUES(?,?,?,?,?,?,?)',
                      (evaluation_id, retired['id'], run_id, 'retired-test-call', encoded,
                       hashlib.sha256(encoded.encode()).hexdigest(), now))
-        conn.execute('INSERT INTO agent_native_retirements(agent_id,evaluation_id,source,decision_agent_id,retired_at) VALUES(?,?,?,?,?)',
-                     (retired['id'], evaluation_id, 'agent', retired['id'], now))
+        conn.execute('INSERT INTO agent_native_retirements(agent_id,evaluation_id,replacement_id,source,decision_agent_id,retired_at) VALUES(?,?,?,?,?,?)',
+                     (retired['id'], evaluation_id, None, 'agent', retired['id'], now))
     client.delete(f"{URL}/{removed['id']}")
 
     assert [agent['id'] for agent in client.get(URL).json()] == [active['id']]
