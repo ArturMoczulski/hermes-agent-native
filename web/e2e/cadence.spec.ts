@@ -14,7 +14,9 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     const first=(await current()).work;
     await request.post(`${backend}/__e2e__/comment/${id}`,{headers});
     await page.goto(`/agents/${id}`);
-    await expect(page.getByLabel('Current agent summary')).toContainText('Latest attempt: completed');
+    const overview=page.getByRole('region',{name:'Current work overview',exact:true});
+    await expect(overview).toContainText('Stage: Automatic work off');
+    await expect(overview).toContainText('Latest attempt: completed');
     await expect(page.getByRole('link',{name:'Full view'})).toBeVisible();
     const planeLink=page.getByRole('link',{name:'Open project in Plane'});
     const settingsButton=page.getByRole('button',{name:'Agent settings'});
