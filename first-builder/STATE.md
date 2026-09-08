@@ -1,3 +1,12 @@
+## Bounded read throttle recovery — 2026-09-08
+
+PlaneReads now honors HTTP429 Retry-After for GET only: maximum three attempts
+and30 seconds total requested waiting. Longer server delays remain failures rather
+than being ignored. Authority is rechecked every100ms while waiting, so pause or
+deadline invalidation prevents another request. Three targeted real-HTTP tests
+pass after the missing-backoff RED, including bounded retries and revocation.
+Local API limit600/minute is already deployed. Same-agent Luna recovery pending.
+
 ## Plane throttling confirmed — 2026-09-08
 
 Recovery a5afd795-5d68-5d4f-9c63-563cbb3db9f4 read the complete saved story

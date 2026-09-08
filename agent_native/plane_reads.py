@@ -10,6 +10,7 @@ import ipaddress
 import json
 import math
 import re
+import time
 from urllib.parse import urlsplit
 from uuid import UUID
 
@@ -133,6 +134,28 @@ class PlaneReads:
         self.page_size = page_size
 
     def _request(self, context, suffix='', params=None):
+        # Only retry read throttles. Never replay a mutation or retry before
+        # the server's delay; host authority/deadline stays live while waiting.
+        budget = 30
+        for attempt in range(3):
+            try:
+                return self._request_once(context, suffix, params)
+            except PlaneReadError as error:
+                if error.status != 429 or attempt == 2:
+                    raise
+                delay = error.retry_after if error.retry_after is not None else 1
+                if delay > budget:
+                    raise
+                budget -= delay
+                until = time.monotonic() + delay
+                while True:
+                    self.authority.resolve(context)
+                    remaining = until - time.monotonic()
+                    if remaining <= 0:
+                        break
+                    time.sleep(min(0.1, remaining))
+
+    def _request_once(self, context, suffix='', params=None):
         scope = self.authority.resolve(context)
         url = (f'{self._base_url}/api/v1/workspaces/{scope.workspace_slug}/'
                f'projects/{scope.project_id}/{suffix}')
