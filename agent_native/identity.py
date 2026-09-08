@@ -85,7 +85,7 @@ def _event(conn, root, kind):
 
 
 def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None,
-                autonomy_level=3, parent_id=None):
+                autonomy_level=3, parent_id=None, _allow_nested=False):
     """Persist identity, first-review intent and event together; never launch a worker.
 
     The intent records the creating owner's request, not execution authority or
@@ -106,7 +106,7 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
     original_model = model_settings.creation_input(model_selection)
     from agent_native import autonomy
     autonomy_level = autonomy.validate_level(autonomy_level)
-    with write_txn(conn):
+    with write_txn(conn, allow_nested=_allow_nested):
         previous = conn.execute(
             'SELECT id, name, initial_purpose FROM agent_native_agents WHERE request_id = ?',
             (request_id,),

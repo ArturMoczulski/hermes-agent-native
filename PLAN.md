@@ -198,7 +198,13 @@ parent/child links, and browse the recursive active-agent tree. Until atomic sub
 controls land, removal and self-retirement reject a parent with active descendants so
 the framework cannot leave an active orphan. The next hierarchy increment grants a
 managed parent a scoped child-creation operation with explicit delegated purpose and
-frozen configuration; human-created children remain the only supported path today.
+frozen configuration. That increment is now implemented: an admitted parent can create
+one direct child per idempotent tool-call identity, and the child starts queued with an
+immutable parent link plus the parent's frozen model, autonomy level, work limits and
+enabled cadence. The managed operation accepts no credentials or configuration overrides,
+and its audit record binds the child to the parent run, reason and inherited settings.
+The next hierarchy increment makes the accountable parent inspect and evaluate delegated
+results before adding atomic subtree pause, retirement and replacement controls.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

@@ -1,3 +1,23 @@
+## Managed child delegation — 2026-09-08
+
+AN-37 now lets an admitted parent create a registered direct child through the
+managed `child_create` operation. The call carries only a child name, protected
+delegated purpose and reason. The host copies the parent attempt's frozen model,
+autonomy level and work limits, plus its enabled cadence configuration; the model
+cannot inject credentials or widen runtime settings. The child is queued for its
+own setup and work, receives an immutable parent link, and appears in the existing
+recursive hierarchy. The parent run, tool-call identity, reason and inherited
+configuration are recorded atomically, so retries return the same child.
+
+Focused evidence: four delegation tests cover tool exposure, inherited bounded
+configuration, queued work, credential-free audit data, idempotent replay and
+failure when frozen admission data is absent. Five directly affected hierarchy
+and retirement cases also pass, as does Ruff on the changed Python surface.
+
+Next: give the accountable parent a scoped view of delegated work and an explicit
+result-evaluation path. Atomic subtree pause, retirement and replacement remain
+later AN-37 increments.
+
 ## Durable whole-purpose evaluation — 2026-09-08
 
 AN-75 now has an explicit `purpose_evaluate` managed-work operation. It stores an

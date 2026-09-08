@@ -20,11 +20,12 @@ def read(conn, agent_id):
     return dict(zip(('soul_revision','enabled','interval_seconds','next_due'),(row[0],bool(row[1]),row[2],row[3]))) if row else {'enabled':False,'interval_seconds':None,'next_due':None,'soul_revision':None}
 
 
-def configure(conn, *, actor, agent_id, expected_revision, interval_seconds, enabled):
+def configure(conn, *, actor, agent_id, expected_revision, interval_seconds, enabled,
+              _allow_nested=False):
     _require_owner(actor)
     if type(enabled) is not bool or type(interval_seconds) is not int or not 1<=interval_seconds<=2592000:
         raise ValueError('Choose an interval of 1 to 2592000 seconds and an explicit enabled setting')
-    with write_txn(conn):
+    with write_txn(conn, allow_nested=_allow_nested):
         from agent_native.identity import require_active
         require_active(conn, agent_id)
         root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()

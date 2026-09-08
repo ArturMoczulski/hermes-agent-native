@@ -73,6 +73,7 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'A confirmed planning change is a valid result with an empty outputs list. '
             'Use output_read to read complete prior output versions when excerpts are truncated. Use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
             'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
+            'Use child_create only for a clearly independent delegated responsibility. Give the child a protected purpose, remain accountable for its work, and do not treat creating it as completing your assignment. '
             'Inspect the task and use result_record to report its outcome and evaluation with saved output version references. '
             'Useful discovery, a plan change, waiting for input or a blocker may have an empty outputs list. '
             'Before ending a work review, use purpose_evaluate to record whether the whole protected purpose should continue, wait, seek clarification or is a retirement candidate. '
@@ -139,7 +140,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('child_create','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -157,7 +158,11 @@ class _Run:
                 operation_id = str(uuid4())
                 conn.execute('INSERT INTO agent_native_work_effects(run_id,call_id,operation_id,fingerprint) VALUES(?,?,?,?)',
                              (self.work['id'],call_id,operation_id,fingerprint))
-        if tool == 'plane_resource_inspect':
+        if tool == 'child_create':
+            from agent_native.child_delegation import create
+            result=create(conn,validate=self.validate,parent_id=self.work['agent_id'],
+                          parent_run_id=self.work['id'],call_id=call_id,arguments=args)
+        elif tool == 'plane_resource_inspect':
             result = planning.inspect(args)
         elif tool == 'plane_operation_execute':
             if set(args) != {'operation','arguments'}:
@@ -257,7 +262,8 @@ class _Run:
             # its response. No subsequent effect is admitted after a stop.
             conn.execute('UPDATE agent_native_work_effects SET result=? WHERE run_id=? AND call_id=?',
                          (json.dumps(result),self.work['id'],call_id))
-            summary = (('Read saved output: '+result['title']) if tool=='output_read' else
+            summary = (('Created child agent: '+result['child_id']) if tool=='child_create' else
+                       ('Read saved output: '+result['title']) if tool=='output_read' else
                        ('Saved output: '+result['title']) if tool=='output_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
                        ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
