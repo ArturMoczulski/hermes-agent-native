@@ -170,6 +170,7 @@ class ResultDecision(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     request_id: str = Field(min_length=1, max_length=128)
     decision: str = Field(min_length=1, max_length=32, strict=True)
+    expected_criteria_revision: str = Field(min_length=1, max_length=128, strict=True)
     note: str | None = Field(default=None, max_length=4000)
 
 

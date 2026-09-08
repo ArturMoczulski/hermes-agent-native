@@ -30,7 +30,8 @@ def _result(c):
 def test_accept_exact_result_is_idempotent_and_immutable(configured):
     root, result_id = _result(configured)
     path = f'{URL}/{root["id"]}/results/{result_id}/decision'
-    body = {'request_id': 'accept-one', 'decision': 'accepted'}
+    body = {'request_id': 'accept-one', 'decision': 'accepted',
+            'expected_criteria_revision': 'criteria'}
     assert configured.post(path, json=body).status_code == 200
     again = configured.post(path, json=body)
     assert again.status_code == 200
@@ -43,8 +44,11 @@ def test_accept_exact_result_is_idempotent_and_immutable(configured):
 def test_revision_request_requires_note_and_becomes_pending_feedback(configured):
     root, result_id = _result(configured)
     path = f'{URL}/{root["id"]}/results/{result_id}/decision'
-    assert configured.post(path, json={'request_id': 'rev-empty', 'decision': 'revision_requested'}).status_code == 422
-    response = configured.post(path, json={'request_id': 'rev-one', 'decision': 'revision_requested', 'note': 'Strengthen the ending.'})
+    assert configured.post(path, json={'request_id': 'rev-empty', 'decision': 'revision_requested',
+                                       'expected_criteria_revision': 'criteria'}).status_code == 422
+    response = configured.post(path, json={'request_id': 'rev-one', 'decision': 'revision_requested',
+                                            'expected_criteria_revision': 'criteria',
+                                            'note': 'Strengthen the ending.'})
     assert response.status_code == 200
     result = next(r for r in response.json()['work']['results'] if r['id'] == result_id)
     assert result['acceptance'] == 'revision_requested'
@@ -64,7 +68,8 @@ def test_owner_cannot_accept_result_without_a_review_gate(configured):
         conn.execute('UPDATE agent_native_work_results SET record_json=?,record_sha256=? WHERE id=?',
                      (encoded, hashlib.sha256(encoded.encode()).hexdigest(), result_id))
     response = configured.post(f'{URL}/{root["id"]}/results/{result_id}/decision', json={
-        'request_id': 'accept-optional', 'decision': 'accepted'})
+        'request_id': 'accept-optional', 'decision': 'accepted',
+        'expected_criteria_revision': 'criteria'})
     assert response.status_code == 422
     assert response.json()['detail'] == 'This result does not require an owner decision'
 
@@ -87,7 +92,19 @@ def test_required_review_stops_cadence_until_owner_decides(configured,decision,n
 
     path = f'{URL}/{root["id"]}/results/{result_id}/decision'
     assert configured.post(path,json={
-        'request_id':'resolve-cadence-gate','decision':decision,**({'note':note} if note else {})
+        'request_id':'resolve-cadence-gate','decision':decision,
+        'expected_criteria_revision':'criteria',**({'note':note} if note else {})
     }).status_code==200
     with connect_closing(board='default') as conn:
         assert len(cadence.queue_due(conn,now='2099-01-01T00:00:01+00:00'))==1
+
+
+def test_owner_decision_rejects_a_stale_criteria_revision(configured):
+    root, result_id = _result(configured)
+    response = configured.post(f'{URL}/{root["id"]}/results/{result_id}/decision', json={
+        'request_id': 'stale-criteria', 'decision': 'accepted',
+        'expected_criteria_revision': 'older-screen-revision',
+    })
+
+    assert response.status_code == 409
+    assert response.json()['detail'] == 'Result criteria changed; reload before deciding'

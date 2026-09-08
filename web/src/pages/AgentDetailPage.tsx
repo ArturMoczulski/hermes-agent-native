@@ -593,7 +593,7 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
     try {
       await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/results/${encodeURIComponent(result.id)}/decision`, {
         method: "POST", headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ request_id: crypto.randomUUID(), decision, ...(decision === "revision_requested" ? { note: note.trim() } : {}) }),
+        body: JSON.stringify({ request_id: crypto.randomUUID(), decision, expected_criteria_revision: result.criteria_revision, ...(decision === "revision_requested" ? { note: note.trim() } : {}) }),
       });
       setMessage(decision === "accepted" ? "Accepted this exact result and its listed output versions." : "Revision requested. The agent will receive this as trusted feedback on its next cadence attempt.");
     } catch { setMessage("Could not confirm this decision. Reload the result before retrying."); }

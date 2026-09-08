@@ -35,12 +35,16 @@ def pending_required(conn, agent_id):
             pending.append(result_id)
     return pending
 
-def decide(conn, *, actor, agent_id, result_id, request_id, decision, note=None):
+def decide(conn, *, actor, agent_id, result_id, request_id, decision,
+           expected_criteria_revision, note=None):
     _require_owner(actor)
     if decision not in ('accepted','revision_requested'):
         raise ValueError('Choose accept or request revision')
     if not isinstance(request_id, str) or not 1 <= len(request_id) <= 128:
         raise ValueError('Decision request identity is required')
+    if (not isinstance(expected_criteria_revision, str)
+            or not 1 <= len(expected_criteria_revision) <= 128):
+        raise ValueError('Expected criteria revision is required')
     if note is not None and (not isinstance(note, str) or len(note) > 4000 or '\x00' in note):
         raise ValueError('Decision note must be bounded text')
     if decision == 'revision_requested' and (note is None or not note.strip()):
@@ -53,6 +57,8 @@ def decide(conn, *, actor, agent_id, result_id, request_id, decision, note=None)
         record = json.loads(result[1])
         if not record.get('review', {}).get('required'):
             raise ValueError('This result does not require an owner decision')
+        if record.get('criteria_revision') != expected_criteria_revision:
+            raise ConflictError('Result criteria changed; reload before deciding')
         prior_request = conn.execute('SELECT result_id,decision,note FROM agent_native_result_decisions WHERE request_id=?', (request_id,)).fetchone()
         if prior_request:
             if tuple(prior_request) != (result_id, decision, note):

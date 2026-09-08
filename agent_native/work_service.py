@@ -345,7 +345,7 @@ class _Run:
                     snapshot['previous_purpose_evaluations']=list_evaluations(conn,root['id'])[:5]
                     from agent_native.child_supervision import summaries as child_summaries
                     snapshot['children'] = child_summaries(conn, root['id'], 20)
-                    if root.get('replacement', {}).get('role') == 'successor':
+                    if (root.get('replacement') or {}).get('role') == 'successor':
                         snapshot['replacement_handoff'] = root['replacement']
                     snapshot['continuation_note'] = 'Review earlier results and outputs; do not repeat finished work. Read work_feedback and current Plane comments with work_comments before substantive work. Waiting is a valid result; do not invent new work.'
                     initial = _initial_context(snapshot, {k: v for k, v in _CONTRACTS.items() if k != 'comment.create'},

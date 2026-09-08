@@ -49,6 +49,8 @@ Plane work item. The owner toggle binds to the immutable observed assignment
 fingerprint; submitted deliverables record `assignment_policy` as their gate source.
 If Plane criteria change afterward, submission stops with a stale-policy conflict
 until the owner refreshes the gate from a newly observed selection.
+Owner decisions also carry the exact criteria revision displayed by the client; the
+API rejects a stale decision before accepting or requesting revision.
 Cadence enforcement now treats an existing required review as an actual gate: no
 new automatic attempt is queued while an exact result awaits its owner decision.
 Accepting or requesting revision resolves that gate and makes the decision immediately

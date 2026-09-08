@@ -128,6 +128,7 @@ export type OutputVersion = OutputMetadata & { content: string };
 export type WorkResult = {
   id: string;
   item_id: string;
+  criteria_revision: string;
   outcome: "submitted" | "discovery" | "waiting" | "blocked";
   summary: string;
   evaluation: { report: string; source: "agent" };

@@ -1,3 +1,16 @@
+## Criteria-revision-bound owner decisions — 2026-09-08
+
+AN-9 owner acceptance now includes the exact criteria revision displayed with the
+immutable result. The API rejects a decision from a stale page before recording it,
+and Accept or Request revision remains bound to the result's exact saved-output
+versions. Six focused acceptance/cadence tests, Ruff, and TypeScript pass.
+
+The focused writer browser journey exposed and fixed an ordinary-agent startup
+regression from successor handoff support (`replacement: null` was treated as an
+object). Its subsequent deterministic model fixture stopped after one step without a
+result, before reaching the decision UI; that separate fixture failure remains visible
+and was not misreported as acceptance evidence.
+
 ## Stacked-pause resume — 2026-09-08
 
 AN-37 now gives the owner an explicit Resume action for an agent's own subtree pause.
