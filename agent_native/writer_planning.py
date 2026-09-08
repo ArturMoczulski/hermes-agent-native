@@ -160,7 +160,7 @@ class _PlanningSession:
 
 
 @contextmanager
-def open_planning(*, db_path, home, agent_id, binding_id, validate):
+def open_planning(*, db_path, home, agent_id, binding_id, validate, on_read_retry=None):
     """Open on the broker thread; ``home`` is HERMES_HOME/agent-native.
 
     ``validate(conn)`` must raise unless this exact run is current, active, within
@@ -185,6 +185,7 @@ def open_planning(*, db_path, home, agent_id, binding_id, validate):
             authority.resolve(context)
             writer = PlaneWrites(authority, MutationJournal(conn), base_url=config['base_url'],
                                  api_key=config['api_key'], service_user_id=config['expected_user_id'])
+            writer._reads.on_retry = on_read_retry
             _verify_principal(authority, config)
             yield _PlanningSession(writer, context, state['discovery_item_id'])
         finally:

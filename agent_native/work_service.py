@@ -218,8 +218,15 @@ class _Run:
                     self.validate(conn)
                     conn.execute('UPDATE agent_native_work_runs SET binding_id=? WHERE id=?',(binding,self.work['id']))
                 self.workspace = self.service.home / 'agents' / root['id'] / 'workspace'
+                def read_retry(phase, status_code, delay):
+                    with write_txn(conn):
+                        self.validate(conn)
+                        summary = (f'Waiting for Plane (HTTP {status_code}); retrying this read in {delay} seconds.'
+                                   if phase == 'waiting' else 'Plane read recovered; continuing the same attempt.')
+                        state.event(conn, self.work['id'], 'work.dependency_'+phase, summary)
                 with open_planning(db_path=self.service.db_path,home=self.service.home,
-                                   agent_id=root['id'],binding_id=binding,validate=self.validate) as planning:
+                                   agent_id=root['id'],binding_id=binding,validate=self.validate,
+                                   on_read_retry=read_retry) as planning:
                     snapshot = planning.snapshot()
                     from agent_native.result_store import list_results
                     from agent_native.output_store import list_outputs

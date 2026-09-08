@@ -146,3 +146,12 @@ failed attempt and purpose revision; repeating an unconfirmed request cannot
 create another recovery. A rejected request shows a review message. Paused and
 unknown work are not eligible. This manual control does not implement automatic
 dependency recovery; AN-75 tracks that remaining work.
+
+### Automatic temporary dependency recovery
+
+Plane GET429/502/503/504 responses can recover in the same managed attempt.
+Up to three requests and30 seconds of backoff honor Retry-After; authority and
+deadline remain checked during waiting. Activity records Waiting for Plane and
+recovery, with no credentials or upstream bodies. This does not replay writes,
+reset the attempt budget, or silently start another model session. Longer outages
+and other failure classes still require review; this is not service-restart recovery.

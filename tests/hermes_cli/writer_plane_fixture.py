@@ -35,6 +35,9 @@ def _route(server, request):
             return 200, {}, project
         return None
     resource = parts[6]
+    if resource == 'cycles' and method == 'GET' and getattr(server, 'temporary_read_outage', False):
+        server.temporary_read_outage = False
+        return 503, {'Retry-After':'2'}, {'error':'Temporary fixture outage'}
     if resource == 'states' and len(parts) == 7 and method == 'GET':
         return 200, {}, _page(server.states[pid])
     if resource in ('archived-issues', 'archived-cycles') and method == 'GET':

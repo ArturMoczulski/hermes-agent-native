@@ -37,6 +37,7 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         folder.mkdir(mode=0o700, exist_ok=True)
         folder.chmod(0o700)
         path = folder / 'plane-setup.json'
+        plane.temporary_read_outage = bool(body.get('temporary_read_outage', False))
         if body.get('enabled') is True:
             path.write_text(json.dumps(plane.config))
             path.chmod(0o600)

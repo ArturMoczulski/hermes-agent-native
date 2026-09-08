@@ -132,20 +132,29 @@ class PlaneReads:
             raise ValueError('Page size must be an integer between 1 and 100')
         self._api_key = api_key
         self.page_size = page_size
+        self.on_retry = None
 
     def _request(self, context, suffix='', params=None):
-        # Only retry read throttles. Never replay a mutation or retry before
+        # Only retry temporary read failures. Never replay a mutation or retry before
         # the server's delay; host authority/deadline stays live while waiting.
         budget = 30
+        last_status = None
         for attempt in range(3):
             try:
-                return self._request_once(context, suffix, params)
+                result = self._request_once(context, suffix, params)
+                if attempt and self.on_retry:
+                    self.on_retry('recovered', last_status, 0)
+                return result
             except PlaneReadError as error:
-                if error.status != 429 or attempt == 2:
+                if error.status not in (429, 502, 503, 504) or attempt == 2:
                     raise
                 delay = error.retry_after if error.retry_after is not None else 1
                 if delay > budget:
                     raise
+                self.authority.resolve(context)
+                last_status = error.status
+                if self.on_retry:
+                    self.on_retry('waiting', error.status, delay)
                 budget -= delay
                 until = time.monotonic() + delay
                 while True:

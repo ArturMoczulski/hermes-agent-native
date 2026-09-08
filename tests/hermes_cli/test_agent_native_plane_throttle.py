@@ -7,11 +7,12 @@ from agent_native.plane_reads import PlaneReadError
 from tests.hermes_cli.test_agent_native_plane_reads import upstream, scoped, project_record  # noqa: F401
 
 
-def test_get_honors_retry_after_then_returns_scoped_result(scoped, upstream):
+@pytest.mark.parametrize('status', [429, 502, 503, 504])
+def test_get_honors_retry_after_then_returns_scoped_result(scoped, upstream, status):
     timestamps = []
     def route(_):
         timestamps.append(time.monotonic())
-        return (429, {'Retry-After':'1'}, {}) if len(timestamps)==1 else (200, {}, project_record(scoped))
+        return (status, {'Retry-After':'1'}, {}) if len(timestamps)==1 else (200, {}, project_record(scoped))
     upstream.routes[scoped[6]] = route
     assert scoped[5].get_project(scoped[4])['id'] == scoped[8]
     assert len(timestamps) == 2 and timestamps[1]-timestamps[0] >= 1

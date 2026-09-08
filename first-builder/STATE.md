@@ -1,3 +1,18 @@
+## Automatic temporary Plane read recovery — 2026-09-08
+
+AN-75 increment: managed Plane GET429/502/503/504 retries stay in the same
+attempt/session, with maximum3 attempts and30 seconds total backoff. Retry-After
+is honored. Pause/deadline/authority checks continue throughout waiting.
+Durable activity records dependency_waiting and dependency_recovered, with
+sanitized HTTP status and delay. No mutation replay and no automatic new run.
+Six targeted real-HTTP retry cases pass. Playwright injects one503 before the
+worker reads cycles, then verifies completed work, one attempt, one saved output,
+and visible waiting/recovered history without an owner retry (7.5s).
+The test defers opening monitoring until afterward so its independent reads do
+not consume the injected outage. Ruff passes. No paid calls or live agents added.
+Remaining: prolonged outages, network/provider failures and restart recovery;
+AN-75 is not complete.
+
 ## Owner failed-work recovery UI — 2026-09-08
 
 AN-75 now exposes Retry failed work in Thinking cadence for failed attempts.
