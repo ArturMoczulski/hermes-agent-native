@@ -36,6 +36,8 @@ export type Agent = {
   child_ids: string[];
   removed_at?: string | null;
   retirement?: { evaluation_id: string; source: "agent" | "parent" | "owner"; retired_at: string } | null;
+  pause?: { paused: boolean; sources: { source_agent_id: string; requested_at: string }[] };
+  subtree_pause?: { source_agent_id: string; affected_agent_ids: string[]; newly_paused_agent_ids: string[]; stopping_agent_ids: string[] };
   model_selection?: ModelSelection | null;
   model_activity?: ModelActivity[];
   autonomy: AutonomySettings;
@@ -168,6 +170,7 @@ export function validWorkLimits(value: unknown): value is WorkLimits {
 export function agentWorkStatus(agent: Agent): string {
   if (agent.retirement) return "Retired";
   if (agent.removed_at) return "Removed";
+  if (agent.pause?.paused) return "Paused";
   const work = agent.work;
   if (!work) return "Not started";
   if (work.state === "queued" && agent.setup?.status !== "ready") return "Waiting for setup";

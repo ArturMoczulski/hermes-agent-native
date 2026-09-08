@@ -28,6 +28,9 @@ def configure(conn, *, actor, agent_id, expected_revision, interval_seconds, ena
     with write_txn(conn, allow_nested=_allow_nested):
         from agent_native.identity import require_active
         require_active(conn, agent_id)
+        if enabled:
+            from agent_native.subtree_lifecycle import require_not_paused
+            require_not_paused(conn, agent_id)
         root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
         if not root: raise KeyError(agent_id)
         if root[0]!=expected_revision: raise ConflictError('Purpose changed; reload cadence settings')

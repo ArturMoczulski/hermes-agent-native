@@ -12,6 +12,8 @@ def retry_failed(conn, *, actor, agent_id, expected_revision, expected_run_id):
     recovery_id = str(uuid5(NAMESPACE_URL, 'agent-native:failed-work-retry:' + expected_run_id))
     with write_txn(conn):
         require_active(conn, agent_id)
+        from agent_native.subtree_lifecycle import require_not_paused
+        require_not_paused(conn, agent_id)
         root = conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?', (agent_id,)).fetchone()
         if not root:
             raise KeyError(agent_id)

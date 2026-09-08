@@ -209,8 +209,12 @@ status, result/output metadata and verified chunks of exact saved-output version
 excluding private reasoning and credentials. Only the direct parent can record an
 immutable accepted, revision-requested or rejected evaluation of an exact submitted
 child result. The evaluation remains separate from human acceptance, wakes the child's
-cadence, and routes revision or rejection as applicable child feedback. Next: atomic
-subtree pause, retirement and replacement controls, preserving history throughout.
+cadence, and routes revision or rejection as applicable child feedback. Owner pause is
+now a durable, atomic subtree operation: it disables cadence, stops or pauses active
+attempts, blocks new autonomous work and child creation, preserves attempt history, and
+exposes every applicable pause source. Repeating the request is safe, and a separately
+paused descendant retains its own pause cause for the later resume design. Next: atomic
+subtree retirement, followed by replacement and explicit stacked-pause resume controls.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

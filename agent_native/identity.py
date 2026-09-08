@@ -73,6 +73,10 @@ def _read(conn, agent_id):
     root['assignment_review_policies'] = list_policies(conn, agent_id)
     if root['work'] is not None:
         root['execution'] = root['work']['state']
+    from agent_native.subtree_lifecycle import read_pause
+    root['pause'] = read_pause(conn, agent_id)
+    if root['pause']['paused']:
+        root['execution'] = 'paused'
     return root
 
 
@@ -140,6 +144,8 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
             if not conn.execute('SELECT 1 FROM agent_native_agents WHERE id=?', (parent_id,)).fetchone():
                 raise KeyError(parent_id)
             require_active(conn, parent_id)
+            from agent_native.subtree_lifecycle import require_not_paused
+            require_not_paused(conn, parent_id)
         agent_id = str(uuid4())
         conn.execute(
             'INSERT INTO agent_native_agents '

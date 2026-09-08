@@ -125,6 +125,7 @@ export default function AgentDetailPage() {
             </Link>
           </div>
         </header>
+        {agent.pause?.paused && <PauseSummary agent={agent} />}
         {agent.retirement && <RetirementSummary agent={agent} />}
         {!fullView ? <CompactAgentView agent={agent} /> : <>
         {inactive ? <p role="status">{agent.retirement ? 'Agent retired after its purpose evaluation. ' : 'Agent removed. '}Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
@@ -240,6 +241,18 @@ export default function AgentDetailPage() {
       </>}
     </div>
   );
+}
+
+function PauseSummary({ agent }: { agent: Agent }) {
+  const ownPause = agent.pause?.sources.some((source) => source.source_agent_id === agent.id);
+  const ancestor = agent.pause?.sources.find((source) => source.source_agent_id !== agent.id);
+  return <section role="status" aria-label="Agent paused" className="space-y-2 rounded-xl border border-amber-500/50 bg-amber-500/5 p-5">
+    <h2 className="font-semibold">Automatic work is paused</h2>
+    <p>{ownPause
+      ? "This agent and every active descendant are paused. Thinking cadence and new autonomous work will not restart until the applicable pause is resumed."
+      : <>This agent is paused through ancestor <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(ancestor?.source_agent_id ?? "")}`}>{ancestor?.source_agent_id}</Link>. Thinking cadence and new autonomous work will not restart until that pause is resumed.</>}</p>
+    {agent.work?.state === "stopping" && <p>The current work process is still stopping; its history remains available.</p>}
+  </section>;
 }
 
 function IconTooltip({ label, children }: { label: string; children: ReactNode }) {
@@ -440,6 +453,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       <h2 className="text-lg font-semibold">{work ? "Current work" : "Start the first work run"}</h2>
       {canPause && <Button disabled={action !== null} onClick={() => { void perform("pause"); }}>{action === "pause" ? "Requesting pause…" : "Pause"}</Button>}
     </div>
+    {canPause && <p className="text-sm text-muted-foreground">Pause stops automatic work for this agent and every active descendant.</p>}
     {work ? <>
       {work.summary && <p className="whitespace-pre-wrap break-words">{work.summary}</p>}
       {work.state === "queued" && agent.setup?.status !== "ready" && <p>The request is saved. Work will begin after the private workspace and Plane project are ready.</p>}

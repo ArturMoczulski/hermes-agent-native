@@ -182,8 +182,12 @@ def pause_work(agent_id: str, actor=Depends(owner_session)):
     from agent_native.work_state import request_pause
     with connect_closing(board='default') as conn:
         try:
-            request_pause(conn, actor=actor, agent_id=agent_id)
-            return identity.get_root(conn, actor=actor, agent_id=agent_id)
+            subtree_pause = request_pause(conn, actor=actor, agent_id=agent_id)
+            agent = identity.get_root(conn, actor=actor, agent_id=agent_id)
+            agent['subtree_pause'] = subtree_pause
+            return agent
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
         except identity.ConflictError as exc:
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 

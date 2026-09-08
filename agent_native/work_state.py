@@ -38,7 +38,8 @@ from agent_native.purpose_evaluation import SCHEMA as PURPOSE_EVALUATION_SCHEMA
 from agent_native.retirement import SCHEMA as RETIREMENT_SCHEMA
 from agent_native.child_delegation import SCHEMA as CHILD_DELEGATION_SCHEMA
 from agent_native.child_supervision import SCHEMA as CHILD_SUPERVISION_SCHEMA
-WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA
+from agent_native.subtree_lifecycle import SCHEMA as SUBTREE_LIFECYCLE_SCHEMA
+WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA + SUBTREE_LIFECYCLE_SCHEMA
 
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 
@@ -141,6 +142,8 @@ def configure(conn, *, actor, agent_id, expected_revision, limits):
     encoded = limits_json(limits)
     with write_txn(conn, allow_nested=True):
         require_active(conn, agent_id)
+        from agent_native.subtree_lifecycle import require_not_paused
+        require_not_paused(conn, agent_id)
         root = conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?', (agent_id,)).fetchone()
         if root is None:
             raise KeyError(agent_id)
@@ -169,18 +172,8 @@ def configure(conn, *, actor, agent_id, expected_revision, limits):
 
 
 def request_pause(conn, *, actor, agent_id):
-    _require_owner(actor)
-    with write_txn(conn):
-        work = read_work(conn,agent_id)
-        if not work:
-            raise ConflictError('This agent has no configured work run')
-        conn.execute('UPDATE agent_native_cadence SET enabled=0 WHERE agent_id=?',(agent_id,))
-        if work['state'] in TERMINAL or work['state'] == 'stopping':
-            return work
-        state = 'paused' if work['state'] == 'queued' else 'stopping'
-        conn.execute('UPDATE agent_native_work_runs SET stop_requested=1,state=? WHERE id=?', (state,work['id']))
-        event(conn,work['id'],'work.'+state,'Paused before starting.' if state=='paused' else 'Stopping the active work process.')
-    return read_work(conn,agent_id)
+    from agent_native.subtree_lifecycle import request_pause as pause_subtree
+    return pause_subtree(conn, actor=actor, agent_id=agent_id)
 
 
 def validate(conn, run_id):

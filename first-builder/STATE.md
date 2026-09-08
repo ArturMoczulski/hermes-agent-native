@@ -1,3 +1,20 @@
+## Durable atomic subtree pause — 2026-09-08
+
+AN-37 now implements the owner decision that pausing an agent pauses its entire active
+subtree. A dedicated pause ledger records every applicable pause source, so the state is
+durable and can later distinguish an ancestor pause from a descendant's separate pause.
+One transaction disables cadence throughout the subtree, pauses queued attempts, marks
+running attempts for stopping, and records affected agents. Paused agents reject new
+autonomous work, cadence enablement, retry and child creation while chat and retained
+history remain available.
+
+The API acknowledges the exact affected subtree, and both compact and full agent views
+show a persistent pause notice, including whether the pause came from this agent or an
+ancestor. Focused evidence: five backend lifecycle tests, Ruff, the production web build,
+and a Playwright owner journey proving the parent UI and persisted child state all pass.
+
+Next: atomic subtree retirement, then replacement and explicit stacked-pause resume.
+
 ## Accountable parent supervision — 2026-09-08
 
 AN-37 now gives every admitted parent a fresh bounded roster of its direct
