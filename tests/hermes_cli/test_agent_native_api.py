@@ -1,4 +1,5 @@
 """Authenticated HTTP boundary over real isolated control storage."""
+import hashlib
 import json
 
 import pytest
@@ -71,6 +72,40 @@ def test_remove_retains_history_and_blocks_new_work(client):
     assert client.post(path + '/chat').status_code == 409
     assert client.post(path + '/work', json={'expected_revision': 1, 'timeout_seconds': 30, 'max_iterations': 2}).status_code == 409
     assert client.post(path + '/setup/retry').status_code == 409
+
+
+def test_retired_roster_is_separate_from_active_and_removed_agents(client):
+    from agent_native.identity import OWNER
+    from hermes_cli.kanban_db_connect import connect_closing
+    active = client.post(URL, json=BODY).json()
+    retired = client.post(URL, json={**BODY, 'request_id': 'retired-create', 'name': 'Retired artist'}).json()
+    removed = client.post(URL, json={**BODY, 'request_id': 'removed-create', 'name': 'Removed artist'}).json()
+    with connect_closing(board='default') as conn:
+        now = retired['created_at']
+        run_id = 'retired-test-run'
+        evaluation_id = 'retired-test-evaluation'
+        conn.execute('INSERT INTO agent_native_work_runs '
+                     '(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at) '
+                     'VALUES(?,?,?,?,?,?,?,?)', (run_id, retired['id'], retired['startup']['id'], 1,
+                     'retired-test-session', '{"max_iterations": 1, "timeout_seconds": 1}', 'completed', now))
+        record = {'id': evaluation_id, 'agent_id': retired['id'], 'run_id': run_id,
+                  'soul_revision': 1, 'purpose': retired['purpose'], 'judgment': 'retire_candidate',
+                  'evidence': ['Purpose fulfilled.'], 'remaining_obligations': [], 'uncertainty': None,
+                  'next_action': 'Retire.', 'question_id': None, 'created_at': now}
+        encoded = json.dumps(record, sort_keys=True, ensure_ascii=False, allow_nan=False)
+        conn.execute('INSERT INTO agent_native_purpose_evaluations VALUES(?,?,?,?,?,?,?)',
+                     (evaluation_id, retired['id'], run_id, 'retired-test-call', encoded,
+                      hashlib.sha256(encoded.encode()).hexdigest(), now))
+        conn.execute('INSERT INTO agent_native_retirements(agent_id,evaluation_id,source,retired_at) VALUES(?,?,?,?)',
+                     (retired['id'], evaluation_id, 'agent', now))
+    client.delete(f"{URL}/{removed['id']}")
+
+    assert [agent['id'] for agent in client.get(URL).json()] == [active['id']]
+    retired_roster = client.get(URL + '?lifecycle=retired')
+    assert retired_roster.status_code == 200
+    assert [agent['id'] for agent in retired_roster.json()] == [retired['id']]
+    assert retired_roster.json()[0]['retirement']['source'] == 'agent'
+    assert client.get(URL + '?lifecycle=removed').status_code == 422
 
 
 def test_removal_cancels_queued_work_and_cannot_be_revived(client):

@@ -92,6 +92,7 @@ export default function AgentDetailPage() {
   const planeUrl = agent?.setup?.project_id && agent.setup.plane_origin && agent.setup.workspace_slug
     ? `${agent.setup.plane_origin}/${encodeURIComponent(agent.setup.workspace_slug)}/projects/${encodeURIComponent(agent.setup.project_id)}/issues/`
     : null;
+  const inactive = Boolean(agent?.removed_at || agent?.retirement);
 
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
@@ -104,7 +105,7 @@ export default function AgentDetailPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold">{agent.name}</h1>
-              {!agent.removed_at && <IconTooltip label="Agent settings">
+              {!inactive && <IconTooltip label="Agent settings">
                 <Button size="icon" className="size-10 border border-border bg-background text-foreground shadow-sm hover:bg-muted" aria-label="Agent settings" onClick={() => setSettingsOpen(true)}><Settings className="size-5" strokeWidth={2.5} aria-hidden="true" /></Button>
               </IconTooltip>}
               {planeUrl && <IconTooltip label="Open project in Plane">
@@ -115,15 +116,16 @@ export default function AgentDetailPage() {
           </div>
           <p className="break-all text-xs text-muted-foreground">Root agent · {agent.id}</p>
           <div className="flex flex-wrap gap-2">
-            {!agent.removed_at && <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>}
+            {!inactive && <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}/chat`}>Chat with agent</Link>}
             <Link className="inline-block rounded-md border px-4 py-2 text-sm underline-offset-4 hover:underline"
               to={fullView ? `/agents/${encodeURIComponent(agent.id)}` : `/agents/${encodeURIComponent(agent.id)}?view=full`}>
               {fullView ? "Compact view" : "Full view"}
             </Link>
           </div>
         </header>
+        {agent.retirement && <RetirementSummary agent={agent} />}
         {!fullView ? <CompactAgentView agent={agent} /> : <>
-        {agent.removed_at ? <p role="status">Agent removed. Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
+        {inactive ? <p role="status">{agent.retirement ? 'Agent retired after its purpose evaluation. ' : 'Agent removed. '}Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Remove agent" className="space-y-3 rounded-xl border p-5">
           <Button onClick={() => setConfirmRemove(true)}>Remove agent</Button>
           {confirmRemove && <div className="space-y-3">
             <p>Remove this agent and stop its work? This cannot be undone.</p>
@@ -133,7 +135,7 @@ export default function AgentDetailPage() {
           </div>}
           {removeError && <p role="alert">Could not confirm removal. Reload or retry; repeating removal is safe.</p>}
         </section>}
-        {!agent.removed_at && <><AgentModelControls key={`model:${agent.id}`} agent={agent}
+        {!inactive && <><AgentModelControls key={`model:${agent.id}`} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {
             mutationVersion.current += 1;
@@ -227,7 +229,7 @@ export default function AgentDetailPage() {
         <WorkResults key={`results:${agent.id}`} agent={agent} />
         <SavedOutputs key={`outputs:${agent.id}`} agent={agent} />
         </>}
-        {!agent.removed_at && <AgentSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} agent={agent}
+        {!inactive && <AgentSettingsDialog open={settingsOpen} onOpenChange={setSettingsOpen} agent={agent}
           onMutationStart={() => { mutationVersion.current += 1; }}
           onUpdate={(result) => {
             mutationVersion.current += 1;
@@ -257,7 +259,7 @@ function CompactAgentView({ agent }: { agent: Agent }) {
   return <div className="space-y-6">
     <ProgressConcernAttention agent={agent} />
     <WorkResults agent={agent} attentionOnly />
-    {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
+    {!agent.removed_at && !agent.retirement && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
     <div aria-label="Current agent summary" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
       {work && <span>Latest attempt: {work.state.replace('_', ' ')}</span>}
       {work?.focus && <><span aria-hidden="true">·</span><span>{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current" : "Latest"} work:</span>
@@ -277,6 +279,24 @@ function CompactAgentView({ agent }: { agent: Agent }) {
       <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
     </section>
   </div>;
+}
+
+function RetirementSummary({ agent }: { agent: Agent }) {
+  const retirement = agent.retirement;
+  if (!retirement) return null;
+  const evaluation = agent.work?.purpose_evaluations?.find(value => value.id === retirement.evaluation_id);
+  return <section aria-label="Retirement decision" className="space-y-3 rounded-xl border p-5">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <h2 className="text-lg font-semibold">Agent retired</h2>
+      <time className="text-sm text-muted-foreground" dateTime={retirement.retired_at}>{new Date(retirement.retired_at).toLocaleString()}</time>
+    </div>
+    <p>The agent ended its ongoing role after the framework verified its latest whole-purpose evaluation. Its history and outputs remain available.</p>
+    {evaluation ? <>
+      <p><strong>Final assessment:</strong> {evaluation.next_action}</p>
+      {evaluation.evidence.length > 0 && <div><p className="font-medium">Evidence</p><ul className="list-disc space-y-1 pl-5">{evaluation.evidence.map((item, index) => <li key={index}>{item}</li>)}</ul></div>}
+      <p className="text-sm text-muted-foreground">No remaining obligations, unanswered questions, required reviews, unresolved effects, or recorded uncertainty blocked retirement.</p>
+    </> : <p className="text-sm text-muted-foreground">Retirement evaluation {retirement.evaluation_id}</p>}
+  </section>;
 }
 
 function PurposeEvaluation({agent}:{agent:Agent}) {

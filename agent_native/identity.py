@@ -46,7 +46,7 @@ def _read(conn, agent_id):
     removed = conn.execute('SELECT removed_at FROM agent_native_removals WHERE agent_id=?', (agent_id,)).fetchone()
     retired = conn.execute('SELECT evaluation_id,source,retired_at FROM agent_native_retirements WHERE agent_id=?', (agent_id,)).fetchone()
     root['retirement'] = (dict(zip(('evaluation_id','source','retired_at'), retired)) if retired else None)
-    root['removed_at'] = removed[0] if removed else (retired[2] if retired else None)
+    root['removed_at'] = removed[0] if removed else None
     root['startup'] = (dict(zip(('id', 'cause', 'soul_revision', 'requested_at'), startup))
                        if startup is not None else None)
     from agent_native.startup import read_setup
@@ -186,12 +186,20 @@ def events(conn, *, actor, agent_id):
             for row in rows]
 
 
-def list_roots(conn, *, actor):
+def list_roots(conn, *, actor, lifecycle='active'):
     """Installation roster; only the trusted owner may enumerate roots."""
     _require_owner(actor)
+    if lifecycle not in ('active', 'retired'):
+        raise ValueError('Choose active or retired agents')
+    where = (
+        'id IN (SELECT agent_id FROM agent_native_retirements) '
+        'AND id NOT IN (SELECT agent_id FROM agent_native_removals)'
+        if lifecycle == 'retired' else
+        'id NOT IN (SELECT agent_id FROM agent_native_removals) '
+        'AND id NOT IN (SELECT agent_id FROM agent_native_retirements)'
+    )
     return [_read(conn, row[0]) for row in conn.execute(
-        'SELECT id FROM agent_native_agents WHERE id NOT IN (SELECT agent_id FROM agent_native_removals) '
-        'AND id NOT IN (SELECT agent_id FROM agent_native_retirements) ORDER BY created_at, id'
+        f'SELECT id FROM agent_native_agents WHERE {where} ORDER BY created_at, id'
     ).fetchall()]
 
 

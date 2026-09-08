@@ -185,6 +185,11 @@ Plane writes remain. Success disables cadence, invalidates earlier work authorit
 preserves the evaluation and all history. The present runtime exposes root agents only;
 subtree review and cascade remain part of the hierarchy increment rather than being
 simulated in this root-only data model.
+The paired owner UX is also implemented: the ordinary roster remains limited to
+active agents, an explicit retired-agents view keeps retired identities discoverable,
+and a retired detail page shows the exact purpose evaluation and evidence that
+authorized retirement. Retirement and owner removal have distinct labels and
+records; neither permits new chat, settings changes or autonomous work.
 Clarification enforcement is now connected: the judgment must name an applicable
 unanswered framework question, cadence suppresses redundant attempts while it is open,
 and the trusted owner answer wakes the next review without overriding owner pause.

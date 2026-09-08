@@ -3,6 +3,8 @@
 Only the existing dashboard owner session is accepted. Scoped automation tokens
 cannot promote themselves to OWNER through request data or general middleware.
 """
+from typing import Literal
+
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -59,9 +61,9 @@ class CreateAgent(BaseModel):
 
 
 @router.get('')
-def list_agents(actor=Depends(owner_session)):
+def list_agents(lifecycle: Literal['active', 'retired'] = 'active', actor=Depends(owner_session)):
     with connect_closing(board='default') as conn:
-        return identity.list_roots(conn, actor=actor)
+        return identity.list_roots(conn, actor=actor, lifecycle=lifecycle)
 
 
 @router.post('', status_code=201)

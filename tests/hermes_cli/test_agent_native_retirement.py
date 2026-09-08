@@ -1,7 +1,7 @@
 """Guarded agent-initiated retirement through managed work authority."""
 import pytest
 
-from agent_native.identity import OWNER, get_root
+from agent_native.identity import OWNER, get_root, list_roots
 from tests.hermes_cli.test_agent_native_purpose_evaluation import broker, effect  # noqa: F401
 
 
@@ -29,9 +29,12 @@ def test_agent_retires_from_current_clear_evaluation(broker):
     assert result['status'] == 'retired'
     assert result['evaluation_id']
     root = get_root(s.conn, actor=OWNER, agent_id=s.root['id'])
-    assert root['removed_at']
+    assert root['removed_at'] is None
     assert root['retirement']['source'] == 'agent'
     assert root['cadence']['enabled'] is False
+    assert all(agent['id'] != s.root['id'] for agent in list_roots(s.conn, actor=OWNER))
+    retired = list_roots(s.conn, actor=OWNER, lifecycle='retired')
+    assert [agent['id'] for agent in retired] == [s.root['id']]
 
     with pytest.raises(PermissionError):
         s.run._effect(s.conn, s.planning, effect(s, 'after-retirement', 'purpose_evaluate', {

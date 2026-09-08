@@ -33,6 +33,7 @@ export function validModelChoice(value: unknown): value is ModelChoice {
 
 export type Agent = {
   removed_at?: string | null;
+  retirement?: { evaluation_id: string; source: "agent" | "parent" | "owner"; retired_at: string } | null;
   model_selection?: ModelSelection | null;
   model_activity?: ModelActivity[];
   autonomy: AutonomySettings;
@@ -163,6 +164,7 @@ export function validWorkLimits(value: unknown): value is WorkLimits {
 }
 
 export function agentWorkStatus(agent: Agent): string {
+  if (agent.retirement) return "Retired";
   if (agent.removed_at) return "Removed";
   const work = agent.work;
   if (!work) return "Not started";

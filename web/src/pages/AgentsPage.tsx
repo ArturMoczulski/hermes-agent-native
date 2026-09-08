@@ -35,6 +35,8 @@ export default function AgentsPage() {
   const { setTitle } = usePageHeader();
   const navigate = useNavigate();
   const [agents, setAgents] = useState<Agent[]>([]);
+  const [retiredAgents, setRetiredAgents] = useState<Agent[]>([]);
+  const [showRetired, setShowRetired] = useState(false);
   const [initialRequest] = useState(restoreCreation);
   const [name, setName] = useState(initialRequest?.name ?? "");
   const [defaultModel, setDefaultModel] = useState<DefaultAgentModel | null>(null);
@@ -71,6 +73,17 @@ export default function AgentsPage() {
     });
     return () => { active = false; };
   }, [reload]);
+
+  useEffect(() => {
+    if (!showRetired) return;
+    let active = true;
+    void fetchJSON<Agent[]>(`${endpoint}?lifecycle=retired`).then((result) => {
+      if (active) setRetiredAgents(result);
+    }).catch(() => {
+      if (active) setError("Could not load retired agents. Check your connection and retry.");
+    });
+    return () => { active = false; };
+  }, [showRetired, reload]);
 
   async function create(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -175,7 +188,12 @@ export default function AgentsPage() {
         scopeDescription="Only this new agent will use the selected model." onApply={setModelSelection} onClose={() => setChoosingModel(false)} />}
       {error && <div role="alert" className="space-y-2"><p>{error}</p><Button disabled={saving} onClick={() => { setLoading(true); setError(""); setReload((value) => value + 1); }}>Reload agents</Button></div>}
       <section aria-label="Agent list" className="space-y-4">
-        <h2 className="text-lg font-semibold">Agents</h2>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <h2 className="text-lg font-semibold">Agents</h2>
+          <Button type="button" aria-expanded={showRetired} onClick={() => setShowRetired(value => !value)}>
+            {showRetired ? "Hide retired agents" : "Show retired agents"}
+          </Button>
+        </div>
         {loading ? <p>Loading agents…</p> : agents.length === 0 && !error ? <p>No agents yet. Create your first agent above.</p> : null}
         {agents.map((agent) => (
           <article key={agent.id} className="space-y-3 rounded-xl border p-5">
@@ -185,6 +203,16 @@ export default function AgentsPage() {
             <p className="break-all text-xs text-muted-foreground">Agent ID: {agent.id} · Purpose revision {agent.soul_revision}</p>
           </article>
         ))}
+        {showRetired && <section aria-label="Retired agents" className="space-y-3 border-t pt-4">
+          <h3 className="font-semibold">Retired agents</h3>
+          {retiredAgents.length === 0 ? <p className="text-sm text-muted-foreground">No retired agents.</p> : retiredAgents.map(agent => (
+            <article key={agent.id} className="space-y-2 rounded-xl border p-5 opacity-80">
+              <div className="flex items-center justify-between gap-4"><h4 className="font-semibold"><Link className="underline-offset-4 hover:underline" to={`/agents/${encodeURIComponent(agent.id)}`}>{agent.name}</Link></h4><span className="rounded-full border px-3 py-1 text-sm">Retired</span></div>
+              <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>
+              {agent.retirement && <p className="text-xs text-muted-foreground">Retired <time dateTime={agent.retirement.retired_at}>{new Date(agent.retirement.retired_at).toLocaleString()}</time></p>}
+            </article>
+          ))}
+        </section>}
       </section>
     </div>
   );

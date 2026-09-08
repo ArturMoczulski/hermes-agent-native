@@ -190,7 +190,7 @@ test('configured creation reaches a private planning home with one discovery tas
 test('owner removes an agent while retaining its history', async ({ page, request }) => {
   const created = await request.post(api, { headers, data: { request_id: crypto.randomUUID(), name: 'Remove me', purpose: 'A temporary purpose' } });
   const agent = await created.json();
-  await page.goto(`/agents/${agent.id}`);
+  await page.goto(`/agents/${agent.id}?view=full`);
   await page.getByRole('button', { name: 'Remove agent', exact: true }).click();
   await expect(page.getByText('History, saved outputs and Plane records are retained.')).toBeVisible();
   await page.getByRole('button', { name: 'Confirm removal', exact: true }).click();
@@ -201,4 +201,46 @@ test('owner removes an agent while retaining its history', async ({ page, reques
   expect((await (await request.get(api, { headers })).json()).some((a: {id: string}) => a.id === agent.id)).toBe(false);
   expect((await request.post(`${api}/${agent.id}/chat`, { headers })).status()).toBe(409);
   expect((await request.delete(`${api}/${agent.id}`, { headers })).status()).toBe(200);
+});
+
+test('retired agents remain discoverable with their retirement evidence', async ({ page }) => {
+  const retiredAt = '2026-09-08T12:00:00+00:00';
+  const evaluation = {
+    id: 'evaluation-retired', run_id: 'run-retired', soul_revision: 1,
+    purpose: 'Prepare one complete atlas.', judgment: 'retire_candidate',
+    evidence: ['The atlas is published and every acceptance criterion is met.'],
+    remaining_obligations: [], uncertainty: null, next_action: 'Retire after fulfilling the finite purpose.',
+    question_id: null, created_at: retiredAt,
+  };
+  const retired = {
+    id: 'retired-atlas-agent', name: 'Atlas maker', purpose: 'Prepare one complete atlas.',
+    soul_revision: 2, execution: 'completed', created_at: '2026-09-08T10:00:00+00:00',
+    removed_at: null, retirement: { evaluation_id: evaluation.id, source: 'agent', retired_at: retiredAt },
+    startup: null, setup: null, cadence: { enabled: false, interval_seconds: 60, next_due: null },
+    autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null },
+    model_selection: null, model_activity: [], progress_concerns: [], assignment_review_policies: [],
+    work: { id: 'run-retired', state: 'completed', limits: { timeout_seconds: 180, max_iterations: 50 },
+      session_id: 'retired-session', model_calls: 2, events: [], summary: 'Atlas completed.', error: null,
+      stories: [], outputs: [], results: [], progress: [], output_sections: [], focus: null,
+      purpose_evaluations: [evaluation] },
+  };
+  await page.route('**/api/agent-native/agents**', route => {
+    const url = new URL(route.request().url());
+    const tail = url.pathname.split('/').pop();
+    const body = tail === retired.id ? retired : url.searchParams.get('lifecycle') === 'retired' ? [retired] : [];
+    return route.fulfill({ status: 200, contentType: 'application/json', body: JSON.stringify(body) });
+  });
+
+  await page.goto('/agents');
+  await expect(page.getByText('Atlas maker')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Show retired agents' }).click();
+  const retiredSection = page.getByRole('region', { name: 'Retired agents' });
+  await expect(retiredSection).toContainText('Atlas maker');
+  await expect(retiredSection).toContainText('Retired');
+  await retiredSection.getByRole('link', { name: 'Atlas maker' }).click();
+  await expect(page.getByLabel('Execution status')).toHaveText('Retired');
+  const decision = page.getByRole('region', { name: 'Retirement decision' });
+  await expect(decision).toContainText('Retire after fulfilling the finite purpose.');
+  await expect(decision).toContainText('The atlas is published and every acceptance criterion is met.');
+  await expect(page.getByRole('link', { name: 'Chat with agent' })).toHaveCount(0);
 });
