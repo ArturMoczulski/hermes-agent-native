@@ -134,6 +134,28 @@ class RetryWork(BaseModel):
     expected_run_id: str = Field(min_length=1, max_length=128)
 
 
+class ResultDecision(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    request_id: str = Field(min_length=1, max_length=128)
+    decision: str = Field(min_length=1, max_length=32, strict=True)
+    note: str | None = Field(default=None, max_length=4000)
+
+
+@router.post('/{agent_id}/results/{result_id}/decision')
+def decide_result(agent_id: str, result_id: str, body: ResultDecision, actor=Depends(owner_session)):
+    from agent_native.acceptance import decide
+    with connect_closing(board='default') as conn:
+        try:
+            decide(conn, actor=actor, agent_id=agent_id, result_id=result_id, **body.model_dump())
+            return identity.get_root(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(404, 'Result not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(409, str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(422, str(exc)) from exc
+
+
 @router.post('/{agent_id}/work/retry')
 def retry_work(agent_id: str, body: RetryWork, actor=Depends(owner_session)):
     from agent_native.work_retry import retry_failed

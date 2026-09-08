@@ -40,9 +40,15 @@ def _checked(row):
 
 
 def list_results(conn, agent_id):
-    return [_checked(row) for row in conn.execute(
+    results = [_checked(row) for row in conn.execute(
         'SELECT id,record_json,record_sha256 FROM agent_native_work_results '
         'WHERE agent_id=? ORDER BY created_at DESC,id DESC', (agent_id,))]
+    from agent_native.acceptance import get as get_decision
+    for result in results:
+        decision = get_decision(conn, result['id'])
+        result['acceptance'] = decision['decision'] if decision else 'not_evaluated'
+        result['owner_decision'] = decision
+    return results
 
 
 def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation, arguments, record_progress=None):

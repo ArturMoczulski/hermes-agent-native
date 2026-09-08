@@ -293,16 +293,36 @@ function WorkResults({ agent }: { agent: Agent }) {
   return <section aria-label="Work results" className="space-y-4 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">Results</h2>
     {!results.length && <p>No results recorded yet.</p>}
-    {results.map((result) => <article id={`result-${result.id}`} key={result.id} className="space-y-3 rounded-lg border p-4">
+    {results.map((result) => <ResultCard key={result.id} agent={agent} result={result} label={labels[result.outcome]} />)}
+  </section>;
+}
+
+function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult; label: string }) {
+  const [note, setNote] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  async function decide(decision: "accepted" | "revision_requested") {
+    if (busy || (decision === "revision_requested" && !note.trim())) return;
+    setBusy(true); setMessage("");
+    try {
+      await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/results/${encodeURIComponent(result.id)}/decision`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ request_id: crypto.randomUUID(), decision, ...(decision === "revision_requested" ? { note: note.trim() } : {}) }),
+      });
+      setMessage(decision === "accepted" ? "Accepted this exact result and its listed output versions." : "Revision requested. The agent will receive this as trusted feedback on its next cadence attempt.");
+    } catch { setMessage("Could not confirm this decision. Reload the result before retrying."); }
+    finally { setBusy(false); }
+  }
+  return <article id={`result-${result.id}`} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h3 className="font-semibold">{labels[result.outcome]}</h3>
+        <h3 className="font-semibold">{label}</h3>
         <time className="text-xs text-muted-foreground" dateTime={result.created_at}>{new Date(result.created_at).toLocaleString()}</time>
       </div>
       <p className="whitespace-pre-wrap break-words">{result.summary}</p>
       <section aria-label="Agent evaluation" className="space-y-2 text-sm">
         <h4 className="font-semibold">Agent evaluation</h4>
         <pre className="whitespace-pre-wrap break-words font-sans">{result.evaluation.report}</pre>
-        <p className="text-muted-foreground">This is the agent’s assessment. Acceptance has not been evaluated.</p>
+        <p className="text-muted-foreground">This is the agent’s assessment. {result.acceptance === "not_evaluated" ? "Owner acceptance has not been evaluated." : result.acceptance === "accepted" ? "The owner accepted this exact result." : "The owner requested a revision."}</p>
       </section>
       {result.outputs.length ? <ul className="space-y-1 text-sm">{result.outputs.map((output) => {
         const metadata = agent.work?.outputs.find((item) => item.output_id === output.output_id && item.version === output.version);
@@ -311,8 +331,16 @@ function WorkResults({ agent }: { agent: Agent }) {
         </Link></li>;
       })}</ul> : <p className="text-sm text-muted-foreground">No saved outputs for this result.</p>}
       <PlanningItemLink agent={agent} itemId={result.item_id} />
-    </article>)}
-  </section>;
+      {result.acceptance === "not_evaluated" ? <section aria-label="Owner result decision" className="space-y-3 border-t pt-3">
+        <p className="text-sm">Accepting applies only to this result and the output versions listed above.</p>
+        <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => void decide("accepted")}>Accept result</Button></div>
+        <label className="block text-sm">Revision instructions
+          <textarea value={note} onChange={event => setNote(event.target.value)} disabled={busy} maxLength={4000} rows={3} className="mt-1 w-full rounded border bg-background p-2" />
+        </label>
+        <Button disabled={busy || !note.trim()} onClick={() => void decide("revision_requested")}>Request revision</Button>
+      </section> : result.owner_decision?.note ? <p className="whitespace-pre-wrap text-sm">Owner note: {result.owner_decision.note}</p> : null}
+      {message && <p role="status" className="text-sm">{message}</p>}
+    </article>;
 }
 
 function PlanningItemLink({ agent, itemId }: { agent: Agent; itemId: string }) {

@@ -110,7 +110,8 @@ export type WorkResult = {
   outcome: "submitted" | "discovery" | "waiting" | "blocked";
   summary: string;
   evaluation: { report: string; source: "agent" };
-  acceptance: "not_evaluated";
+  acceptance: "not_evaluated" | "accepted" | "revision_requested";
+  owner_decision?: { id: string; decision: "accepted" | "revision_requested"; note: string | null; created_at: string } | null;
   outputs: OutputReference[];
   created_at: string;
 };
