@@ -65,5 +65,10 @@ duplicate concerns while one is open.
 6. Restart preserves the concern and suspended cadence state.
 
 Later AN-51 work can detect repeated replanning, repeated approaches across nominally
-successful attempts, and unresolved delegation. Those signals need domain-aware
-evidence and must not be inferred from activity volume alone.
+successful attempts, and unresolved delegation. The next implemented slice covers
+the directly observable successful case: three consecutive completed cadence attempts
+that record neither a result nor a saved output create a distinct concern and suspend
+cadence through the same owner-resume workflow. A recorded result—including useful
+discovery or an explicit wait—resets this sequence. Replanning inside recorded results,
+quality stagnation and unresolved delegation still need domain-aware evidence and must
+not be inferred from activity volume alone.

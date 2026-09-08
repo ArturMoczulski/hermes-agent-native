@@ -168,3 +168,7 @@ The first AN-51 slice counts only consecutive safely retryable cadence
 failures with no result, output, useful learning or new owner direction; after three,
 it records one concern and suspends cadence. The owner-controlled threshold defaults
 to three, accepts two through ten, and explicit resume resolves and resets the sequence.
+The next AN-51 slice applies the same bounded response when three consecutive cadence
+attempts report completion but record neither a result nor a saved output. It records
+a distinct concern so the UI and evidence identify silent completion separately from
+terminal failure. Any recorded result or output resets the sequence.

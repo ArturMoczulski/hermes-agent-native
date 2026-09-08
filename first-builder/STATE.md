@@ -1,3 +1,17 @@
+## Silent successful cadence detection — 2026-09-08
+
+AN-51 now also detects cadence attempts that report completion without leaving any
+durable evidence. Three consecutive `completed` attempts with neither a result nor a
+saved output create the distinct `repeated_empty_completion` concern and suspend
+automatic work through the existing owner-resume workflow. Any result—including a
+useful discovery or explicit wait—or saved output breaks the sequence. Existing
+databases migrate their concern-kind constraint without losing prior concerns.
+
+Focused backend coverage verifies detection, reset, retained migration data and the
+unique-open-concern index. The previously verified Playwright alert/resume journey is
+shared by both concern kinds because the UI renders the durable concern summary and
+attempt evidence generically.
+
 ## Initial no-progress concern and suspension — 2026-09-08
 
 The owner explicitly approved AN-67 option B: three consecutive safely retryable

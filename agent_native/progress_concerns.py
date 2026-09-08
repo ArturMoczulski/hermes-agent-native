@@ -13,7 +13,7 @@ CREATE TABLE IF NOT EXISTS agent_native_progress_concern_settings (
 );
 CREATE TABLE IF NOT EXISTS agent_native_progress_concerns (
  id TEXT PRIMARY KEY, agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
- kind TEXT NOT NULL CHECK(kind='repeated_unproductive_failure'),
+ kind TEXT NOT NULL CHECK(kind IN ('repeated_unproductive_failure','repeated_empty_completion')),
  status TEXT NOT NULL CHECK(status IN ('open','resolved')),
  attempt_ids TEXT NOT NULL, summary TEXT NOT NULL, created_at TEXT NOT NULL,
  resolved_at TEXT, response TEXT, resume_request_id TEXT,
@@ -22,6 +22,36 @@ CREATE TABLE IF NOT EXISTS agent_native_progress_concerns (
 CREATE UNIQUE INDEX IF NOT EXISTS agent_native_one_open_progress_concern
  ON agent_native_progress_concerns(agent_id,kind) WHERE status='open';
 """
+
+
+def migrate_kinds(conn):
+    """Extend the concern kinds on databases created by the first slice."""
+    row = conn.execute(
+        "SELECT sql FROM sqlite_master WHERE type='table' "
+        "AND name='agent_native_progress_concerns'"
+    ).fetchone()
+    if not row or 'repeated_empty_completion' in row[0]:
+        return
+    if conn.in_transaction:
+        raise RuntimeError('Progress concern migration requires an initialization boundary')
+    conn.execute('BEGIN IMMEDIATE')
+    try:
+        conn.execute('ALTER TABLE agent_native_progress_concerns RENAME TO '
+                     'agent_native_progress_concerns_old')
+        conn.executescript(SCHEMA)
+        conn.execute(
+            'INSERT INTO agent_native_progress_concerns SELECT * FROM '
+            'agent_native_progress_concerns_old'
+        )
+        conn.execute('DROP TABLE agent_native_progress_concerns_old')
+        conn.execute(
+            'CREATE UNIQUE INDEX IF NOT EXISTS agent_native_one_open_progress_concern '
+            "ON agent_native_progress_concerns(agent_id,kind) WHERE status='open'"
+        )
+        conn.commit()
+    except Exception:
+        conn.rollback()
+        raise
 
 
 def settings(conn, agent_id):
@@ -88,12 +118,17 @@ def suspend_if_stalled(conn, agent_id):
     cutoff = _direction_cutoff(conn, agent_id)
     threshold = settings(conn, agent_id)['failure_threshold']
     attempts = []
+    kind = None
     for run_id, run_state, created_at in conn.execute(
         'SELECT id,state,created_at FROM agent_native_work_runs '
         'WHERE agent_id=? ORDER BY rowid DESC',
         (agent_id,),
     ).fetchall():
-        if run_state != 'retryable_failure' or created_at <= cutoff:
+        candidate = {
+            'retryable_failure': 'repeated_unproductive_failure',
+            'completed': 'repeated_empty_completion',
+        }.get(run_state)
+        if candidate is None or created_at <= cutoff or (kind and candidate != kind):
             break
         if (
             conn.execute(
@@ -104,6 +139,7 @@ def suspend_if_stalled(conn, agent_id):
             ).fetchone()
         ):
             break
+        kind = candidate
         attempts.append(run_id)
         if len(attempts) == threshold:
             break
@@ -113,16 +149,22 @@ def suspend_if_stalled(conn, agent_id):
     concern_id = str(
         uuid5(NAMESPACE_URL, 'agent-native:no-progress:' + agent_id + ':' + attempts[-1])
     )
-    summary = (
-        f'Repeated work without progress: {threshold} consecutive attempts failed '
-        'without a result or saved output.'
-    )
+    if kind == 'repeated_empty_completion':
+        summary = (
+            f'Repeated work without progress: {threshold} consecutive attempts '
+            'completed without recording progress or a saved output.'
+        )
+    else:
+        summary = (
+            f'Repeated work without progress: {threshold} consecutive attempts failed '
+            'without a result or saved output.'
+        )
     conn.execute(
         'INSERT OR IGNORE INTO agent_native_progress_concerns '
         '(id,agent_id,kind,status,attempt_ids,summary,created_at) '
         'VALUES(?,?,?,?,?,?,?)',
         (
-            concern_id, agent_id, 'repeated_unproductive_failure', 'open',
+            concern_id, agent_id, kind, 'open',
             json.dumps(attempts), summary, _now(),
         ),
     )
