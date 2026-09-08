@@ -46,6 +46,7 @@ export type Agent = {
   cadence?: { enabled: boolean; interval_seconds: number | null; next_due: string | null };
   progress_concerns?: ProgressConcern[];
   progress_concern_settings?: { failure_threshold: number };
+  assignment_review_policies?: { agent_id:string; item_id:string; assignment_fingerprint:string; required:boolean; revision:number; updated_at:string }[];
   setup: {
     activation_id: string;
     status: "queued" | "preparing" | "blocked" | "failed" | "unresolved" | "ready" | "superseded";
@@ -124,7 +125,7 @@ export type WorkResult = {
   summary: string;
   evaluation: { report: string; source: "agent" };
   acceptance: "not_evaluated" | "accepted" | "revision_requested";
-  review: { required: boolean; source: "autonomy" | "owner_policy" | "legacy"; reason: string | null };
+  review: { required: boolean; source: "autonomy" | "owner_policy" | "assignment_policy" | "legacy"; reason: string | null };
   owner_decision?: { id: string; decision: "accepted" | "revision_requested"; note: string | null; created_at: string } | null;
   outputs: OutputReference[];
   created_at: string;

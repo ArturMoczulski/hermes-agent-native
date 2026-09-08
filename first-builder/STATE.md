@@ -1,3 +1,13 @@
+## Assignment-bound deliverable review — 2026-09-08
+
+AN-9 now supports an owner review requirement for the agent's exact selected Plane
+work item. Agent settings display the current assignment and store the toggle with
+its immutable observed assignment fingerprint. Applicable submitted outputs record
+`assignment_policy` as the review source and use the existing decision/cadence gate.
+If the Plane item changes after configuration, result submission fails closed with a
+stale-policy conflict until the agent observes the new revision and the owner refreshes
+the gate. Focused result/acceptance/cadence tests and static UI checks pass.
+
 ## Owner-authored deliverable review policy — 2026-09-08
 
 AN-9 now lets the owner require review of every submitted deliverable for one agent,

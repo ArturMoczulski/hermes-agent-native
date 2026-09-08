@@ -294,6 +294,23 @@ class AutonomySettings(BaseModel):
     require_owner_review: bool = Field(strict=True)
     expected_revision: int = Field(strict=True, ge=1)
 
+class AssignmentReviewSettings(BaseModel):
+    model_config = ConfigDict(extra='forbid')
+    run_id: str = Field(min_length=1,max_length=128)
+    required: bool = Field(strict=True)
+    expected_revision: int = Field(strict=True,ge=0)
+
+@router.put('/{agent_id}/assignment-review')
+def update_assignment_review(agent_id:str,body:AssignmentReviewSettings,actor=Depends(owner_session)):
+    from agent_native.assignment_review import configure_current
+    with connect_closing(board='default') as conn:
+        try:
+            configure_current(conn,actor=actor,agent_id=agent_id,**body.model_dump())
+            return identity.get_root(conn,actor=actor,agent_id=agent_id)
+        except KeyError as exc: raise HTTPException(404,'Agent or run not found') from exc
+        except identity.ConflictError as exc: raise HTTPException(409,str(exc)) from exc
+        except ValueError as exc: raise HTTPException(422,str(exc)) from exc
+
 
 @router.get('/{agent_id}/autonomy')
 def autonomy_settings(agent_id: str, actor=Depends(owner_session)):

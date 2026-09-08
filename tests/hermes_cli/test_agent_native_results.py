@@ -129,6 +129,28 @@ def test_owner_review_policy_gates_submitted_output_at_balanced_autonomy(broker)
     }
 
 
+def test_assignment_review_gate_binds_to_observed_item_revision(broker):
+    from agent_native.assignment_review import configure_current
+    from agent_native.identity import ConflictError, OWNER
+    from tests.hermes_cli.test_agent_native_work_focus import select
+    s=broker
+    focus=select(s)
+    policy=configure_current(s.conn,actor=OWNER,agent_id=s.root['id'],run_id=s.work['id'],
+                             required=True,expected_revision=0)
+    assert policy['assignment_fingerprint']==focus['assignment_fingerprint']
+    output=s.run._effect(s.conn,s.planning,effect(s,'assignment-output','output_publish',{
+        'title':'Assignment draft','content':'A complete draft.','format':'markdown',
+        'item_id':s.setup['discovery_item_id']}))
+    result=record(s,'assignment-result',outcome='submitted',outputs=[{
+        'output_id':output['output_id'],'version':output['version']}])
+    assert result['review']['source']=='assignment_policy'
+
+    s.plane.items[s.setup['discovery_item_id']]['description_html']='<p>Changed criteria</p>'
+    with pytest.raises(ConflictError,match='Assignment changed'):
+        record(s,'stale-assignment-result',outcome='submitted',outputs=[{
+            'output_id':output['output_id'],'version':output['version']}])
+
+
 def test_approval_driven_attempt_requires_review_for_submitted_output(broker):
     s = broker
     with write_txn(s.conn):

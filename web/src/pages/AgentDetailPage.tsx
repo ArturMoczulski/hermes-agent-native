@@ -323,9 +323,41 @@ function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpd
         <AgentModelControls agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
         <AgentProgressSettings agentId={agent.id} />
         <AgentAutonomySettings agentId={agent.id} />
+        <AssignmentReviewSettings key={`${agent.work?.focus?.item_id}:${agent.assignment_review_policies?.find(value=>value.item_id===agent.work?.focus?.item_id)?.revision??0}`} agent={agent} onUpdate={onUpdate} />
         <AgentCadence agentId={agent.id} revision={agent.soul_revision} />
       </DialogContent>
     </Dialog>;
+}
+
+function AssignmentReviewSettings({agent,onUpdate}:{agent:Agent;onUpdate:(agent:Agent)=>void}) {
+  const focus=agent.work?.focus;
+  const policy=focus ? agent.assignment_review_policies?.find(value=>value.item_id===focus.item_id) : undefined;
+  const [required,setRequired]=useState(policy?.required??false);
+  const [busy,setBusy]=useState(false);
+  const [message,setMessage]=useState("");
+  async function save(){
+    if(!agent.work||!focus||busy)return;
+    setBusy(true);setMessage("");
+    try{
+      const updated=await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/assignment-review`,{
+        method:"PUT",headers:{"Content-Type":"application/json"},body:JSON.stringify({
+          run_id:agent.work.id,required,expected_revision:policy?.revision??0})});
+      onUpdate(updated);setMessage("Saved for this exact observed assignment revision.");
+    }catch{setMessage("Could not save. The assignment or policy may have changed; reload and try again.");}
+    finally{setBusy(false);}
+  }
+  return <section aria-label="Assignment review settings" className="space-y-3 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">Current assignment review</h2>
+    {!focus?<p className="text-sm text-muted-foreground">Available after the agent selects a Plane work item.</p>:<>
+      <p className="text-sm">{focus.name}</p>
+      <label className="flex items-start gap-3 text-sm"><input type="checkbox" className="mt-1" checked={required} disabled={busy}
+        onChange={event=>{setRequired(event.target.checked);setMessage("");}} />
+        <span><strong>Require owner review for this assignment</strong><br/><span className="text-muted-foreground">Bound to the currently observed Plane work-item revision. Assignment changes require refreshing this policy.</span></span>
+      </label>
+      <Button disabled={busy||required===(policy?.required??false)} onClick={()=>void save()}>Save assignment review</Button>
+    </>}
+    {message&&<p role="status" className="text-sm">{message}</p>}
+  </section>;
 }
 
 function WorkControls({ agent, onMutationStart, onUpdate }: {

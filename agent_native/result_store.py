@@ -140,12 +140,17 @@ def record(conn, *, validate, workspace, agent_id, run_id, call_id, observation,
                                     'FROM agent_native_autonomy_settings WHERE agent_id=?',
                                     (agent_id,)).fetchone()
         owner_policy = bool(autonomy and autonomy[1])
-        review_required = bool(autonomy and (autonomy[0] == 1 or owner_policy)
+        from agent_native.assignment_review import applicable
+        assignment_policy=applicable(conn,agent_id,args['item_id'],observation['fingerprint'])
+        review_required = bool(autonomy and (autonomy[0] == 1 or owner_policy or assignment_policy)
                                and args['outcome'] == 'submitted' and outputs)
         review = {
             'required': review_required,
-            'source': 'owner_policy' if owner_policy and review_required else 'autonomy',
-            'reason': ('Owner policy requires review of every submitted deliverable.'
+            'source': ('assignment_policy' if assignment_policy and review_required else
+                       'owner_policy' if owner_policy and review_required else 'autonomy'),
+            'reason': ('This assignment revision requires owner review of its submitted deliverable.'
+                       if assignment_policy and review_required else
+                       'Owner policy requires review of every submitted deliverable.'
                        if owner_policy and review_required else
                        'Approval-driven autonomy requires owner review of submitted deliverables.'
                        if review_required else None),

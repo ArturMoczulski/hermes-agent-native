@@ -44,7 +44,11 @@ next AN-9 increment.
 The owner-policy half is implemented: Agent settings can require review of every
 submitted deliverable independently of autonomy level. The policy is revisioned,
 frozen onto admission, visible to the worker, and stored as the exact result gate
-source. Assignment-authored gates remain the next refinement.
+source. Assignment-authored gates are now implemented for the agent's selected
+Plane work item. The owner toggle binds to the immutable observed assignment
+fingerprint; submitted deliverables record `assignment_policy` as their gate source.
+If Plane criteria change afterward, submission stops with a stale-policy conflict
+until the owner refreshes the gate from a newly observed selection.
 Cadence enforcement now treats an existing required review as an actual gate: no
 new automatic attempt is queued while an exact result awaits its owner decision.
 Accepting or requesting revision resolves that gate and makes the decision immediately
