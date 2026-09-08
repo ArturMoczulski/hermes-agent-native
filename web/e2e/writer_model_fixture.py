@@ -144,6 +144,52 @@ def next_reply(messages, purpose):
             return {'role':'assistant','content':'Recovered after fresh inspection.'}
         return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
             'function':{'name':name,'arguments':json.dumps(arguments)}}]}
+    if 'E2E_REVISION_CADENCE' in purpose:
+        planning = _planning(messages)
+        target = planning['discovery']['id']
+        previous = planning.get('saved_outputs', [])
+        if not previous:
+            if index == 0:
+                name, arguments = 'work_item_select', {'item_id': target}
+            elif index == 1:
+                name, arguments = 'output_publish', {
+                    'item_id': target, 'title': 'Revision wake draft', 'format': 'text',
+                    'content': 'The citadel still falls at dawn.',
+                }
+            elif index == 2:
+                name, arguments = 'result_record', {
+                    'item_id': target, 'summary': 'Initial draft ready', 'outcome': 'submitted',
+                    'evaluation': 'The first version is complete enough for the configured gate.',
+                    'outputs': [{'output_id': result(1)['output_id'], 'version': result(1)['version']}],
+                }
+            else:
+                return {'role': 'assistant', 'content': 'Initial draft saved.'}
+        else:
+            if index == 0:
+                name, arguments = 'work_item_select', {'item_id': target}
+            elif index == 1:
+                name, arguments = 'work_feedback', {}
+            elif index == 2:
+                name, arguments = 'output_publish', {
+                    'item_id': target, 'title': 'Revision wake draft', 'format': 'text',
+                    'output_id': previous[0]['output_id'],
+                    'content': 'The citadel survives at dawn after the requested hopeful revision.',
+                }
+            elif index == 3:
+                name, arguments = 'work_feedback', {
+                    'feedback_id': result(1)['pending'][0]['id'],
+                    'response': 'Saved the requested hopeful revision as version 2.',
+                }
+            elif index == 4:
+                name, arguments = 'result_record', {
+                    'item_id': target, 'summary': 'Requested revision completed', 'outcome': 'submitted',
+                    'evaluation': 'The owner revision instruction is reflected in the new version.',
+                    'outputs': [{'output_id': result(2)['output_id'], 'version': result(2)['version']}],
+                }
+            else:
+                return {'role': 'assistant', 'content': 'Requested revision saved.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_CADENCE' in purpose:
         planning = _planning(messages)
         target = planning['discovery']['id']

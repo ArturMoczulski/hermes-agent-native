@@ -1,3 +1,15 @@
+## Exact-output revision continuation — 2026-09-08
+
+AN-9 now has a deterministic owner-browser journey for the complete revision path.
+An approval-driven agent publishes an exact gated output, then receives an owner
+revision request from that output's reader while configured with a one-day cadence.
+The trusted instruction creates a durable wake, starts a distinct attempt in seconds,
+is read through managed feedback, and produces version 2 with the requested change.
+
+The adjacent exact-output acceptance journey also passes, proving Accept and Request
+revision remain separate decisions on immutable versions. Both focused Playwright
+journeys, TypeScript, focused ESLint and focused Ruff pass without a paid model.
+
 ## Durable actionable-input cadence wake — 2026-09-08
 
 AN-75 now distinguishes a routine scheduled check-in from a prompt reconsideration

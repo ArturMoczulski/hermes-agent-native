@@ -110,6 +110,50 @@ test('a writer purpose uses shared output and result records without a chat prom
 })
 
 
+test('requesting revision on an exact output promptly wakes long-interval cadence', async ({ page, request }) => {
+  test.setTimeout(90000)
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+  const created = await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
+    request_id: crypto.randomUUID(), name: 'Revision wake writer',
+    purpose: 'Write and revise a fantasy citadel draft. E2E_REVISION_CADENCE',
+    autonomy_level: 1, work: { timeout_seconds: 180, max_iterations: 12 },
+  } })
+  expect(created.status()).toBe(201)
+  const { id } = await created.json()
+  const api = `${backend}/api/agent-native/agents/${id}`
+  const current = async () => await (await request.get(api, { headers })).json()
+  try {
+    await expect.poll(async () => (await current()).work.state, { timeout: 30000 }).toBe('completed')
+    const first = (await current()).work
+    expect((await request.post(`${api}/cadence`, { headers, data: {
+      expected_revision: 1, enabled: true, interval_seconds: 86400,
+    } })).ok()).toBe(true)
+    await page.goto(`/agents/${id}?view=full`)
+    await page.getByRole('button', { name: 'Read output', exact: true }).click()
+    const reader = page.getByRole('article', { name: 'Output reader', exact: true })
+    await expect(reader).toContainText('The citadel still falls at dawn.')
+    await reader.getByLabel('Revision instructions').fill('Give the citadel a hopeful survival at dawn.')
+    await reader.getByRole('button', { name: 'Request revision', exact: true }).click()
+    await expect(reader).toContainText('Revision requested.')
+
+    await expect.poll(async () => {
+      const agent = await current()
+      return agent.work.id !== first.id && agent.work.state === 'completed'
+    }, { timeout: 30000 }).toBe(true)
+    const continued = await current()
+    expect(continued.work.outputs.some((output: { version: number }) => output.version === 2)).toBe(true)
+    const output = continued.work.outputs.find((candidate: { version: number }) => candidate.version === 2)
+    const revised = await (await request.get(
+      `${api}/outputs/${output.output_id}/versions/2`, { headers })).json()
+    expect(revised.content).toContain('survives at dawn')
+    expect(continued.work.id).not.toBe(first.id)
+  } finally {
+    await request.post(`${api}/work/pause`, { headers })
+  }
+})
+
+
 test('Pause stops a real active worker and held model connection after navigating away and back', async ({ page, request }) => {
   test.setTimeout(60000)
   const marker = 'E2E_WRITER_HOLD_PAUSE'

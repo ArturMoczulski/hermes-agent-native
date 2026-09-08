@@ -56,6 +56,9 @@ history but direct required review to the referenced immutable saved-output vers
 The output reader clearly distinguishes required, optional, accepted and
 revision-requested states, and only a pending required review exposes Accept output or
 Request revision. Focused required-review and balanced-autonomy browser journeys pass.
+The exact-output Request revision journey is now verified end to end: trusted revision
+feedback wakes an enabled one-day cadence immediately, starts a distinct attempt and
+saves the requested version 2. The neighboring exact-output Accept journey also passes.
 Cadence enforcement now treats an existing required review as an actual gate: no
 new automatic attempt is queued while an exact result awaits its owner decision.
 Accepting or requesting revision resolves that gate and makes the decision immediately
