@@ -1,3 +1,17 @@
+## Purpose change stops obsolete execution — 2026-09-09
+
+AN-76 now proves that revising purpose during a real held provider request physically
+stops the worker and disconnects the model client. The original attempt remains visible
+under revision 1 with no late output; the same agent ID carries revision 2 and the new
+purpose. A purpose-revoked run is classified as `interrupted`, with an explicit purpose
+change explanation, rather than `paused` because no owner pause exists.
+
+The focused browser journey failed on the prior misleading `paused` state, then passed
+after the host distinguished revision supersession from pause. Forty-two focused
+identity/API/cadence regressions, TypeScript, focused ESLint and Ruff, and whitespace
+checks pass. Next: create a durable revision-2 setup/replan intent without rewriting the
+original creation request or its history.
+
 ## Owner purpose revision begins AN-76 — 2026-09-09
 
 The complete owner-journey audit exposed a real missing control: the dashboard displayed

@@ -208,6 +208,32 @@ test('Pause stops a real active worker and held model connection after navigatin
   })
 })
 
+test('changing purpose stops the obsolete worker and retains its interrupted attempt', async ({ page, request }) => {
+  test.setTimeout(60000)
+  const marker = 'E2E_WRITER_HOLD_PURPOSE_CHANGE'
+  await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
+  await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
+  const created = await (await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
+    request_id: crypto.randomUUID(), name: 'Redirected writer',
+    purpose: `Write stories about an old citadel. ${marker}`,
+    work: { timeout_seconds: 300, max_iterations: 20 },
+  } })).json()
+  const api = `${backend}/api/agent-native/agents/${created.id}`
+  const hold = async () => (await (await request.get(`${backend}/__e2e__/model-holds/${marker}`, { headers })).json())
+  await expect.poll(async () => (await hold()).entered, { timeout: 30000 }).toBe(true)
+  await page.goto(`/agents/${created.id}`)
+  await page.getByRole('button', { name: 'Agent settings', exact: true }).click()
+  const settings = page.getByRole('dialog', { name: 'Agent settings' })
+  await settings.getByLabel('Agent purpose', { exact: true }).fill('Write stories about a floating city.')
+  await settings.getByRole('button', { name: 'Change purpose and stop obsolete work', exact: true }).click()
+  await expect(settings.getByRole('status')).toContainText('Purpose changed')
+  await expect.poll(async () => (await (await request.get(api, { headers })).json()).work.state).toBe('interrupted')
+  await expect.poll(async () => (await hold()).client_disconnected).toBe(true)
+  const revised = await (await request.get(api, { headers })).json()
+  expect(revised).toMatchObject({ id: created.id, soul_revision: 2, purpose: 'Write stories about a floating city.' })
+  expect(revised.work.stories).toHaveLength(0)
+})
+
 for (const limit of ['time', 'steps'] as const) {
   test(`the configured ${limit} limit ends work without another provider call`, async ({ page, request }) => {
     test.setTimeout(60000)

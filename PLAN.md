@@ -13,6 +13,10 @@ is implemented as a focused slice: Agent settings can revise the protected purpo
 without replacing the stable agent identity, using the current purpose revision as a
 compare-and-swap guard. The next slice must prove immediate stopping of held obsolete
 work and prepare fresh current-purpose planning before the final real-model journey.
+The held-worker proof now passes: purpose revision closes the provider connection,
+retains the old attempt as `interrupted` rather than mislabeling it as an owner pause,
+preserves the stable agent identity, and produces no late output. Fresh setup/replan
+for revision 2 is the remaining purpose-change transition.
 AN-93 is complete. Compact view places applicable owner questions before output decisions
 and progress concerns in Compact view. A labeled Current/Latest work card follows the
 attention area with the ongoing stage, latest bounded-attempt outcome and direct Plane

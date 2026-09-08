@@ -116,7 +116,7 @@ class _Run:
             raise PermissionError('Work was stopped or reached its time limit')
         state.validate(conn,self.work['id'])
 
-    def stop(self, reason='Owner paused this work.', *, recoverable=False):
+    def stop(self, reason='Owner paused this work.', *, recoverable=False, superseded=False):
         # No broker/HTTP/database lock may be acquired before process termination.
         self.stopped.set()
         dead = self.host.force_stop(timeout=2)
@@ -130,7 +130,7 @@ class _Run:
                 if row[0] not in state.TERMINAL:
                     can_continue = recoverable and _cadence_can_retry(
                         conn, self.work['agent_id'], self.work['id'])
-                    target = ('limit_reached' if timed_out else 'interrupted' if can_continue else 'paused') if dead else 'unknown'
+                    target = ('limit_reached' if timed_out else 'interrupted' if superseded or can_continue else 'paused') if dead else 'unknown'
                     conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,finished_at=?,summary=? WHERE id=?',
                                  (target,_now(),reason,self.work['id']))
                     state.event(conn,self.work['id'],'work.'+target,reason if dead else 'Worker stop could not be confirmed.')
@@ -524,7 +524,17 @@ class WorkService:
                 with connect_closing(self.db_path) as conn:
                     run.validate(conn)
             except PermissionError:
-                run.stop('Work paused or its execution authority ended.')
+                with connect_closing(self.db_path) as conn:
+                    revision = conn.execute(
+                        'SELECT soul_revision FROM agent_native_agents WHERE id=?',
+                        (run.work['agent_id'],),
+                    ).fetchone()
+                superseded = bool(revision and revision[0] != run.work['soul_revision'])
+                run.stop(
+                    'Purpose changed; obsolete work was stopped.' if superseded
+                    else 'Work paused or its execution authority ended.',
+                    superseded=superseded,
+                )
         with connect_closing(self.db_path) as conn:
             from agent_native.cadence import queue_due
             queue_due(conn,busy_agents={run.work['agent_id'] for run in self.runs.values()})
