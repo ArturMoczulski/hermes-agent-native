@@ -5,11 +5,13 @@ The owner selected the Hermes fork and Plane. The live
 dependencies and cycles. Read it before selecting work; this is not another board.
 
 The current undated cycle 03 is **Shared agent work and the fantasy writer**.
-AN-91 corrects the shared planning/output boundary exposed by the live fantasy
+AN-91 completed the shared planning/output boundary exposed by the live fantasy
 world agent: Plane owns briefs, cycles, task descriptions, criteria and planning
 notes, while Saved outputs contain the actual purpose-level deliverables. Planning
 changes may be reported as results with no file. The only exception is an
-assignment that explicitly requests a planning document as its deliverable.
+assignment that explicitly requests a planning document as its deliverable. A
+clean replacement agent proved this behavior with a Plane-only planning result
+and one actual World Bible output.
 **AN-9 result acceptance is now the owner's immediate priority.** Add a trusted,
 version-bound owner workflow to accept a submitted result or request revisions;
 the decision must wake the cadence agent and either unlock dependent work or

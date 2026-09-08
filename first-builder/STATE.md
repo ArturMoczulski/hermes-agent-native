@@ -7,7 +7,12 @@ AN-91 records the cross-agent defect. Product design, the Plane skill and the
 managed-work prompt now reserve Saved outputs for purpose-level deliverables;
 confirmed planning changes can be results with no file. An explicit assignment
 for a planning document remains the exception. The focused prompt regression and
-Ruff pass. Existing immutable output history is retained as evidence.
+Ruff pass. Existing immutable output history is retained as evidence. Live
+acceptance then removed the noisy agent and created replacement
+`5031569a-9054-4ec4-ad09-936229de5168` with the same purpose. Its first MiniMax
+attempt kept its brief and cycle in Plane, recorded planning with no output, and
+saved only `World Bible v0.1 — Cosmology and Creation Myth` as the domain
+deliverable. Sixty-second cadence is enabled. AN-91 is Done.
 
 ## Owner result acceptance is the immediate priority — 2026-09-08
 
