@@ -4,6 +4,7 @@ import { WorkFeedback } from '@/components/WorkFeedback';
 import { AgentProgressSettings } from "@/components/AgentProgressSettings";
 import { AgentAutonomySettings } from "@/components/AgentAutonomySettings";
 import { useEffect, useRef, useState } from "react";
+import type { ReactNode } from "react";
 import { Link, useLocation, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@nous-research/ui/ui/components/dialog";
@@ -15,7 +16,7 @@ import { fetchJSON } from "@/lib/api";
 import PlanningWork from "./PlanningWork";
 import { AgentModelControls } from "@/components/AgentModelControls";
 import { usePageHeader } from "@/contexts/usePageHeader";
-import { ExternalLink, Settings } from "lucide-react";
+import { Settings, SquareKanban } from "lucide-react";
 
 type LoadedAgent = { key: string; agent?: Agent; error?: string };
 
@@ -103,8 +104,12 @@ export default function AgentDetailPage() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div className="flex items-center gap-2">
               <h1 className="text-2xl font-semibold">{agent.name}</h1>
-              {!agent.removed_at && <Button size="icon" className="border-0 bg-transparent shadow-none hover:bg-muted" aria-label="Agent settings" title="Agent settings" onClick={() => setSettingsOpen(true)}><Settings aria-hidden="true" /></Button>}
-              {planeUrl && <a className="inline-flex size-9 items-center justify-center rounded-md hover:bg-muted" href={planeUrl} target="_blank" rel="noreferrer" aria-label="Open project in Plane" title="Open project in Plane"><ExternalLink aria-hidden="true" /></a>}
+              {!agent.removed_at && <IconTooltip label="Agent settings">
+                <Button size="icon" className="size-10 border border-border bg-background text-foreground shadow-sm hover:bg-muted" aria-label="Agent settings" onClick={() => setSettingsOpen(true)}><Settings className="size-5" strokeWidth={2.5} aria-hidden="true" /></Button>
+              </IconTooltip>}
+              {planeUrl && <IconTooltip label="Open project in Plane">
+                <a className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground shadow-sm hover:bg-muted" href={planeUrl} target="_blank" rel="noreferrer" aria-label="Open project in Plane"><SquareKanban className="size-5" strokeWidth={2.5} aria-hidden="true" /></a>
+              </IconTooltip>}
             </div>
             <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
           </div>
@@ -231,6 +236,15 @@ export default function AgentDetailPage() {
       </>}
     </div>
   );
+}
+
+function IconTooltip({ label, children }: { label: string; children: ReactNode }) {
+  return <span className="group relative inline-flex">
+    {children}
+    <span role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
+      {label}
+    </span>
+  </span>;
 }
 
 function CompactAgentView({ agent }: { agent: Agent }) {

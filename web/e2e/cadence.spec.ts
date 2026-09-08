@@ -16,8 +16,13 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
     await page.goto(`/agents/${id}`);
     await expect(page.getByLabel('Current agent summary')).toContainText('Latest attempt: completed');
     await expect(page.getByRole('link',{name:'Full view'})).toBeVisible();
-    await expect(page.getByRole('link',{name:'Open project in Plane'})).toBeVisible();
-    await page.getByRole('button',{name:'Agent settings'}).click();
+    const planeLink=page.getByRole('link',{name:'Open project in Plane'});
+    const settingsButton=page.getByRole('button',{name:'Agent settings'});
+    await settingsButton.hover();
+    await expect(page.getByRole('tooltip',{name:'Agent settings'})).toBeVisible();
+    await planeLink.hover();
+    await expect(page.getByRole('tooltip',{name:'Open project in Plane'})).toBeVisible();
+    await settingsButton.click();
     const settings=page.getByRole('dialog',{name:'Agent settings'});
     await expect(settings).toBeVisible();
     const cadence=settings.getByRole('region',{name:'Thinking cadence',exact:true});
