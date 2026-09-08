@@ -19,6 +19,17 @@ from hermes_cli.kanban_db_connect import connect_closing, write_txn
 _log = logging.getLogger(__name__)
 
 
+def _authority_revoked(validate, error):
+    """Separate a denied operation from loss of the whole run capability."""
+    if not isinstance(error, PermissionError):
+        return False
+    try:
+        validate()
+        return False
+    except PermissionError:
+        return True
+
+
 def _initial_context(snapshot, contracts, autonomy_policy=None):
     """Build the managed-work instruction with a clear planning/output boundary."""
     return ('Review your protected purpose and current project. Continue useful work, ask a scoped question or record a waiting result when appropriate. Use the supplied planning skill. '
@@ -303,7 +314,7 @@ class _Run:
                                 reply = {'ok':True,'result':result}
                             except Exception as exc:
                                 # Never return credentials/HTTP response bodies in errors.
-                                reply = {'ok':False,'revoked':isinstance(exc,PermissionError),
+                                reply = {'ok':False,'revoked':_authority_revoked(lambda: self.validate(conn), exc),
                                          'error':'Work operation could not be admitted or confirmed ('+type(exc).__name__+').'}
                                 with write_txn(conn):
                                     state.event(conn,self.work['id'],'work.operation_failed',reply['error'])

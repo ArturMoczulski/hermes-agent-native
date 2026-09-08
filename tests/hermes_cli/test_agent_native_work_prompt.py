@@ -1,6 +1,7 @@
 """Focused contract checks for managed-work instructions."""
 
 from agent_native.work_service import _initial_context
+from agent_native.work_service import _authority_revoked
 
 
 def test_planning_records_stay_in_plane_and_outputs_are_purpose_deliverables():
@@ -19,3 +20,11 @@ def test_high_autonomy_does_not_invent_owner_acceptance_gate():
     assert 'Continuously pursue the purpose across outputs and milestones' in prompt
     assert 'do not invent an owner-acceptance gate' in prompt
     assert 'Leave the task nonterminal for owner review' not in prompt
+
+
+def test_scoped_operation_denial_does_not_revoke_the_run():
+    assert _authority_revoked(lambda: None, PermissionError('Wrong work item')) is False
+    assert _authority_revoked(lambda: (_ for _ in ()).throw(PermissionError('Run stopped')),
+                              PermissionError('Denied during revoked run')) is True
+    assert _authority_revoked(lambda: (_ for _ in ()).throw(AssertionError('must not run')),
+                              ValueError('Malformed arguments')) is False
