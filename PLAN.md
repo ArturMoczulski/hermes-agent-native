@@ -56,6 +56,10 @@ history but direct required review to the referenced immutable saved-output vers
 The output reader clearly distinguishes required, optional, accepted and
 revision-requested states, and only a pending required review exposes Accept output or
 Request revision. Focused required-review and balanced-autonomy browser journeys pass.
+Level 5 autonomous progression is also verified in a focused browser journey: the
+agent completes a cosmology output, leaves review optional, then a distinct cadence
+session selects and completes a different ready magic-system assignment without owner
+input or acceptance controls.
 The exact-output Request revision journey is now verified end to end: trusted revision
 feedback wakes an enabled one-day cadence immediately, starts a distinct attempt and
 saves the requested version 2. The neighboring exact-output Accept journey also passes.

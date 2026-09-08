@@ -198,6 +198,15 @@ counts and final duration so chapter timestamps match playback. Raw evidence
 remains available alongside the chapter index. These recording configurations
 are an owner review tool, not the default feature-verification command.
 
+## Autonomous progression across assignments
+
+`autonomous-continuation.spec.ts` proves that a Level 5 agent can complete one
+purpose-level output, leave its review optional, and use a later cadence session to
+select and complete a different ready Plane assignment without owner input. The owner
+view must show both outputs tied to distinct work items and expose no acceptance
+controls. The model is a deterministic local fixture; the case verifies framework
+continuation and review policy rather than creative quality.
+
 ## Work-selection progress
 
 `plane-progress.spec.ts`, case `selected work posts progress in Plane before the

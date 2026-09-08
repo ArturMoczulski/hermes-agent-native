@@ -1,3 +1,17 @@
+## Autonomous progression across assignments — 2026-09-08
+
+AN-9, AN-75 and AN-92 now have a deterministic owner-browser proof that Level 5
+does not manufacture an acceptance gate between ordinary authorized deliverables.
+The agent creates two distinct ready Plane assignments, completes and evaluates a
+Cosmology foundation on the first, records optional review and a continuing purpose
+obligation, then cadence starts a separate native session without owner input. That
+session selects the Magic-system assignment and saves its distinct purpose-level output.
+
+The final owner view shows both outputs tied to different work items, optional review,
+and no Accept or Request revision controls. The focused Playwright journey passes
+without a paid model. This is deterministic framework integration evidence; qualitative
+creative evaluation remains a separate concern.
+
 ## Exact-output revision continuation — 2026-09-08
 
 AN-9 now has a deterministic owner-browser journey for the complete revision path.

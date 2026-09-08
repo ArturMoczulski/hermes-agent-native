@@ -71,6 +71,70 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_AUTONOMOUS_CONTINUATION' in purpose:
+        planning = _planning(messages)
+        previous = planning.get('saved_outputs', [])
+        if not previous:
+            if index == 0:
+                name, arguments = operation('item.create', {
+                    'name': 'Draft the cosmology foundation',
+                    'description': 'Produce the first purpose-level cosmology foundation.',
+                    'priority': 'high',
+                })
+            elif index == 1:
+                name, arguments = operation('item.create', {
+                    'name': 'Draft the magic-system foundation',
+                    'description': 'Produce a distinct magic-system foundation after cosmology.',
+                    'priority': 'high',
+                })
+            elif index == 2:
+                name, arguments = 'work_item_select', {'item_id': result(0)['resource']['id']}
+            elif index == 3:
+                name, arguments = 'output_publish', {
+                    'item_id': result(0)['resource']['id'], 'title': 'Cosmology foundation',
+                    'format': 'markdown', 'content': '# Cosmology\n\nThree moons govern the world tides.',
+                }
+            elif index == 4:
+                name, arguments = 'result_record', {
+                    'item_id': result(0)['resource']['id'], 'summary': 'Cosmology foundation completed',
+                    'outcome': 'submitted', 'evaluation': 'A concrete cosmology foundation is saved.',
+                    'outputs': [{'output_id': result(3)['output_id'], 'version': result(3)['version']}],
+                }
+            elif index == 5:
+                name, arguments = 'purpose_evaluate', {
+                    'judgment': 'continue', 'evidence': ['Cosmology foundation is saved.'],
+                    'remaining_obligations': ['Draft the ready magic-system foundation.'],
+                    'uncertainty': None, 'next_action': 'Draft the magic-system foundation.',
+                    'question_id': None,
+                }
+            else:
+                return {'role': 'assistant', 'content': 'Cosmology saved; magic-system work remains ready.'}
+        else:
+            magic = next(item for item in planning['items'] if item['name'] == 'Draft the magic-system foundation')
+            if index == 0:
+                name, arguments = 'work_item_select', {'item_id': magic['id']}
+            elif index == 1:
+                name, arguments = 'output_publish', {
+                    'item_id': magic['id'], 'title': 'Magic-system foundation', 'format': 'markdown',
+                    'content': '# Magic system\n\nMoonlight can be stored in sworn silver vessels.',
+                }
+            elif index == 2:
+                name, arguments = 'result_record', {
+                    'item_id': magic['id'], 'summary': 'Magic-system foundation completed',
+                    'outcome': 'submitted', 'evaluation': 'A distinct magic-system foundation is saved.',
+                    'outputs': [{'output_id': result(1)['output_id'], 'version': result(1)['version']}],
+                }
+            elif index == 3:
+                name, arguments = 'purpose_evaluate', {
+                    'judgment': 'continue', 'evidence': ['Cosmology and magic-system foundations are saved.'],
+                    'remaining_obligations': ['Continue developing the broader world setting.'],
+                    'uncertainty': None, 'next_action': 'Review the next ready worldbuilding priority.',
+                    'question_id': None,
+                }
+            else:
+                return {'role': 'assistant', 'content': 'Magic-system foundation saved without an owner gate.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_OUTPUT_REVIEW' in purpose:
         target = _planning(messages)['discovery']['id']
         content = ('A wizard follows the dragon. 🐉\n' * 750) + 'THE VERIFIED END'
