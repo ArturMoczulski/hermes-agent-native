@@ -71,7 +71,7 @@ def _event(conn, root, kind):
     )
 
 
-def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None, autonomy_level=5):
+def create_root(conn, *, actor, request_id, name, purpose, work=None, model_selection=None, autonomy_level=3):
     """Persist identity, first-review intent and event together; never launch a worker.
 
     The intent records the creating owner's request, not execution authority or

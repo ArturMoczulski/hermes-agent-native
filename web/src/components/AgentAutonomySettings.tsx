@@ -5,7 +5,7 @@ import { agentsEndpoint, autonomyLabels, type Agent, type AutonomySettings } fro
 
 export function AgentAutonomySettings({ agentId }: { agentId: string }) {
   const [current, setCurrent] = useState<AutonomySettings | null>(null);
-  const [level, setLevel] = useState(5);
+  const [level, setLevel] = useState(3);
   const [reload, setReload] = useState(0);
   const [busy, setBusy] = useState(false);
   const [message, setMessage] = useState("");

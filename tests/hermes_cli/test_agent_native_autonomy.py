@@ -2,11 +2,11 @@
 from tests.hermes_cli.test_agent_native_model_settings import configured, client, URL, BODY  # noqa: F401
 
 
-def test_creation_defaults_to_high_autonomy_and_owner_can_change_it(configured):
+def test_creation_defaults_to_balanced_autonomy_and_owner_can_change_it(configured):
     c = configured
     root = c.post(URL, json=BODY).json()
     path = URL + '/' + root['id'] + '/autonomy'
-    assert root['autonomy']['level'] == 5
+    assert root['autonomy']['level'] == 3
     initial = c.get(path).json()
     changed = c.put(path, json={'level': 2, 'expected_revision': initial['revision']})
     assert changed.status_code == 200

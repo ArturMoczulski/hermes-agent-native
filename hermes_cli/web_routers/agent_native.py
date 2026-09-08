@@ -55,7 +55,7 @@ class CreateAgent(BaseModel):
     purpose: str = Field(min_length=1, max_length=20000)
     work: WorkLimits | None = None
     model_selection: ModelChoice | None = None
-    autonomy_level: int = Field(default=5, strict=True, ge=1, le=5)
+    autonomy_level: int = Field(default=3, strict=True, ge=1, le=5)
 
 
 @router.get('')

@@ -2,7 +2,7 @@
 from agent_native.identity import ConflictError, _now, _require_owner
 from hermes_cli.kanban_db_connect import write_txn
 
-DEFAULT_LEVEL = 5
+DEFAULT_LEVEL = 3
 AUTONOMY_SCHEMA = """
 CREATE TABLE IF NOT EXISTS agent_native_autonomy_settings (
  agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id), level INTEGER NOT NULL CHECK(level BETWEEN 1 AND 5),

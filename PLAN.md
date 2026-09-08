@@ -20,7 +20,7 @@ end-to-end case: its Canon v0.1 is saved and evaluated, while Cycle 02 correctly
 waits for owner review. Plane Done alone remains insufficient, and accepting one
 result does not declare the agent's whole purpose complete.
 AN-92 now defines the paired owner-controlled autonomy policy: five eagerness
-levels from approval-driven through highly autonomous, with Level 5 as the new-agent
+levels from approval-driven through highly autonomous, with Level 3 as the new-agent
 default. The level controls when review blocks continuation; it never weakens an
 explicit owner, assignment, authority or mandatory-policy gate. AN-9 supplies the
 Accept / Request revision workflow when the resulting gate is genuinely required,

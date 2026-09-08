@@ -41,7 +41,7 @@ export default function AgentsPage() {
   const [modelSelection, setModelSelection] = useState<ModelChoice | null>(initialRequest?.model_selection ?? null);
   const [choosingModel, setChoosingModel] = useState(false);
   const [purpose, setPurpose] = useState(initialRequest?.purpose ?? "");
-  const [autonomyLevel, setAutonomyLevel] = useState(initialRequest?.autonomy_level ?? 5);
+  const [autonomyLevel, setAutonomyLevel] = useState(initialRequest?.autonomy_level ?? 3);
   const [timeoutSeconds, setTimeoutSeconds] = useState(String(initialRequest?.work?.timeout_seconds ?? defaultWorkLimits.timeout_seconds));
   const [modelSteps, setModelSteps] = useState(String(initialRequest?.work?.max_iterations ?? defaultWorkLimits.max_iterations));
   const workLimits = { timeout_seconds: Number(timeoutSeconds), max_iterations: Number(modelSteps) };
@@ -111,7 +111,7 @@ export default function AgentsPage() {
       setTimeoutSeconds(String(defaultWorkLimits.timeout_seconds));
       setModelSteps(String(defaultWorkLimits.max_iterations));
       setModelSelection(null);
-      setAutonomyLevel(5);
+      setAutonomyLevel(3);
       pending.current = null;
       void navigate(`/agents/${encodeURIComponent(agent.id)}`);
     } catch {
@@ -156,7 +156,7 @@ export default function AgentsPage() {
             onChange={event => setAutonomyLevel(Number(event.target.value))}>
             {Object.entries(autonomyLabels).map(([value, label]) => <option key={value} value={value}>{label}</option>)}
           </select>
-          <p className="text-xs text-muted-foreground">Highly autonomous is the default. The agent keeps working and asks only when a decision is critical or outside its authority.</p>
+          <p className="text-xs text-muted-foreground">Balanced is the default. The agent continues ordinary reversible work and asks before significant commitments, costly actions, or material changes in direction.</p>
         </div>
         <details className="rounded-lg border p-4">
           <summary className="cursor-pointer text-sm font-medium">Advanced work limits <span className="ml-2 text-muted-foreground">· 3 minutes · 50 model steps by default</span></summary>
