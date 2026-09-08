@@ -11,21 +11,24 @@ test('agent asks a question and uses the retained owner answer in saved work',as
   const api=`${backend}/api/agent-native/agents/${id}`;
   try {
     await page.goto(`/agents/${id}`);
-    const questions=page.getByRole('region',{name:'Questions for you',exact:true});
+    const questions=page.getByRole('region',{name:'Needs your answer',exact:true});
     await expect(questions).toContainText('What kind of ending would you like?',{timeout:30000});
     await expect(questions.getByRole('link',{name:'Open affected work item'})).toHaveAttribute('href',/\/issues\/[0-9a-f-]+\/$/);
     await expect.poll(async()=>{const e=await(await request.get(`${backend}/__e2e__/writer-evidence/${id}`,{headers})).json();return e.comments.filter((c:{comment_html:string})=>c.comment_html.includes('What kind of ending would you like?')).length;}).toBe(1);
     await questions.getByLabel('Your answer').fill('A hopeful ending with a reunited family.');
     await questions.getByRole('button',{name:'Send answer'}).click();
-    await expect(questions).toContainText('Answered');
+    await expect(questions).not.toBeVisible();
+    await page.getByRole('link',{name:'Full view'}).click();
+    const history=page.getByRole('region',{name:'Questions for you',exact:true});
+    await expect(history).toContainText('Answered');
     await page.reload();
-    await expect(questions).toContainText('A hopeful ending with a reunited family.');
-    await expect(questions.getByText('What kind of ending would you like?',{exact:true})).toHaveCount(1);
+    await expect(history).toContainText('A hopeful ending with a reunited family.');
+    await expect(history.getByText('What kind of ending would you like?',{exact:true})).toHaveCount(1);
     await request.post(`${backend}/__e2e__/release-model`,{headers,data:{marker:'E2E_QUESTION_HOLD'}});
     await expect.poll(async()=>(await(await request.get(api,{headers})).json()).work.state,{timeout:30000}).toBe('completed');
     const output=(await(await request.get(api,{headers})).json()).work.outputs[0];
     await page.goto(`/agents/${id}?output=${output.output_id}&version=1`);
-    await expect(page.getByRole('region',{name:'Saved outputs',exact:true})).toContainText('A hopeful ending with a reunited family.');
+    await expect(page.getByRole('region',{name:'Recent outputs',exact:true})).toContainText('A hopeful ending with a reunited family.');
   } finally {
     await request.post(`${api}/work/pause`,{headers});
     await request.post(`${backend}/__e2e__/release-model`,{headers,data:{marker:'E2E_QUESTION_HOLD'}});

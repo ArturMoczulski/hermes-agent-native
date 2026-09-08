@@ -249,15 +249,19 @@ function IconTooltip({ label, children }: { label: string; children: ReactNode }
 
 function CompactAgentView({ agent }: { agent: Agent }) {
   const work = agent.work;
-  const events = [...(work?.events ?? [])].reverse().slice(0, 20);
+  const events = (work?.events ?? []).filter((event) =>
+    event.kind !== "work.model"
+    && !event.summary.startsWith("Model step ")
+    && !event.summary.startsWith("Plane: inspected ")
+  ).reverse().slice(0, 20);
   return <div className="space-y-6">
-    {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} />}
+    {!agent.removed_at && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
     <div aria-label="Current agent summary" className="flex flex-wrap items-center gap-x-2 gap-y-1 text-sm text-muted-foreground">
       {work && <span>Latest attempt: {work.state.replace('_', ' ')}</span>}
       {work?.focus && <><span aria-hidden="true">·</span><span>{["running", "queued", "preparing", "stopping"].includes(work.state) ? "Current" : "Latest"} work:</span>
         <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} /></>}
     </div>
-    <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} />
+    <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} compact />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
       <h2 className="text-lg font-semibold">Recent activity</h2>
       {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
@@ -430,7 +434,7 @@ function PlanningItemLink({ agent, itemId, label = "Open work item" }: { agent: 
     href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/${encodeURIComponent(itemId)}/`}>{label}</a>;
 }
 
-function SavedOutputs({ agent, limit }: { agent: Agent; limit?: number }) {
+function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?: number; compact?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const allOutputs = agent.work?.outputs ?? [];
   const outputs = limit == null ? allOutputs : allOutputs.slice(0, limit);
@@ -449,13 +453,14 @@ function SavedOutputs({ agent, limit }: { agent: Agent; limit?: number }) {
     });
   }
 
-  return <section aria-label="Saved outputs" className="space-y-4 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">Saved outputs</h2>
+  const label = compact ? "Recent outputs" : "Saved outputs";
+  return <section aria-label={label} className="space-y-4 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">{label}</h2>
     {!outputs.length && <p>No output versions saved yet.</p>}
     <div className="space-y-4">{outputs.map((output) => <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4">
       <h3 className="font-semibold">{output.title} · Version {output.version}</h3>
       <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>
-      <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>
+      {!compact && <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>}
       <PlanningItemLink agent={agent} itemId={output.item_id} />
       <div><Button onClick={() => select(output)}>Read output</Button></div>
     </article>)}</div>

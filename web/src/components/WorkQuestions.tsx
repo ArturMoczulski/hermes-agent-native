@@ -31,21 +31,24 @@ function Answer({ question, agentId, revision, refresh, setup }: { question: Que
     {error && <p role="alert">{error}</p>}
   </article>;
 }
-export function WorkQuestions({agentId,revision,setup}:{agentId:string;revision:number;setup:Agent["setup"]}){
+export function WorkQuestions({agentId,revision,setup,attentionOnly=false}:{agentId:string;revision:number;setup:Agent["setup"];attentionOnly?:boolean}){
   const [questions,setQuestions]=useState<Question[]>([]);
   const [error,setError]=useState(false);
+  const [loaded,setLoaded]=useState(false);
   const [reload,setReload]=useState(0);
   useEffect(()=>{
     let active=true;
-    const load=async()=>{try {const rows=await fetchJSON<Question[]>(`/api/agent-native/agents/${agentId}/questions`);if(active){setQuestions(rows);setError(false);}}catch{if(active)setError(true);}};
+    const load=async()=>{try {const rows=await fetchJSON<Question[]>(`/api/agent-native/agents/${agentId}/questions`);if(active){setQuestions(rows);setError(false);setLoaded(true);}}catch{if(active){setError(true);setLoaded(true);}}};
     void load();const timer=setInterval(()=>void load(),2000);
     return()=>{active=false;clearInterval(timer);};
   },[agentId,reload]);
-  return <section aria-label="Questions for you" className="space-y-3 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">Questions for you</h2>
-    <p className="text-sm text-muted-foreground">Up to 20 questions, unanswered first. Answers are retained without restarting paused or completed work. The agent checks task applicability before using them.</p>
+  const visible=attentionOnly?questions.filter(q=>q.applicable&&q.answer===null):questions;
+  if(attentionOnly&&loaded&&!error&&!visible.length)return null;
+  return <section aria-label={attentionOnly?'Needs your answer':'Questions for you'} className={`space-y-3 rounded-xl border p-5 ${attentionOnly?'border-amber-500/60 bg-amber-500/5':''}`}>
+    <h2 className="text-lg font-semibold">{attentionOnly?'Needs your answer':'Questions for you'}</h2>
+    <p className="text-sm text-muted-foreground">{attentionOnly?'This agent has an applicable question for you. Answer it here or open the affected Plane work item.':'Up to 20 questions, unanswered first. Answers are retained without restarting paused or completed work. The agent checks task applicability before using them.'}</p>
     {error && <p role="alert">Question updates unavailable; displayed records may be stale.</p>}
-    {!questions.length && !error && <p className="text-sm">No questions recorded.</p>}
-    {questions.map(q=><Answer key={q.id} setup={setup} question={q} agentId={agentId} revision={revision} refresh={()=>setReload(n=>n+1)} />)}
+    {!visible.length && !error && <p className="text-sm">No questions recorded.</p>}
+    {visible.map(q=><Answer key={q.id} setup={setup} question={q} agentId={agentId} revision={revision} refresh={()=>setReload(n=>n+1)} />)}
   </section>;
 }
