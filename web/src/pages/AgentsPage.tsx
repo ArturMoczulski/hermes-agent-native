@@ -11,6 +11,7 @@ import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentM
 
 type PendingCreation = { request_id: string; name: string; purpose: string; work?: WorkLimits; model_selection?: ModelChoice };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
+const defaultWorkLimits: WorkLimits = { timeout_seconds: 180, max_iterations: 50 };
 
 function restoreCreation(): PendingCreation | null {
   try {
@@ -39,13 +40,12 @@ export default function AgentsPage() {
   const [modelSelection, setModelSelection] = useState<ModelChoice | null>(initialRequest?.model_selection ?? null);
   const [choosingModel, setChoosingModel] = useState(false);
   const [purpose, setPurpose] = useState(initialRequest?.purpose ?? "");
-  const [timeoutSeconds, setTimeoutSeconds] = useState(initialRequest?.work ? String(initialRequest.work.timeout_seconds) : "");
-  const [modelSteps, setModelSteps] = useState(initialRequest?.work ? String(initialRequest.work.max_iterations) : "");
-  const wantsWork = timeoutSeconds !== "" || modelSteps !== "";
+  const [timeoutSeconds, setTimeoutSeconds] = useState(String(initialRequest?.work?.timeout_seconds ?? defaultWorkLimits.timeout_seconds));
+  const [modelSteps, setModelSteps] = useState(String(initialRequest?.work?.max_iterations ?? defaultWorkLimits.max_iterations));
   const workLimits = { timeout_seconds: Number(timeoutSeconds), max_iterations: Number(modelSteps) };
-  const invalidWork = wantsWork && !validWorkLimits(workLimits);
+  const invalidWork = !validWorkLimits(workLimits);
   const modelKnown = modelSelection !== null || defaultModel !== null;
-  const missingWorkModel = wantsWork && !validModelChoice(modelSelection ?? defaultModel);
+  const missingWorkModel = !validModelChoice(modelSelection ?? defaultModel);
   const [loading, setLoading] = useState(true);
   const [reload, setReload] = useState(0);
   const [saving, setSaving] = useState(false);
@@ -76,14 +76,14 @@ export default function AgentsPage() {
     submitting.current = true;
     setSaving(true);
     setError("");
-    const work = wantsWork ? workLimits : undefined;
+    const work = workLimits;
     if (pending.current?.name !== name.trim() || pending.current?.purpose !== purpose.trim()
       || pending.current?.work?.timeout_seconds !== work?.timeout_seconds
       || pending.current?.work?.max_iterations !== work?.max_iterations
       || pending.current?.model_selection?.provider !== modelSelection?.provider
       || pending.current?.model_selection?.model !== modelSelection?.model
       || (pending.current?.model_selection?.reasoning_effort ?? "default") !== (modelSelection?.reasoning_effort ?? "default")) {
-      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), ...(work ? { work } : {}), ...(modelSelection ? { model_selection: modelSelection } : {}) };
+      pending.current = { name: name.trim(), purpose: purpose.trim(), request_id: crypto.randomUUID(), work, ...(modelSelection ? { model_selection: modelSelection } : {}) };
     }
     try {
       // Persist before POST: a committed response can be lost across a reload.
@@ -105,8 +105,8 @@ export default function AgentsPage() {
       setAgents((existing) => [...existing.filter((a) => a.id !== agent.id), agent]);
       setName("");
       setPurpose("");
-      setTimeoutSeconds("");
-      setModelSteps("");
+      setTimeoutSeconds(String(defaultWorkLimits.timeout_seconds));
+      setModelSteps(String(defaultWorkLimits.max_iterations));
       setModelSelection(null);
       pending.current = null;
       void navigate(`/agents/${encodeURIComponent(agent.id)}`);
@@ -123,7 +123,7 @@ export default function AgentsPage() {
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">Your agents</h1>
         <p className="text-muted-foreground">Give each agent a purpose to keep and develop over time.</p>
-        <p className="rounded-lg border p-3 text-sm">Create an agent to talk with it, or set both work limits to start its first private work run after setup is ready.</p>
+        <p className="rounded-lg border p-3 text-sm">Creating an agent starts its first private bounded work run after setup is ready. You can talk with it at any time.</p>
       </header>
       <DefaultAgentModelControls onChange={setDefaultModel} />
       <form onSubmit={(event) => void create(event)} className="space-y-4 rounded-xl border p-5">
@@ -146,15 +146,17 @@ export default function AgentsPage() {
           </div>
           <p className="text-xs text-muted-foreground">Each agent keeps its own selection. You can change it later in agent details.</p>
         </fieldset>
-        <fieldset className="space-y-3 rounded-lg border p-4" disabled={saving}>
-          <legend className="px-1 text-sm font-medium">First work run (optional)</legend>
-          <p className="text-sm text-muted-foreground">Set both limits to let the agent plan and work toward its purpose in its private workspace. Leave both blank to create it for conversation. This starts one run; automatic continuation is not enabled.</p>
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div className="space-y-2"><Label htmlFor="agent-run-time">Maximum run time (seconds)</Label><Input id="agent-run-time" type="number" min={1} max={3600} step={1} required={wantsWork} value={timeoutSeconds} onChange={(event) => setTimeoutSeconds(event.target.value)} /></div>
-            <div className="space-y-2"><Label htmlFor="agent-model-steps">Maximum model steps</Label><Input id="agent-model-steps" type="number" min={1} max={100} step={1} required={wantsWork} value={modelSteps} onChange={(event) => setModelSteps(event.target.value)} /></div>
-          </div>
-          {invalidWork && <p className="text-sm">Enter both limits: 1–3600 seconds and 1–100 model steps.</p>}
-        </fieldset>
+        <details className="rounded-lg border p-4">
+          <summary className="cursor-pointer text-sm font-medium">Advanced work limits <span className="ml-2 text-muted-foreground">· 3 minutes · 50 model steps by default</span></summary>
+          <fieldset className="mt-4 space-y-3" disabled={saving}>
+            <p className="text-sm text-muted-foreground">These safety limits apply to each attempt. Thinking cadence can start a new attempt after a normal limit is reached.</p>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2"><Label htmlFor="agent-run-time">Maximum run time (seconds)</Label><Input id="agent-run-time" type="number" min={1} max={3600} step={1} required value={timeoutSeconds} onChange={(event) => setTimeoutSeconds(event.target.value)} /></div>
+              <div className="space-y-2"><Label htmlFor="agent-model-steps">Maximum model steps</Label><Input id="agent-model-steps" type="number" min={1} max={100} step={1} required value={modelSteps} onChange={(event) => setModelSteps(event.target.value)} /></div>
+            </div>
+            {invalidWork && <p className="text-sm">Enter both limits: 1–3600 seconds and 1–100 model steps.</p>}
+          </fieldset>
+        </details>
         <Button type="submit" disabled={saving || loading || !name.trim() || !purpose.trim() || invalidWork || !modelKnown || missingWorkModel}>{saving ? "Creating…" : "Create agent"}</Button>
       </form>
       {choosingModel && <AgentModelPicker choice={modelSelection ?? defaultModel} title="Choose a model for this agent" actionLabel="Use model"

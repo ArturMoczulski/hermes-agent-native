@@ -19,6 +19,59 @@ def test_due_cadence_retains_attempts_and_never_overlaps_or_resumes_pause(broker
     assert cadence.read(s.conn,s.root['id'])['enabled'] is False
 
 
+def test_due_cadence_continues_after_a_normal_run_limit_without_resuming_owner_pause(broker):
+    from agent_native import cadence, work_state
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    s.conn.execute("UPDATE agent_native_work_runs SET state='limit_reached',stop_requested=1,"
+                   "summary='Work reached its time limit.',finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+                   (s.work['id'],))
+
+    queued=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+
+    assert len(queued)==1
+    assert work_state.read_work(s.conn,s.root['id'])['state']=='queued'
+    history=[row[0] for row in s.conn.execute(
+        'SELECT state FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid',(s.root['id'],)).fetchall()]
+    assert history==['limit_reached','queued']
+
+
+def test_legacy_time_limit_migration_preserves_owner_pause(broker):
+    from agent_native.work_state import migrate_legacy_time_limits
+    s=broker
+    timed_out=s.work['id']
+    s.conn.execute("UPDATE agent_native_work_runs SET state='paused',stop_requested=1,"
+                   "summary='Work reached its time limit.' WHERE id=?",(timed_out,))
+    s.conn.execute("UPDATE agent_native_work_events SET kind='work.paused',"
+                   "summary='Work reached its time limit.' WHERE run_id=? AND kind='work.queued'",(timed_out,))
+    legacy_text=(f"Agent: {s.root['id']}\nAttempt: {timed_out}\nWork item: item\nAttempt paused\n"
+                 "This is the bounded attempt status, not acceptance of the assignment or completion of the agent purpose. Review saved evidence and any unresolved delivery before continuing.")
+    s.conn.execute("INSERT INTO agent_native_progress "
+                   "(operation_id,source_id,agent_id,run_id,item_id,summary,text,status,created_at) "
+                   "VALUES(?,?,?,?,?,'Attempt paused',?,'pending','2000-01-01T00:00:00+00:00')",
+                   ('legacy-notice','terminal:'+timed_out,s.root['id'],timed_out,'item',legacy_text))
+    owner_pause='owner-paused-run'
+    s.conn.execute(
+        "INSERT INTO agent_native_work_runs "
+        "(id,agent_id,activation_id,soul_revision,session_id,limits,state,stop_requested,summary,created_at) "
+        "SELECT ?,agent_id,activation_id,soul_revision,?,limits,'paused',1,?,created_at "
+        "FROM agent_native_work_runs WHERE id=?",
+        (owner_pause,'owner-paused-session','Owner paused this work.',timed_out),
+    )
+
+    assert migrate_legacy_time_limits(s.conn)==1
+    assert migrate_legacy_time_limits(s.conn)==0
+    states=dict(s.conn.execute('SELECT id,state FROM agent_native_work_runs').fetchall())
+    assert states[timed_out]=='limit_reached'
+    assert states[owner_pause]=='paused'
+    assert s.conn.execute('SELECT kind FROM agent_native_work_events WHERE run_id=?',(timed_out,)).fetchone()[0]=='work.limit_reached'
+    summary,text=s.conn.execute('SELECT summary,text FROM agent_native_progress WHERE operation_id=?',
+                                ('legacy-notice',)).fetchone()
+    assert summary=='Attempt limit_reached'
+    assert '\nAttempt limit_reached\n' in text
+
+
 def test_cadence_requires_owner_and_stops_on_unknown_or_changed_purpose(broker):
     from agent_native import cadence
     s=broker

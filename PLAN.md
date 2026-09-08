@@ -18,7 +18,11 @@ attempts are implemented; a live agent has picked up Plane feedback and saved a
 revised output without a manual continuation prompt. The demo exposed a false
 cycle-assignment conflict after timestamp-only Plane updates; that is now fixed
 with focused backend and browser coverage. Recovery after interrupted/failed work
-remains unfinished. AN-73 conversations and AN-84 comment review have implemented
+remains unfinished. A normal per-attempt runtime limit is now recorded separately
+from owner pause and remains eligible for a later cadence attempt; legacy timeout
+records are repaired on startup. Agent creation uses 180 seconds and 50 model
+steps per attempt by default, with overrides collapsed under advanced controls.
+AN-73 conversations and AN-84 comment review have implemented
 increments, with broader acceptance still open. AN-80 remains in Backlog:
 uncertain-delivery reconciliation and safe description merging are deferred.
 The reasoning-default clarification is complete: actionable labels and explicit Astra Low.
@@ -95,7 +99,8 @@ Existing preview agents are not automatically enabled. The Builder handoff remai
 Follow small TDD increments and the existing Playwright setup, using
 [named test cases by default](first-builder/PRACTICES.md#targeted-verification-by-default). Keep one active
 implementation slice, no cycle dates or duration estimates. Runtime cadence and
-finite limits must be explicitly configured before launch; open defaults remain open.
+finite limits remain explicit agent configuration; creation starts with the
+owner-selected 180-second and 50-model-step defaults unless advanced values are set.
 
 Owner promoted AN-84 (incoming Plane comment review/replies) next, after the AN-73
 question-comment increment. AN-84 now supplies scoped in-run discussion review;

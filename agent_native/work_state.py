@@ -34,14 +34,57 @@ from agent_native.cadence import SCHEMA as CADENCE_SCHEMA
 from agent_native.comments import SCHEMA as COMMENTS_SCHEMA
 WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA
 
-TERMINAL = frozenset({'paused', 'completed', 'failed', 'unknown'})
+TERMINAL = frozenset({'paused', 'limit_reached', 'completed', 'failed', 'unknown'})
+
+
+def migrate_legacy_time_limits(conn):
+    """Relabel deadline stops written before ``limit_reached`` existed.
+
+    The exact summary was emitted only by the watchdog deadline path. Owner
+    pauses use a different summary, so this does not make them cadence eligible.
+    """
+    with write_txn(conn, allow_nested=True):
+        run_ids = [row[0] for row in conn.execute(
+            "SELECT id FROM agent_native_work_runs WHERE state='paused' "
+            "AND stop_requested=1 AND summary='Work reached its time limit.'"
+        ).fetchall()]
+        progress_ids = [row[0] for row in conn.execute(
+            "SELECT p.run_id FROM agent_native_progress p "
+            "JOIN agent_native_work_runs w ON w.id=p.run_id "
+            "WHERE w.state IN ('paused','limit_reached') AND w.stop_requested=1 "
+            "AND w.summary='Work reached its time limit.' "
+            "AND p.source_id='terminal:'||p.run_id AND p.summary='Attempt paused' "
+            "AND p.status='pending'"
+        ).fetchall()]
+        changed = set(run_ids) | set(progress_ids)
+        if not changed:
+            return 0
+        conn.executemany(
+            "UPDATE agent_native_work_runs SET state='limit_reached' WHERE id=?",
+            ((run_id,) for run_id in run_ids),
+        )
+        conn.executemany(
+            "UPDATE agent_native_work_events SET kind='work.limit_reached' "
+            "WHERE run_id=? AND kind='work.paused' "
+            "AND summary='Work reached its time limit.'",
+            ((run_id,) for run_id in run_ids),
+        )
+        conn.executemany(
+            "UPDATE agent_native_progress SET summary='Attempt limit_reached',"
+            "text=replace(text,char(10)||'Attempt paused'||char(10),"
+            "char(10)||'Attempt limit_reached'||char(10)) "
+            "WHERE run_id=? AND source_id='terminal:'||run_id "
+            "AND summary='Attempt paused' AND status='pending'",
+            ((run_id,) for run_id in progress_ids),
+        )
+        return len(changed)
 
 
 def event(conn, run_id, kind, summary):
     with write_txn(conn, allow_nested=True):
         conn.execute('INSERT INTO agent_native_work_events(run_id,kind,summary,created_at) VALUES (?,?,?,?)',
                      (run_id, kind, summary, _now()))
-        if kind in ('work.completed', 'work.paused', 'work.failed', 'work.unknown'):
+        if kind in ('work.completed', 'work.paused', 'work.limit_reached', 'work.failed', 'work.unknown'):
             from agent_native.progress import terminal
             terminal(conn, run_id)
 

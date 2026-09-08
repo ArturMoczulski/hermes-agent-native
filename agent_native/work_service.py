@@ -54,13 +54,14 @@ class _Run:
         self.stopped.set()
         dead = self.host.force_stop(timeout=2)
         self.inbox.put(None)
-        if time.monotonic() >= self.deadline:
+        timed_out = time.monotonic() >= self.deadline
+        if timed_out:
             reason = 'Work reached its time limit.'
         with self.stop_lock:
             with connect_closing(self.service.db_path) as conn, write_txn(conn):
                 row = conn.execute('SELECT state FROM agent_native_work_runs WHERE id=?',(self.work['id'],)).fetchone()
                 if row[0] not in state.TERMINAL:
-                    target = 'paused' if dead else 'unknown'
+                    target = ('limit_reached' if timed_out else 'paused') if dead else 'unknown'
                     conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,finished_at=?,summary=? WHERE id=?',
                                  (target,_now(),reason,self.work['id']))
                     state.event(conn,self.work['id'],'work.'+target,reason if dead else 'Worker stop could not be confirmed.')

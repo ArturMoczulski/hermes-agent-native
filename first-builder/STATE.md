@@ -1,3 +1,17 @@
+## Normal run-limit continuation and creation defaults — 2026-09-08
+
+AN-75 now distinguishes a normal bounded-attempt deadline from an owner pause.
+The watchdog records `limit_reached`; enabled cadence may create a later attempt,
+while an explicit owner pause remains blocking. Startup migration repairs legacy
+timeout rows only when they carry the watchdog's exact historical summary, and
+preserves owner-paused rows. Creation now starts work with 180 seconds and 50
+model steps by default; those controls are collapsed under Advanced work limits.
+
+Focused evidence: two cadence/migration cases, the native Playwright time-limit
+case, two creation-default browser cases, the cadence continuation browser case,
+scoped Ruff, and the production web build pass. AN-75 remains In Progress for
+broader recovery and whole-purpose lifecycle acceptance.
+
 ## MiniMax Token Plan connection — 2026-09-08
 
 The owner connected the local Agent Native preview to a MiniMax Monthly Ultra

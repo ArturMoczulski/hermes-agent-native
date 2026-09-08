@@ -146,7 +146,7 @@ for (const limit of ['time', 'steps'] as const) {
     await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
     const marker = 'E2E_WRITER_HOLD_TIME'
     const response = await request.post(`${backend}/api/agent-native/agents`, { headers, data: {
-      request_id: `writer-limit-${limit}`, name: `Writer ${limit} limit`,
+      request_id: crypto.randomUUID(), name: `Writer ${limit} limit`,
       purpose: 'Write a fantasy story. ' + (limit === 'time' ? marker : ''),
       work: { timeout_seconds: limit === 'time' ? 8 : 300, max_iterations: limit === 'steps' ? 2 : 20 },
     } })
@@ -158,7 +158,7 @@ for (const limit of ['time', 'steps'] as const) {
       await expect.poll(async () => (await (await request.get(`${backend}/__e2e__/model-holds/${marker}`, { headers })).json()).entered,
         { timeout: 15000 }).toBe(true)
     }
-    await expect.poll(async () => (await get()).work.state, { timeout: 20000 }).toBe(limit === 'time' ? 'paused' : 'failed')
+    await expect.poll(async () => (await get()).work.state, { timeout: 20000 }).toBe(limit === 'time' ? 'limit_reached' : 'failed')
     const final = await get()
     expect(final.work.model_calls).toBe(limit === 'time' ? 1 : 2)
     expect(final.work.stories).toHaveLength(0)
@@ -169,7 +169,7 @@ for (const limit of ['time', 'steps'] as const) {
     }
     await page.reload()
     expect((await get()).work.model_calls).toBe(final.work.model_calls)
-    await expect(page.getByLabel('Execution status')).toHaveText(limit === 'time' ? 'Paused' : 'Failed')
+    await expect(page.getByLabel('Execution status')).toHaveText(limit === 'time' ? 'Run limit reached' : 'Failed')
     await demoCheckpoint(page, test.info(), {
       title: limit === 'time' ? 'The time limit interrupts a held call' : 'The step limit prevents another model call',
       expected: limit === 'time' ? 'An 8-second limit must stop the active worker and close the pending model connection.' : 'A 2-step limit must prevent a third provider call.',

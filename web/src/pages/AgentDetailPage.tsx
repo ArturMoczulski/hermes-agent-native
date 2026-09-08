@@ -254,6 +254,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       {work.state === "queued" && agent.setup?.status !== "ready" && <p>The request is saved. Work will begin after the private workspace and Plane project are ready.</p>}
       {work.state === "stopping" && <p role="status">Stopping the current run. Pause will be confirmed after it stops.</p>}
       {work.state === "paused" && <p>The run is paused. It will not restart automatically.</p>}
+      {work.state === "limit_reached" && <p>This bounded attempt reached its configured limit. If thinking cadence is enabled, the next check-in can continue the work in a new attempt.</p>}
       {work.state === "completed" && <p>This run has finished. Review its results and saved outputs below. Finishing a run does not mean its work has been accepted.</p>}
       {work.state === "unknown" && <p>The run outcome needs checking before any further work.</p>}
       {work.error && <p role="alert" className="whitespace-pre-wrap break-words">{work.error}</p>}
@@ -263,7 +264,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
         <dt className="text-muted-foreground">Model calls</dt><dd>{work.model_calls}</dd>
         <dt className="text-muted-foreground">Session</dt><dd className="break-all">{work.session_id}</dd>
       </dl>
-      <p className="text-xs text-muted-foreground">Each attempt is bounded. Configure Thinking cadence for automatic check-ins after completed work.</p>
+      <p className="text-xs text-muted-foreground">Each attempt is bounded. Configure Thinking cadence for automatic check-ins after completed work or a normal run limit.</p>
     </> : <form onSubmit={(event) => { event.preventDefault(); void perform("start"); }} className="space-y-4">
       <p className="text-sm text-muted-foreground">Set both limits to let this agent work on its purpose in its private workspace. Work waits for setup if needed.</p>
       <div className="grid gap-4 sm:grid-cols-2">

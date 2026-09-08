@@ -136,3 +136,9 @@ prior results, saved work and pending discussion. An interval missed while the
 service was unavailable does not create a backlog of duplicate attempts. Disabling
 cadence prevents future check-ins; pausing also stops current work. Uncertain
 side effects must be resolved before automatically continuing dependent work.
+
+Each attempt may have finite safety limits such as elapsed runtime and model
+steps. Reaching a normal attempt limit ends that attempt and records the reason;
+it does not mean that the owner paused the agent or that its ongoing purpose is
+finished. An enabled cadence may start a later bounded attempt. An explicit owner
+pause remains a separate state and prevents ordinary cadence continuation.

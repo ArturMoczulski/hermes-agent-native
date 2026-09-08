@@ -47,7 +47,7 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
     <p>{cadence?.enabled?`Enabled · every ${cadence.interval_seconds} seconds`:'Automatic check-ins are off'}</p>
     {blocked&&<p role="status">Check-ins blocked: the latest attempt {attempts[0]?.state==='failed'?'failed':`is ${attempts[0]?.state}`}. Review its activity and outcome. Enabled cadence does not restart stopped or uncertain work.</p>}
     {cadence?.enabled&&!blocked&&cadence.next_due&&<p>Next eligible check-in: {new Date(cadence.next_due).toLocaleString()}. Active work and unresolved outcomes can delay it.</p>}
-    <p className="text-sm">Each check-in reviews progress and decides whether to work, ask or wait. It uses the existing run limits. Missed intervals produce at most one check-in; paused work does not restart.</p>
+    <p className="text-sm">Each check-in reviews progress and decides whether to work, ask or wait. It uses the existing run limits. Missed intervals produce at most one check-in; a normal run limit remains eligible, while owner-paused work does not restart.</p>
     <label htmlFor="cadence-seconds">Check-in interval (seconds)</label>
     <Input id="cadence-seconds" type="number" min={1} max={2592000} value={seconds} placeholder={String(cadence?.interval_seconds??'')} onChange={e=>setSeconds(e.target.value)}/>
     <Button disabled={busy||!Number(seconds||cadence?.interval_seconds)} onClick={()=>{void save(true);}}>Enable or update cadence</Button>

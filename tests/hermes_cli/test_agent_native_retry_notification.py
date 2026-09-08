@@ -64,3 +64,26 @@ def test_cadence_after_owner_recovery_keeps_terminal_notification_unknown(broker
     queued = cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
     assert len(queued) == 1
     assert MutationJournal(s.conn).get(operation_id,actor=OWNER)['status'] == 'unknown'
+
+
+def test_cadence_continues_past_pending_normal_limit_notice(broker):
+    from agent_native import cadence
+    s = broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    select(s)
+    s.conn.execute("UPDATE agent_native_work_runs SET state='limit_reached',stop_requested=1,"
+                   "summary='Work reached its time limit.',finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+                   (s.work['id'],))
+    with write_txn(s.conn):
+        progress.terminal(s.conn,s.work['id'])
+    notice=s.conn.execute("SELECT operation_id,status FROM agent_native_progress WHERE source_id=?",
+                          ('terminal:'+s.work['id'],)).fetchone()
+    assert tuple(notice)[1]=='pending'
+
+    queued=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+
+    assert len(queued)==1
+    event=s.conn.execute("SELECT summary FROM agent_native_work_events WHERE run_id=? "
+                         "AND kind='work.notification_unresolved'",(queued[0],)).fetchone()
+    assert notice[0] in event[0]
