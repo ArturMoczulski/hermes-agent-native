@@ -286,3 +286,37 @@ test('retired agents remain discoverable with their retirement evidence', async 
   await expect(decision).toContainText('The atlas is published and every acceptance criterion is met.');
   await expect(page.getByRole('link', { name: 'Chat with agent' })).toHaveCount(0);
 });
+
+test('compact header enables automatic work when cadence is off', async ({ page }) => {
+  const id = 'cadence-off-agent';
+  const agent = {
+    id, name: 'Waiting builder', purpose: 'Build after owner direction.', parent_id: null, child_ids: [],
+    soul_revision: 1, execution: 'completed', created_at: '2026-09-09T10:00:00+00:00',
+    removed_at: null, retirement: null, replacement: null, pause: { paused: false, sources: [] },
+    cadence: { enabled: false, interval_seconds: null, next_due: null },
+    autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null },
+    model_selection: null, model_activity: [], progress_concerns: [], assignment_review_policies: [],
+    startup: null, setup: null,
+    work: { id: 'waiting-run', state: 'completed', limits: { timeout_seconds: 180, max_iterations: 50 },
+      session_id: 'waiting-session', model_calls: 1, events: [], summary: 'Waiting.', error: null,
+      stories: [], outputs: [], results: [], progress: [], output_sections: [], focus: null, purpose_evaluations: [{ id: 'clarify', run_id: 'waiting-run', soul_revision: 1, purpose: 'Build after owner direction.', judgment: 'clarify', evidence: ['Design ready.'], remaining_obligations: ['Owner choice.'], uncertainty: 'Owner choice.', next_action: 'Wait for owner.', question_id: 'question-1', created_at: '2026-09-09T10:00:00+00:00' }] },
+  };
+  await page.route(`**/api/agent-native/agents/${id}`, async route => {
+    if (route.request().method() === 'GET') return route.fulfill({ status: 200, json: agent });
+    return route.fallback();
+  });
+  await page.route(`**/api/agent-native/agents/${id}/cadence`, async route => {
+    expect(route.request().postDataJSON()).toEqual({ expected_revision: 1, interval_seconds: 60, enabled: true });
+    agent.cadence = { enabled: true, interval_seconds: 60, next_due: '2026-09-09T10:01:00+00:00' };
+    return route.fulfill({ status: 200, json: agent.cadence });
+  });
+
+  await page.goto(`/agents/${id}`);
+  const enable = page.getByRole('button', { name: 'Enable automatic work', exact: true });
+  await enable.hover();
+  await expect(page.getByRole('tooltip', { name: 'Enable automatic work' })).toBeVisible();
+  await enable.click();
+  await expect(page.getByLabel('Execution status')).toHaveText('Active · waiting for your decision');
+  await expect(page.getByRole('region', { name: 'Current work overview' })).toContainText('Waiting for your decision');
+  await expect(page.getByRole('button', { name: 'Pause automatic work', exact: true })).toBeVisible();
+});

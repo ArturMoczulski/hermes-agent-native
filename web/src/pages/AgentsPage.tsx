@@ -171,7 +171,7 @@ export default function AgentsPage() {
       <header className="space-y-2">
         <h1 className="text-2xl font-semibold">Your agents</h1>
         <p className="text-muted-foreground">Give each agent a purpose to keep and develop over time.</p>
-        <p className="rounded-lg border p-3 text-sm">Creating an agent starts its first private bounded work run after setup is ready. You can talk with it at any time.</p>
+        <p className="rounded-lg border p-3 text-sm">Creating an agent starts private bounded work and enables automatic one-minute check-ins after setup is ready. Waiting questions and required reviews pause eligibility without turning automatic work off. You can talk with it at any time.</p>
       </header>
       <DefaultAgentModelControls onChange={setDefaultModel} />
       <section aria-label="First Builder launch checkpoint" className="space-y-3 rounded-xl border p-5">

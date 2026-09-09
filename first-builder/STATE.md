@@ -2378,3 +2378,17 @@ and conflicting Plane calls with zero unresolved receipts. It completed 20 model
 steps, published GDD v1, recorded a waiting result, and asked one consolidated owner
 question at the intended pre-implementation acceptance gate. AN-97 is complete.
 The First Builder remains held; AN-95 now awaits owner review of the test GDD.
+
+## Self-driven creation and truthful waiting state — 2026-09-09
+
+Cycle 04 defects AN-98 and AN-99 correct the final-test lifecycle mismatch. Creating
+an agent with bounded work now atomically enables a 60-second cadence by default.
+Questions and required reviews remain eligibility gates while cadence stays enabled.
+The compact header now shows Enable automatic work when cadence is actually off,
+uses the cadence endpoint to enable it, and reserves Pause automatic work for an
+enabled cadence. Completed work with an unresolved owner dependency reads Waiting
+for your decision rather than Automatic work off or a generic next check-in. Focused
+API and installed-Chromium browser journeys pass. The deployed build repaired the
+existing Fantasy Game Builder through the normal UI: cadence is enabled at 60 seconds,
+its unresolved GDD question remains the active eligibility gate, and no redundant run
+was started. AN-98 and AN-99 are Done. The First Builder remains held.

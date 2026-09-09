@@ -8,6 +8,7 @@ test('cadence starts a separate attempt that revises saved work from Plane feedb
   const created=await request.post(`${backend}/api/agent-native/agents`,{headers,data:{request_id:crypto.randomUUID(),name:'Continuing writer',purpose:'Revise drafts using feedback. E2E_CADENCE',work:{timeout_seconds:180,max_iterations:12}}});
   expect(created.status()).toBe(201);
   const {id}=await created.json();const api=`${backend}/api/agent-native/agents/${id}`;
+  expect((await request.post(`${api}/cadence`,{headers,data:{expected_revision:1,enabled:false,interval_seconds:60}})).ok()).toBe(true);
   const current=async()=>(await(await request.get(api,{headers})).json());
   try{
     await expect.poll(async()=>(await current()).work.state,{timeout:30000}).toBe('completed');

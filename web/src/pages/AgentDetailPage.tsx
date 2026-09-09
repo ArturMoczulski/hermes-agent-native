@@ -8,7 +8,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@nous-research/ui/ui/components/dialog";
-import { agentsEndpoint, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
+import { agentsEndpoint, agentWaitingForOwner, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { Markdown } from "@/components/Markdown";
@@ -104,13 +104,24 @@ export default function AgentDetailPage() {
     if (agent.pause?.paused && !ownPause) return;
     setTogglingAutomaticWork(true); setAutomaticWorkError(false); mutationVersion.current += 1;
     try {
-      const result = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/work/${agent.pause?.paused ? "resume" : "pause"}`, { method: "POST" });
-      mutationVersion.current += 1;
-      setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
-      if (agent.pause?.paused) {
-        const resumed = result.subtree_resume?.resumed_agent_ids.length ?? 0;
-        const retained = result.subtree_resume?.still_paused_agent_ids.length ?? 0;
-        setResumeNotice(`Automatic work resumed for ${resumed} agent${resumed === 1 ? "" : "s"}.${retained ? ` ${retained} independently paused descendant${retained === 1 ? " remains" : "s remain"} paused.` : ""}`);
+      if (!agent.pause?.paused && !agent.cadence?.enabled) {
+        const cadence = await fetchJSON<NonNullable<Agent["cadence"]>>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/cadence`, {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ expected_revision: agent.soul_revision, interval_seconds: agent.cadence?.interval_seconds ?? 60, enabled: true }),
+        });
+        mutationVersion.current += 1;
+        setLoaded((previous) => previous.key === key && previous.agent
+          ? { key, agent: { ...previous.agent, cadence } } : previous);
+        setResumeNotice("Automatic work enabled. Waiting dependencies still apply and resolving one will wake the agent.");
+      } else {
+        const result = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/work/${agent.pause?.paused ? "resume" : "pause"}`, { method: "POST" });
+        mutationVersion.current += 1;
+        setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
+        if (agent.pause?.paused) {
+          const resumed = result.subtree_resume?.resumed_agent_ids.length ?? 0;
+          const retained = result.subtree_resume?.still_paused_agent_ids.length ?? 0;
+          setResumeNotice(`Automatic work resumed for ${resumed} agent${resumed === 1 ? "" : "s"}.${retained ? ` ${retained} independently paused descendant${retained === 1 ? " remains" : "s remain"} paused.` : ""}`);
+        }
       }
     } catch { setAutomaticWorkError(true); }
     finally { setTogglingAutomaticWork(false); }
@@ -136,10 +147,10 @@ export default function AgentDetailPage() {
             </div>
             <div className="flex items-center gap-2">
               <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
-              {!fullView && !inactive && <IconTooltip label={agent.pause?.paused ? "Resume automatic work" : "Pause automatic work"}>
+              {!fullView && !inactive && <IconTooltip label={agent.pause?.paused ? "Resume automatic work" : agent.cadence?.enabled ? "Pause automatic work" : "Enable automatic work"}>
                 <Button size="icon" className="size-10 border border-border bg-background text-foreground shadow-sm hover:bg-muted" disabled={togglingAutomaticWork || Boolean(agent.pause?.paused && !agent.pause.sources.some((source) => source.source_agent_id === agent.id))}
-                  aria-label={agent.pause?.paused ? "Resume automatic work" : "Pause automatic work"} onClick={() => void toggleAutomaticWork()}>
-                  {agent.pause?.paused ? <Play className="size-5" aria-hidden="true" /> : <Pause className="size-5" aria-hidden="true" />}
+                  aria-label={agent.pause?.paused ? "Resume automatic work" : agent.cadence?.enabled ? "Pause automatic work" : "Enable automatic work"} onClick={() => void toggleAutomaticWork()}>
+                  {agent.pause?.paused || !agent.cadence?.enabled ? <Play className="size-5" aria-hidden="true" /> : <Pause className="size-5" aria-hidden="true" />}
                 </Button>
               </IconTooltip>}
             </div>
@@ -369,7 +380,7 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     : work?.state === "running" ? "Working"
     : ["queued", "preparing"].includes(work?.state ?? "") ? "Starting"
     : work?.state === "stopping" ? "Stopping"
-    : work?.state === "completed" && agent.cadence?.enabled ? "Waiting for next check-in"
+    : work?.state === "completed" && agent.cadence?.enabled ? agentWaitingForOwner(agent) ? "Waiting for your decision" : "Waiting for next check-in"
     : work?.state === "completed" ? "Automatic work off"
     : work ? work.state.replace("_", " ") : "Not started";
   return <section aria-label="Current work overview" className="space-y-2 rounded-xl border p-5">

@@ -170,6 +170,14 @@ export function validWorkLimits(value: unknown): value is WorkLimits {
     && Number.isInteger(limits.max_iterations) && limits.max_iterations >= 1 && limits.max_iterations <= 100;
 }
 
+export function agentWaitingForOwner(agent: Agent): boolean {
+  const work = agent.work;
+  if (!work) return false;
+  const latestEvaluation = work.purpose_evaluations?.at(-1);
+  const requiredReview = work.results.some(result => result.review.required && !result.owner_decision);
+  return requiredReview || latestEvaluation?.judgment === "clarify";
+}
+
 export function agentWorkStatus(agent: Agent): string {
   if (agent.retirement) return "Retired";
   if (agent.removed_at) return "Removed";
@@ -187,7 +195,9 @@ export function agentWorkStatus(agent: Agent): string {
     return "Automatic work off";
   }
   if (agent.cadence?.enabled && ["completed", "limit_reached"].includes(work.state)) {
-    return "Active · waiting for next check-in";
+    return agentWaitingForOwner(agent)
+      ? "Active · waiting for your decision"
+      : "Active · waiting for next check-in";
   }
   if (agent.cadence && !agent.cadence.enabled && ["completed", "limit_reached"].includes(work.state)) {
     return "Automatic work off";

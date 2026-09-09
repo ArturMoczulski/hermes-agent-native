@@ -185,6 +185,11 @@ def create_root(conn, *, actor, request_id, name, purpose, work=None, model_sele
         queue_setup(conn, agent_id)
         if work is not None:
             configure(conn, actor=actor, agent_id=agent_id, expected_revision=1, limits=work)
+            from agent_native.cadence import configure as configure_cadence
+            configure_cadence(
+                conn, actor=actor, agent_id=agent_id, expected_revision=1,
+                interval_seconds=60, enabled=True, _allow_nested=True,
+            )
         root = _read(conn, agent_id)
         _event(conn, root, 'agent.created')
         return root

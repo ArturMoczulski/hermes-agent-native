@@ -35,6 +35,17 @@ def test_create_list_and_read(client):
     assert agent['execution'] == 'not_started'
 
 
+def test_creation_with_work_enables_automatic_continuation_by_default(client):
+    root = client.post(URL, json={
+        **BODY, 'request_id': 'self-driven-create',
+        'work': {'timeout_seconds': 180, 'max_iterations': 50},
+    }).json()
+
+    assert root['work']['state'] == 'queued'
+    assert root['cadence']['enabled'] is True
+    assert root['cadence']['interval_seconds'] == 60
+
+
 def test_owner_creates_a_child_and_api_returns_tree_relationships(client):
     parent = client.post(URL, json=BODY).json()
     child = client.post(URL, json={**BODY, 'request_id': 'api-child', 'name': 'Composer',
