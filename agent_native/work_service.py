@@ -279,7 +279,7 @@ class _Run:
             result = checkpoint(conn, validate=self.validate, planning=planning,
                                 agent_id=self.work['agent_id'], run_id=self.work['id'], call_id=call_id, arguments=args)
         elif tool in ('repository_file_read', 'repository_file_write', 'repository_command'):
-            from agent_native.first_builder import active_repository
+            from agent_native.repository_access import active_repository
             from agent_native import builder_repository
             repository = active_repository(conn, self.work['agent_id'])
             operation = {'repository_file_read': builder_repository.read_file,
@@ -408,7 +408,7 @@ class _Run:
                 with write_txn(conn):
                     self.validate(conn)
                     conn.execute('UPDATE agent_native_work_runs SET binding_id=? WHERE id=?',(binding,self.work['id']))
-                from agent_native.first_builder import active_repository
+                from agent_native.repository_access import active_repository
                 try:
                     self.workspace = active_repository(conn, root['id'])
                 except PermissionError:
@@ -447,21 +447,26 @@ class _Run:
                                                self.work['autonomy']['policy'])
                     skill = (Path(__file__).resolve().parents[1] / 'skills/productivity/plane-project-management/SKILL.md').read_text()
                     from agent.work_policy import TOOL_NAMES, BUILDER_TOOL_NAMES
-                    from agent_native.first_builder import active_instructions, active_repository
+                    from agent_native.repository_access import active_repository
                     try:
                         active_repository(conn, root['id'])
                     except PermissionError:
                         authorized_tools = TOOL_NAMES
                     else:
                         authorized_tools = TOOL_NAMES | BUILDER_TOOL_NAMES
-                        protected = active_instructions(conn, root['id'])
-                        skill = (protected / 'PLANE.md').read_text() + '\n\n' + skill
-                        initial = '\n\n'.join((
-                            (protected / 'SOUL.md').read_text(),
-                            (protected / 'INSTRUCTIONS.md').read_text(),
-                            (protected / 'PRACTICES.md').read_text(),
-                            initial,
-                        ))
+                        from agent_native.first_builder import active_instructions
+                        try:
+                            protected = active_instructions(conn, root['id'])
+                        except PermissionError:
+                            pass
+                        else:
+                            skill = (protected / 'PLANE.md').read_text() + '\n\n' + skill
+                            initial = '\n\n'.join((
+                                (protected / 'SOUL.md').read_text(),
+                                (protected / 'INSTRUCTIONS.md').read_text(),
+                                (protected / 'PRACTICES.md').read_text(),
+                                initial,
+                            ))
                     attempt = {'run_id':self.work['id'],'agent_id':root['id'],'soul_revision':root['soul_revision'],
                                'name':root['name'],'purpose':root['purpose'],'workspace':str(self.workspace),
                                'session_id':self.work['session_id'],'native_db':str(self.service.home.parent/'state.db'),

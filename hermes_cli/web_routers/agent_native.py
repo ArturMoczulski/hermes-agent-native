@@ -101,6 +101,24 @@ def launch_first_builder(body: FirstBuilderAction, actor=Depends(owner_session))
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+class ProjectWorkspaceGrant(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    expected_revision: int = Field(strict=True, ge=1)
+    root: str = Field(min_length=1, max_length=4096)
+
+
+@router.post('/{agent_id}/workspace', status_code=201)
+def grant_project_workspace(agent_id: str, body: ProjectWorkspaceGrant, actor=Depends(owner_session)):
+    from agent_native import project_workspace
+    with connect_closing(board='default') as conn:
+        try:
+            return project_workspace.grant(conn, actor=actor, agent_id=agent_id, **body.model_dump())
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except (ValueError, PermissionError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 class ConfigureWork(WorkLimits):
     expected_revision: int = Field(strict=True, ge=1)
 

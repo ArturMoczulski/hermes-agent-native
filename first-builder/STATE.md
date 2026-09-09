@@ -2392,3 +2392,13 @@ API and installed-Chromium browser journeys pass. The deployed build repaired th
 existing Fantasy Game Builder through the normal UI: cadence is enabled at 60 seconds,
 its unresolved GDD question remains the active eligibility gate, and no redundant run
 was started. AN-98 and AN-99 are Done. The First Builder remains held.
+
+## AN-96 protected ordinary-agent workspace — 2026-09-09
+
+The first increment is implemented: an owner-authenticated API can grant one existing
+repository root to one ordinary agent, and managed work resolves that root without
+inheriting First Builder instructions or authority. Ungranted identities remain
+denied. Focused grant/denial and API-adjacency evidence passes. AN-96 remains In
+Progress; next add owner provisioning plus protected build/serve and its stable
+playable link. Do not grant the Fantasy Game Builder until its GDD is accepted. The
+First Builder remains held.

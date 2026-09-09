@@ -6,6 +6,7 @@ import pytest
 
 from agent_native.builder_repository import command, read_file, write_file
 from agent.work_policy import BUILDER_TOOL_NAMES, TOOL_NAMES, WorkContext, tool_schemas
+from tests.hermes_cli.test_agent_native_api import client  # noqa: F401
 
 
 def test_builder_repository_reads_and_compare_and_swap_writes(tmp_path):
@@ -61,3 +62,31 @@ def test_repository_tools_are_absent_from_ordinary_managed_work():
     assert BUILDER_TOOL_NAMES <= {row["function"]["name"] for row in tool_schemas(builder)}
     with pytest.raises(PermissionError):
         ordinary.tool(None, "repository_file_read", {"path": "README.md"}, "call")
+
+
+def test_owner_grants_one_ordinary_agent_an_isolated_repository(client, tmp_path):
+    from agent_native.first_builder import active_repository
+    from agent_native.project_workspace import active_repository as active_project_repository
+    from hermes_cli.kanban_db_connect import connect_closing
+
+    granted = client.post('/api/agent-native/agents', json={
+        'request_id': 'ordinary-coder', 'name': 'Game builder', 'purpose': 'Build a game',
+    }).json()
+    ordinary = client.post('/api/agent-native/agents', json={
+        'request_id': 'ordinary-reader', 'name': 'Reader', 'purpose': 'Read stories',
+    }).json()
+    project = tmp_path / 'fantasy-game'
+    project.mkdir()
+
+    response = client.post(f"/api/agent-native/agents/{granted['id']}/workspace", json={
+        'expected_revision': 1, 'root': str(project),
+    })
+    assert response.status_code == 201
+    assert response.json() == {'root': str(project.resolve()), 'active': True, 'revision': 1}
+
+    with connect_closing(tmp_path / 'control.db') as conn:
+        assert active_project_repository(conn, granted['id']) == project.resolve()
+        with pytest.raises(PermissionError):
+            active_project_repository(conn, ordinary['id'])
+        with pytest.raises(PermissionError):
+            active_repository(conn, granted['id'])
