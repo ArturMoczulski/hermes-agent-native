@@ -2282,3 +2282,16 @@ AN-24 combined verification command (isolated fixture services):
 ```sh
 HERMES_TEST_FILE_RETRIES=0 scripts/run_tests.sh -j 8 tests/hermes_cli/test_agent_native_plane_tools.py tests/hermes_cli/test_agent_native_plane_tool_lifetime.py tests/hermes_cli/test_agent_native_plane_attempt_authority.py tests/tools/test_agent_native_dispatch.py tests/tools/test_registry.py tests/test_model_tools.py tests/test_model_tools_async_bridge.py tests/tools/test_code_execution.py tests/tools/test_code_kernel.py tests/tools/test_code_kernel_remote.py tests/hermes_cli/test_agent_native_identity.py tests/hermes_cli/test_agent_native_api.py tests/hermes_cli/test_agent_native_plane_write_access.py tests/hermes_cli/test_agent_native_plane_writes.py tests/hermes_cli/test_agent_native_plane_write_failures.py tests/hermes_cli/test_agent_native_plane_write_journal.py tests/hermes_cli/test_agent_native_plane_recovery.py tests/hermes_cli/test_agent_native_plane_recovery_failures.py tests/hermes_cli/test_agent_native_plane_recovery_journal.py tests/hermes_cli/test_agent_native_plane_operation_lock.py -q
 ```
+## Compact purpose and automatic-work control — 2026-09-09
+
+Paused live AN-76 agent `7b4d3ccd-1adb-4412-9c15-ed0ebf8da51e`: its active
+MiniMax attempt and subtree stopped, and cadence is disabled. Compact agent detail now
+shows the protected purpose beneath the name and a play/pause icon beside execution
+status. The pause uses the existing atomic subtree operation, so it stops current work
+and prevents cadence restart; resume restores the prior automatic-work state and keeps
+independent descendant pauses intact. Both controls have visible hover tooltips.
+
+Focused verification: `subtree-pause.spec.ts` pause and resume cases pass with the
+already-installed Chromium headless shell (2 tests, 6.9s). The bundled ChatGPT Node
+cannot load the repository's signed Rolldown binding; Homebrew Node 24.3 runs the
+existing dependency and test suite without downloading another browser.

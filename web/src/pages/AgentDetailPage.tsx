@@ -16,7 +16,7 @@ import { fetchJSON } from "@/lib/api";
 import PlanningWork from "./PlanningWork";
 import { AgentModelControls } from "@/components/AgentModelControls";
 import { usePageHeader } from "@/contexts/usePageHeader";
-import { Settings, SquareKanban } from "lucide-react";
+import { Pause, Play, Settings, SquareKanban } from "lucide-react";
 
 type LoadedAgent = { key: string; agent?: Agent; error?: string };
 
@@ -35,6 +35,8 @@ export default function AgentDetailPage() {
   const [reload, setReload] = useState(0);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [resumeNotice, setResumeNotice] = useState<string | null>(null);
+  const [togglingAutomaticWork, setTogglingAutomaticWork] = useState(false);
+  const [automaticWorkError, setAutomaticWorkError] = useState(false);
   const mutationVersion = useRef(0);
   const [loaded, setLoaded] = useState<LoadedAgent>({ key: "" });
   const key = `${agentId}:${reload}`;
@@ -96,6 +98,24 @@ export default function AgentDetailPage() {
     : null;
   const inactive = Boolean(agent?.removed_at || agent?.retirement);
 
+  async function toggleAutomaticWork() {
+    if (!agent || inactive || togglingAutomaticWork) return;
+    const ownPause = agent.pause?.sources.some((source) => source.source_agent_id === agent.id);
+    if (agent.pause?.paused && !ownPause) return;
+    setTogglingAutomaticWork(true); setAutomaticWorkError(false); mutationVersion.current += 1;
+    try {
+      const result = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/work/${agent.pause?.paused ? "resume" : "pause"}`, { method: "POST" });
+      mutationVersion.current += 1;
+      setLoaded((previous) => previous.key === key ? { key, agent: result } : previous);
+      if (agent.pause?.paused) {
+        const resumed = result.subtree_resume?.resumed_agent_ids.length ?? 0;
+        const retained = result.subtree_resume?.still_paused_agent_ids.length ?? 0;
+        setResumeNotice(`Automatic work resumed for ${resumed} agent${resumed === 1 ? "" : "s"}.${retained ? ` ${retained} independently paused descendant${retained === 1 ? " remains" : "s remain"} paused.` : ""}`);
+      }
+    } catch { setAutomaticWorkError(true); }
+    finally { setTogglingAutomaticWork(false); }
+  }
+
   return (
     <div className="mx-auto w-full max-w-4xl space-y-6 p-6">
       <Link to="/agents" className="text-sm underline underline-offset-4">All agents</Link>
@@ -114,8 +134,20 @@ export default function AgentDetailPage() {
                 <a className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground shadow-sm hover:bg-muted" href={planeUrl} target="_blank" rel="noreferrer" aria-label="Open project in Plane"><SquareKanban className="size-5" strokeWidth={2.5} aria-hidden="true" /></a>
               </IconTooltip>}
             </div>
-            <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
+            <div className="flex items-center gap-2">
+              <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
+              {!fullView && !inactive && <IconTooltip label={agent.pause?.paused ? "Resume automatic work" : "Pause automatic work"}>
+                <Button size="icon" className="size-10 border border-border bg-background text-foreground shadow-sm hover:bg-muted" disabled={togglingAutomaticWork || Boolean(agent.pause?.paused && !agent.pause.sources.some((source) => source.source_agent_id === agent.id))}
+                  aria-label={agent.pause?.paused ? "Resume automatic work" : "Pause automatic work"} onClick={() => void toggleAutomaticWork()}>
+                  {agent.pause?.paused ? <Play className="size-5" aria-hidden="true" /> : <Pause className="size-5" aria-hidden="true" />}
+                </Button>
+              </IconTooltip>}
+            </div>
           </div>
+          {!fullView && <section aria-label="Agent purpose summary" className="max-w-3xl">
+            <p className="text-sm font-medium text-muted-foreground">Purpose</p>
+            <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>
+          </section>}
           <p className="break-all text-xs text-muted-foreground">{agent.parent_id ? "Child agent" : "Root agent"} · {agent.id}</p>
           {agent.parent_id && <p className="text-sm">Child of <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.parent_id)}`}>{agent.parent_id}</Link></p>}
           {agent.child_ids.length > 0 && <p className="text-sm">Children: {agent.child_ids.map((childId, index) => <span key={childId}>{index > 0 && ", "}<Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(childId)}`}>{childId}</Link></span>)}</p>}
@@ -127,6 +159,7 @@ export default function AgentDetailPage() {
             </Link>
           </div>
         </header>
+        {automaticWorkError && <p role="alert">Could not confirm the automatic-work change. The last confirmed state is still shown; reload and try again.</p>}
         {resumeNotice && <p role="status" className="rounded-xl border border-green-500/50 bg-green-500/5 p-4">{resumeNotice}</p>}
         {agent.pause?.paused && <PauseSummary agent={agent} onMutationStart={() => { mutationVersion.current += 1; }} onResumed={(result) => {
           mutationVersion.current += 1;

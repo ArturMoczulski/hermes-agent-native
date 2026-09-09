@@ -22,9 +22,12 @@ test('owner pause visibly and durably pauses an entire active agent subtree', as
   expect(childResponse.ok()).toBeTruthy();
   const child = await childResponse.json();
 
-  await page.goto(`/agents/${parent.id}?view=full`);
-  await expect(page.getByText('Pause stops automatic work for this agent and every active descendant.')).toBeVisible();
-  await page.getByRole('button', { name: 'Pause', exact: true }).click();
+  await page.goto(`/agents/${parent.id}`);
+  await expect(page.getByRole('region', { name: 'Agent purpose summary' })).toContainText('Continue useful work until the owner pauses it.');
+  const pause = page.getByRole('button', { name: 'Pause automatic work', exact: true });
+  await pause.hover();
+  await expect(page.getByRole('tooltip', { name: 'Pause automatic work' })).toBeVisible();
+  await pause.click();
 
   await expect(page.getByLabel('Execution status')).toHaveText('Paused');
   await expect(page.getByRole('status', { name: 'Agent paused' })).toContainText('This agent and every active descendant are paused.');
@@ -52,7 +55,10 @@ test('owner resume clears only its stacked pause and confirms the result', async
   expect((await request.post(`${backend}/api/agent-native/agents/${child.id}/work/pause`, { headers })).ok()).toBeTruthy();
 
   await page.goto(`/agents/${parent.id}`);
-  await page.getByRole('button', { name: 'Resume automatic work' }).click();
+  const resume = page.getByRole('button', { name: 'Resume automatic work', exact: true }).first();
+  await resume.hover();
+  await expect(page.getByRole('tooltip', { name: 'Resume automatic work' })).toBeVisible();
+  await resume.click();
 
   await expect(page.getByText('Automatic work resumed for 1 agent. 1 independently paused descendant remains paused.', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Execution status')).not.toHaveText('Paused');
