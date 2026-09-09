@@ -333,6 +333,9 @@ rejection receipts with their tool name and error class; diagnostics omit the
 arguments and private provider data. Full authority revocation still stops the
 run, and uncertain external delivery remains unknown and blocks automatic retry.
 Focused broker, scoped-progress, unknown-write and cadence-classification tests
-pass. Next: restart the local preview on this implementation and verify a clean
-ordinary test agent continues after a rejected call; the First Builder remains
-held behind the owner test gate.
+pass. The restarted local preview migrated the existing receipt table. A clean MiniMax M3
+Fantasy Game Builder encountered invalid and conflicting Plane calls, retained zero
+unresolved receipts, continued through 20 model steps, published GDD v1, asked a
+consolidated owner question, and completed its bounded attempt at the intended
+approval gate. AN-97 is complete; the First Builder remains held behind the owner
+test gate.

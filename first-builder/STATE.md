@@ -2372,5 +2372,9 @@ authorization failures as replayable rejected results before another model step.
 Unknown Plane delivery and run-authority loss retain fail-closed behavior. Focused
 evidence: three work-effect cases, the scoped progress-denial case, and three
 unknown/retry cadence cases pass with retries disabled; Ruff and whitespace checks
-pass. Next: activate the migration in the local preview and verify live cadence
-continuation with a clean ordinary agent. Do not release the prepared First Builder.
+pass. The local preview loaded the migration. Clean verification agent
+`9ba64293-9eba-466b-aa2b-4073f17e76fc` used MiniMax M3 and continued after invalid
+and conflicting Plane calls with zero unresolved receipts. It completed 20 model
+steps, published GDD v1, recorded a waiting result, and asked one consolidated owner
+question at the intended pre-implementation acceptance gate. AN-97 is complete.
+The First Builder remains held; AN-95 now awaits owner review of the test GDD.
