@@ -14,7 +14,8 @@ test('native work rereads a rejected conflict and completes the same attempt',as
     const a=await(await request.get(api,{headers})).json();
     expect(a.work.events.some((e:{kind:string})=>e.kind==='work.conflict')).toBe(true);
     expect(a.work.focus.cycle_id).toBeTruthy();
-    await expect(page.getByText('Recovered after fresh inspection',{exact:false}).first()).toBeVisible();
+    await expect(page.getByText('Recovered from refreshed conflict state',{exact:false}).first()).toBeVisible();
+    expect(a.work.model_calls).toBeLessThanOrEqual(10);
     expect(await(await request.get(`${api}/attempts`,{headers})).json()).toHaveLength(1);
   }finally{await request.post(`${api}/work/pause`,{headers});}
 });

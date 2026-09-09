@@ -186,18 +186,47 @@ class _Run:
                 raise ValueError('Planning effect requires operation and arguments')
             if args['operation'] == 'comment.create':
                 raise ValueError('Use progress_report for managed progress comments')
+            from agent_native.plane_write_contracts import ContractError
             from agent_native.plane_writes import PlaneWriteError, PlaneWriteConflict
             try:
                 result = planning.execute(operation_id,args['operation'],args['arguments'])
+            except ContractError:
+                operation = args['operation']
+                result = {
+                    'status':'invalid_arguments',
+                    'operation':operation,
+                    'write_attempted':False,
+                    'message':operation+' arguments do not match the tool contract. Review its required fields and use IDs and fingerprints from current Plane observations.',
+                }
+                state.event(conn,self.work['id'],'work.contract_rejected',
+                            'Plane rejected invalid '+operation+' arguments before execution.')
             except PlaneWriteError as exc:
                 if isinstance(exc, PlaneWriteConflict) and exc.outcome == 'rejected':
                     # A known pre-write rejection is task data, not revocation.
                     # Retain this call's receipt; a fresh decision needs a new call.
+                    operation = args['operation']
+                    operation_args = args['arguments']
+                    inspect_target = (
+                        ('item', operation_args.get('item_id')) if operation in ('item.update','cycle.assign','cycle.remove','dependency.add') else
+                        ('cycle', operation_args.get('cycle_id')) if operation == 'cycle.update' else
+                        ('project', None) if operation == 'project.update' else None)
+                    fresh = None
+                    if inspect_target is not None:
+                        try:
+                            fresh = {'kind':inspect_target[0], **planning.inspect({'kind':inspect_target[0], **({'resource_id':inspect_target[1]} if inspect_target[1] else {})})}
+                        except Exception:
+                            # The original rejection remains authoritative. A
+                            # failed convenience read must not change its status.
+                            pass
                     result = {'status':'conflict','operation_id':operation_id,
+                              'operation':operation,
                               'write_attempted':False,
                               'message':'Plane changed or the requested relationship conflicts with current state. No write was sent. Inspect the affected resource and current relationships, then reassess the task before issuing a new operation. Do not repeat stale arguments.'}
+                    if fresh is not None:
+                        result['fresh'] = fresh
                     state.event(conn,self.work['id'],'work.conflict',
-                                'Plane rejected '+args['operation']+' before writing; fresh inspection required.')
+                                'Plane rejected '+operation+' before writing; refreshed '+inspect_target[0]+' state is available in the tool result.' if fresh is not None else
+                                'Plane rejected '+operation+' before writing; fresh inspection required.')
                 elif exc.outcome == 'unknown':
                     # The mutation journal retains the original operation. Revoke
                     # this run before another model request or effect is admitted;
@@ -289,7 +318,8 @@ class _Run:
                        ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
                        ('Retired agent from purpose evaluation') if tool=='purpose_retire' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
-                       ('Plane conflict: fresh inspection required' if result.get('status')=='conflict' else
+                       ('Plane rejected invalid '+result.get('operation','operation')+' arguments' if result.get('status')=='invalid_arguments' else
+                        ('Plane conflict in '+result.get('operation','operation')+': refreshed state returned' if result.get('fresh') else 'Plane conflict: fresh inspection required') if result.get('status')=='conflict' else
                         'Plane: '+args.get('operation','inspected '+args.get('kind','resource'))))
             if tool != 'work_item_select':
                 # Selection and its event commit together; receipt recovery must

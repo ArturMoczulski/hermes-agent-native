@@ -215,16 +215,14 @@ def next_reply(messages, purpose):
             name, arguments = operation('cycle.assign', {'item_id':target,'cycle_id':result(2)['resource']['id'],'expected_cycle_id':None,'expected_item_fingerprint':result(0)['fingerprint']})
         elif index == 6:
             assert result(5)['status'] == 'conflict' and result(5)['write_attempted'] is False
-            name, arguments = 'plane_resource_inspect', {'kind':'item','resource_id':target}
+            assert result(5)['fresh']['kind'] == 'item' and result(5)['fresh']['resource']['name'] == 'Freshly clarified task'
+            name, arguments = operation('cycle.assign', {'item_id':target,'cycle_id':result(2)['resource']['id'],'expected_cycle_id':None,'expected_item_fingerprint':result(5)['fresh']['fingerprint']})
         elif index == 7:
-            assert result(6)['resource']['name'] == 'Freshly clarified task'
-            name, arguments = operation('cycle.assign', {'item_id':target,'cycle_id':result(2)['resource']['id'],'expected_cycle_id':None,'expected_item_fingerprint':result(6)['fingerprint']})
-        elif index == 8:
             name, arguments = 'work_item_select', {'item_id':target}
-        elif index == 9:
-            name, arguments = 'result_record', {'item_id':target,'summary':'Recovered after fresh inspection','outcome':'discovery','evaluation':'Conflict rejected before write; fresh task inspected and assigned.','outputs':[]}
+        elif index == 8:
+            name, arguments = 'result_record', {'item_id':target,'summary':'Recovered from refreshed conflict state','outcome':'discovery','evaluation':'Conflict rejected before write; the returned fresh task state was assigned without another inspection step.','outputs':[]}
         else:
-            return {'role':'assistant','content':'Recovered after fresh inspection.'}
+            return {'role':'assistant','content':'Recovered from refreshed conflict state.'}
         return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
             'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_REVISION_CADENCE' in purpose:

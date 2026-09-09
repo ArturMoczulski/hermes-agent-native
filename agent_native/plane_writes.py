@@ -345,18 +345,21 @@ class PlaneWrites:
         return found
 
     def _assign_cycle(self, context, args, operation_id):
-        self._current(
-            context, "item", args["item_id"], args["expected_item_fingerprint"]
-        )
         self._fetch(context, "cycle", args["cycle_id"])
         prior = self._memberships(context, args["item_id"])
         actual = prior[0]["cycle"] if prior else None
+        # A repeated request for an already-established relationship has no
+        # mutation left to protect. Confirm it before rejecting an observation
+        # made stale by an unrelated item edit.
+        if actual == args["cycle_id"]:
+            return None, "", prior, None, "membership", args["item_id"]
+        self._current(
+            context, "item", args["item_id"], args["expected_item_fingerprint"]
+        )
         if actual != args["expected_cycle_id"]:
             raise PlaneWriteConflict(
                 "Prior cycle changed; inspect the item before moving it"
             )
-        if actual == args["cycle_id"]:
-            return None, "", prior, None, "membership", args["item_id"]
         return (
             "POST",
             f"cycles/{args['cycle_id']}/cycle-issues/",
@@ -419,11 +422,12 @@ class PlaneWrites:
 
     def _add_dependency(self, context, args, operation_id):
         source, target = args["item_id"], args["dependency_id"]
+        dependencies = self._dependencies(context, source)
+        if target in dependencies:
+            return None, "", [], None, "dependency", source
         self._current(context, "item", source, args["expected_fingerprint"])
         self._fetch(context, "item", target)
         self._check_dependency_path(context, source, target)
-        if target in self._dependencies(context, source):
-            return None, "", [], None, "dependency", source
         return (
             "POST",
             f"work-items/{source}/relations/",

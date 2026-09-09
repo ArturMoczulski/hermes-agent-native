@@ -26,6 +26,11 @@ and disabled further cadence. Focused browser proofs cover feedback-to-output,
 question-to-output, pause/resume, service restart and purpose redirection without
 requiring another paid-model run. Recovered Plane conflicts remain visible and are
 the next reliability concern; they do not invalidate the accepted journey.
+AN-94 closes that focused concern: a known pre-write conflict returns the current
+typed resource and fingerprint in the same tool result, already-satisfied cycle and
+dependency relationships confirm without another mutation, and malformed Plane
+calls receive an actionable operation-specific result rather than generic
+`ContractError` activity. Unknown delivery remains blocking and unchanged.
 The compact owner header now shows the protected purpose beside the agent's identity
 and places a tooltip-labeled pause/resume control next to execution status. Pausing from
 this control atomically stops current subtree work and disables its cadence; resuming

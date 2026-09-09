@@ -2310,3 +2310,17 @@ targeted cases), plus the preceding compact pause/resume pair. The feedback test
 updated to enter Full view for steering and assert the compact exact-version Output
 reader after AN-93 intentionally moved exhaustive controls out of Compact view.
 Repeated recovered Plane conflicts remain a follow-up efficiency/diagnostic concern.
+## AN-94 Plane conflict efficiency — 2026-09-09
+
+Completed the focused reliability issue exposed by the real AN-76 MiniMax run.
+Known pre-write conflicts now return the freshly observed resource kind, content and
+fingerprint in the same safe tool result, so the worker can reassess without spending
+a separate model step on another inspection. Repeated cycle assignments and dependency
+links that are already satisfied confirm idempotently before an unrelated stale item
+fingerprint can reject them. Invalid operation arguments return an operation-specific
+correction and event instead of escaping as a generic `ContractError`. Unknown writes
+retain their existing fail-closed behavior.
+
+Evidence: 14 focused cycle/dependency/conflict backend tests passed; the installed-
+Chromium Plane conflict journey passed in 4.7s and completes in at most 10 model calls,
+one fewer inspection round trip than before. Focused Ruff checks passed.
