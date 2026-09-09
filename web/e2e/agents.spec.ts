@@ -345,3 +345,25 @@ test('owner grants a protected project workspace from agent settings', async ({ 
   await expect(settings.getByRole('status')).toContainText('Coding workspace granted');
   await expect(settings.getByText('/projects/fantasy-game', { exact: true })).toBeVisible();
 });
+
+
+test('compact agent view opens the latest stable project preview', async ({ page }) => {
+  const id = 'preview-agent';
+  const agent = {
+    id, name: 'Site builder', purpose: 'Build a site.', parent_id: null, child_ids: [], soul_revision: 1,
+    execution: 'completed', created_at: '2026-09-09T10:00:00+00:00', removed_at: null, retirement: null, replacement: null,
+    pause: { paused: false, sources: [] }, cadence: { enabled: false, interval_seconds: null, next_due: null },
+    project_workspace: { root: '/projects/site', active: true, revision: 1 },
+    project_preview: { relative_root: 'dist', revision: 2, published_at: '2026-09-09T10:00:00+00:00', url: `/api/agent-native/agents/${id}/preview/` },
+    model_selection: null, model_activity: [], progress_concerns: [], progress_concern_settings: { failure_threshold: 3 },
+    assignment_review_policies: [], autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null },
+    setup: null, startup: null, work: null,
+  };
+  await page.route(`**/api/agent-native/agents/${id}`, route => route.fulfill({ status: 200, json: agent }));
+  await page.route(`**/api/agent-native/agents/${id}/attempts`, route => route.fulfill({ status: 200, json: [] }));
+  await page.goto(`/agents/${id}`);
+  const preview = page.getByRole('link', { name: 'Open project preview', exact: true });
+  await preview.hover();
+  await expect(page.getByRole('tooltip', { name: 'Open project preview' })).toBeVisible();
+  await expect(preview).toHaveAttribute('href', `/api/agent-native/agents/${id}/preview/`);
+});

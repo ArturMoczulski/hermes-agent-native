@@ -119,6 +119,19 @@ def grant_project_workspace(agent_id: str, body: ProjectWorkspaceGrant, actor=De
             raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
+@router.get('/{agent_id}/preview/')
+@router.get('/{agent_id}/preview/{asset_path:path}')
+def read_project_preview(agent_id: str, asset_path: str = 'index.html', actor=Depends(owner_session)):
+    from fastapi.responses import FileResponse
+    from agent_native import project_preview
+    with connect_closing(board='default') as conn:
+        try:
+            identity.get_root(conn, actor=actor, agent_id=agent_id)
+            return FileResponse(project_preview.asset(conn, agent_id, asset_path))
+        except (KeyError, PermissionError, ValueError) as exc:
+            raise HTTPException(status_code=404, detail='Preview asset not found') from exc
+
+
 class ConfigureWork(WorkLimits):
     expected_revision: int = Field(strict=True, ge=1)
 

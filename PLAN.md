@@ -378,3 +378,18 @@ TypeScript, ESLint and Ruff pass. Next: run builds in the granted boundary and
 publish a stable owner-visible playable URL without granting host-wide process or
 network authority. The Fantasy Game Builder remains ungranted pending GDD acceptance,
 and the First Builder remains held.
+
+## Stable project previews — 2026-09-09
+
+AN-96 now provides a generic managed `repository_preview_publish` operation for
+ordinary coding agents. It publishes a static directory only inside the agent's
+active project-workspace grant, requires a regular `index.html`, rejects absolute,
+parent and symlink escapes, and records a versioned stable agent preview URL. The
+authenticated dashboard serves the current preview without granting the agent a
+long-running host process or arbitrary network listener. The compact agent header
+shows an Open project preview control with a tooltip. Six focused repository and
+isolation tests, the installed-Chromium preview-link journey, TypeScript, ESLint,
+Ruff, compilation and the production build pass. The local dashboard is deployed
+with both workspace and preview schema. AN-96 remains In Progress until the accepted
+Fantasy Game Builder is provisioned and proves a real build increment. The First
+Builder remains held.

@@ -16,7 +16,7 @@ import { fetchJSON } from "@/lib/api";
 import PlanningWork from "./PlanningWork";
 import { AgentModelControls } from "@/components/AgentModelControls";
 import { usePageHeader } from "@/contexts/usePageHeader";
-import { Pause, Play, Settings, SquareKanban } from "lucide-react";
+import { MonitorPlay, Pause, Play, Settings, SquareKanban } from "lucide-react";
 
 type LoadedAgent = { key: string; agent?: Agent; error?: string };
 
@@ -143,6 +143,9 @@ export default function AgentDetailPage() {
               </IconTooltip>}
               {planeUrl && <IconTooltip label="Open project in Plane">
                 <a className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground shadow-sm hover:bg-muted" href={planeUrl} target="_blank" rel="noreferrer" aria-label="Open project in Plane"><SquareKanban className="size-5" strokeWidth={2.5} aria-hidden="true" /></a>
+              </IconTooltip>}
+              {agent.project_preview?.url && <IconTooltip label="Open project preview">
+                <a className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground shadow-sm hover:bg-muted" href={agent.project_preview.url} target="_blank" rel="noreferrer" aria-label="Open project preview"><MonitorPlay className="size-5" strokeWidth={2.5} aria-hidden="true" /></a>
               </IconTooltip>}
             </div>
             <div className="flex items-center gap-2">

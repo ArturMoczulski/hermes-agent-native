@@ -17,7 +17,7 @@ from uuid import UUID
 
 _current = ContextVar('agent_native_work_context', default=None)
 TOOL_NAMES = frozenset({'child_create', 'child_replace', 'child_inspect', 'child_result_evaluate', 'child_autonomy_configure', 'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'output_read', 'result_record', 'purpose_evaluate', 'purpose_retire', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'})
-BUILDER_TOOL_NAMES = frozenset({'repository_file_read', 'repository_file_write', 'repository_command'})
+BUILDER_TOOL_NAMES = frozenset({'repository_file_read', 'repository_file_write', 'repository_command', 'repository_preview_publish'})
 
 
 def _object(properties, required):
@@ -79,6 +79,7 @@ def tool_schemas(context=None):
                                          ['path', 'content', 'expected_sha256']),
         'repository_command': _object({'argv': {'type': 'array', 'items': string, 'minItems': 1, 'maxItems': 64},
                                        'timeout_seconds': {'type': 'integer', 'minimum': 1, 'maximum': 180}}, ['argv']),
+        'repository_preview_publish': _object({'path': string}, ['path']),
     }
     descriptions = {
         'child_create': 'Create one direct child when independently pursuing a clearly delegated responsibility is useful. Supply a concise name, protected delegated purpose, and reason. The child inherits this attempt\'s frozen model, autonomy level, work limits and enabled cadence; you cannot pass credentials or broader authority. Creation is not required for every task. You remain accountable for the child and its result.',
@@ -101,6 +102,7 @@ def tool_schemas(context=None):
         'repository_file_read': 'Read one UTF-8 file inside the explicitly granted framework repository. Returns content and a hash required for safe writes. Symlinks and paths outside the repository are rejected.',
         'repository_file_write': 'Create or replace one UTF-8 file inside the framework repository. Supply the prior hash, or missing for a new file. Concurrent changes are rejected.',
         'repository_command': 'Run one bounded non-shell development command in the framework repository. Only approved search, Git, Python, pytest, Node and npm commands are accepted.',
+        'repository_preview_publish': 'Publish a static preview directory inside the explicitly granted project workspace. The directory must contain index.html. Returns the stable owner-visible preview URL.',
     }
     allowed = TOOL_NAMES if context is None or context.authorized_tools is None else frozenset(context.authorized_tools)
     return [{'type': 'function', 'function': {'name': name, 'description': descriptions[name],

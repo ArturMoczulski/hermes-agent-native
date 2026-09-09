@@ -165,6 +165,9 @@ SCHEMA_SQL += FIRST_BUILDER_SCHEMA
 from agent_native.project_workspace import SCHEMA as PROJECT_WORKSPACE_SCHEMA
 SCHEMA_SQL += PROJECT_WORKSPACE_SCHEMA
 
+from agent_native.project_preview import SCHEMA as PROJECT_PREVIEW_SCHEMA
+SCHEMA_SQL += PROJECT_PREVIEW_SCHEMA
+
 SCHEMA_SQL += """
 CREATE TABLE IF NOT EXISTS agent_native_removals (
  agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),

@@ -158,7 +158,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments','repository_file_read','repository_file_write','repository_command')
+        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments','repository_file_read','repository_file_write','repository_command','repository_preview_publish')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -278,6 +278,10 @@ class _Run:
             from agent_native.progress import checkpoint
             result = checkpoint(conn, validate=self.validate, planning=planning,
                                 agent_id=self.work['agent_id'], run_id=self.work['id'], call_id=call_id, arguments=args)
+        elif tool == 'repository_preview_publish':
+            from agent_native.identity import OWNER
+            from agent_native.project_preview import publish
+            result = publish(conn, actor=OWNER, agent_id=self.work['agent_id'], **args)
         elif tool in ('repository_file_read', 'repository_file_write', 'repository_command'):
             from agent_native.repository_access import active_repository
             from agent_native import builder_repository

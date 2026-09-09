@@ -2410,3 +2410,13 @@ workspace through the authenticated grant API. Focused Chromium and backend chec
 pass. AN-96 remains In Progress; next implement the protected build/serve lifecycle
 and stable playable link. Do not grant the waiting Fantasy Game Builder until its
 GDD is accepted. The First Builder remains held.
+
+## AN-96 stable project preview — 2026-09-09
+
+Ordinary granted coding agents can now publish a static directory inside their
+workspace at a stable authenticated preview URL. The operation rejects path and
+symlink escape; no arbitrary preview server process is granted. Compact UI linkage,
+focused backend isolation, Chromium, lint, type and production-build checks pass.
+The local preview is deployed with the new schema. AN-96 awaits a real post-GDD
+Fantasy Game Builder increment; that agent is still gated and ungranted. The First
+Builder remains held.

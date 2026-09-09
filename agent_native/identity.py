@@ -76,6 +76,11 @@ def _read(conn, agent_id):
         root['project_workspace'] = read_project_workspace(conn, agent_id)
     except KeyError:
         root['project_workspace'] = None
+    from agent_native.project_preview import read as read_project_preview
+    try:
+        root['project_preview'] = read_project_preview(conn, agent_id)
+    except KeyError:
+        root['project_preview'] = None
     predecessor = conn.execute(
         'SELECT id,predecessor_id,reason,handoff,created_at FROM agent_native_replacements '
         'WHERE successor_id=?', (agent_id,),

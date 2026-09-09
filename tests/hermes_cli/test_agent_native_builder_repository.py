@@ -90,3 +90,27 @@ def test_owner_grants_one_ordinary_agent_an_isolated_repository(client, tmp_path
             active_project_repository(conn, ordinary['id'])
         with pytest.raises(PermissionError):
             active_repository(conn, granted['id'])
+
+
+def test_granted_agent_publishes_a_stable_isolated_preview(client, tmp_path):
+    from agent_native.identity import OWNER
+    from agent_native.project_preview import publish
+    from hermes_cli.kanban_db_connect import connect_closing
+
+    agent = client.post('/api/agent-native/agents', json={
+        'request_id': 'preview-coder', 'name': 'Site builder', 'purpose': 'Build a site',
+    }).json()
+    project = tmp_path / 'site'
+    (project / 'dist').mkdir(parents=True)
+    (project / 'dist' / 'index.html').write_text('<h1>Playable increment</h1>')
+    assert client.post(f"/api/agent-native/agents/{agent['id']}/workspace", json={
+        'expected_revision': 1, 'root': str(project),
+    }).status_code == 201
+
+    with connect_closing(tmp_path / 'control.db') as conn:
+        preview = publish(conn, actor=OWNER, agent_id=agent['id'], path='dist')
+    assert preview['url'] == f"/api/agent-native/agents/{agent['id']}/preview/"
+    response = client.get(preview['url'])
+    assert response.status_code == 200
+    assert response.text == '<h1>Playable increment</h1>'
+    assert client.get(preview['url'] + '../secret').status_code == 404
