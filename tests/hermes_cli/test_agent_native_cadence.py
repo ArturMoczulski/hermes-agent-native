@@ -164,7 +164,7 @@ def test_service_restart_keeps_unreceipted_effect_unknown(broker):
     from hermes_cli.kanban_db_connect import connect_closing
     s=broker
     cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,interval_seconds=3600,enabled=True)
-    s.conn.execute('INSERT INTO agent_native_work_effects VALUES(?,?,?,?,NULL)',
+    s.conn.execute('INSERT INTO agent_native_work_effects(run_id,call_id,operation_id,fingerprint,result) VALUES(?,?,?,?,NULL)',
                    (s.work['id'],'in-flight','operation-in-flight','fingerprint'))
     service=WorkService(s.db_path,s.home).start()
     try:
@@ -200,7 +200,7 @@ def test_failed_cadence_run_is_classified_retryable_only_after_effects_settle(br
     cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
                       interval_seconds=60,enabled=True)
     if not settled:
-        s.conn.execute('INSERT INTO agent_native_work_effects VALUES(?,?,?,?,NULL)',
+        s.conn.execute('INSERT INTO agent_native_work_effects(run_id,call_id,operation_id,fingerprint,result) VALUES(?,?,?,?,NULL)',
                        (s.work['id'],'unsettled','unsettled-operation','fingerprint'))
 
     s.run.finish(s.conn,{'type':'turn.error'})

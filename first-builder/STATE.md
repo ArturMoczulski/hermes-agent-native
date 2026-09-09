@@ -2361,3 +2361,16 @@ reconciling historical protected preparations. The focused red/green regression 
 adjacent uncertain-create recovery pass. The exact live operation was confirmed by
 GET-only matching evidence, its stopped attempt retained as interrupted, and cadence
 started a distinct running attempt. The First Builder remains held for this test.
+
+## AN-97 rejected managed-tool receipts — 2026-09-09
+
+Cycle 04 item AN-97 (`1aac11f5-e9ab-4314-9f24-42e0035d782e`) is the active
+defect from the Fantasy Game Builder test. A deterministic broker case reproduced
+a malformed Plane call leaving an unresolved effect receipt. The host now stores
+the managed tool on every admitted receipt and settles validation or non-revoking
+authorization failures as replayable rejected results before another model step.
+Unknown Plane delivery and run-authority loss retain fail-closed behavior. Focused
+evidence: three work-effect cases, the scoped progress-denial case, and three
+unknown/retry cadence cases pass with retries disabled; Ruff and whitespace checks
+pass. Next: activate the migration in the local preview and verify live cadence
+continuation with a clean ordinary agent. Do not release the prepared First Builder.

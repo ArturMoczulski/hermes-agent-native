@@ -322,3 +322,17 @@ The next AN-51 slice applies the same bounded response when three consecutive ca
 attempts report completion but record neither a result nor a saved output. It records
 a distinct concern so the UI and evidence identify silent completion separately from
 terminal failure. Any recorded result or output resets the sequence.
+
+## Rejected managed-tool receipts — 2026-09-09
+
+AN-97 is In Progress in Cycle 04. The Fantasy Game Builder test exposed that
+validation and scoped authorization failures after effect admission left NULL
+receipts, making a failed bounded attempt look like an uncertain external write
+and stopping cadence. Safely rejected calls now receive durable, replayable
+rejection receipts with their tool name and error class; diagnostics omit the
+arguments and private provider data. Full authority revocation still stops the
+run, and uncertain external delivery remains unknown and blocks automatic retry.
+Focused broker, scoped-progress, unknown-write and cadence-classification tests
+pass. Next: restart the local preview on this implementation and verify a clean
+ordinary test agent continues after a rejected call; the First Builder remains
+held behind the owner test gate.

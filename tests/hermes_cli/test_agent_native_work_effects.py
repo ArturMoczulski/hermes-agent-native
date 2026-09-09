@@ -109,6 +109,30 @@ def test_lost_plane_write_preserves_unknown_and_blocks_all_later_admission(broke
                                 (s.work['id'],)).fetchone()[0] == 1
 
 
+def test_invalid_managed_call_settles_as_rejected_and_allows_retry(broker):
+    from agent_native.work_service import _recoverable_interruption
+
+    s = broker
+    result = s.run._effect(s.conn, s.planning, effect(
+        s, 'bad-plane-shape', arguments={'operation': 'item.create'}))
+
+    assert result == {
+        'status': 'rejected',
+        'tool': 'plane_operation_execute',
+        'error': 'ValueError',
+        'message': 'The managed tool rejected this call before any effect was attempted. Review its arguments and retry with a new tool call.',
+    }
+    tool, stored = s.conn.execute(
+        'SELECT tool,result FROM agent_native_work_effects WHERE run_id=? AND call_id=?',
+        (s.work['id'], 'bad-plane-shape')).fetchone()
+    assert tool == 'plane_operation_execute'
+    assert json.loads(stored) == result
+    assert _recoverable_interruption(s.conn, s.work['id']) is True
+    events = work_state.read_work(s.conn, s.root['id'])['events']
+    assert events[-1]['kind'] == 'work.effect_rejected'
+    assert events[-1]['summary'] == 'plane_operation_execute rejected the call before any effect was attempted (ValueError).'
+
+
 def test_output_cannot_use_a_foreign_item_or_create_an_artifact(broker):
     s = broker
     other = create_root(s.conn, actor=OWNER, request_id='foreign-work',

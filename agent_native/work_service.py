@@ -138,6 +138,22 @@ class _Run:
         return dead
 
     def _effect(self, conn, planning, params):
+        try:
+            return self._effect_unsettled(conn, planning, params)
+        except (ValueError, PermissionError) as exc:
+            if _authority_revoked(lambda: self.validate(conn), exc):
+                raise
+            tool, arguments = params.get('tool'), params.get('arguments')
+            fingerprint = (hashlib.sha256(
+                json.dumps([tool, arguments], sort_keys=True).encode()).hexdigest()
+                if isinstance(tool, str) and isinstance(arguments, dict) else None)
+            result = self._reject_effect(
+                conn, params.get('tool_call_id'), tool, type(exc), fingerprint)
+            if result is None:
+                raise
+            return result
+
+    def _effect_unsettled(self, conn, planning, params):
         self.validate(conn)
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
@@ -148,7 +164,7 @@ class _Run:
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
         with write_txn(conn):
             self.validate(conn)
-            old = conn.execute('SELECT operation_id,fingerprint,result FROM agent_native_work_effects '
+            old = conn.execute('SELECT operation_id,fingerprint,result,tool FROM agent_native_work_effects '
                                'WHERE run_id=? AND call_id=?',(self.work['id'],call_id)).fetchone()
             if old:
                 if old[1] != fingerprint:
@@ -158,8 +174,8 @@ class _Run:
                 operation_id = old[0]
             else:
                 operation_id = str(uuid4())
-                conn.execute('INSERT INTO agent_native_work_effects(run_id,call_id,operation_id,fingerprint) VALUES(?,?,?,?)',
-                             (self.work['id'],call_id,operation_id,fingerprint))
+                conn.execute('INSERT INTO agent_native_work_effects(run_id,call_id,operation_id,fingerprint,tool) VALUES(?,?,?,?,?)',
+                             (self.work['id'],call_id,operation_id,fingerprint,tool))
         if tool == 'child_create':
             from agent_native.child_delegation import create
             result=create(conn,validate=self.validate,parent_id=self.work['agent_id'],
@@ -184,9 +200,9 @@ class _Run:
             result = planning.inspect(args)
         elif tool == 'plane_operation_execute':
             if set(args) != {'operation','arguments'}:
-                raise ValueError('Planning effect requires operation and arguments')
+                return self._reject_effect(conn, call_id, tool, ValueError)
             if args['operation'] == 'comment.create':
-                raise ValueError('Use progress_report for managed progress comments')
+                return self._reject_effect(conn, call_id, tool, ValueError)
             from agent_native.plane_write_contracts import ContractError
             from agent_native.plane_writes import PlaneWriteError, PlaneWriteConflict
             try:
@@ -294,7 +310,7 @@ class _Run:
             base = progress.public_base()
             required = {'title','content','item_id','format'}
             if not required <= set(args) or set(args) - required - {'output_id'}:
-                raise ValueError('Output requires title, content, item and format')
+                return self._reject_effect(conn, call_id, tool, ValueError)
             planning.inspect({'kind':'item','resource_id':args['item_id']})
             result = publish(conn,validate=self.validate,workspace=self.workspace,
                              agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
@@ -305,7 +321,7 @@ class _Run:
             from agent_native import progress
             base = progress.public_base()
             if 'item_id' not in args:
-                raise ValueError('Result requires an assignment')
+                return self._reject_effect(conn, call_id, tool, ValueError)
             observation = planning.inspect({'kind':'item','resource_id':args['item_id']})
             result = record(conn,validate=self.validate,workspace=self.workspace,
                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
@@ -335,6 +351,37 @@ class _Run:
                 # Selection and its event commit together; receipt recovery must
                 # not emit a second change or make an old item current again.
                 state.event(conn,self.work['id'],'work.effect',summary)
+        return result
+
+    def _reject_effect(self, conn, call_id, tool, error_type, fingerprint=None):
+        row = conn.execute(
+            'SELECT tool,result,fingerprint FROM agent_native_work_effects '
+            'WHERE run_id=? AND call_id=?',
+            (self.work['id'], call_id),
+        ).fetchone()
+        if (row is None or row[0] != tool
+                or fingerprint is not None and row[2] != fingerprint):
+            return None
+        if row[1] is not None:
+            return json.loads(row[1])
+        result = {
+            'status': 'rejected',
+            'tool': tool,
+            'error': error_type.__name__,
+            'message': ('The managed tool rejected this call before any effect was '
+                        'attempted. Review its arguments and retry with a new tool call.'),
+        }
+        with write_txn(conn):
+            conn.execute(
+                'UPDATE agent_native_work_effects SET result=? '
+                'WHERE run_id=? AND call_id=?',
+                (json.dumps(result), self.work['id'], call_id),
+            )
+            state.event(
+                conn, self.work['id'], 'work.effect_rejected',
+                f'{tool} rejected the call before any effect was attempted '
+                f'({error_type.__name__}).',
+            )
         return result
 
     def _admit(self, conn, params):

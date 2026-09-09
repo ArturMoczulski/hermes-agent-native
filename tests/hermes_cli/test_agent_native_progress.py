@@ -68,11 +68,18 @@ def test_progress_cannot_target_unselected_items_or_bypass_verbosity(broker):
     s = broker
     select(s)
     count = len(s.plane.requests)
-    with pytest.raises(PermissionError):
-        s.run._effect(s.conn, s.planning, effect(s, 'foreign-progress', 'progress_report', {
-            'item_id': '00000000-0000-4000-8000-000000000000', 'kind': 'checkpoint',
-            'summary': 'Work', 'evidence': 'Evidence', 'next_action': 'Next'}))
-    with pytest.raises(ValueError):
-        s.run._effect(s.conn, s.planning, effect(s, 'raw-comment', arguments={
-            'operation': 'comment.create', 'arguments': {'item_id': s.setup['discovery_item_id'], 'text': 'Bypass'}}))
+    denied = s.run._effect(s.conn, s.planning, effect(
+        s, 'foreign-progress', 'progress_report', {
+            'item_id': '00000000-0000-4000-8000-000000000000',
+            'kind': 'checkpoint', 'summary': 'Work', 'evidence': 'Evidence',
+            'next_action': 'Next',
+        }))
+    assert denied['status'] == 'rejected'
+    assert denied['error'] == 'PermissionError'
+    rejected = s.run._effect(s.conn, s.planning, effect(s, 'raw-comment', arguments={
+        'operation': 'comment.create',
+        'arguments': {'item_id': s.setup['discovery_item_id'], 'text': 'Bypass'},
+    }))
+    assert rejected['status'] == 'rejected'
+    assert rejected['tool'] == 'plane_operation_execute'
     assert len(s.plane.requests) == count

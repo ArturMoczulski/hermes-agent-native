@@ -721,7 +721,8 @@ def connect(db_path: Optional[Path] = None, *, board: Optional[str] = None) -> s
                 migrate_runs(conn)
                 from agent_native.schema import SCHEMA_SQL as agent_native_schema
                 conn.executescript(agent_native_schema)
-                from agent_native.work_state import migrate_legacy_time_limits
+                from agent_native.work_state import migrate_effect_tools, migrate_legacy_time_limits
+                migrate_effect_tools(conn)
                 migrate_legacy_time_limits(conn)
                 from agent_native.startup import migrate_setup_revisions
                 migrate_setup_revisions(conn)

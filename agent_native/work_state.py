@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS agent_native_work_events (
 );
 CREATE TABLE IF NOT EXISTS agent_native_work_effects (
  run_id TEXT NOT NULL REFERENCES agent_native_work_runs(id), call_id TEXT NOT NULL,
- operation_id TEXT NOT NULL UNIQUE, fingerprint TEXT NOT NULL, result TEXT,
+ operation_id TEXT NOT NULL UNIQUE, fingerprint TEXT NOT NULL, tool TEXT NOT NULL DEFAULT 'legacy_unknown', result TEXT,
  PRIMARY KEY(run_id, call_id)
 );
 """
@@ -43,6 +43,17 @@ from agent_native.subtree_lifecycle import SCHEMA as SUBTREE_LIFECYCLE_SCHEMA
 WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA + CHILD_AUTONOMY_SCHEMA + SUBTREE_LIFECYCLE_SCHEMA
 
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
+
+
+def migrate_effect_tools(conn):
+    """Add observable tool identity to receipts created by older releases."""
+    columns = {row[1] for row in conn.execute(
+        'PRAGMA table_info(agent_native_work_effects)')}
+    if 'tool' not in columns:
+        with write_txn(conn, allow_nested=True):
+            conn.execute(
+                "ALTER TABLE agent_native_work_effects "
+                "ADD COLUMN tool TEXT NOT NULL DEFAULT 'legacy_unknown'")
 
 
 def migrate_legacy_time_limits(conn):
