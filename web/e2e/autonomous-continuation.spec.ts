@@ -39,6 +39,15 @@ test('highly autonomous agent advances to a different ready assignment without o
     expect(second.results.map((result: { review: { required: boolean } }) => result.review.required))
       .toEqual([false, false])
 
+    await page.goto(`/agents/${id}`)
+    const direction = page.getByRole('region', { name: 'Current work overview', exact: true })
+    await expect(direction.getByRole('heading', { name: 'Working on now', exact: true })).toBeVisible()
+    await expect(direction.getByRole('heading', { name: 'Up next', exact: true })).toBeVisible()
+    await page.getByRole('region', { name: 'Recent outputs', exact: true })
+      .getByRole('button', { name: 'Read output', exact: true }).first().click()
+    await expect(page.getByRole('article', { name: 'Output reader', exact: true })
+      .getByRole('region', { name: 'Output review', exact: true })).toHaveCount(0)
+
     await page.goto(`/agents/${id}?view=full`)
     const outputs = page.getByRole('region', { name: 'Saved outputs', exact: true })
     await expect(outputs).toContainText('Cosmology foundation')

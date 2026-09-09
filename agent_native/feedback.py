@@ -48,12 +48,15 @@ def submit(conn, *, actor, agent_id, expected_revision, request_id, text):
             key = old[0]
         else:
             key = str(uuid4())
+            created_at = _now()
             conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,text,status,created_at) VALUES(?,?,?,?,?,?,?)',
-                         (key,agent_id,expected_revision,request_id,text,'pending',_now()))
+                         (key,agent_id,expected_revision,request_id,text,'pending',created_at))
             from agent_native.work_state import event
             run = conn.execute('SELECT id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if run:
                 event(conn,run[0],'work.feedback_received','Owner feedback received: '+key)
+            from agent_native.cadence import wake
+            wake(conn, agent_id, 'owner_feedback', requested_at=created_at)
         return _rows(conn,agent_id,'AND id=?',(key,))[0]
 
 

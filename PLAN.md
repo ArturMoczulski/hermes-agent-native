@@ -393,3 +393,15 @@ Ruff, compilation and the production build pass. The local dashboard is deployed
 with both workspace and preview schema. AN-96 remains In Progress until the accepted
 Fantasy Game Builder is provisioned and proves a real build increment. The First
 Builder remains held.
+
+## Current checkpoint clarification — AN-100 and AN-101
+
+AN-100 and AN-101 remove the ambiguity exposed by the Fantasy Game Builder checkpoint.
+Compact output reading omits optional, undecided review UI while Full view retains the
+evaluation evidence. The compact Work direction card now states what the agent is
+working on and what it intends to do next. A whole-purpose `wait` judgment makes
+enabled cadence dormant without model calls until durable actionable input arrives;
+owner feedback now supplies that wake signal and admits one fresh attempt. The owner
+acceptance of Fantasy Game Builder GDD v2 was delivered through that path, the exact
+output decision was recorded, and its isolated coding workspace was granted for
+implementation.

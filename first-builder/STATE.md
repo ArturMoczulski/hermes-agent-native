@@ -2420,3 +2420,24 @@ focused backend isolation, Chromium, lint, type and production-build checks pass
 The local preview is deployed with the new schema. AN-96 awaits a real post-GDD
 Fantasy Game Builder increment; that agent is still gated and ungranted. The First
 Builder remains held.
+
+## AN-100/AN-101 truthful review and dormant waiting — 2026-09-09
+
+The live Fantasy Game Builder revealed that a `wait` purpose judgment still caused a
+new paid MiniMax run every 60 seconds even when no owner signal had changed. Cadence
+now treats `wait` as a durable dormant state: automatic work remains enabled, but a
+routine interval spends no model tokens. Existing durable input wakes exactly one
+fresh attempt, and ordinary owner feedback now participates in that wake path.
+
+Compact view combines the latest whole-purpose judgment with the selected work into
+plain-language Working on now and Up next fields. It explicitly says when automatic
+work is enabled but no model is running. Optional undecided review is hidden from the
+compact output reader; Full view retains it as diagnostic evidence. A display helper
+that read the oldest evaluation instead of the latest was corrected.
+
+Focused proof: the dormant-wait/backend case, one installed-Chromium autonomous
+continuation journey, web typecheck and production build pass. The local dashboard is
+deployed. The owner's GDD v2 acceptance was delivered as trusted feedback and then
+recorded against the exact output version. The agent woke, handled that direction,
+opened its implementation cycle, and received the isolated project directory
+`/Users/arturmoczulski/Projects/fantasy-game-builder`. The First Builder remains held.

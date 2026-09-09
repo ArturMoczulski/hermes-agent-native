@@ -175,7 +175,7 @@ export function validWorkLimits(value: unknown): value is WorkLimits {
 export function agentWaitingForOwner(agent: Agent): boolean {
   const work = agent.work;
   if (!work) return false;
-  const latestEvaluation = work.purpose_evaluations?.at(-1);
+  const latestEvaluation = work.purpose_evaluations?.[0];
   const requiredReview = work.results.some(result => result.review.required && !result.owner_decision);
   return requiredReview || latestEvaluation?.judgment === "clarify";
 }

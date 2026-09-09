@@ -289,6 +289,7 @@ export default function AgentDetailPage() {
           </li>)}</ol> : <p>No execution activity recorded yet.</p>}
           <p className="text-sm text-muted-foreground">Created <time dateTime={agent.created_at}>{new Date(agent.created_at).toLocaleString()}</time></p>
         </section>
+        <PurposeEvaluation agent={agent} />
         <WorkResults key={`results:${agent.id}`} agent={agent} />
         <SavedOutputs key={`outputs:${agent.id}`} agent={agent} />
         </>}
@@ -358,7 +359,6 @@ function CompactAgentView({ agent }: { agent: Agent }) {
     <WorkResults agent={agent} attentionOnly />
     <ProgressConcernAttention agent={agent} />
     <CompactWorkOverview agent={agent} />
-    <PurposeEvaluation agent={agent} />
     <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} compact />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
       <h2 className="text-lg font-semibold">Recent activity</h2>
@@ -376,6 +376,7 @@ function CompactAgentView({ agent }: { agent: Agent }) {
 
 function CompactWorkOverview({ agent }: { agent: Agent }) {
   const work = agent.work;
+  const evaluation = work?.purpose_evaluations?.[0];
   const active = Boolean(work && ["running", "queued", "preparing", "stopping"].includes(work.state));
   const stage = agent.retirement ? "Retired"
     : agent.removed_at ? "Removed"
@@ -386,10 +387,21 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     : work?.state === "completed" && agent.cadence?.enabled ? agentWaitingForOwner(agent) ? "Waiting for your decision" : "Waiting for next check-in"
     : work?.state === "completed" ? "Automatic work off"
     : work ? work.state.replace("_", " ") : "Not started";
-  return <section aria-label="Current work overview" className="space-y-2 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">{active ? "Current work" : "Latest work"}</h2>
+  const currentDirection = active
+    ? work?.focus?.name ?? work?.summary ?? "Reviewing its purpose and project state."
+    : evaluation?.judgment === "clarify" ? "Waiting for your answer before dependent work can continue."
+    : evaluation?.judgment === "wait" ? (evaluation.uncertainty || "Waiting for new information before continuing.")
+    : work?.focus?.name ?? work?.summary ?? "No current work direction has been recorded.";
+  const nextDirection = evaluation?.next_action ?? (agent.cadence?.enabled
+    ? "Review the project again at the next eligible check-in."
+    : "Enable automatic work or give the agent new direction.");
+  return <section aria-label="Current work overview" className="space-y-3 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">Work direction</h2>
     <p className="text-sm"><strong>Stage:</strong> {stage}</p>
-    {work && <p className="text-sm text-muted-foreground">Latest attempt: {work.state.replace("_", " ")}</p>}
+    <div><h3 className="text-sm font-semibold">Working on now</h3><p className="whitespace-pre-wrap text-sm">{currentDirection}</p></div>
+    <div><h3 className="text-sm font-semibold">Up next</h3><p className="whitespace-pre-wrap text-sm">{nextDirection}</p></div>
+    {evaluation?.judgment === "wait" && agent.cadence?.enabled && <p className="text-sm text-muted-foreground">Automatic work remains enabled, but no model is running while the agent waits for new information.</p>}
+    {work && <p className="text-xs text-muted-foreground">Latest bounded attempt: {work.state.replace("_", " ")}</p>}
     {work?.focus ? <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} />
       : <p className="text-sm text-muted-foreground">No work item selected.</p>}
   </section>;
@@ -778,15 +790,15 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
       <PlanningItemLink agent={agent} itemId={output.item_id} />
       <div><Button onClick={() => select(output)}>Read output</Button></div>
     </article>)}</div>
-    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent}
+    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
       outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
   </section>;
 }
 
 type LoadedOutput = { key: string; output?: OutputVersion; error?: boolean };
 
-function OutputReader({ agent, outputId, requestedVersion, uniqueSelection, onClose }: {
-  agent: Agent; outputId: string | null; requestedVersion: string | null; uniqueSelection: boolean; onClose: () => void;
+function OutputReader({ agent, outputId, requestedVersion, uniqueSelection, showOptionalReview, onClose }: {
+  agent: Agent; outputId: string | null; requestedVersion: string | null; uniqueSelection: boolean; showOptionalReview: boolean; onClose: () => void;
 }) {
   const agentId = agent.id;
   const [retry, setRetry] = useState(0);
@@ -822,7 +834,7 @@ function OutputReader({ agent, outputId, requestedVersion, uniqueSelection, onCl
     <div className="flex items-start justify-between gap-3"><h3 className="text-xl font-semibold">{output.title} · Version {output.version}</h3><Button onClick={onClose}>Close output</Button></div>
     <a className="inline-block text-sm underline underline-offset-4" href={outputVersionLink(agentId, output)}>Link to this version</a>
     {output.format === "markdown" ? <Markdown content={output.content} /> : <pre className="whitespace-pre-wrap break-words text-sm">{output.content}</pre>}
-    {result && <OutputReview agent={agent} result={result} />}
+    {result && (showOptionalReview || result.review.required || result.acceptance !== "not_evaluated") && <OutputReview agent={agent} result={result} />}
     {output.evaluation != null && <section aria-label="Saved version evaluation" className="space-y-2 border-t pt-4">
       <h4 className="font-semibold">Agent evaluation</h4>
       <p className="text-xs text-muted-foreground">The agent’s assessment of this saved version. It is evidence, not an owner decision.</p>

@@ -47,3 +47,25 @@ def test_clarification_blocks_cadence_until_the_linked_question_is_answered(brok
     questions.answer(s.conn,actor=OWNER,agent_id=s.root['id'],question_id=question['id'],
                      expected_revision=1,answer='Make it hopeful.')
     assert len(cadence.queue_due(s.conn,now='2099-01-01T00:00:01+00:00'))==1
+
+
+def test_wait_is_dormant_until_owner_feedback_wakes_one_fresh_attempt(broker):
+    from agent_native import cadence, feedback
+    from agent_native.identity import OWNER
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=1,enabled=True)
+    s.run._effect(s.conn,s.planning,effect(s,'purpose-wait','purpose_evaluate',{
+        'judgment':'wait','evidence':['The design draft is ready.'],
+        'remaining_obligations':['Implement after owner direction.'],
+        'uncertainty':'The owner has not approved the design.',
+        'next_action':'Incorporate owner feedback, then begin implementation.','question_id':None}))
+    s.conn.execute("UPDATE agent_native_work_runs SET state='completed',finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",(s.work['id'],))
+
+    assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
+    assert cadence.queue_due(s.conn,now='2099-01-02T00:00:00+00:00')==[]
+
+    feedback.submit(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                    request_id='approve-design',text='The design is approved. Begin implementation.')
+    assert len(cadence.queue_due(s.conn,now='2099-01-02T00:00:01+00:00'))==1
+    assert cadence.queue_due(s.conn,now='2099-01-03T00:00:00+00:00')==[]
