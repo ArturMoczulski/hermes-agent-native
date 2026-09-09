@@ -366,3 +366,15 @@ repository tools or visibility. Focused grant, denial, First Builder separation 
 adjacent creation tests pass. Next: add the owner-facing provisioning flow and a
 protected build/serve lifecycle with a stable playable link before granting the
 Fantasy Game Builder. The First Builder remains held.
+
+## Owner workspace provisioning — 2026-09-09
+
+AN-96 now includes an owner-facing Agent Settings flow. The agent API exposes the
+current project-workspace grant, the settings dialog accepts an existing absolute
+root, and successful provisioning replaces the form with the exact active boundary
+and an isolation explanation. A focused installed-Chromium journey proves the
+request and visible readback; focused backend grant/denial and adjacent API tests,
+TypeScript, ESLint and Ruff pass. Next: run builds in the granted boundary and
+publish a stable owner-visible playable URL without granting host-wide process or
+network authority. The Fantasy Game Builder remains ungranted pending GDD acceptance,
+and the First Builder remains held.

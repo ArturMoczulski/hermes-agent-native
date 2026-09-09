@@ -320,3 +320,28 @@ test('compact header enables automatic work when cadence is off', async ({ page 
   await expect(page.getByRole('region', { name: 'Current work overview' })).toContainText('Waiting for your decision');
   await expect(page.getByRole('button', { name: 'Pause automatic work', exact: true })).toBeVisible();
 });
+
+test('owner grants a protected project workspace from agent settings', async ({ page }) => {
+  const id = 'workspace-agent';
+  const agent = {
+    id, name: 'Game builder', purpose: 'Build a browser game.', parent_id: null, child_ids: [],
+    soul_revision: 1, execution: 'not_started', created_at: '2026-09-09T10:00:00+00:00',
+    removed_at: null, retirement: null, replacement: null, pause: { paused: false, sources: [] },
+    cadence: null, project_workspace: null, model_selection: null, model_activity: [], progress_concerns: [],
+    progress_concern_settings: { failure_threshold: 3 }, assignment_review_policies: [],
+    autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null }, setup: null, startup: null, work: null,
+  };
+  await page.route(`**/api/agent-native/agents/${id}`, route => route.fulfill({ status: 200, json: agent }));
+  await page.route(`**/api/agent-native/agents/${id}/attempts`, route => route.fulfill({ status: 200, json: [] }));
+  await page.route(`**/api/agent-native/agents/${id}/workspace`, async route => {
+    expect(route.request().postDataJSON()).toEqual({ expected_revision: 1, root: '/projects/fantasy-game' });
+    return route.fulfill({ status: 201, json: { root: '/projects/fantasy-game', active: true, revision: 1 } });
+  });
+  await page.goto(`/agents/${id}`);
+  await page.getByRole('button', { name: 'Agent settings', exact: true }).click();
+  const settings = page.getByRole('dialog', { name: 'Agent settings' });
+  await settings.getByLabel('Project workspace root').fill('/projects/fantasy-game');
+  await settings.getByRole('button', { name: 'Grant coding workspace', exact: true }).click();
+  await expect(settings.getByRole('status')).toContainText('Coding workspace granted');
+  await expect(settings.getByText('/projects/fantasy-game', { exact: true })).toBeVisible();
+});

@@ -507,6 +507,7 @@ function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpd
       <DialogContent className="max-h-[85vh] max-w-3xl overflow-y-auto">
         <DialogHeader><DialogTitle>Agent settings</DialogTitle><DialogDescription>Changes apply to this agent. Current work keeps the settings it started with.</DialogDescription></DialogHeader>
         <PurposeSettings agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
+        <ProjectWorkspaceSettings agent={agent} onUpdate={onUpdate} />
         <AgentModelControls agent={agent} onMutationStart={onMutationStart} onUpdate={onUpdate} />
         <AgentProgressSettings agentId={agent.id} />
         <AgentAutonomySettings agentId={agent.id} />
@@ -514,6 +515,40 @@ function AgentSettingsDialog({ open, onOpenChange, agent, onMutationStart, onUpd
         <AgentCadence agentId={agent.id} revision={agent.soul_revision} />
       </DialogContent>
     </Dialog>;
+}
+
+function ProjectWorkspaceSettings({ agent, onUpdate }: { agent: Agent; onUpdate: (agent: Agent) => void }) {
+  const [root, setRoot] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [message, setMessage] = useState("");
+  async function grant(event: FormEvent) {
+    event.preventDefault();
+    if (busy || !root.trim() || agent.project_workspace?.active) return;
+    setBusy(true); setMessage("");
+    try {
+      const project_workspace = await fetchJSON<NonNullable<Agent["project_workspace"]>>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/workspace`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expected_revision: agent.soul_revision, root: root.trim() }),
+      });
+      onUpdate({ ...agent, project_workspace });
+      setMessage("Coding workspace granted. Repository tools will be limited to this root.");
+    } catch {
+      setMessage("Could not grant this workspace. Confirm the directory exists and is not already assigned.");
+    } finally { setBusy(false); }
+  }
+  return <form aria-label="Project workspace settings" onSubmit={(event) => void grant(event)} className="space-y-3 rounded-xl border p-5">
+    <h2 className="text-lg font-semibold">Coding workspace</h2>
+    {agent.project_workspace?.active ? <>
+      <p className="text-sm text-muted-foreground">This agent can use bounded repository tools only inside:</p>
+      <p className="break-all rounded-md bg-muted p-3 font-mono text-sm">{agent.project_workspace.root}</p>
+    </> : <>
+      <p className="text-sm text-muted-foreground">Grant an existing project directory. This does not grant access to the Agent Native repository or First Builder instructions.</p>
+      <Label htmlFor="project-workspace-root">Project workspace root</Label>
+      <Input id="project-workspace-root" value={root} onChange={(event) => { setRoot(event.target.value); setMessage(""); }} placeholder="/absolute/path/to/project" disabled={busy} />
+      <Button type="submit" disabled={busy || !root.trim()}>{busy ? "Granting…" : "Grant coding workspace"}</Button>
+    </>}
+    {message && <p role="status" className="text-sm">{message}</p>}
+  </form>;
 }
 
 function PurposeSettings({ agent, onMutationStart, onUpdate }: {

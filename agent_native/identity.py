@@ -71,6 +71,11 @@ def _read(conn, agent_id):
     root['progress_concern_settings'] = concern_settings(conn, agent_id)
     from agent_native.assignment_review import list_policies
     root['assignment_review_policies'] = list_policies(conn, agent_id)
+    from agent_native.project_workspace import read as read_project_workspace
+    try:
+        root['project_workspace'] = read_project_workspace(conn, agent_id)
+    except KeyError:
+        root['project_workspace'] = None
     predecessor = conn.execute(
         'SELECT id,predecessor_id,reason,handoff,created_at FROM agent_native_replacements '
         'WHERE successor_id=?', (agent_id,),

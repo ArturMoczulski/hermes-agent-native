@@ -2402,3 +2402,11 @@ denied. Focused grant/denial and API-adjacency evidence passes. AN-96 remains In
 Progress; next add owner provisioning plus protected build/serve and its stable
 playable link. Do not grant the Fantasy Game Builder until its GDD is accepted. The
 First Builder remains held.
+
+## AN-96 owner provisioning UI — 2026-09-09
+
+Agent Settings can now provision and display an ordinary agent's explicit coding
+workspace through the authenticated grant API. Focused Chromium and backend checks
+pass. AN-96 remains In Progress; next implement the protected build/serve lifecycle
+and stable playable link. Do not grant the waiting Fantasy Game Builder until its
+GDD is accepted. The First Builder remains held.

@@ -41,6 +41,7 @@ export type Agent = {
   subtree_pause?: { source_agent_id: string; affected_agent_ids: string[]; newly_paused_agent_ids: string[]; stopping_agent_ids: string[] };
   subtree_resume?: { source_agent_id: string; affected_agent_ids: string[]; resumed_agent_ids: string[]; still_paused_agent_ids: string[]; cadence_restored_agent_ids: string[] };
   model_selection?: ModelSelection | null;
+  project_workspace?: { root: string; revision: number; active: boolean } | null;
   model_activity?: ModelActivity[];
   autonomy: AutonomySettings;
   id: string;
