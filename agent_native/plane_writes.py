@@ -219,7 +219,11 @@ class PlaneWrites:
 
     def _update_project(self, context, args, operation_id):
         self._current(context, "project", None, args["expected_fingerprint"])
-        return "PATCH", "", {"description": args["description"]}, 200, "project", None
+        # Plane removes trailing line breaks from this plain-text field. Send its
+        # canonical representation so response verification cannot falsely turn a
+        # successful update into an unknown outcome.
+        description = args["description"].rstrip("\r\n")
+        return "PATCH", "", {"description": description}, 200, "project", None
 
     def _update_item(self, context, args, operation_id):
         self._current(context, "item", args["item_id"], args["expected_fingerprint"])

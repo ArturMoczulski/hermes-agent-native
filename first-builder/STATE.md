@@ -2346,3 +2346,18 @@ real protected compute-host startup; seven affected managed-work tests; one Chro
 checkpoint journey; Ruff, Python compilation and the production web build. Next:
 prepare the identity in the local preview, run the owner-requested final ordinary
 test agent, record its evidence, and only then release the separate launch gate.
+## Final test agent and Plane normalization recovery — 2026-09-09
+
+AN-95 now tracks the live Fantasy Game Builder checkpoint. The clean agent identity
+`560b6a71-381a-4509-8812-170a26f8ec29` uses MiniMax M3, Level 1 for its initial
+game-specification gate, 180-second/50-step attempts and a 60-second cadence. AN-96
+is its prerequisite for an isolated coding workspace and playable local releases;
+ordinary agents still receive no Agent Native repository privilege.
+
+The first attempt successfully wrote its game brief to Plane, but Plane removed one
+trailing newline and the adapter's literal comparison classified the acknowledged
+write as unknown. Project descriptions are now canonicalized before PATCH and when
+reconciling historical protected preparations. The focused red/green regression and
+adjacent uncertain-create recovery pass. The exact live operation was confirmed by
+GET-only matching evidence, its stopped attempt retained as interrupted, and cadence
+started a distinct running attempt. The First Builder remains held for this test.

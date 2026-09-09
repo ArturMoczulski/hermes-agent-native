@@ -177,6 +177,20 @@ def test_writer_authors_brief_cycle_task_and_records_version_reference(writer):
     assert len([event for event in events if event['status'] == 'confirmed']) == 5
 
 
+def test_project_brief_canonicalizes_trailing_newlines_before_delivery(writer):
+    s = writer
+    binding = install(s)
+    with open_session(s, binding) as planning:
+        brief = planning.inspect({'kind': 'project'})
+        result = planning.execute(uid(), 'project.update', {
+            'description': 'A complete project brief.\n\n',
+            'expected_fingerprint': brief['fingerprint'],
+        })
+    assert result['status'] == 'confirmed'
+    assert result['resource']['description'] == 'A complete project brief.'
+    assert s.plane.projects[s.setup['project_id']]['description'] == 'A complete project brief.'
+
+
 def test_uncertain_create_after_reopen_recovers_original_without_resending(writer):
     from agent_native.plane_writes import PlaneWriteError
     s = writer

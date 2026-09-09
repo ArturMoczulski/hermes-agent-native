@@ -16,6 +16,13 @@ tools only to that identity. Preparation leaves its queued work behind an enforc
 `held_for_owner_test` gate. The dashboard shows this checkpoint but exposes no
 launch action. Run and record the owner's final ordinary test agent before confirming
 the checkpoint and activating the Builder; do not launch it as part of preparation.
+AN-95 is the live final ordinary-agent checkpoint. Fantasy Game Builder is using
+MiniMax M3, approval-driven specification review and a 60-second cadence. AN-96
+adds its separately granted coding workspace before implementation begins. A live
+Plane project-description write exposed trailing-newline normalization; the adapter
+now canonicalizes that field before delivery and during read-only recovery, avoiding
+a false unknown outcome. The exact affected receipt was reconciled and cadence
+continued in a fresh attempt.
 AN-76 is now active for the complete owner journey. Its first missing product control
 is implemented as a focused slice: Agent settings can revise the protected purpose
 without replacing the stable agent identity, using the current purpose revision as a

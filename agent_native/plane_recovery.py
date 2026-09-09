@@ -196,6 +196,10 @@ def _update(writer, context, scope, record, args, prepared):
         else f"{'work-items' if kind == 'item' else 'cycles'}/{rid}/"
     )
     _, raw, _ = writer._reads._request(context, suffix)
+    payload = dict(prepared["payload"])
+    if record["operation"] == "project.update" and isinstance(payload.get("description"), str):
+        # Historical preparations may predate request-side canonicalization.
+        payload["description"] = payload["description"].rstrip("\r\n")
     return writer._result(
         context,
         scope,
@@ -205,7 +209,7 @@ def _update(writer, context, scope, record, args, prepared):
         rid,
         raw,
         "PATCH",
-        prepared["payload"],
+        payload,
     )
 
 

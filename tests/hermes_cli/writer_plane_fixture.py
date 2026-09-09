@@ -31,6 +31,10 @@ def _route(server, request):
                                'group': 'completed', 'default': False}]
     if len(parts) == 6:
         if method == 'PATCH':
+            # Plane canonicalizes project descriptions by removing trailing line
+            # breaks before returning the saved record.
+            if isinstance(body.get('description'), str):
+                body['description'] = body['description'].rstrip('\r\n')
             project.update(body, updated_at=str(uuid4()), updated_by=server.user)
             return 200, {}, project
         return None
