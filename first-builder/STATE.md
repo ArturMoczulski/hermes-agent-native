@@ -2295,3 +2295,18 @@ Focused verification: `subtree-pause.spec.ts` pause and resume cases pass with t
 already-installed Chromium headless shell (2 tests, 6.9s). The bundled ChatGPT Node
 cannot load the repository's signed Rolldown binding; Homebrew Node 24.3 runs the
 existing dependency and test suite without downloading another browser.
+## AN-76 complete owner journey — 2026-09-09
+
+Accepted AN-76 from combined live-model and deterministic boundary evidence. Live
+agent `7b4d3ccd-1adb-4412-9c15-ed0ebf8da51e` used MiniMax-M3 to establish its Plane
+project, publish two linked fantasy stories, ask and use owner direction, converse
+without starting project work from chat, and continue an unfinished assignment over
+distinct cadence attempts without a manual continue command. The owner-facing pause
+then stopped the active run and disabled future cadence.
+
+Focused acceptance verification passed with installed Chromium: service restart,
+proactive question/answer, purpose redirection and feedback-to-saved-output (4
+targeted cases), plus the preceding compact pause/resume pair. The feedback test was
+updated to enter Full view for steering and assert the compact exact-version Output
+reader after AN-93 intentionally moved exhaustive controls out of Compact view.
+Repeated recovered Plane conflicts remain a follow-up efficiency/diagnostic concern.

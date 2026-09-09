@@ -17,7 +17,15 @@ produces no late output, atomically refreshes the protected soul projection whil
 preserving workspace and memory, creates a revision-specific Plane discovery item,
 and starts exactly one fresh bounded attempt using the existing limits and cadence.
 The browser proof finishes with a saved output for revision 2 under the same agent ID.
-The remaining AN-76 work is the final representative owner journey and evidence review.
+AN-76's representative owner journey and evidence review are complete. A live
+MiniMax-M3 writer created its own Plane brief, undated cycles and work items, kept
+planning material out of saved outputs, published two linked stories, exchanged
+owner chat and a proactive question, and continued the selected second story on
+cadence without a human continuation prompt. The owner then paused its active run
+and disabled further cadence. Focused browser proofs cover feedback-to-output,
+question-to-output, pause/resume, service restart and purpose redirection without
+requiring another paid-model run. Recovered Plane conflicts remain visible and are
+the next reliability concern; they do not invalidate the accepted journey.
 The compact owner header now shows the protected purpose beside the agent's identity
 and places a tooltip-labeled pause/resume control next to execution status. Pausing from
 this control atomically stops current subtree work and disables its cadence; resuming
