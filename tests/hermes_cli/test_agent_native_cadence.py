@@ -86,6 +86,44 @@ def test_cadence_requires_owner_and_stops_on_unknown_or_changed_purpose(broker):
     assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
 
 
+def test_ready_revised_purpose_queues_one_fresh_attempt_and_preserves_cadence(broker):
+    from agent_native import cadence, work_state
+    from agent_native.identity import revise_soul
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    revise_soul(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                purpose='Write a different fantasy series')
+    s.conn.execute("UPDATE agent_native_work_runs SET state='interrupted',finished_at=? WHERE id=?",
+                   ('2000-01-01T00:00:00+00:00',s.work['id']))
+
+    assert cadence.queue_revised_purposes(s.conn)==[]
+    s.conn.execute("UPDATE agent_native_setup SET status='ready',phase='ready' WHERE agent_id=?",
+                   (s.root['id'],))
+    [queued]=cadence.queue_revised_purposes(s.conn)
+
+    work=work_state.read_work(s.conn,s.root['id'])
+    assert work['id']==queued and work['state']=='queued' and work['soul_revision']==2
+    assert work['limits']==s.work['limits']
+    assert cadence.read(s.conn,s.root['id'])['soul_revision']==2
+    assert cadence.read(s.conn,s.root['id'])['enabled'] is True
+    assert cadence.queue_revised_purposes(s.conn)==[]
+
+
+def test_worker_error_racing_purpose_change_is_interrupted_not_failed(broker):
+    from agent_native.identity import revise_soul
+    s=broker
+    revise_soul(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                purpose='Write a different fantasy series')
+
+    s.run.fail('ConnectionError')
+
+    row=s.conn.execute('SELECT state,error FROM agent_native_work_runs WHERE id=?',
+                       (s.work['id'],)).fetchone()
+    assert row[0]=='interrupted'
+    assert row[1] is None
+
+
 def test_legacy_attempt_migration_preserves_foreign_key_history():
     import sqlite3
     from agent_native.cadence import migrate_runs

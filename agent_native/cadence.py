@@ -122,6 +122,49 @@ def queue_due(conn, *, now=None, busy_agents=()):
     return queued
 
 
+def queue_revised_purposes(conn, *, now=None):
+    """Start one fresh bounded attempt after a revised purpose is fully prepared."""
+    from agent_native.work_state import event
+    now = now or _now()
+    queued = []
+    with write_txn(conn):
+        rows = conn.execute(
+            "SELECT a.id,a.soul_revision,w.id,w.activation_id,w.soul_revision,w.limits,w.state "
+            "FROM agent_native_agents a "
+            "JOIN agent_native_setup s ON s.agent_id=a.id AND s.status='ready' "
+            "JOIN agent_native_setup_revisions sr ON sr.agent_id=a.id AND sr.soul_revision=a.soul_revision "
+            "JOIN agent_native_work_runs w ON w.rowid=(SELECT max(previous.rowid) "
+            " FROM agent_native_work_runs previous WHERE previous.agent_id=a.id) "
+            "WHERE w.soul_revision<a.soul_revision "
+            "AND w.state IN ('paused','interrupted','limit_reached','completed','retryable_failure','failed') "
+            "AND a.id NOT IN (SELECT agent_id FROM agent_native_removals) "
+            "AND a.id NOT IN (SELECT agent_id FROM agent_native_retirements) "
+            "AND a.id NOT IN (SELECT agent_id FROM agent_native_agent_pauses)"
+        ).fetchall()
+        for agent_id,revision,_previous_id,activation_id,_old_revision,limits,_state in rows:
+            if conn.execute(
+                "SELECT 1 FROM agent_native_work_runs WHERE agent_id=? "
+                "AND (soul_revision=? OR state IN ('queued','preparing','running','stopping'))",
+                (agent_id,revision),
+            ).fetchone():
+                continue
+            run_id = str(uuid4())
+            conn.execute(
+                'INSERT INTO agent_native_work_runs '
+                '(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at) '
+                'VALUES(?,?,?,?,?,?,?,?)',
+                (run_id,agent_id,activation_id,revision,'an_work_'+uuid4().hex,limits,'queued',now),
+            )
+            conn.execute(
+                'UPDATE agent_native_cadence SET soul_revision=? WHERE agent_id=?',
+                (revision,agent_id),
+            )
+            event(conn,run_id,'work.queued',
+                  'Purpose changed; starting a fresh planning attempt from the prepared project.')
+            queued.append(run_id)
+    return queued
+
+
 def migrate_runs(conn):
     """Remove legacy per-agent/per-activation uniqueness, retaining every FK target."""
     old=conn.execute("SELECT sql FROM sqlite_master WHERE type='table' AND name='agent_native_work_runs'").fetchone()

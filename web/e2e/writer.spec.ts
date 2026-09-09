@@ -208,8 +208,8 @@ test('Pause stops a real active worker and held model connection after navigatin
   })
 })
 
-test('changing purpose stops the obsolete worker and retains its interrupted attempt', async ({ page, request }) => {
-  test.setTimeout(60000)
+test('changing purpose stops obsolete work and starts one fresh planning attempt', async ({ page, request }) => {
+  test.setTimeout(90000)
   const marker = 'E2E_WRITER_HOLD_PURPOSE_CHANGE'
   await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only' })
   await request.put(`${backend}/__e2e__/plane-config`, { headers, data: { enabled: true } })
@@ -224,14 +224,29 @@ test('changing purpose stops the obsolete worker and retains its interrupted att
   await page.goto(`/agents/${created.id}`)
   await page.getByRole('button', { name: 'Agent settings', exact: true }).click()
   const settings = page.getByRole('dialog', { name: 'Agent settings' })
-  await settings.getByLabel('Agent purpose', { exact: true }).fill('Write stories about a floating city.')
+  const newPurpose = 'Write stories about a floating city. E2E_PURPOSE_REDIRECT'
+  await settings.getByLabel('Agent purpose', { exact: true }).fill(newPurpose)
   await settings.getByRole('button', { name: 'Change purpose and stop obsolete work', exact: true }).click()
   await expect(settings.getByRole('status')).toContainText('Purpose changed')
-  await expect.poll(async () => (await (await request.get(api, { headers })).json()).work.state).toBe('interrupted')
   await expect.poll(async () => (await hold()).client_disconnected).toBe(true)
   const revised = await (await request.get(api, { headers })).json()
-  expect(revised).toMatchObject({ id: created.id, soul_revision: 2, purpose: 'Write stories about a floating city.' })
-  expect(revised.work.stories).toHaveLength(0)
+  expect(revised).toMatchObject({ id: created.id, soul_revision: 2, purpose: newPurpose })
+  const interruptedId = created.work.id
+  await expect.poll(async () => {
+    const current = await (await request.get(api, { headers })).json()
+    return current.work.id !== interruptedId && current.work.soul_revision === 2
+      ? current.work.state : 'waiting'
+  }, { timeout: 45000 }).toMatch(/completed|failed/)
+  const continued = await (await request.get(api, { headers })).json()
+  expect(continued.work.state, JSON.stringify(continued.work)).toBe('completed')
+  expect(continued.work.soul_revision).toBe(2)
+  expect(continued.work.id).not.toBe(interruptedId)
+  expect(continued.work.outputs.length).toBeGreaterThan(0)
+  const evidence = await (await request.get(`${backend}/__e2e__/writer-evidence/${created.id}`, { headers })).json()
+  expect(evidence.run_states).toEqual([
+    { id: interruptedId, soul_revision: 1, state: 'interrupted' },
+    { id: continued.work.id, soul_revision: 2, state: 'completed' },
+  ])
 })
 
 for (const limit of ['time', 'steps'] as const) {

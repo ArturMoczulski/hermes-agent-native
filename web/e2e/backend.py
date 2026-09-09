@@ -179,6 +179,10 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         with connect_closing(Path(home)/'kanban.db') as conn:
             work = read_work(conn,agent_id)
             pid = conn.execute('SELECT worker_pid FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
+            run_states = conn.execute(
+                'SELECT id,soul_revision,state FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid',
+                (agent_id,),
+            ).fetchall()
         alive = False
         if pid and pid[0]:
             try:
@@ -193,6 +197,7 @@ with tempfile.TemporaryDirectory(prefix='agent-native-e2e-') as home, plane_serv
         with SessionDB(Path(home)/'state.db') as db:
             messages = db.get_messages_as_conversation(work['session_id']) if work else []
         return {'worker_alive':alive,'file_content':content,
+                'run_states':[{'id':row[0],'soul_revision':row[1],'state':row[2]} for row in run_states],
                 'items':[i for i in plane.items.values() if i['project'] in project_ids],
                 'cycles':[c for c in plane.cycles.values() if c['project'] in project_ids],
                 'comments':[c for c in plane.comments.values() if c['project'] in project_ids],

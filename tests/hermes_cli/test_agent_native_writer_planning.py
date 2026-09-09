@@ -108,6 +108,22 @@ def test_stale_setup_or_changed_private_configuration_cannot_open(writer, change
     assert len(s.plane.requests) == before
 
 
+def test_revised_ready_setup_opens_new_discovery_with_existing_project_grant(writer):
+    s = writer
+    binding = install(s)
+    old_discovery = s.setup['discovery_item_id']
+    revise_soul(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                purpose='Write a different fantasy story.')
+    prepare(s.conn, actor=OWNER, agent_id=s.root['id'], home=s.home)
+    revised = read_setup(s.conn, s.root['id'])
+
+    assert revised['discovery_item_id'] != old_discovery
+    assert install(s) == binding
+    with open_session(s, binding) as planning:
+        snapshot = planning.snapshot()
+    assert snapshot['discovery']['id'] == revised['discovery_item_id']
+
+
 def test_actual_api_principal_must_match_the_provisioned_identity(writer):
     s = writer
     binding = install(s)

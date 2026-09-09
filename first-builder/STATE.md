@@ -1,3 +1,21 @@
+## Purpose revision automatically replans and resumes — 2026-09-09
+
+AN-76 now carries a purpose change through the whole running product. After obsolete
+execution stops, the setup service refreshes only host-owned SOUL and identity files,
+preserving mutable workspace and memory. The same private Plane project receives a new,
+deterministically identified discovery work item for revision 2, so the immutable
+creation request and original discovery history remain intact. Once setup is ready,
+the work service queues exactly one fresh bounded attempt with the previous limits and
+moves an enabled cadence to the new revision. Existing scoped project access gains only
+the new discovery item; revoked write grants are not restored.
+
+The owner-browser proof changes purpose during a held provider request, observes the
+provider disconnect, then verifies the revision-1 attempt is `interrupted`, revision 2
+finishes in a separate run, and a new purpose-level output is saved. A disconnect race
+can no longer mislabel superseded work as failed. Focused evidence: 74 backend tests
+pass with one explicit container test skipped, and the single Chrome Playwright journey
+passes. Next: complete AN-76's final representative owner journey and evidence review.
+
 ## Purpose change stops obsolete execution — 2026-09-09
 
 AN-76 now proves that revising purpose during a real held provider request physically
@@ -9,8 +27,7 @@ change explanation, rather than `paused` because no owner pause exists.
 The focused browser journey failed on the prior misleading `paused` state, then passed
 after the host distinguished revision supersession from pause. Forty-two focused
 identity/API/cadence regressions, TypeScript, focused ESLint and Ruff, and whitespace
-checks pass. Next: create a durable revision-2 setup/replan intent without rewriting the
-original creation request or its history.
+checks pass. The revision-2 setup and replan transition is now implemented above.
 
 ## Owner purpose revision begins AN-76 — 2026-09-09
 

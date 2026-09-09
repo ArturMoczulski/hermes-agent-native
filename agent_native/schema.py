@@ -60,6 +60,10 @@ CREATE TABLE IF NOT EXISTS agent_native_setup_events (
     message TEXT NOT NULL,
     created_at TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_setup_revisions (
+    agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
+    soul_revision INTEGER NOT NULL CHECK(soul_revision > 0)
+);
 CREATE TABLE IF NOT EXISTS agent_native_plane_access (
     id TEXT PRIMARY KEY,
     agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),

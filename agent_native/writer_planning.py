@@ -23,7 +23,7 @@ from agent_native.plane_write_contracts import validate_arguments
 from agent_native.plane_write_journal import MutationJournal
 from agent_native.plane_writes import PlaneWrites
 from agent_native.provisioning import _projection, _verify
-from agent_native.startup import _row, load_plane_configuration
+from agent_native.startup import _revision, _row, load_plane_configuration
 from hermes_cli.kanban_db_connect import connect_closing
 
 # Fixed host policy, never copied from a tool request or future adapter additions.
@@ -43,7 +43,7 @@ def _ready(conn, agent_id):
     if (not state or state['status'] != 'ready' or state['phase'] != 'ready'
             or not state['files_ready'] or not startup
             or startup['id'] != state['activation_id']
-            or startup['soul_revision'] != root['soul_revision']
+            or _revision(conn, agent_id) != root['soul_revision']
             or any(not state[k] for k in _SETUP_KEYS)):
         raise PermissionError('Current writer setup is not ready')
     return root, {**{k: state[k] for k in _SETUP_KEYS}, 'soul_revision': root['soul_revision']}
@@ -64,6 +64,8 @@ def install_grants(conn, *, actor, agent_id):
         (agent_id, state['workspace_slug'], state['project_id']),
     ).fetchone()
     if existing:
+        allow_resource(conn, actor=actor, binding_id=existing[0], kind='item',
+                       resource_id=state['discovery_item_id'], fields=RESOURCE_FIELDS['item'])
         return existing[0]
     binding = grant_project(conn, actor=actor, agent_id=agent_id,
                             workspace_slug=state['workspace_slug'],

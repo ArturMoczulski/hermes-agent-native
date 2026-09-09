@@ -209,9 +209,19 @@ def revise_soul(conn, *, actor, agent_id, expected_revision, purpose):
             (purpose, agent_id),
         )
         conn.execute("UPDATE agent_native_setup SET status = 'superseded', "
-                     "message = 'Purpose changed. This setup request cannot start work.', updated_at = ? "
+                     "message = 'Purpose changed. The prior setup revision was superseded.', updated_at = ? "
                      'WHERE agent_id = ?', (_now(), agent_id))
         from agent_native.startup import _event as setup_event
+        setup_event(conn, agent_id)
+        conn.execute(
+            'UPDATE agent_native_setup_revisions SET soul_revision=soul_revision+1 WHERE agent_id=?',
+            (agent_id,),
+        )
+        conn.execute(
+            "UPDATE agent_native_setup SET status='queued',phase='files',attempted=0,files_ready=0,"
+            "message='Purpose changed. Refreshing protected files and planning access.',updated_at=? "
+            'WHERE agent_id=?', (_now(), agent_id),
+        )
         setup_event(conn, agent_id)
         root = _read(conn, agent_id)
         _event(conn, root, 'agent.soul_revised')

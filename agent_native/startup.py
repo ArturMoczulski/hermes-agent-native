@@ -10,6 +10,7 @@ import json
 import os
 from pathlib import Path
 import stat
+from uuid import NAMESPACE_URL, uuid5
 
 from agent_native.identity import OWNER, ConflictError, _now, _require_owner, get_root
 from agent_native.plane_operation_lock import operation_lock
@@ -19,6 +20,32 @@ from hermes_cli.kanban_db_connect import write_txn
 _FIELDS = ('activation_id', 'status', 'phase', 'attempted', 'files_ready', 'plane_origin',
            'plane_user_id', 'workspace_slug', 'workspace_id', 'project_id',
            'discovery_item_id', 'message', 'updated_at')
+
+
+def migrate_setup_revisions(conn):
+    """Backfill the additive purpose revision marker for existing setup rows."""
+    conn.execute(
+        'INSERT OR IGNORE INTO agent_native_setup_revisions(agent_id,soul_revision) '
+        'SELECT s.agent_id,a.soul_revision FROM agent_native_setup s '
+        'JOIN agent_native_initial_activations a ON a.id=s.activation_id'
+    )
+
+
+def _revision(conn, agent_id):
+    row = conn.execute(
+        'SELECT soul_revision FROM agent_native_setup_revisions WHERE agent_id=?',
+        (agent_id,),
+    ).fetchone()
+    return row[0] if row else None
+
+
+def _discovery_intent_id(root):
+    if root['soul_revision'] == root['startup']['soul_revision']:
+        return root['startup']['id']
+    return str(uuid5(
+        NAMESPACE_URL,
+        f"agent-native:purpose:{root['id']}:{root['soul_revision']}",
+    ))
 
 
 def _row(conn, agent_id):
@@ -53,23 +80,26 @@ def queue_setup(conn, agent_id):
                  '(activation_id, agent_id, status, phase, message, updated_at) '
                  "SELECT id, agent_id, 'queued', 'files', 'Waiting to prepare agent workspace.', ? "
                  'FROM agent_native_initial_activations WHERE agent_id = ?', (_now(), agent_id))
+    conn.execute(
+        'INSERT INTO agent_native_setup_revisions(agent_id,soul_revision) '
+        'SELECT agent_id,soul_revision FROM agent_native_initial_activations WHERE agent_id=?',
+        (agent_id,),
+    )
     _event(conn, agent_id)
 
 
-def _update(conn, agent_id, **changes):
+def _update(conn, agent_id, *, expected_revision=None, **changes):
     if not changes or not set(changes) <= set(_FIELDS) - {'activation_id', 'updated_at'}:
         raise ValueError('Invalid setup transition')
     changes['updated_at'] = _now()
     with write_txn(conn):
-        # Owner revision is terminal for this intent. A late HTTP receipt can
-        # retain resource IDs, but can never restore readiness for the old soul.
         current = _row(conn, agent_id)
-        if current and current['status'] == 'superseded':
-            changes['status'] = 'superseded'
-            changes['message'] = 'Purpose changed. This setup request cannot start work.'
+        if expected_revision is not None and _revision(conn, agent_id) != expected_revision:
+            return False
         conn.execute('UPDATE agent_native_setup SET ' + ', '.join(f'{key} = ?' for key in changes)
                      + ' WHERE agent_id = ?', (*changes.values(), agent_id))
         _event(conn, agent_id)
+        return True
 
 
 def retry_setup(conn, *, actor, agent_id):
@@ -82,16 +112,14 @@ def retry_setup(conn, *, actor, agent_id):
             raise ConflictError('The purpose changed; this setup request is superseded')
         state = _row(conn, agent_id)
         if state['status'] in ('blocked', 'failed', 'unresolved'):
-            _update(conn, agent_id, status='queued', message='Setup retry requested; existing resources will be checked.')
+            _update(conn, agent_id, expected_revision=root['soul_revision'], status='queued', message='Setup retry requested; existing resources will be checked.')
     return get_root(conn, actor=actor, agent_id=agent_id)
 
 
-def _current(conn, agent_id):
+def _current(conn, agent_id, expected_revision=None):
     root = get_root(conn, actor=OWNER, agent_id=agent_id)
-    if root['startup'] is None or root['startup']['soul_revision'] != root['soul_revision']:
-        _update(conn, agent_id, status='superseded', message='Purpose changed. This setup request cannot start work.')
-        return False
-    return True
+    return (_revision(conn, agent_id) == root['soul_revision']
+            and (expected_revision is None or root['soul_revision'] == expected_revision))
 
 
 class SetupInterrupted(Exception):
@@ -144,13 +172,17 @@ def prepare(conn, *, actor, agent_id, home, open_plane=None, plane_identity=None
     if root['setup'] is None:
         return
     with operation_lock(conn, root['startup']['id']):
-        if not _current(conn, agent_id) or _row(conn, agent_id)['status'] not in ('queued', 'preparing'):
+        if (not _current(conn, agent_id, root['soul_revision'])
+                or _row(conn, agent_id)['status'] not in ('queued', 'preparing')):
             return
-        _update(conn, agent_id, status='preparing', message='Preparing private workspace and planning home.')
+        _update(conn, agent_id, expected_revision=root['soul_revision'], status='preparing', message='Preparing private workspace and planning home.')
         try:
-            provision_root(conn, actor=actor, agent_id=agent_id, storage_root=Path(home) / 'agents')
+            provision_root(
+                conn, actor=actor, agent_id=agent_id, storage_root=Path(home) / 'agents',
+                refresh_projection=root['soul_revision'] > root['startup']['soul_revision'],
+            )
             if _row(conn, agent_id)['phase'] == 'files':
-                _update(conn, agent_id, files_ready=1, phase='workspace', attempted=0,
+                _update(conn, agent_id, expected_revision=root['soul_revision'], files_ready=1, phase='workspace', attempted=0,
                         message='Private files ready. Preparing Plane workspace.')
             if open_plane is None:
                 config = load_plane_configuration(home)
@@ -162,11 +194,11 @@ def prepare(conn, *, actor, agent_id, home, open_plane=None, plane_identity=None
                 raise ConfigurationRequired('Plane connection changed. Restore the original host connection to reconcile setup.')
             with open_plane() as plane:
                 if state['plane_origin'] is None:
-                    _update(conn, agent_id, plane_origin=origin, plane_user_id=user_id,
+                    _update(conn, agent_id, expected_revision=root['soul_revision'], plane_origin=origin, plane_user_id=user_id,
                             message='Authenticated Plane connection recorded for this setup request.')
                 write_count = [0]
                 def before_write():
-                    if stopped() or not _current(conn, agent_id):
+                    if stopped() or not _current(conn, agent_id, root['soul_revision']):
                         raise SetupInterrupted()
                     write_count[0] += 1
                 plane.before_write = before_write
@@ -174,12 +206,12 @@ def prepare(conn, *, actor, agent_id, home, open_plane=None, plane_identity=None
         except SetupInterrupted:
             return  # Retain the original checkpoint; recovery inspects an attempted phase.
         except ConfigurationRequired as exc:
-            _update(conn, agent_id, status='blocked', message=str(exc))
+            _update(conn, agent_id, expected_revision=root['soul_revision'], status='blocked', message=str(exc))
         except Exception:
             # Network failures are classified at the phase boundary below. Never
             # serialize arbitrary exceptions (credentials, URLs or tool text).
             state = _row(conn, agent_id)
-            _update(conn, agent_id, status='unresolved' if state['attempted'] else 'failed',
+            _update(conn, agent_id, expected_revision=root['soul_revision'], status='unresolved' if state['attempted'] else 'failed',
                     message='Setup could not be completed. Check the host connection and retry; uncertain creates will only be inspected.')
 
 
@@ -188,14 +220,14 @@ def _planning(conn, root, plane, stopped, write_count):
     agent_id = root['id']
     phases = ('workspace', 'project', 'discovery')
     for phase in phases:
-        if stopped() or not _current(conn, agent_id):
+        if stopped() or not _current(conn, agent_id, root['soul_revision']):
             return
         state = _row(conn, agent_id)
         completed = phases.index(phase) < (phases.index(state['phase']) if state['phase'] in phases else 3)
         previous_attempt = bool(state['attempted'])
         allow_create = not completed and not previous_attempt
         if not completed:
-            _update(conn, agent_id, attempted=1, message=f'Checking Plane {phase}.')
+            _update(conn, agent_id, expected_revision=root['soul_revision'], attempted=1, message=f'Checking Plane {phase}.')
         writes_before_phase = write_count[0]
         try:
             if phase == 'workspace':
@@ -207,7 +239,7 @@ def _planning(conn, root, plane, stopped, write_count):
                 fields = {'project_id': result['id']}
                 next_phase = 'discovery'
             else:
-                result = plane.ensure_discovery(agent_id=agent_id, activation_id=root['startup']['id'],
+                result = plane.ensure_discovery(agent_id=agent_id, activation_id=_discovery_intent_id(root),
                                                 purpose=root['purpose'], workspace_slug=state['workspace_slug'],
                                                 project_id=state['project_id'], allow_create=allow_create)
                 fields = {'discovery_item_id': result['id']}
@@ -216,16 +248,16 @@ def _planning(conn, root, plane, stopped, write_count):
                 if any(state[key] != value for key, value in fields.items()):
                     raise SetupError('Previously confirmed Plane resources changed. Manual reconciliation is required.', uncertain=True)
             else:
-                _update(conn, agent_id, **fields, phase=next_phase, attempted=0,
+                _update(conn, agent_id, expected_revision=root['soul_revision'], **fields, phase=next_phase, attempted=0,
                         message=f'Plane {phase} confirmed.')
         except SetupInterrupted:
             if not completed and not previous_attempt and write_count[0] == writes_before_phase:
-                _update(conn, agent_id, attempted=0)
+                _update(conn, agent_id, expected_revision=root['soul_revision'], attempted=0)
             raise
         except SetupError as exc:
             uncertain = previous_attempt or exc.uncertain or completed
-            _update(conn, agent_id, status='unresolved' if uncertain else 'failed',
+            _update(conn, agent_id, expected_revision=root['soul_revision'], status='unresolved' if uncertain else 'failed',
                     attempted=int(previous_attempt or (exc.uncertain and not completed)), message=str(exc))
             return
-    if not stopped() and _current(conn, agent_id):
-        _update(conn, agent_id, status='ready', message='Private workspace, Plane project and first discovery task are ready. Execution has not started.')
+    if not stopped() and _current(conn, agent_id, root['soul_revision']):
+        _update(conn, agent_id, expected_revision=root['soul_revision'], status='ready', message='Private workspace, Plane project and first discovery task are ready. Execution has not started.')

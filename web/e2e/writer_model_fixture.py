@@ -71,6 +71,25 @@ def next_reply(messages, purpose):
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if 'E2E_PURPOSE_REDIRECT' in purpose:
+        target = _planning(messages)['discovery']['id']
+        if index == 0:
+            name, arguments = 'work_item_select', {'item_id': target}
+        elif index == 1:
+            name, arguments = 'output_publish', {
+                'item_id': target, 'title': 'Floating city opening', 'format': 'markdown',
+                'content': '# The City Above\n\nAt dawn, the floating city opened its silver gates.',
+            }
+        elif index == 2:
+            name, arguments = 'result_record', {
+                'item_id': target, 'summary': 'First redirected-purpose story opening saved',
+                'outcome': 'submitted', 'evaluation': 'The output follows the revised floating-city purpose.',
+                'outputs': [{'output_id': result(1)['output_id'], 'version': result(1)['version']}],
+            }
+        else:
+            return {'role': 'assistant', 'content': 'The revised-purpose output is saved.'}
+        return {'role':'assistant','content':None,'tool_calls':[{'id':f'writer_fixture_{index}','type':'function',
+            'function':{'name':name,'arguments':json.dumps(arguments)}}]}
     if 'E2E_AUTONOMOUS_CONTINUATION' in purpose:
         planning = _planning(messages)
         previous = planning.get('saved_outputs', [])

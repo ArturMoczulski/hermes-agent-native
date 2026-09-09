@@ -447,8 +447,15 @@ class _Run:
             except PermissionError:
                 authorized = False
             if current['state']=='stopping' or not authorized:
-                target = 'paused' if dead else 'unknown'
-                summary = ('Work stopped or its execution authority ended.' if dead else
+                revision = conn.execute(
+                    'SELECT w.soul_revision,a.soul_revision FROM agent_native_work_runs w '
+                    'JOIN agent_native_agents a ON a.id=w.agent_id WHERE w.id=?',
+                    (self.work['id'],),
+                ).fetchone()
+                superseded = bool(revision and revision[0] != revision[1])
+                target = ('interrupted' if superseded else 'paused') if dead else 'unknown'
+                summary = ('Purpose changed; obsolete work was stopped.' if superseded and dead else
+                           'Work stopped or its execution authority ended.' if dead else
                            'Worker exit could not be confirmed.')
                 conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,summary=?,finished_at=? WHERE id=?',
                              (target,summary,_now(),self.work['id']))
@@ -479,11 +486,19 @@ class _Run:
         with connect_closing(self.service.db_path) as conn, write_txn(conn):
             current = state.read_work(conn,self.work['agent_id'])
             if current['state'] not in state.TERMINAL:
-                target = ('retryable_failure' if dead and _cadence_can_retry(
+                revision = conn.execute(
+                    'SELECT w.soul_revision,a.soul_revision FROM agent_native_work_runs w '
+                    'JOIN agent_native_agents a ON a.id=w.agent_id WHERE w.id=?',
+                    (self.work['id'],),
+                ).fetchone()
+                superseded = bool(revision and revision[0] != revision[1])
+                target = ('interrupted' if dead and superseded else
+                          'retryable_failure' if dead and _cadence_can_retry(
                     conn, self.work['agent_id'], self.work['id']) else 'failed') if dead else 'unknown'
-                message = 'Work stopped; '+reason+'. Inspect activity before retrying any uncertain operation.'
+                message = ('Purpose changed; obsolete work was stopped.' if superseded else
+                           'Work stopped; '+reason+'. Inspect activity before retrying any uncertain operation.')
                 conn.execute('UPDATE agent_native_work_runs SET state=?,error=?,finished_at=? WHERE id=?',
-                             (target,message,_now(),self.work['id']))
+                             (target,None if superseded else message,_now(),self.work['id']))
                 state.event(conn,self.work['id'],'work.'+target,message)
 
 
@@ -536,7 +551,8 @@ class WorkService:
                     superseded=superseded,
                 )
         with connect_closing(self.db_path) as conn:
-            from agent_native.cadence import queue_due
+            from agent_native.cadence import queue_due, queue_revised_purposes
+            queue_revised_purposes(conn)
             queue_due(conn,busy_agents={run.work['agent_id'] for run in self.runs.values()})
             rows = conn.execute("SELECT w.agent_id FROM agent_native_work_runs w JOIN agent_native_setup s ON s.agent_id=w.agent_id "
                                 "WHERE w.state='queued' AND s.status='ready'").fetchall()

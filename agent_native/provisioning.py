@@ -42,7 +42,39 @@ def _verify(base, expected):
             raise ValueError(f'Protected file permissions changed: {name}')
 
 
-def provision_root(conn, *, actor, agent_id, storage_root):
+def _refresh_projection(base, expected):
+    """Atomically replace host-owned files without touching mutable layers."""
+    _verify_layout(base)
+    profile = base / 'profile'
+    for name, contents in expected.items():
+        destination = profile / name
+        if destination.is_symlink() or not destination.is_file():
+            raise ValueError(f'Unsafe protected projection: {name}')
+        if stat.S_IMODE(destination.stat().st_mode) != 0o400:
+            raise ValueError(f'Protected file permissions changed: {name}')
+        fd, temporary = tempfile.mkstemp(prefix=f'.{name}.', dir=profile)
+        try:
+            with os.fdopen(fd, 'w') as stream:
+                stream.write(contents)
+                stream.flush()
+                os.fsync(stream.fileno())
+            os.chmod(temporary, 0o400)
+            os.replace(temporary, destination)
+        finally:
+            if os.path.exists(temporary):
+                os.unlink(temporary)
+
+
+def _verify_layout(base):
+    for relative in ('', 'profile', 'workspace', 'profile/memories', 'profile/skills'):
+        path = base / relative
+        if path.is_symlink() or not path.is_dir():
+            raise ValueError(f'Unsafe or incomplete agent directory: {path}')
+        if relative in ('', 'profile') and stat.S_IMODE(path.stat().st_mode) != 0o700:
+            raise ValueError(f'Protected directory permissions changed: {path}')
+
+
+def provision_root(conn, *, actor, agent_id, storage_root, refresh_projection=False):
     """Publish one complete layout; retries validate it without erasing mutable work.
 
     Only inactive roots are supported. Soul revisions invalidate an existing
@@ -78,6 +110,8 @@ def provision_root(conn, *, actor, agent_id, storage_root):
         finally:
             if stage.exists():
                 shutil.rmtree(stage)
+    if refresh_projection:
+        _refresh_projection(base, expected)
     _verify(base, expected)
     return {'agent_id': root['id'], 'soul_revision': root['soul_revision'],
             'profile': str(base / 'profile'), 'workspace': str(base / 'workspace'),

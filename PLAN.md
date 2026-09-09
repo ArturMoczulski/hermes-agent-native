@@ -11,12 +11,13 @@ do not infer a new priority from this repository summary.
 AN-76 is now active for the complete owner journey. Its first missing product control
 is implemented as a focused slice: Agent settings can revise the protected purpose
 without replacing the stable agent identity, using the current purpose revision as a
-compare-and-swap guard. The next slice must prove immediate stopping of held obsolete
-work and prepare fresh current-purpose planning before the final real-model journey.
-The held-worker proof now passes: purpose revision closes the provider connection,
-retains the old attempt as `interrupted` rather than mislabeling it as an owner pause,
-preserves the stable agent identity, and produces no late output. Fresh setup/replan
-for revision 2 is the remaining purpose-change transition.
+compare-and-swap guard. The complete purpose-redirection slice now passes: purpose
+revision closes the provider connection, retains the old attempt as `interrupted`,
+produces no late output, atomically refreshes the protected soul projection while
+preserving workspace and memory, creates a revision-specific Plane discovery item,
+and starts exactly one fresh bounded attempt using the existing limits and cadence.
+The browser proof finishes with a saved output for revision 2 under the same agent ID.
+The remaining AN-76 work is the final representative owner journey and evidence review.
 AN-93 is complete. Compact view places applicable owner questions before output decisions
 and progress concerns in Compact view. A labeled Current/Latest work card follows the
 attention area with the ongoing stage, latest bounded-attempt outcome and direct Plane

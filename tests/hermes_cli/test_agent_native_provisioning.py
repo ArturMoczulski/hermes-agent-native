@@ -135,10 +135,22 @@ def test_retry_rejects_weakened_protected_permissions(setup, relative, mode):
         provision_root(conn, actor=OWNER, agent_id=root['id'], storage_root=storage)
 
 
-def test_new_soul_revision_invalidates_old_projection(setup):
+def test_new_soul_revision_refreshes_only_protected_projection(setup):
     from agent_native.identity import revise_soul
     conn, root, storage = setup
-    provision_root(conn, actor=OWNER, agent_id=root['id'], storage_root=storage)
+    layout = provision_root(conn, actor=OWNER, agent_id=root['id'], storage_root=storage)
+    workspace = Path(layout['workspace'], 'draft.md')
+    memory = Path(layout['memory'], 'MEMORY.md')
+    workspace.write_text('Keep the draft')
+    memory.write_text('Keep the memory')
     revise_soul(conn, actor=OWNER, agent_id=root['id'], expected_revision=1, purpose='New purpose')
-    with pytest.raises(ValueError):
-        provision_root(conn, actor=OWNER, agent_id=root['id'], storage_root=storage)
+    refreshed = provision_root(conn, actor=OWNER, agent_id=root['id'], storage_root=storage,
+                               refresh_projection=True)
+    assert refreshed['soul_revision'] == 2
+    assert refreshed['profile'] == layout['profile']
+    assert refreshed['workspace'] == layout['workspace']
+    assert refreshed['memory'] == layout['memory']
+    assert 'New purpose' in (Path(layout['profile']) / 'SOUL.md').read_text()
+    assert json.loads((Path(layout['profile']) / 'identity.json').read_text())['soul_revision'] == 2
+    assert workspace.read_text() == 'Keep the draft'
+    assert memory.read_text() == 'Keep the memory'

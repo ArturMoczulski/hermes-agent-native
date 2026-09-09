@@ -1,5 +1,6 @@
 """Durable setup orchestration over real SQLite and private files."""
 from contextlib import contextmanager
+import json
 from uuid import uuid4
 
 import pytest
@@ -108,11 +109,13 @@ def test_purpose_change_during_setup_prevents_ready_and_next_effect(setup):
     def changed(**kwargs):
         result = original(**kwargs)
         revise_soul(conn, actor=OWNER, agent_id=root['id'], expected_revision=1, purpose='New purpose')
+        assert conn.execute('SELECT soul_revision FROM agent_native_setup_revisions WHERE agent_id=?',
+                            (root['id'],)).fetchone()[0] == 2
         return result
     planning.ensure_workspace = changed
     run(conn, root, home, planning)
     current = get_root(conn, actor=OWNER, agent_id=root['id'])
-    assert current['setup']['status'] == 'superseded'
+    assert current['setup']['status'] == 'queued'
     assert [name for name, _ in planning.calls] == ['workspace']
 
 
@@ -165,11 +168,30 @@ def test_correcting_first_login_identity_after_no_effects_is_retryable(setup):
     assert get_root(conn, actor=OWNER, agent_id=root['id'])['setup']['status'] == 'ready'
 
 
-def test_purpose_edit_immediately_supersedes_ready_setup(setup):
+def test_purpose_edit_queues_fresh_setup_without_replacing_creation_history(setup):
     conn, root, home = setup
     run(conn, root, home, Planning())
     updated = revise_soul(conn, actor=OWNER, agent_id=root['id'], expected_revision=1, purpose='Write poetry')
-    assert updated['setup']['status'] == 'superseded'
+    assert updated['setup']['status'] == 'queued'
+    assert updated['startup']['soul_revision'] == 1
+    run(conn, updated, home, Planning())
+    ready = get_root(conn, actor=OWNER, agent_id=root['id'])
+    assert ready['setup']['status'] == 'ready'
+    identity = json.loads((home / 'agents' / root['id'] / 'profile' / 'identity.json').read_text())
+    assert identity['soul_revision'] == 2
+
+
+def test_revised_purpose_gets_new_plane_discovery_without_replacing_creation(setup):
+    conn, root, home = setup
+    run(conn, root, home, Planning())
+    revised = revise_soul(conn, actor=OWNER, agent_id=root['id'], expected_revision=1,
+                          purpose='Write poetry')
+    planning = Planning()
+    run(conn, revised, home, planning)
+    discovery = [arguments for name, arguments in planning.calls if name == 'discovery'][0]
+    assert discovery['activation_id'] != root['startup']['id']
+    assert discovery['purpose'] == 'Write poetry'
+    assert get_root(conn, actor=OWNER, agent_id=root['id'])['startup']['id'] == root['startup']['id']
 
 
 def test_shutdown_guard_before_first_write_allows_safe_resume(setup):
@@ -191,12 +213,13 @@ def test_shutdown_guard_before_first_write_allows_safe_resume(setup):
     assert planning.calls[0][1]['allow_create'] is True
 
 
-def test_late_setup_receipt_cannot_revive_superseded_request(setup):
+def test_late_setup_receipt_cannot_overwrite_new_purpose_setup(setup):
     from agent_native.startup import _update
     conn, root, home = setup
     run(conn, root, home, Planning())
     revise_soul(conn, actor=OWNER, agent_id=root['id'], expected_revision=1, purpose='Changed purpose')
     # A delayed host checkpoint must retain its resource receipt without
     # overwriting the owner's newer terminal state.
-    _update(conn, root['id'], status='ready', message='Late successful receipt')
-    assert get_root(conn, actor=OWNER, agent_id=root['id'])['setup']['status'] == 'superseded'
+    assert not _update(conn, root['id'], expected_revision=1,
+                       status='ready', message='Late successful receipt')
+    assert get_root(conn, actor=OWNER, agent_id=root['id'])['setup']['status'] == 'queued'
