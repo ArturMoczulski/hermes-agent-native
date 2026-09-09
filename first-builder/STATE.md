@@ -2324,3 +2324,25 @@ retain their existing fail-closed behavior.
 Evidence: 14 focused cycle/dependency/conflict backend tests passed; the installed-
 Chromium Plane conflict journey passed in 4.7s and completes in at most 10 model calls,
 one fewer inspection round trip than before. Focused Ruff checks passed.
+## First Builder is prepared behind the owner test gate — 2026-09-09
+
+Cycle 03 is reconciled in Plane: accepted AN-73 is Done; unfinished AN-74, AN-80
+and AN-84 scopes remain Backlog rather than being implied complete. Cycle 04 and
+AN-57 now own the self-hosting handoff.
+
+The framework can prepare one stable First Builder identity with the exact
+`openai-codex/gpt-5.6-sol` model and Low reasoning, its existing Agent Native Plane
+project, a concise protected purpose, and the normal 180-second/50-step attempt.
+Owner-controlled soul/instructions/practices/Plane context and a content-verified
+Python runtime are copied read-only outside the repository. The protected worker
+cannot fall back to mutable checkout imports. Only the active Builder receives
+bounded repository read, compare-and-swap write, search/test/build and Git commit
+operations; ordinary agents do not see them.
+
+Preparation is inert: setup and work remain queued behind `held_for_owner_test`.
+The Agents screen displays the exact model and checkpoint and deliberately has no
+launch control. Focused evidence: nine First Builder/repository tests, including a
+real protected compute-host startup; seven affected managed-work tests; one Chromium
+checkpoint journey; Ruff, Python compilation and the production web build. Next:
+prepare the identity in the local preview, run the owner-requested final ordinary
+test agent, record its evidence, and only then release the separate launch gate.

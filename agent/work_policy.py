@@ -17,13 +17,14 @@ from uuid import UUID
 
 _current = ContextVar('agent_native_work_context', default=None)
 TOOL_NAMES = frozenset({'child_create', 'child_replace', 'child_inspect', 'child_result_evaluate', 'child_autonomy_configure', 'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'output_read', 'result_record', 'purpose_evaluate', 'purpose_retire', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'})
+BUILDER_TOOL_NAMES = frozenset({'repository_file_read', 'repository_file_write', 'repository_command'})
 
 
 def _object(properties, required):
     return {'type': 'object', 'properties': properties, 'required': required, 'additionalProperties': False}
 
 
-def tool_schemas():
+def tool_schemas(context=None):
     string = {'type': 'string'}
     parameters = {
         'child_create': _object({'name':string,'purpose':string,'reason':string}, ['name','purpose','reason']),
@@ -73,6 +74,11 @@ def tool_schemas():
             'question_id':{'type':['string','null']}},
             ['judgment','evidence','remaining_obligations','uncertainty','next_action','question_id']),
         'purpose_retire': _object({'evaluation_id': string}, ['evaluation_id']),
+        'repository_file_read': _object({'path': string}, ['path']),
+        'repository_file_write': _object({'path': string, 'content': string, 'expected_sha256': string},
+                                         ['path', 'content', 'expected_sha256']),
+        'repository_command': _object({'argv': {'type': 'array', 'items': string, 'minItems': 1, 'maxItems': 64},
+                                       'timeout_seconds': {'type': 'integer', 'minimum': 1, 'maximum': 180}}, ['argv']),
     }
     descriptions = {
         'child_create': 'Create one direct child when independently pursuing a clearly delegated responsibility is useful. Supply a concise name, protected delegated purpose, and reason. The child inherits this attempt\'s frozen model, autonomy level, work limits and enabled cadence; you cannot pass credentials or broader authority. Creation is not required for every task. You remain accountable for the child and its result.',
@@ -92,9 +98,13 @@ def tool_schemas():
         'result_record': 'Record a work result and evaluation against the authorized item criteria. Link saved output IDs and exact versions, or use an empty outputs array when no file is needed. References are unverified links, not saved outputs or proof of effects. Reporting a result never accepts the work on behalf of its owner.',
         'purpose_evaluate': 'Record whether the protected whole purpose should continue, wait, seek clarification, or is a retirement candidate. Include evidence, every remaining obligation, uncertainty and the next action. Clarify requires the exact unanswered question_id; other judgments use null. Assignment completion alone does not fulfill the whole purpose.',
         'purpose_retire': 'Initiate retirement using the exact latest retirement-candidate evaluation_id. The framework rechecks purpose revision, obligations, uncertainty, questions, required reviews and unresolved effects. A rejected retirement leaves the agent active.',
+        'repository_file_read': 'Read one UTF-8 file inside the explicitly granted framework repository. Returns content and a hash required for safe writes. Symlinks and paths outside the repository are rejected.',
+        'repository_file_write': 'Create or replace one UTF-8 file inside the framework repository. Supply the prior hash, or missing for a new file. Concurrent changes are rejected.',
+        'repository_command': 'Run one bounded non-shell development command in the framework repository. Only approved search, Git, Python, pytest, Node and npm commands are accepted.',
     }
+    allowed = TOOL_NAMES if context is None or context.authorized_tools is None else frozenset(context.authorized_tools)
     return [{'type': 'function', 'function': {'name': name, 'description': descriptions[name],
-                                             'parameters': parameters[name]}} for name in sorted(TOOL_NAMES)]
+                                             'parameters': parameters[name]}} for name in sorted(allowed)]
 
 
 @dataclass(frozen=True)
@@ -113,6 +123,7 @@ class WorkContext:
     initial_context: str
     skill_text: str
     request: Callable
+    authorized_tools: tuple[str, ...] | list[str] | None = None
     _revoked: Event = field(default_factory=Event, repr=False, compare=False)
 
     def __post_init__(self):
@@ -130,6 +141,10 @@ class WorkContext:
         for value in (self.session_id, self.name, self.purpose, self.initial_context, self.skill_text):
             if not isinstance(value, str) or not value.strip():
                 raise ValueError('Work requires protected purpose, context and skill text')
+        if self.authorized_tools is not None:
+            if (not isinstance(self.authorized_tools, (tuple, list)) or not self.authorized_tools
+                    or any(name not in TOOL_NAMES | BUILDER_TOOL_NAMES for name in self.authorized_tools)):
+                raise ValueError('Work tool grant is invalid')
         self.check()
 
     def check(self, agent=None):
@@ -156,7 +171,8 @@ class WorkContext:
 
     def tool(self, agent, name, arguments, tool_call_id):
         self.check(agent)
-        if name not in TOOL_NAMES or not isinstance(arguments, dict):
+        allowed = TOOL_NAMES if self.authorized_tools is None else frozenset(self.authorized_tools)
+        if name not in allowed or not isinstance(arguments, dict):
             raise PermissionError('This tool is not authorized for managed work')
         if not isinstance(tool_call_id, str) or not tool_call_id or len(tool_call_id) > 256:
             raise PermissionError('Managed effects require a native tool-call identity')

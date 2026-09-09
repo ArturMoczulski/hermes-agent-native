@@ -4,10 +4,18 @@ The owner selected the Hermes fork and Plane. The live
 [Plane project](first-builder/PLANE.md) owns actionable items, priorities,
 dependencies and cycles. Read it before selecting work; this is not another board.
 
-The current undated cycle 03 is **Shared agent work and the fantasy writer**.
-The compact agent operating view and deliverable-review workflow are complete. Select
-the next actionable item from Plane after reconciling the remaining cycle acceptance;
-do not infer a new priority from this repository summary.
+Cycle 03 (**Shared agent work and the fantasy writer**) is reconciled: AN-73 is
+accepted, while the unfinished portions of AN-74, AN-80 and AN-84 remain explicit
+Backlog work outside the closed cycle. The current undated cycle is 04, focused on
+the First Builder handoff. AN-57 is active.
+
+The First Builder preparation path pins `openai-codex/gpt-5.6-sol` with Low
+reasoning, deploys owner-controlled instructions and an immutable compute-runtime
+snapshot outside the writable repository, and grants bounded repository development
+tools only to that identity. Preparation leaves its queued work behind an enforced
+`held_for_owner_test` gate. The dashboard shows this checkpoint but exposes no
+launch action. Run and record the owner's final ordinary test agent before confirming
+the checkpoint and activating the Builder; do not launch it as part of preparation.
 AN-76 is now active for the complete owner journey. Its first missing product control
 is implemented as a focused slice: Agent settings can revise the protected purpose
 without replacing the stable agent identity, using the current purpose revision as a

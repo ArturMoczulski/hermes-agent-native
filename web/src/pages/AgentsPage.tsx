@@ -10,6 +10,7 @@ import { usePageHeader } from "@/contexts/usePageHeader";
 import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentModelControls";
 
 type PendingCreation = { request_id: string; name: string; purpose: string; parent_id?: string; work?: WorkLimits; model_selection?: ModelChoice; autonomy_level: number };
+type FirstBuilder = { registration: { agent_id: string; launch_state: "held_for_owner_test" | "ready_to_launch" | "active" }; agent: Agent };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
 const defaultWorkLimits: WorkLimits = { timeout_seconds: 180, max_iterations: 50 };
 
@@ -57,6 +58,9 @@ export default function AgentsPage() {
   const [reload, setReload] = useState(0);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [firstBuilder, setFirstBuilder] = useState<FirstBuilder | null>(null);
+  const [builderLoading, setBuilderLoading] = useState(true);
+  const [builderPreparing, setBuilderPreparing] = useState(false);
   const pending = useRef<PendingCreation | null>(initialRequest);
   const submitting = useRef(false);
 
@@ -76,6 +80,28 @@ export default function AgentsPage() {
     });
     return () => { active = false; };
   }, [reload]);
+
+  useEffect(() => {
+    let active = true;
+    setBuilderLoading(true);
+    void fetchJSON<FirstBuilder>("/api/agent-native/first-builder").then(value => {
+      if (active) setFirstBuilder(value);
+    }).catch(() => {
+      if (active) setFirstBuilder(null);
+    }).finally(() => {
+      if (active) setBuilderLoading(false);
+    });
+    return () => { active = false; };
+  }, [reload]);
+
+  async function prepareFirstBuilder() {
+    setBuilderPreparing(true); setError("");
+    try {
+      setFirstBuilder(await fetchJSON<FirstBuilder>("/api/agent-native/first-builder/prepare", { method: "POST" }));
+    } catch {
+      setError("Could not prepare the First Builder. Check its model connection and protected runtime, then retry.");
+    } finally { setBuilderPreparing(false); }
+  }
 
   useEffect(() => {
     if (!showRetired) return;
@@ -148,6 +174,20 @@ export default function AgentsPage() {
         <p className="rounded-lg border p-3 text-sm">Creating an agent starts its first private bounded work run after setup is ready. You can talk with it at any time.</p>
       </header>
       <DefaultAgentModelControls onChange={setDefaultModel} />
+      <section aria-label="First Builder launch checkpoint" className="space-y-3 rounded-xl border p-5">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div><h2 className="text-lg font-semibold">First Builder handoff</h2><p className="text-sm text-muted-foreground">Prepare the framework builder without starting autonomous work.</p></div>
+          {firstBuilder && <span className="rounded-full border px-3 py-1 text-sm">{firstBuilder.registration.launch_state === "held_for_owner_test" ? "Waiting for final test" : firstBuilder.registration.launch_state === "ready_to_launch" ? "Ready to launch" : "Active"}</span>}
+        </div>
+        {builderLoading ? <p>Checking Builder status…</p> : firstBuilder ? <>
+          <p><strong>{firstBuilder.agent.name}</strong> · OpenAI GPT-5.6 Sol · Low reasoning</p>
+          <p className="text-sm">{firstBuilder.registration.launch_state === "held_for_owner_test" ? "Protected instructions, repository tools and its bounded run are prepared. It cannot start until the final ordinary test-agent evidence is recorded." : firstBuilder.registration.launch_state === "ready_to_launch" ? "The final test is recorded. Launch remains a separate owner action." : "The Builder launch gate has been released."}</p>
+          <Link className="text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(firstBuilder.agent.id)}`}>Open First Builder details</Link>
+        </> : <>
+          <p className="text-sm">This creates one held Builder identity, copies protected instructions and runtime code outside its writable repository, and pins GPT-5.6 Sol with Low reasoning. It does not launch the agent.</p>
+          <Button type="button" disabled={builderPreparing} onClick={() => void prepareFirstBuilder()}>{builderPreparing ? "Preparing…" : "Prepare First Builder"}</Button>
+        </>}
+      </section>
       <form onSubmit={(event) => void create(event)} className="space-y-4 rounded-xl border p-5">
         <h2 className="text-lg font-semibold">Create an agent</h2>
         <div className="space-y-2">

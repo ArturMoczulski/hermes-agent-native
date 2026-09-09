@@ -28,12 +28,77 @@ def owner_session(request: Request):
 
 router = APIRouter(prefix='/api/agent-native/agents')
 model_router = APIRouter(prefix='/api/agent-native/models')
+first_builder_router = APIRouter(prefix='/api/agent-native/first-builder')
+
+
+@first_builder_router.get('')
+def read_first_builder(actor=Depends(owner_session)):
+    from agent_native import first_builder
+    with connect_closing(board='default') as conn:
+        try:
+            registration = first_builder.read(conn, actor=actor)
+            return {'registration': registration,
+                    'agent': identity.get_root(conn, actor=actor, agent_id=registration['agent_id'])}
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='First Builder is not prepared') from exc
+
+
+@first_builder_router.post('/prepare', status_code=201)
+def prepare_first_builder(actor=Depends(owner_session)):
+    from pathlib import Path
+    from agent_native import first_builder
+    from hermes_constants import get_hermes_home
+    repository = Path(__file__).resolve().parents[2]
+    with connect_closing(board='default') as conn:
+        try:
+            agent = first_builder.prepare(
+                conn, actor=actor, home=get_hermes_home() / 'agent-native',
+                repository=repository, instruction_source=repository / 'first-builder',
+            )
+            return {'registration': first_builder.read(conn, actor=actor), 'agent': agent}
+        except ValueError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 class WorkLimits(BaseModel):
     model_config = ConfigDict(extra='forbid')
     timeout_seconds: int = Field(strict=True, ge=1, le=3600)
     max_iterations: int = Field(strict=True, ge=1, le=100)
+
+
+class FirstBuilderAction(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    agent_id: str = Field(min_length=1, max_length=128)
+
+
+class FirstBuilderTest(FirstBuilderAction):
+    evidence: str = Field(min_length=1, max_length=4000)
+
+
+@first_builder_router.post('/confirm-test')
+def confirm_first_builder_test(body: FirstBuilderTest, actor=Depends(owner_session)):
+    from agent_native import first_builder
+    with connect_closing(board='default') as conn:
+        try:
+            first_builder.confirm_owner_test(conn, actor=actor, **body.model_dump())
+            registration = first_builder.read(conn, actor=actor)
+            return {'registration': registration,
+                    'agent': identity.get_root(conn, actor=actor, agent_id=registration['agent_id'])}
+        except (ValueError, PermissionError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
+@first_builder_router.post('/launch')
+def launch_first_builder(body: FirstBuilderAction, actor=Depends(owner_session)):
+    from agent_native import first_builder
+    with connect_closing(board='default') as conn:
+        try:
+            first_builder.launch(conn, actor=actor, **body.model_dump())
+            registration = first_builder.read(conn, actor=actor)
+            return {'registration': registration,
+                    'agent': identity.get_root(conn, actor=actor, agent_id=registration['agent_id'])}
+        except (ValueError, PermissionError) as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
 
 
 class ConfigureWork(WorkLimits):

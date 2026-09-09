@@ -159,6 +159,9 @@ SCHEMA_SQL += AUTONOMY_SCHEMA
 from agent_native.acceptance import ACCEPTANCE_SCHEMA
 SCHEMA_SQL += ACCEPTANCE_SCHEMA
 
+from agent_native.first_builder import SCHEMA as FIRST_BUILDER_SCHEMA
+SCHEMA_SQL += FIRST_BUILDER_SCHEMA
+
 SCHEMA_SQL += """
 CREATE TABLE IF NOT EXISTS agent_native_removals (
  agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),

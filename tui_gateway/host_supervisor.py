@@ -127,17 +127,20 @@ class HostSupervisor:
         cwd: str | Path | None = None, env: dict[str, str] | None = None,
         rpc_sink: Callable[[dict], None] | None = None, respawn_max: int = 3,
         heartbeat_secs: int = 15, expected_build_sha: str | None = None,
-        expected_hermes_home: str | None = None, autostart: bool = True) -> None:
+        expected_hermes_home: str | None = None, source_root: str | Path | None = None,
+        autostart: bool = True) -> None:
         self.registry_path = (
             Path(registry_path) if registry_path is not None
             else get_hermes_home() / "state" / _REGISTRY_NAME)
         self.argv = argv or [sys.executable, "-m", "tui_gateway.compute_host"]
-        self.cwd = Path(cwd) if cwd is not None else _repo_root()
+        self._explicit_source_root = source_root is not None
+        self.source_root = Path(source_root).resolve() if source_root is not None else _repo_root()
+        self.cwd = Path(cwd) if cwd is not None else self.source_root
         self.env = env
         self.rpc_sink = rpc_sink or (lambda _obj: None)
         self.respawn_max = max(0, int(respawn_max))
         self.heartbeat_secs = max(1, int(heartbeat_secs))
-        self.expected_build_sha = _build_sha() if expected_build_sha is None else expected_build_sha
+        self.expected_build_sha = (_build_sha() if source_root is None else "unknown") if expected_build_sha is None else expected_build_sha
         self.expected_hermes_home = (
             str(get_hermes_home()) if expected_hermes_home is None else expected_hermes_home)
         self._lock = threading.RLock()
@@ -343,10 +346,15 @@ class HostSupervisor:
         self._hello = {}
         env = {**hermes_subprocess_env(inherit_credentials=True), **os.environ, **(self.env or {})}
         env["HERMES_COMPUTE_HOST_HEARTBEAT_SECS"] = str(self.heartbeat_secs)
-        root = str(_repo_root())
-        env.setdefault("PYTHONPATH", root)
-        if root not in env["PYTHONPATH"].split(os.pathsep):
-            env["PYTHONPATH"] = root + os.pathsep + env["PYTHONPATH"]
+        root = str(self.source_root)
+        if self._explicit_source_root:
+            # A protected runtime must never import missing modules from the mutable
+            # checkout through an inherited developer PYTHONPATH.
+            env["PYTHONPATH"] = root
+        else:
+            env.setdefault("PYTHONPATH", root)
+            if root not in env["PYTHONPATH"].split(os.pathsep):
+                env["PYTHONPATH"] = root + os.pathsep + env["PYTHONPATH"]
         # Lossy UTF-8 decode: a locale-mismatched byte must not raise inside the drain threads.
         with self._spawn_guard:
             if self._force_stopped.is_set():

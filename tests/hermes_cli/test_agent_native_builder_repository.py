@@ -1,0 +1,63 @@
+import hashlib
+import time
+from uuid import uuid4
+
+import pytest
+
+from agent_native.builder_repository import command, read_file, write_file
+from agent.work_policy import BUILDER_TOOL_NAMES, TOOL_NAMES, WorkContext, tool_schemas
+
+
+def test_builder_repository_reads_and_compare_and_swap_writes(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    path = root / "module.py"
+    path.write_text("old\n")
+    observed = read_file(root, {"path": "module.py"})
+    assert observed == {
+        "path": "module.py", "content": "old\n", "sha256": hashlib.sha256(b"old\n").hexdigest(),
+    }
+
+    changed = write_file(root, {"path": "module.py", "content": "new\n", "expected_sha256": observed["sha256"]})
+    assert changed["sha256"] == hashlib.sha256(b"new\n").hexdigest()
+    assert path.read_text() == "new\n"
+    with pytest.raises(ValueError, match="changed"):
+        write_file(root, {"path": "module.py", "content": "stale\n", "expected_sha256": observed["sha256"]})
+
+
+def test_builder_repository_rejects_escape_symlinks_and_dangerous_commands(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    outside = tmp_path / "secret"
+    outside.write_text("private")
+    (root / "escape").symlink_to(outside)
+    for path in ("../secret", "/etc/passwd", "escape"):
+        with pytest.raises((ValueError, PermissionError)):
+            read_file(root, {"path": path})
+    with pytest.raises(PermissionError, match="command"):
+        command(root, {"argv": ["rm", "-rf", "."]})
+    with pytest.raises(PermissionError, match="command"):
+        command(root, {"argv": ["git", "push"]})
+
+
+def test_builder_repository_runs_bounded_non_shell_commands(tmp_path):
+    root = tmp_path / "repo"
+    root.mkdir()
+    (root / "needle.txt").write_text("needle\n")
+    result = command(root, {"argv": ["rg", "-n", "needle", "needle.txt"], "timeout_seconds": 5})
+    assert result["returncode"] == 0
+    assert "1:needle" in result["output"]
+    assert result["truncated"] is False
+
+
+def test_repository_tools_are_absent_from_ordinary_managed_work():
+    common = dict(run_id=str(uuid4()), agent_id=str(uuid4()), soul_revision=1, name="Agent",
+                  purpose="Work", workspace="/workspace", session_id="session", native_db="/state.db",
+                  deadline_monotonic=time.monotonic() + 30, max_iterations=5, max_tokens=1000,
+                  initial_context="context", skill_text="skill", request=lambda *_: {})
+    ordinary = WorkContext(**common, authorized_tools=sorted(TOOL_NAMES))
+    builder = WorkContext(**common, authorized_tools=sorted(TOOL_NAMES | BUILDER_TOOL_NAMES))
+    assert not BUILDER_TOOL_NAMES & {row["function"]["name"] for row in tool_schemas(ordinary)}
+    assert BUILDER_TOOL_NAMES <= {row["function"]["name"] for row in tool_schemas(builder)}
+    with pytest.raises(PermissionError):
+        ordinary.tool(None, "repository_file_read", {"path": "README.md"}, "call")

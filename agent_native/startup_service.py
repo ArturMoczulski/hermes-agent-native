@@ -28,6 +28,7 @@ class SetupService:
     def tick(self):
         with connect_closing(self.db_path) as conn:
             agents = conn.execute("SELECT agent_id FROM agent_native_setup WHERE status IN ('queued', 'preparing') "
+                                  "AND agent_id NOT IN (SELECT agent_id FROM agent_native_first_builder) "
                                   'ORDER BY updated_at LIMIT 100').fetchall()
             for (agent_id,) in agents:
                 if self.stop_requested.is_set():

@@ -1032,7 +1032,7 @@ def _init_fallback_chain(agent, fallback_model):
 def _load_tools(agent, enabled_toolsets, disabled_toolsets):
     from agent.work_policy import current as current_work, tool_schemas
     if current_work(agent) is not None:
-        agent.tools = tool_schemas()
+        agent.tools = tool_schemas(current_work(agent))
         agent.valid_tool_names = frozenset(tool['function']['name'] for tool in agent.tools)
         agent._tool_snapshot_generation = 0
         agent._kanban_worker_guidance = ""

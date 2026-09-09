@@ -92,6 +92,12 @@ class _RunAuthority(WriteAuthority):
         if state != self._state or load_plane_configuration(self._home) != self._config:
             raise PermissionError('Writer planning configuration changed')
         try:
+            from agent_native.first_builder import active_instructions
+            active_instructions(self._conn, self._agent_id)
+            return
+        except PermissionError:
+            pass
+        try:
             storage = self._home / 'agents'
             if storage.is_symlink():
                 raise ValueError('Unsafe storage')

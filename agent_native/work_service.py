@@ -99,6 +99,7 @@ class _Run:
         self.host = HostSupervisor(registry_path=service.home / 'work-hosts' / (work['id']+'.json'),
             env={'HERMES_HOME':str(service.home.parent),'HERMES_MANAGED_COMPUTE_HOST':'1'},
             expected_hermes_home=str(service.home.parent), rpc_sink=self.inbox.put,
+            source_root=work.get('runtime_release'),
             autostart=False,respawn_max=0)
         self.thread = threading.Thread(target=self.run,name='work-'+work['id'][:8],daemon=True)
         self.watchdog = threading.Thread(target=self._watch_deadline,
@@ -141,7 +142,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments')
+        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments','repository_file_read','repository_file_write','repository_command')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -261,6 +262,14 @@ class _Run:
             from agent_native.progress import checkpoint
             result = checkpoint(conn, validate=self.validate, planning=planning,
                                 agent_id=self.work['agent_id'], run_id=self.work['id'], call_id=call_id, arguments=args)
+        elif tool in ('repository_file_read', 'repository_file_write', 'repository_command'):
+            from agent_native.first_builder import active_repository
+            from agent_native import builder_repository
+            repository = active_repository(conn, self.work['agent_id'])
+            operation = {'repository_file_read': builder_repository.read_file,
+                         'repository_file_write': builder_repository.write_file,
+                         'repository_command': builder_repository.command}[tool]
+            result = operation(repository, args)
         elif tool == 'work_item_select':
             from agent_native.work_focus import select
             result = select(conn, validate=self.validate, inspect=planning.inspect,
@@ -318,6 +327,7 @@ class _Run:
                        ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
                        ('Retired agent from purpose evaluation') if tool=='purpose_retire' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
+                       ('Repository operation: '+tool) if tool.startswith('repository_') else
                        ('Plane rejected invalid '+result.get('operation','operation')+' arguments' if result.get('status')=='invalid_arguments' else
                         ('Plane conflict in '+result.get('operation','operation')+': refreshed state returned' if result.get('fresh') else 'Plane conflict: fresh inspection required') if result.get('status')=='conflict' else
                         'Plane: '+args.get('operation','inspected '+args.get('kind','resource'))))
@@ -351,7 +361,11 @@ class _Run:
                 with write_txn(conn):
                     self.validate(conn)
                     conn.execute('UPDATE agent_native_work_runs SET binding_id=? WHERE id=?',(binding,self.work['id']))
-                self.workspace = self.service.home / 'agents' / root['id'] / 'workspace'
+                from agent_native.first_builder import active_repository
+                try:
+                    self.workspace = active_repository(conn, root['id'])
+                except PermissionError:
+                    self.workspace = self.service.home / 'agents' / root['id'] / 'workspace'
                 def read_retry(phase, status_code, delay):
                     with write_txn(conn):
                         self.validate(conn)
@@ -385,11 +399,28 @@ class _Run:
                     initial = _initial_context(snapshot, {k: v for k, v in _CONTRACTS.items() if k != 'comment.create'},
                                                self.work['autonomy']['policy'])
                     skill = (Path(__file__).resolve().parents[1] / 'skills/productivity/plane-project-management/SKILL.md').read_text()
+                    from agent.work_policy import TOOL_NAMES, BUILDER_TOOL_NAMES
+                    from agent_native.first_builder import active_instructions, active_repository
+                    try:
+                        active_repository(conn, root['id'])
+                    except PermissionError:
+                        authorized_tools = TOOL_NAMES
+                    else:
+                        authorized_tools = TOOL_NAMES | BUILDER_TOOL_NAMES
+                        protected = active_instructions(conn, root['id'])
+                        skill = (protected / 'PLANE.md').read_text() + '\n\n' + skill
+                        initial = '\n\n'.join((
+                            (protected / 'SOUL.md').read_text(),
+                            (protected / 'INSTRUCTIONS.md').read_text(),
+                            (protected / 'PRACTICES.md').read_text(),
+                            initial,
+                        ))
                     attempt = {'run_id':self.work['id'],'agent_id':root['id'],'soul_revision':root['soul_revision'],
                                'name':root['name'],'purpose':root['purpose'],'workspace':str(self.workspace),
                                'session_id':self.work['session_id'],'native_db':str(self.service.home.parent/'state.db'),
                                'deadline_monotonic':self.deadline,'max_iterations':self.work['limits']['max_iterations'],
-                               'max_tokens':8192,'initial_context':initial,'skill_text':skill}
+                               'max_tokens':8192,'initial_context':initial,'skill_text':skill,
+                               'authorized_tools':sorted(authorized_tools)}
                     with write_txn(conn):
                         self.validate(conn)
                         conn.execute("UPDATE agent_native_work_runs SET state='running' WHERE id=?",(self.work['id'],))
@@ -585,7 +616,8 @@ class WorkService:
             queue_revised_purposes(conn)
             queue_due(conn,busy_agents={run.work['agent_id'] for run in self.runs.values()})
             rows = conn.execute("SELECT w.agent_id FROM agent_native_work_runs w JOIN agent_native_setup s ON s.agent_id=w.agent_id "
-                                "WHERE w.state='queued' AND s.status='ready'").fetchall()
+                                "WHERE w.state='queued' AND s.status='ready' "
+                                "AND w.agent_id NOT IN (SELECT agent_id FROM agent_native_first_builder WHERE launch_state!='active')").fetchall()
             for (agent_id,) in rows:
                 if self.stopped.is_set():
                     break
@@ -600,6 +632,11 @@ class WorkService:
                     work['autonomy'] = snapshot_autonomy(conn, agent_id, work['id'], admission_id)
                     work['autonomy']['policy'] = policy(
                         work['autonomy']['level'], work['autonomy']['require_owner_review'])
+                    from agent_native.first_builder import active_runtime
+                    try:
+                        work['runtime_release'] = str(active_runtime(conn, agent_id))
+                    except PermissionError:
+                        pass
                     conn.execute("UPDATE agent_native_work_runs SET state='preparing',started_at=? WHERE id=?",(_now(),work['id']))
                     state.event(conn,work['id'],'work.preparing','Reading the prepared project before starting the native worker.')
                 run = _Run(self,work)
