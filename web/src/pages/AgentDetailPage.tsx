@@ -8,11 +8,11 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@nous-research/ui/ui/components/dialog";
-import { agentsEndpoint, agentWaitingForOwner, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
+import { agentsEndpoint, agentWaitingForOwner, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type MediaOutput, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { Markdown } from "@/components/Markdown";
-import { fetchJSON } from "@/lib/api";
+import { authedFetch, fetchJSON } from "@/lib/api";
 import PlanningWork from "./PlanningWork";
 import { AgentModelControls } from "@/components/AgentModelControls";
 import { usePageHeader } from "@/contexts/usePageHeader";
@@ -753,10 +753,7 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
         const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
         return <div key={artifact.artifact_id} className="space-y-2 rounded-md border p-3">
           <p className="text-sm font-medium">{artifact.title}</p>
-          {artifact.mime_type.startsWith("image/") && <img className="max-h-80 max-w-full rounded border object-contain" src={source} alt={artifact.title} />}
-          {artifact.mime_type.startsWith("audio/") && <audio className="w-full" controls preload="metadata" src={source}>Audio preview is unavailable.</audio>}
-          {artifact.mime_type.startsWith("video/") && <video className="max-h-80 max-w-full rounded border" controls preload="metadata" src={source}>Video preview is unavailable.</video>}
-          <a className="text-sm underline underline-offset-4" href={source} target="_blank" rel="noreferrer">Open media evidence</a>
+          <AuthenticatedMedia artifact={artifact} source={source} compact />
         </div>;
       })}
       <PlanningItemLink agent={agent} itemId={result.item_id} />
@@ -802,11 +799,8 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
       return <article key={artifact.artifact_id} className="space-y-3 rounded-lg border p-4">
         <h3 className="font-semibold">{artifact.title}</h3>
         <p className="text-xs text-muted-foreground">{artifact.mime_type} · {(artifact.byte_count / 1024).toFixed(1)} KB · <time dateTime={artifact.created_at}>{new Date(artifact.created_at).toLocaleString()}</time></p>
-        {artifact.mime_type.startsWith("image/") && <img className="max-h-[32rem] max-w-full rounded-md border object-contain" src={source} alt={artifact.title} />}
-        {artifact.mime_type.startsWith("audio/") && <audio className="w-full" controls preload="metadata" src={source}>Audio preview is unavailable.</audio>}
-        {artifact.mime_type.startsWith("video/") && <video className="max-h-[32rem] max-w-full rounded-md border" controls preload="metadata" src={source}>Video preview is unavailable.</video>}
+        <AuthenticatedMedia artifact={artifact} source={source} />
         <PlanningItemLink agent={agent} itemId={artifact.item_id} />
-        <div className="flex flex-wrap gap-2"><a className="text-sm underline underline-offset-4" href={source} target="_blank" rel="noreferrer">Open media</a><a className="text-sm underline underline-offset-4" href={`${source}?download=true`}>Download</a></div>
       </article>;
     })}</div>
     <div className="space-y-4">{outputs.map((output) => <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4">
@@ -819,6 +813,42 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
     {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
       outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
   </section>;
+}
+
+function AuthenticatedMedia({ artifact, source, compact = false }: { artifact: MediaOutput; source: string; compact?: boolean }) {
+  const [objectUrl, setObjectUrl] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    let createdUrl: string | null = null;
+    setObjectUrl(null);
+    setFailed(false);
+    void authedFetch(source).then(async (response) => {
+      if (!response.ok) throw new Error(`Media request failed with ${response.status}`);
+      const blob = await response.blob();
+      if (!active) return;
+      createdUrl = URL.createObjectURL(blob);
+      setObjectUrl(createdUrl);
+    }).catch(() => { if (active) setFailed(true); });
+    return () => {
+      active = false;
+      if (createdUrl) URL.revokeObjectURL(createdUrl);
+    };
+  }, [source]);
+
+  if (failed) return <p role="alert" className="text-sm">Could not load this media. Check your connection and sign-in, then reload.</p>;
+  if (!objectUrl) return <p role="status" className="text-sm text-muted-foreground">Loading media…</p>;
+  const previewClass = compact ? "max-h-80" : "max-h-[32rem]";
+  return <div className="space-y-3">
+    {artifact.mime_type.startsWith("image/") && <img className={`${previewClass} max-w-full rounded-md border object-contain`} src={objectUrl} alt={artifact.title} />}
+    {artifact.mime_type.startsWith("audio/") && <audio className="w-full" controls preload="metadata" src={objectUrl}>Audio preview is unavailable.</audio>}
+    {artifact.mime_type.startsWith("video/") && <video className={`${previewClass} max-w-full rounded-md border`} controls preload="metadata" src={objectUrl}>Video preview is unavailable.</video>}
+    <div className="flex flex-wrap gap-3">
+      <a className="text-sm underline underline-offset-4" href={objectUrl} target="_blank" rel="noreferrer">{compact ? "Open media evidence" : "Open media"}</a>
+      {!compact && <a className="text-sm underline underline-offset-4" href={objectUrl} download={artifact.filename}>Download</a>}
+    </div>
+  </div>;
 }
 
 type LoadedOutput = { key: string; output?: OutputVersion; error?: boolean };

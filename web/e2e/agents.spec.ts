@@ -367,3 +367,36 @@ test('compact agent view opens the latest stable project preview', async ({ page
   await expect(page.getByRole('tooltip', { name: 'Open project preview' })).toBeVisible();
   await expect(preview).toHaveAttribute('href', `/api/agent-native/agents/${id}/preview/`);
 });
+
+test('protected media output loads with dashboard authentication', async ({ page }) => {
+  const id = 'media-agent';
+  const artifactId = '4cd5ae68-3a4f-45d7-8912-9a09254a52dc';
+  const mediaPath = `/api/agent-native/agents/${id}/media/${artifactId}`;
+  const agent = {
+    id, name: 'Game builder', purpose: 'Build a browser game.', parent_id: null, child_ids: [], soul_revision: 1,
+    execution: 'completed', created_at: '2026-09-10T10:00:00+00:00', removed_at: null, retirement: null, replacement: null,
+    pause: { paused: false, sources: [] }, cadence: { enabled: false, interval_seconds: null, next_due: null },
+    project_workspace: null, project_preview: null, model_selection: null, model_activity: [], progress_concerns: [],
+    progress_concern_settings: { failure_threshold: 3 }, assignment_review_policies: [],
+    autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null }, setup: null, startup: null,
+    work: { id: 'media-run', state: 'completed', limits: { timeout_seconds: 180, max_iterations: 50 },
+      session_id: 'media-session', model_calls: 1, events: [], summary: 'Screenshot published.', error: null,
+      stories: [], outputs: [], results: [], progress: [], output_sections: [], focus: null, purpose_evaluations: [],
+      media_outputs: [{ artifact_id: artifactId, agent_id: id, run_id: 'media-run', item_id: 'media-item',
+        title: 'Playable milestone screenshot', filename: 'milestone.png', mime_type: 'image/png',
+        content_sha256: 'test-checksum', byte_count: 68, created_at: '2026-09-10T10:00:00+00:00' }] },
+  };
+  await page.route(`**/api/agent-native/agents/${id}`, route => route.fulfill({ status: 200, json: agent }));
+  await page.route(`**${mediaPath}`, async route => {
+    expect(route.request().headers()['x-hermes-session-token']).toBe(token);
+    const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=', 'base64');
+    return route.fulfill({ status: 200, contentType: 'image/png', body: png });
+  });
+
+  await page.goto(`/agents/${id}`);
+  const image = page.getByRole('img', { name: 'Playable milestone screenshot' });
+  await expect(image).toBeVisible();
+  await expect.poll(() => image.evaluate(element => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
+  await expect(page.getByRole('link', { name: 'Open media' })).toHaveAttribute('href', /^blob:/);
+  await expect(page.getByRole('link', { name: 'Download' })).toHaveAttribute('download', 'milestone.png');
+});

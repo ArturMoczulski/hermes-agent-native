@@ -7,8 +7,11 @@ note containing a filesystem path that the dashboard could not open. Managed med
 publication now verifies image/audio/video signatures, rejects path and symlink
 escapes, copies files into immutable host-owned storage, and records MIME type, size,
 checksum, agent, run and work item. The authenticated dashboard renders images and
-native audio/video players with Open/Download controls. The existing Greenmoor PNG
-was backfilled and now appears inline in both its owner-review card and Recent outputs.
+native audio/video players with Open/Download controls. Media elements fetch their
+bytes through dashboard authentication before receiving a browser-local object URL;
+the session credential is never placed in the media URL. The existing Greenmoor PNG
+was backfilled and its 1024×768 image now renders in both its owner-review card and
+Recent outputs.
 
 The live Fantasy Game Builder has exposed a stale-wait defect after productive,
 bounded attempts. AN-106 is the immediate reliability fix: a superseded `wait`
