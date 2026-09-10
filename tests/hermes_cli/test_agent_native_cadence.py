@@ -37,6 +37,40 @@ def test_due_cadence_continues_after_a_normal_run_limit_without_resuming_owner_p
     assert history==['limit_reached','queued']
 
 
+def test_superseded_wait_cannot_stop_a_later_productive_attempt(broker):
+    import hashlib
+    import json
+    from agent_native import cadence, work_state
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    evaluation={
+        'id':'old-wait','agent_id':s.root['id'],'run_id':s.work['id'],'soul_revision':1,
+        'purpose':s.root['purpose'],'judgment':'wait','evidence':['Waiting for new direction.'],
+        'remaining_obligations':['Continue when useful work becomes available.'],
+        'uncertainty':'No useful next step yet.','next_action':'Wait for actionable input.',
+        'question_id':None,'created_at':'2000-01-01T00:00:00+00:00',
+    }
+    encoded=json.dumps(evaluation,sort_keys=True,ensure_ascii=False,allow_nan=False)
+    s.conn.execute('INSERT INTO agent_native_purpose_evaluations VALUES(?,?,?,?,?,?,?)',
+                   ('old-wait',s.root['id'],s.work['id'],'wait-call',encoded,
+                    hashlib.sha256(encoded.encode()).hexdigest(),evaluation['created_at']))
+    s.conn.execute("UPDATE agent_native_work_runs SET state='completed',finished_at=? WHERE id=?",
+                   ('2000-01-01T00:00:00+00:00',s.work['id']))
+
+    # A genuine current wait is dormant and consumes no model call.
+    assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
+
+    cadence.wake(s.conn,s.root['id'],'owner_feedback',requested_at='2099-01-01T00:00:00+00:00')
+    [productive]=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+    s.conn.execute("UPDATE agent_native_work_runs SET state='limit_reached',finished_at=? WHERE id=?",
+                   ('2099-01-01T00:01:00+00:00',productive))
+
+    [continued]=cadence.queue_due(s.conn,now='2099-01-01T00:02:00+00:00')
+    assert continued!=productive
+    assert work_state.read_work(s.conn,s.root['id'])['id']==continued
+
+
 def test_legacy_time_limit_migration_preserves_owner_pause(broker):
     from agent_native.work_state import migrate_legacy_time_limits
     s=broker

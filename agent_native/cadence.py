@@ -84,6 +84,8 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if suspend_if_stalled(conn, agent_id): continue
             from agent_native.acceptance import pending_required
             if pending_required(conn, agent_id): continue
+            root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
+            previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             wake_row=conn.execute(
                 'SELECT reason FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,),
             ).fetchone()
@@ -92,18 +94,17 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if latest_evaluation:
                 import json
                 evaluation=json.loads(latest_evaluation[0])
-                # A wait judgment is a durable admission gate. Routine time passing
-                # is not new information, so it must not spend another model call.
-                # Existing input paths call wake(), which admits one fresh attempt;
-                # another wait returns the agent to dormancy.
-                if evaluation['judgment']=='wait' and not wake_row:
+                # A wait judgment gates only the attempt that recorded it. Routine
+                # time passing must not spend another model call, but once actionable
+                # input admits a newer attempt the older judgment is historical and
+                # cannot return later productive work to dormancy.
+                if (evaluation['judgment']=='wait' and not wake_row
+                        and previous and evaluation['run_id']==previous[0]):
                     continue
                 if evaluation['judgment']=='clarify':
                     question=conn.execute('SELECT answer FROM agent_native_questions WHERE id=? AND agent_id=?',
                                           (evaluation['question_id'],agent_id)).fetchone()
                     if question and question[0] is None: continue
-            root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
-            previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if (not previous or root[0]!=revision or previous[2]!=revision
                     or previous[4] not in ('completed','interrupted','limit_reached','retryable_failure','paused')): continue
             if (not wake_row and previous[5]

@@ -14,9 +14,11 @@ was backfilled and its 1024×768 image now renders in both its owner-review card
 Recent outputs. Selecting an image opens a large modal preview with keyboard and
 visible close controls; the inline preview remains available for quick scanning.
 
-The live Fantasy Game Builder has exposed a stale-wait defect after productive,
-bounded attempts. AN-106 is the immediate reliability fix: a superseded `wait`
-judgment must not prevent a cadence-enabled agent from starting its next attempt.
+The live Fantasy Game Builder exposed a stale-wait defect after productive,
+bounded attempts. AN-106 binds a plain `wait` judgment to the attempt that recorded
+it: a current wait remains token-free, while actionable input followed by a newer
+productive attempt permanently makes the older wait historical. Unanswered explicit
+questions remain blocking.
 The next major capability is AN-107: persist measured model-token usage and
 provider/model cost, aggregate it by attempt, agent and subtree, and enforce
 owner-controlled soft and hard budgets. AN-108 then expands the compact Work
