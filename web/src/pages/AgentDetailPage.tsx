@@ -786,6 +786,20 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
   const limits = { timeout_seconds: Number(seconds), max_iterations: Number(steps) };
   const work = agent.work;
   const canPause = work && ["queued", "preparing", "running", "stopping"].includes(work.state);
+  const hold = (work as typeof work & { hold?: { item_id: string; reason: string } | null })?.hold;
+
+  async function toggleCurrentHold() {
+    if (busy.current || !work) return;
+    busy.current = true; setError(null); onMutationStart();
+    try {
+      const suffix = hold ? '/work/hold/release' : '/work/hold';
+      const result = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}${suffix}`, {
+        method: 'POST', ...(hold ? {} : { headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ reason: 'Owner paused this work item to provide direction.' }) }),
+      });
+      onUpdate(result);
+    } catch { setError('Could not update the current work hold. Reload and try again.'); }
+    finally { busy.current = false; }
+  }
 
   async function perform(nextAction: "start" | "pause") {
     if (busy.current || (nextAction === "start" && (!validWorkLimits(limits) || !validModelChoice(agent.model_selection)))) return;
@@ -815,10 +829,11 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
   return <section aria-label="Agent work" className="space-y-4 rounded-xl border p-5">
     <div className="flex flex-wrap items-center justify-between gap-3">
       <h2 className="text-lg font-semibold">{work ? "Current work" : "Start the first work run"}</h2>
-      {canPause && <Button disabled={action !== null} onClick={() => { void perform("pause"); }}>{action === "pause" ? "Requesting pause…" : "Pause"}</Button>}
+      <div className="flex gap-2">{work?.focus && <Button disabled={action !== null} onClick={() => void toggleCurrentHold()}>{hold ? 'Resume current work' : 'Hold current work'}</Button>}{canPause && <Button disabled={action !== null} onClick={() => { void perform("pause"); }}>{action === "pause" ? "Requesting pause…" : "Pause agent"}</Button>}</div>
     </div>
     {canPause && <p className="text-sm text-muted-foreground">Pause stops automatic work for this agent and every active descendant.</p>}
     {work ? <>
+      {hold && <p role="status" className="rounded border p-3 text-sm">Current work is held for owner direction. Automatic work remains enabled and will resume this item after you release the hold. Reason: {hold.reason}</p>}
       {work.summary && <p className="whitespace-pre-wrap break-words">{work.summary}</p>}
       {work.state === "queued" && agent.setup?.status !== "ready" && <p>The request is saved. Work will begin after the private workspace and Plane project are ready.</p>}
       {work.state === "stopping" && <p role="status">Stopping the current run. Pause will be confirmed after it stops.</p>}
@@ -836,6 +851,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
         <dt className="text-muted-foreground">Session</dt><dd className="break-all">{work.session_id}</dd>
       </dl>
       <p className="text-xs text-muted-foreground">Each attempt is bounded. Configure Thinking cadence for automatic check-ins after completed work or a normal run limit.</p>
+      {work.focus && <WorkFeedback agentId={agent.id} revision={agent.soul_revision} />}
     </> : <form onSubmit={(event) => { event.preventDefault(); void perform("start"); }} className="space-y-4">
       <p className="text-sm text-muted-foreground">Set both limits to let this agent work on its purpose in its private workspace. Work waits for setup if needed.</p>
       <div className="grid gap-4 sm:grid-cols-2">

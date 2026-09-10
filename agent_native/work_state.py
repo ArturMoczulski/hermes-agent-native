@@ -41,7 +41,8 @@ from agent_native.child_supervision import SCHEMA as CHILD_SUPERVISION_SCHEMA
 from agent_native.child_autonomy import SCHEMA as CHILD_AUTONOMY_SCHEMA
 from agent_native.subtree_lifecycle import SCHEMA as SUBTREE_LIFECYCLE_SCHEMA
 from agent_native.usage import SCHEMA as USAGE_SCHEMA
-WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA + CHILD_AUTONOMY_SCHEMA + SUBTREE_LIFECYCLE_SCHEMA + USAGE_SCHEMA
+from agent_native.work_hold import SCHEMA as HOLD_SCHEMA
+WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA + CHILD_AUTONOMY_SCHEMA + SUBTREE_LIFECYCLE_SCHEMA + USAGE_SCHEMA + HOLD_SCHEMA
 
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 
@@ -139,6 +140,8 @@ def read_work(conn, agent_id):
     result['purpose_evaluations'] = list_evaluations(conn,agent_id)
     from agent_native.work_focus import read_focus
     result['focus'] = read_focus(conn, result['id'])
+    from agent_native.work_hold import read as read_hold
+    result['hold'] = read_hold(conn, agent_id)
     from agent_native.progress import recent
     result['progress'] = recent(conn, result['id'])
     from agent_native.output_sections import pending_sections

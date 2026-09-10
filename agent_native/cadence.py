@@ -80,6 +80,8 @@ def queue_due(conn, *, now=None, busy_agents=()):
     with write_txn(conn):
         for agent_id,revision,interval,due in conn.execute('SELECT agent_id,soul_revision,interval_seconds,next_due FROM agent_native_cadence WHERE enabled=1 AND next_due<=?',(now,)).fetchall():
             if agent_id in busy_agents: continue
+            if conn.execute('SELECT 1 FROM agent_native_work_holds WHERE agent_id=?', (agent_id,)).fetchone():
+                continue
             from agent_native.progress_concerns import suspend_if_stalled
             if suspend_if_stalled(conn, agent_id): continue
             from agent_native.readiness import automatic_work

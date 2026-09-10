@@ -336,6 +336,39 @@ class RetryWork(BaseModel):
     expected_run_id: str = Field(min_length=1, max_length=128)
 
 
+class HoldCurrentWork(BaseModel):
+    model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
+    reason: str = Field(min_length=1, max_length=1000)
+
+
+@router.post('/{agent_id}/work/hold')
+def hold_current_work(agent_id: str, body: HoldCurrentWork, actor=Depends(owner_session)):
+    from agent_native.work_hold import hold
+    with connect_closing(board='default') as conn:
+        try:
+            hold(conn, actor=actor, agent_id=agent_id, **body.model_dump())
+            return identity.get_root(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=422, detail=str(exc)) from exc
+
+
+@router.post('/{agent_id}/work/hold/release')
+def release_current_work(agent_id: str, actor=Depends(owner_session)):
+    from agent_native.work_hold import release
+    with connect_closing(board='default') as conn:
+        try:
+            release(conn, actor=actor, agent_id=agent_id)
+            return identity.get_root(conn, actor=actor, agent_id=agent_id)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail='Agent not found') from exc
+        except identity.ConflictError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+
+
 class ResultDecision(BaseModel):
     model_config = ConfigDict(extra='forbid', str_strip_whitespace=True)
     request_id: str = Field(min_length=1, max_length=128)
