@@ -399,4 +399,10 @@ test('protected media output loads with dashboard authentication', async ({ page
   await expect.poll(() => image.evaluate(element => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
   await expect(page.getByRole('link', { name: 'Open media' })).toHaveAttribute('href', /^blob:/);
   await expect(page.getByRole('link', { name: 'Download' })).toHaveAttribute('download', 'milestone.png');
+  await page.getByRole('button', { name: 'View Playable milestone screenshot full size' }).click();
+  const preview = page.getByRole('dialog', { name: 'Playable milestone screenshot' });
+  await expect(preview).toBeVisible();
+  await expect(preview.getByRole('img', { name: 'Playable milestone screenshot' })).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(preview).toBeHidden();
 });

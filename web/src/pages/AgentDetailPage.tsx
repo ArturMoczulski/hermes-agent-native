@@ -818,6 +818,7 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
 function AuthenticatedMedia({ artifact, source, compact = false }: { artifact: MediaOutput; source: string; compact?: boolean }) {
   const [objectUrl, setObjectUrl] = useState<string | null>(null);
   const [failed, setFailed] = useState(false);
+  const [imageOpen, setImageOpen] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -841,7 +842,23 @@ function AuthenticatedMedia({ artifact, source, compact = false }: { artifact: M
   if (!objectUrl) return <p role="status" className="text-sm text-muted-foreground">Loading media…</p>;
   const previewClass = compact ? "max-h-80" : "max-h-[32rem]";
   return <div className="space-y-3">
-    {artifact.mime_type.startsWith("image/") && <img className={`${previewClass} max-w-full rounded-md border object-contain`} src={objectUrl} alt={artifact.title} />}
+    {artifact.mime_type.startsWith("image/") && <>
+      <button type="button" className="block max-w-full cursor-zoom-in rounded-md text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        aria-label={`View ${artifact.title} full size`} onClick={() => setImageOpen(true)}>
+        <img className={`${previewClass} max-w-full rounded-md border object-contain`} src={objectUrl} alt={artifact.title} />
+      </button>
+      <Dialog open={imageOpen} onOpenChange={setImageOpen}>
+        <DialogContent className="flex h-[90vh] w-[95vw] !max-w-[95vw] flex-col overflow-hidden p-4 sm:p-6">
+          <DialogHeader className="shrink-0 pr-8">
+            <DialogTitle>{artifact.title}</DialogTitle>
+            <DialogDescription>Image preview. Use the close button or press Escape to return.</DialogDescription>
+          </DialogHeader>
+          <div className="min-h-0 flex-1 overflow-auto">
+            <img className="h-full w-full object-contain" src={objectUrl} alt={artifact.title} />
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>}
     {artifact.mime_type.startsWith("audio/") && <audio className="w-full" controls preload="metadata" src={objectUrl}>Audio preview is unavailable.</audio>}
     {artifact.mime_type.startsWith("video/") && <video className={`${previewClass} max-w-full rounded-md border`} controls preload="metadata" src={objectUrl}>Video preview is unavailable.</video>}
     <div className="flex flex-wrap gap-3">

@@ -11,7 +11,8 @@ native audio/video players with Open/Download controls. Media elements fetch the
 bytes through dashboard authentication before receiving a browser-local object URL;
 the session credential is never placed in the media URL. The existing Greenmoor PNG
 was backfilled and its 1024×768 image now renders in both its owner-review card and
-Recent outputs.
+Recent outputs. Selecting an image opens a large modal preview with keyboard and
+visible close controls; the inline preview remains available for quick scanning.
 
 The live Fantasy Game Builder has exposed a stale-wait defect after productive,
 bounded attempts. AN-106 is the immediate reliability fix: a superseded `wait`
