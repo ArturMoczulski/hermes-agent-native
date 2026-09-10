@@ -609,6 +609,7 @@ class WorkFeedbackBody(BaseModel):
     request_id: str = Field(min_length=1, max_length=128)
     expected_revision: int = Field(strict=True, ge=1)
     text: str = Field(min_length=1, max_length=4000)
+    intent: Literal['feedback', 'revision_request'] = 'feedback'
     output_id: str | None = None
     output_version: int | None = Field(default=None, ge=1)
 

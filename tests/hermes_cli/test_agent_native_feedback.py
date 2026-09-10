@@ -35,6 +35,20 @@ def test_feedback_requires_owner_and_current_purpose(broker):
         feedback.submit(s.conn,**{**args,'expected_revision':2})
 
 
+def test_feedback_records_revision_request_intent(broker):
+    from agent_native import feedback
+    s = broker
+    row = feedback.submit(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                          request_id='revision-intent', text='Make the map more readable.',
+                          intent='revision_request')
+    assert row['intent'] == 'revision_request'
+    offered = s.run._effect(s.conn, s.planning, {**effect(s, 'revision-intent-read', 'work_feedback'), 'arguments': {}})
+    assert offered['pending'][0]['intent'] == 'revision_request'
+    with pytest.raises(ValueError):
+        feedback.submit(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                        request_id='invalid-intent', text='No.', intent='approval')
+
+
 from tests.hermes_cli.test_agent_native_chat_api import client  # noqa: E402,F401
 
 

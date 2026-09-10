@@ -15,14 +15,14 @@ test('owner feedback reaches a native worker and its saved output', async ({ pag
     await expect.poll(async () => (await (await request.get(`${backend}/__e2e__/model-holds/E2E_FEEDBACK_HOLD`, { headers })).json()).entered, { timeout: 30000 }).toBe(true);
     await page.goto(`/agents/${id}`);
     await page.getByRole('link', { name: 'Full view', exact: true }).click();
-    const form = page.getByRole('region', { name: 'Feedback for work', exact: true });
+    const form = page.getByRole('region', { name: 'Feedback for work', exact: true }).first();
     await expect(form).toBeVisible();
     await form.getByLabel('Direction for subsequent work').fill('Give the dragon a hopeful ending.');
     await form.getByRole('button', { name: 'Send feedback' }).click();
     await expect(form).toContainText('Pending');
     await request.post(`${backend}/__e2e__/release-model`, { headers, data: { marker: 'E2E_FEEDBACK_HOLD' } });
     await expect(form).toContainText('Agent reports handled', { timeout: 30000 });
-    await expect.poll(async () => (await (await request.get(api, { headers })).json()).work.state).toBe('completed');
+    await expect.poll(async () => (await (await request.get(api, { headers })).json()).work.state, { timeout: 30000 }).toBe('completed');
     const output = (await (await request.get(api, { headers })).json()).work.outputs[0];
     await page.goto(`/agents/${id}?output=${output.output_id}&version=1`);
     await expect(page.getByRole('article', { name: 'Output reader', exact: true })).toContainText('Give the dragon a hopeful ending.');

@@ -54,6 +54,7 @@ def test_revision_request_requires_note_and_becomes_pending_feedback(configured)
     assert result['acceptance'] == 'revision_requested'
     feedback = configured.get(f'{URL}/{root["id"]}/feedback').json()
     assert feedback[0]['status'] == 'pending'
+    assert feedback[0]['intent'] == 'revision_request'
     assert 'Strengthen the ending.' in feedback[0]['text']
 
 

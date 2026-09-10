@@ -71,9 +71,9 @@ def decide(conn, *, actor, agent_id, result_id, request_id, decision,
                      (key, request_id, result_id, agent_id, decision, note, 'owner', _now()))
         if decision == 'revision_requested':
             feedback_id = str(uuid4())
-            conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,text,status,created_at) VALUES(?,?,?,?,?,?,?)',
+            conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,text,intent,status,created_at) VALUES(?,?,?,?,?,?,?,?)',
                          (feedback_id, agent_id, record['soul_revision'], 'result-revision:'+result_id,
-                          'Owner requested revision of result '+result_id+': '+note, 'pending', _now()))
+                          'Owner requested revision of result '+result_id+': '+note, 'revision_request', 'pending', _now()))
         # A decision is actionable input. An enabled cadence may pick it up now,
         # while its normal busy/terminal admission guards still apply.
         from agent_native.cadence import wake
