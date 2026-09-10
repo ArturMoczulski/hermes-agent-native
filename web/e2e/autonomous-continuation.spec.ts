@@ -41,6 +41,7 @@ test('highly autonomous agent advances to a different ready assignment without o
 
     await page.goto(`/agents/${id}`)
     const direction = page.getByRole('region', { name: 'Current work overview', exact: true })
+    await expect(direction.getByRole('heading', { name: 'Current milestone', exact: true })).toBeVisible()
     await expect(direction.getByRole('heading', { name: 'Working on now', exact: true })).toBeVisible()
     await expect(direction.getByRole('heading', { name: 'Up next', exact: true })).toBeVisible()
     await page.getByRole('region', { name: 'Recent outputs', exact: true })

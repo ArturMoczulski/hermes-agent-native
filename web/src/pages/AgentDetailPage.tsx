@@ -486,6 +486,8 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     : evaluation?.judgment === "clarify" ? "Waiting for your answer before dependent work can continue."
     : evaluation?.judgment === "wait" ? (evaluation.uncertainty || "Waiting for new information before continuing.")
     : work?.focus?.name ?? work?.summary ?? "No current work direction has been recorded.");
+  const currentMilestone = work?.focus?.name ?? (work ? "A milestone has not been selected yet." : "No milestone has been selected yet.");
+  const detailedWork = work?.summary && work.summary !== work?.focus?.name ? work.summary : null;
   const nextDirection = requiredReviews.length
     ? `Review ${requiredReviews[0].summary}`
     : evaluation?.judgment === "clarify"
@@ -500,7 +502,9 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
   return <section aria-label="Current work overview" className="space-y-3 rounded-xl border p-5">
     <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-lg font-semibold">Work direction</h2><UsageSummary usage={agent.usage.agent} /></div>
     <p className="text-sm"><strong>Stage:</strong> {stage}</p>
+    <div><h3 className="text-sm font-semibold">Current milestone</h3><p className="whitespace-pre-wrap text-sm">{currentMilestone}</p></div>
     <div><h3 className="text-sm font-semibold">Working on now</h3><p className="whitespace-pre-wrap text-sm">{currentDirection}</p></div>
+    {detailedWork && <div><h3 className="text-sm font-semibold">Current detail</h3><p className="whitespace-pre-wrap text-sm">{detailedWork}</p></div>}
     {recentSteps.length > 0 && <div><h3 className="text-sm font-semibold">Latest progress on this work</h3><ul className="list-disc space-y-1 pl-5 text-sm">{recentSteps.map(step => <li key={step.operation_id}>{step.summary.replace(/^Agent reports:\s*/, "")}</li>)}</ul></div>}
     <div><h3 className="text-sm font-semibold">Up next</h3><p className="whitespace-pre-wrap text-sm">{nextDirection}</p></div>
     {evaluation?.judgment === "wait" && agent.cadence?.enabled && <p className="text-sm text-muted-foreground">Automatic work remains enabled, but no model is running while the agent waits for new information.</p>}
