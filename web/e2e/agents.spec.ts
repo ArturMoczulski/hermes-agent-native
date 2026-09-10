@@ -294,6 +294,8 @@ test('compact header enables automatic work when cadence is off', async ({ page 
     soul_revision: 1, execution: 'completed', created_at: '2026-09-09T10:00:00+00:00',
     removed_at: null, retirement: null, replacement: null, pause: { paused: false, sources: [] },
     cadence: { enabled: false, interval_seconds: null, next_due: null },
+    automatic_work: { state: 'automatic_off', may_start: false, blocker: 'Automatic work is disabled.', release_condition: 'Enable automatic work.', responsible_actor: 'owner' },
+    usage: { agent: { input_tokens: 0, output_tokens: 0, actual_cost_usd: 0, estimated_cost_usd: 0 }, subtree: { input_tokens: 0, output_tokens: 0, actual_cost_usd: 0, estimated_cost_usd: 0 } },
     autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null },
     model_selection: null, model_activity: [], progress_concerns: [], assignment_review_policies: [],
     startup: null, setup: null,
@@ -308,6 +310,7 @@ test('compact header enables automatic work when cadence is off', async ({ page 
   await page.route(`**/api/agent-native/agents/${id}/cadence`, async route => {
     expect(route.request().postDataJSON()).toEqual({ expected_revision: 1, interval_seconds: 60, enabled: true });
     agent.cadence = { enabled: true, interval_seconds: 60, next_due: '2026-09-09T10:01:00+00:00' };
+    agent.automatic_work = { state: 'waiting_owner_answer', may_start: false, blocker: 'Choose the next design direction.', release_condition: 'Answer the agent question.', responsible_actor: 'owner' };
     return route.fulfill({ status: 200, json: agent.cadence });
   });
 
@@ -316,8 +319,8 @@ test('compact header enables automatic work when cadence is off', async ({ page 
   await enable.hover();
   await expect(page.getByRole('tooltip', { name: 'Enable automatic work' })).toBeVisible();
   await enable.click();
-  await expect(page.getByLabel('Execution status')).toHaveText('Active · waiting for your decision');
-  await expect(page.getByRole('region', { name: 'Current work overview' })).toContainText('Waiting for your decision');
+  await expect(page.getByLabel('Execution status')).toHaveText('Needs your decision');
+  await expect(page.getByRole('region', { name: 'Current work overview' })).toContainText('Choose the next design direction.');
   await expect(page.getByRole('button', { name: 'Pause automatic work', exact: true })).toBeVisible();
 });
 

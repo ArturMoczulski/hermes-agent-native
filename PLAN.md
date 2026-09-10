@@ -32,8 +32,10 @@ Plane owns the full acceptance criteria and dependencies for the urgent repair:
 All five items are urgent and assigned to the current undated Cycle 06. Their delivery
 order is AN-116, AN-117, AN-118, AN-119, then AN-120; AN-119 depends on the shared
 readiness and decision-gate work, and AN-120 is the final integration gate. The next
-implementation priority is AN-117, using the now-proven admission behavior as its
-first readiness case.
+implementation priority is AN-117. Its first vertical slice now publishes one
+host-derived readiness decision through the API, uses it for cadence admission,
+and renders it in Compact view. The remaining acceptance work is a focused matrix
+for every lifecycle category before AN-118 takes over decision-gate semantics.
 
 AN-114 is the preceding reliability repair exposed by the live Fantasy Game
 Builder. The framework had no explicit authoritative list of pending owner decisions

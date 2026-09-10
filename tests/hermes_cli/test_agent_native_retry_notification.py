@@ -110,6 +110,16 @@ def test_cadence_continues_past_pending_pause_notice_after_owner_resume(broker):
     ).fetchone()
     assert tuple(notice)[1] == 'pending'
 
+    from agent_native.readiness import automatic_work
+    readiness = automatic_work(s.conn, s.root['id'], now='2099-01-01T00:00:00+00:00')
+    assert readiness == {
+        'state': 'ready',
+        'may_start': True,
+        'blocker': None,
+        'release_condition': None,
+        'responsible_actor': None,
+    }
+
     queued = cadence.queue_due(s.conn, now='2099-01-01T00:00:00+00:00')
 
     assert len(queued) == 1

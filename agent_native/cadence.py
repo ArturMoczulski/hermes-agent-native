@@ -82,37 +82,19 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if agent_id in busy_agents: continue
             from agent_native.progress_concerns import suspend_if_stalled
             if suspend_if_stalled(conn, agent_id): continue
-            from agent_native.acceptance import pending_required
-            if pending_required(conn, agent_id): continue
+            from agent_native.readiness import automatic_work
+            if not automatic_work(conn, agent_id, now=now, busy=agent_id in busy_agents)['may_start']:
+                continue
             root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
             previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             wake_row=conn.execute(
                 'SELECT reason FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,),
             ).fetchone()
-            latest_evaluation=conn.execute('SELECT record_json FROM agent_native_purpose_evaluations '
-                'WHERE agent_id=? ORDER BY created_at DESC,id DESC LIMIT 1',(agent_id,)).fetchone()
-            if latest_evaluation:
-                import json
-                evaluation=json.loads(latest_evaluation[0])
-                # Required reviews are gated above by their immutable result record.
-                # A plain historical wait has no independently verifiable dependency
-                # and cannot suppress cadence; new dependency-free waits are rejected
-                # when the purpose evaluation is recorded.
-                if evaluation['judgment']=='clarify':
-                    question=conn.execute('SELECT answer FROM agent_native_questions WHERE id=? AND agent_id=?',
-                                          (evaluation['question_id'],agent_id)).fetchone()
-                    if question and question[0] is None: continue
             if (not previous or root[0]!=revision or previous[2]!=revision
                     or previous[4] not in ('completed','interrupted','limit_reached','retryable_failure','paused')): continue
-            if (not wake_row and previous[5]
-                    and datetime.fromisoformat(now)<datetime.fromisoformat(previous[5])+timedelta(seconds=interval)):
-                continue
             if conn.execute("SELECT 1 FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')",(agent_id,)).fetchone(): continue
             from agent_native.delivery_barrier import unresolved_terminal_notices, record_notices
-            try:
-                notices = unresolved_terminal_notices(conn, agent_id)
-            except ConflictError:
-                continue
+            notices = unresolved_terminal_notices(conn, agent_id)
             key=str(uuid4())
             conn.execute('INSERT INTO agent_native_work_runs(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at) VALUES(?,?,?,?,?,?,?,?)',
                 (key,agent_id,previous[1],revision,'an_work_'+uuid4().hex,previous[3],'queued',now))

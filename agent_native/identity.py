@@ -103,6 +103,8 @@ def _read(conn, agent_id):
     root['pause'] = read_pause(conn, agent_id)
     if root['pause']['paused']:
         root['execution'] = 'paused'
+    from agent_native.readiness import automatic_work
+    root['automatic_work'] = automatic_work(conn, agent_id)
     return root
 
 

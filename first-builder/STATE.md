@@ -2571,3 +2571,14 @@ preserved five old terminal notices as audit events without resending them and q
 exactly one fresh Fantasy Game Builder attempt. That attempt entered `running` and
 made model calls. The agent has no unanswered owner question, its Milestone 2 output
 is optional review, and its current autonomy setting is Level 3. AN-117 is next.
+## One automatic-work readiness decision — 2026-09-10
+
+AN-117's first vertical slice removes the disagreement that made the live Fantasy
+Game Builder look busy, paused, and recoverable at the same time. The host now
+publishes one read-only automatic-work decision with a state, whether a model run
+may start, the exact blocker, its release condition and who can resolve it.
+Cadence consumes that decision before it queues a run, and Compact view presents
+the same decision to the owner. The initial focused proofs cover setup, the
+owner-resumed informational-pause path, enabling cadence when an owner answer is
+still required, TypeScript, and Chromium. Next: extend the readiness matrix across
+the remaining lifecycle categories and accept AN-117 before moving to AN-118.

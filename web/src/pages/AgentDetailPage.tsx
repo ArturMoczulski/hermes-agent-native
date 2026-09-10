@@ -109,9 +109,10 @@ export default function AgentDetailPage() {
           method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ expected_revision: agent.soul_revision, interval_seconds: agent.cadence?.interval_seconds ?? 60, enabled: true }),
         });
+        const refreshed = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}`);
         mutationVersion.current += 1;
         setLoaded((previous) => previous.key === key && previous.agent
-          ? { key, agent: { ...previous.agent, cadence } } : previous);
+          ? { key, agent: { ...refreshed, cadence } } : previous);
         setResumeNotice("Automatic work enabled. Waiting dependencies still apply and resolving one will wake the agent.");
       } else {
         const result = await fetchJSON<Agent>(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/work/${agent.pause?.paused ? "resume" : "pause"}`, { method: "POST" });
@@ -407,7 +408,15 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     !item.summary.startsWith("Selected work item:") && !item.summary.startsWith("Attempt ")
   ).slice(0, 3);
   const active = Boolean(work && ["running", "queued", "preparing", "stopping"].includes(work.state));
-  const stage = agent.retirement ? "Retired"
+  const readinessStage: Record<string, string> = {
+    ready: "Ready to start", working: "Working", scheduled: "Waiting for next check-in",
+    owner_paused: "Paused", waiting_owner_review: "Waiting for your review",
+    waiting_owner_answer: "Waiting for your answer", owner_attention: "Needs your attention",
+    framework_reconciliation: "Framework recovery needed", automatic_off: "Automatic work off",
+    setup: "Preparing agent", not_configured: "Work not configured", retired: "Retired", removed: "Removed",
+  };
+  const stage = agent.automatic_work ? readinessStage[agent.automatic_work.state]
+    : agent.retirement ? "Retired"
     : agent.removed_at ? "Removed"
     : agent.pause?.paused ? "Paused"
     : work?.state === "running" ? "Working"
@@ -416,17 +425,20 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     : work?.state === "completed" && agent.cadence?.enabled ? agentWaitingForOwner(agent) ? "Waiting for your decision" : "Waiting for next check-in"
     : work?.state === "completed" ? "Automatic work off"
     : work ? work.state.replace("_", " ") : "Not started";
-  const currentDirection = active
+  const currentDirection = agent.automatic_work?.blocker
+    ?? (active
     ? work?.focus?.name ?? work?.summary ?? "Reviewing its purpose and project state."
     : evaluation?.judgment === "clarify" ? "Waiting for your answer before dependent work can continue."
     : evaluation?.judgment === "wait" ? (evaluation.uncertainty || "Waiting for new information before continuing.")
-    : work?.focus?.name ?? work?.summary ?? "No current work direction has been recorded.";
+    : work?.focus?.name ?? work?.summary ?? "No current work direction has been recorded.");
   const nextDirection = requiredReviews.length
     ? `Review ${requiredReviews[0].summary}`
     : evaluation?.judgment === "clarify"
     ? "Continue after you answer the question shown above."
     : active
     ? "Continue the selected work and report the next meaningful checkpoint."
+    : agent.automatic_work?.release_condition
+    ? agent.automatic_work.release_condition
     : agent.cadence?.enabled
     ? "Review the project again at the next eligible check-in."
     : "Enable automatic work or give the agent new direction.";

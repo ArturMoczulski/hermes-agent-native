@@ -44,6 +44,11 @@ def test_creation_with_work_enables_automatic_continuation_by_default(client):
     assert root['work']['state'] == 'queued'
     assert root['cadence']['enabled'] is True
     assert root['cadence']['interval_seconds'] == 60
+    assert root['automatic_work']['state'] == 'setup'
+    assert root['automatic_work']['may_start'] is False
+    assert root['automatic_work']['responsible_actor'] == 'framework'
+    assert root['automatic_work']['blocker']
+    assert root['automatic_work']['release_condition']
 
 
 def test_owner_creates_a_child_and_api_returns_tree_relationships(client):
