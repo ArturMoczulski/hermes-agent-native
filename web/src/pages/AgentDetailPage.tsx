@@ -793,8 +793,6 @@ function WorkResults({ agent, attentionOnly = false }: { agent: Agent; attention
 }
 
 function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult; label: string }) {
-  const media = (agent.work?.media_outputs ?? []).filter(
-    artifact => artifact.run_id === result.run_id && artifact.item_id === result.item_id);
   return <article id={`result-${result.id}`} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">{label}</h3>
@@ -806,21 +804,8 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
         <pre className="whitespace-pre-wrap break-words font-sans">{result.evaluation.report}</pre>
         <p className="text-muted-foreground">This is the agent’s assessment. {result.acceptance === "accepted" ? "The owner accepted this exact result." : result.acceptance === "revision_requested" ? "The owner requested a revision." : result.review.required ? "An owner decision is required for this deliverable." : "No owner decision is required."}</p>
       </section>
-      {result.outputs.length ? <ul className="space-y-1 text-sm">{result.outputs.map((output) => {
-        const metadata = agent.work?.outputs.find((item) => item.output_id === output.output_id && item.version === output.version);
-        return <li key={`${output.output_id}:${output.version}`}><Link className="underline underline-offset-4" to={outputVersionLink(agent.id, output)}>
-          {metadata?.title ?? "Saved output"} · Version {output.version}
-        </Link></li>;
-      })}</ul> : <p className="text-sm text-muted-foreground">No saved outputs for this result.</p>}
-      {media.map(artifact => {
-        const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
-        return <div key={artifact.artifact_id} className="space-y-2 rounded-md border p-3">
-          <p className="text-sm font-medium">{artifact.title}</p>
-          <AuthenticatedMedia artifact={artifact} source={source} compact />
-        </div>;
-      })}
       <PlanningItemLink agent={agent} itemId={result.item_id} />
-      {result.review.required && result.acceptance === "not_evaluated" && <p className="text-sm font-medium">Review the saved outputs and media evidence above, then open the exact saved output version to accept it or request revision.</p>}
+      {result.review.required && result.acceptance === "not_evaluated" && <p className="text-sm font-medium">Review the exact saved output in the Saved outputs panel, then accept it or request revision.</p>}
       {result.owner_decision?.note && <p className="whitespace-pre-wrap text-sm">Owner note: {result.owner_decision.note}</p>}
     </article>;
 }
@@ -839,7 +824,7 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
   const allMedia = agent.work?.media_outputs ?? [];
   const entries = [...allOutputs.map(output => ({ kind: 'output' as const, created_at: output.created_at, output })), ...allMedia.map(media => ({ kind: 'media' as const, created_at: media.created_at, media }))]
     .sort((a, b) => b.created_at.localeCompare(a.created_at));
-  const pageSize = compact ? (limit ?? 3) : 5;
+  const pageSize = 5;
   const pageCount = Math.max(1, Math.ceil(entries.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
   const visible = entries.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
@@ -867,7 +852,7 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
         const artifact = entry.media;
         const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
         return <article key={artifact.artifact_id} className="space-y-3 rounded-lg border p-4">
-        <details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{artifact.title}</summary>
+        <details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{artifact.title} <span className="ml-2 text-xs font-normal text-muted-foreground">Feedback available</span></summary>
         <p className="text-xs text-muted-foreground">{artifact.mime_type} · {(artifact.byte_count / 1024).toFixed(1)} KB · <time dateTime={artifact.created_at}>{new Date(artifact.created_at).toLocaleString()}</time></p>
         <AuthenticatedMedia artifact={artifact} source={source} />
         <PlanningItemLink agent={agent} itemId={artifact.item_id} />
@@ -876,7 +861,7 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
       </article>;
       }
       const output = entry.output;
-      return <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4"><details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{output.title} · Version {output.version}</summary>
+      return <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4"><details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{output.title} · Version {output.version} <span className="ml-2 text-xs font-normal text-muted-foreground">Feedback available</span></summary>
       <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>
       {!compact && <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>}
       <PlanningItemLink agent={agent} itemId={output.item_id} />
