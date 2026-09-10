@@ -4,6 +4,21 @@ import pytest
 from tests.hermes_cli.test_agent_native_work_effects import broker, effect  # noqa: F401
 
 
+def test_purpose_evaluation_schema_exposes_runtime_text_bounds():
+    from agent.work_policy import tool_schemas
+
+    schema = next(tool['function']['parameters'] for tool in tool_schemas()
+                  if tool['function']['name'] == 'purpose_evaluate')
+
+    assert schema['properties']['next_action'] == {
+        'type': 'string', 'minLength': 1, 'maxLength': 4000,
+    }
+    assert schema['properties']['evidence']['items'] == {
+        'type': 'string', 'minLength': 1, 'maxLength': 2000,
+    }
+    assert schema['properties']['evidence']['maxItems'] == 100
+
+
 def test_worker_records_durable_whole_purpose_evaluation(broker):
     s=broker
     evaluation=s.run._effect(s.conn,s.planning,effect(s,'purpose-one','purpose_evaluate',{

@@ -2538,3 +2538,12 @@ next action. The two focused checks pass directly (`2 passed, 4 deselected`). A
 worker-level Playwright attempt remained running, and a subsequent harness start
 exceeded its existing 60-second server timeout, so neither is counted as E2E
 evidence and AN-115 remains open for deterministic worker-path verification.
+
+The model-facing `purpose_evaluate` schema now advertises the runtime's
+nonempty and maximum-length constraints for the next action, evidence,
+remaining obligations and uncertainty. This prevents the observed empty next
+action from being presented as schema-valid. The new schema test failed red,
+then the three AN-115-focused checks passed (`3 passed, 4 deselected`). Running
+the entire purpose-evaluation file also exposed an older retirement test that
+still expects `_effect` to raise even though managed validation failures are
+returned as rejection receipts; keep that separate from AN-115.
