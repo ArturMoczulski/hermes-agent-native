@@ -112,7 +112,8 @@ def test_granted_agent_publishes_a_stable_isolated_preview(client, tmp_path):
     }).json()
     project = tmp_path / 'site'
     (project / 'dist').mkdir(parents=True)
-    (project / 'dist' / 'index.html').write_text('<h1>Playable increment</h1>')
+    (project / 'dist' / 'index.html').write_text('<link rel="stylesheet" href="game.css"><h1>Playable increment</h1>')
+    (project / 'dist' / 'game.css').write_text('h1 { color: green; }')
     assert client.post(f"/api/agent-native/agents/{agent['id']}/workspace", json={
         'expected_revision': 1, 'root': str(project),
     }).status_code == 201
@@ -122,5 +123,19 @@ def test_granted_agent_publishes_a_stable_isolated_preview(client, tmp_path):
     assert preview['url'] == f"/api/agent-native/agents/{agent['id']}/preview/"
     response = client.get(preview['url'])
     assert response.status_code == 200
-    assert response.text == '<h1>Playable increment</h1>'
+    assert 'Playable increment' in response.text
     assert client.get(preview['url'] + '../secret').status_code == 404
+
+    launch = client.post(f"/api/agent-native/agents/{agent['id']}/preview-launch")
+    assert launch.status_code == 200
+    launch_url = launch.json()['url']
+    assert 'ticket=' in launch_url and 'X-Hermes' not in launch_url
+    assert launch_url.startswith('http://localhost')
+    client.headers.pop('X-Hermes-Session-Token')
+    exchange = client.get(launch_url, follow_redirects=False)
+    assert exchange.status_code == 303
+    assert 'ticket=' not in exchange.headers['location']
+    assert 'HttpOnly' in exchange.headers['set-cookie']
+    assert client.get(exchange.headers['location']).status_code == 200
+    assert client.get(exchange.headers['location'] + 'game.css').text == 'h1 { color: green; }'
+    assert client.get(launch_url, follow_redirects=False).status_code == 401

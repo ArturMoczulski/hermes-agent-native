@@ -35,6 +35,13 @@ budget visualization. AN-108 then expands the compact Work
 direction card with the current concrete step and its three newest related
 activities. This must keep bounded-attempt outcomes distinct from whole-agent state.
 
+AN-112 fixes the project-preview launch defect found in the live Fantasy Game
+Builder. The compact-view control no longer navigates directly to an authenticated
+API resource. An authenticated request mints a 30-second, single-use ticket on a
+separate loopback origin; exchanging it establishes an HTTP-only session scoped to
+that agent preview and redirects to a clean URL. Relative project assets then load
+normally without exposing or sharing the dashboard session credential.
+
 AN-104 remains the active storage migration foundation. Its first TDD slice adds
 the authoritative home resolver and safely provisions distinct practices,
 default-project, output and attempt-runtime areas without relocating existing data.

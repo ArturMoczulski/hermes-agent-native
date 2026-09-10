@@ -27,6 +27,7 @@ def owner_session(request: Request):
 
 
 router = APIRouter(prefix='/api/agent-native/agents')
+preview_router = APIRouter(prefix='/agent-preview')
 model_router = APIRouter(prefix='/api/agent-native/models')
 first_builder_router = APIRouter(prefix='/api/agent-native/first-builder')
 
@@ -130,6 +131,57 @@ def read_project_preview(agent_id: str, asset_path: str = 'index.html', actor=De
             return FileResponse(project_preview.asset(conn, agent_id, asset_path))
         except (KeyError, PermissionError, ValueError) as exc:
             raise HTTPException(status_code=404, detail='Preview asset not found') from exc
+
+
+@router.post('/{agent_id}/preview-launch')
+def create_project_preview_launch(request: Request, agent_id: str, actor=Depends(owner_session)):
+    from agent_native import project_preview
+    with connect_closing(board='default') as conn:
+        try:
+            identity.get_root(conn, actor=actor, agent_id=agent_id)
+            project_preview.read(conn, agent_id)
+            ticket = project_preview.mint_launch(agent_id)
+            host = request.url.hostname
+            if host not in ('127.0.0.1', 'localhost'):
+                raise PermissionError('A separate configured preview origin is required')
+            preview_host = 'localhost' if host == '127.0.0.1' else '127.0.0.1'
+            port = f':{request.url.port}' if request.url.port else ''
+            return {'url': f'{request.url.scheme}://{preview_host}{port}/agent-preview/{agent_id}/launch?ticket={ticket}'}
+        except (KeyError, PermissionError) as exc:
+            raise HTTPException(status_code=404, detail='Project preview not found') from exc
+
+
+@preview_router.get('/{agent_id}/launch')
+def exchange_project_preview_launch(request: Request, agent_id: str, ticket: str):
+    from fastapi.responses import RedirectResponse
+    from agent_native import project_preview
+    try:
+        session = project_preview.exchange_launch(agent_id, ticket)
+    except PermissionError as exc:
+        raise HTTPException(status_code=401, detail='Preview launch is invalid or expired') from exc
+    port = f':{request.url.port}' if request.url.port else ''
+    clean_url = f'{request.url.scheme}://{request.url.hostname}{port}/agent-preview/{agent_id}/'
+    response = RedirectResponse(clean_url, status_code=303)
+    response.set_cookie('agent_preview_session', session, max_age=3600, httponly=True,
+                        samesite='strict', path=f'/agent-preview/{agent_id}')
+    return response
+
+
+@preview_router.get('/{agent_id}/')
+@preview_router.get('/{agent_id}/{asset_path:path}')
+def read_launched_project_preview(request: Request, agent_id: str, asset_path: str = 'index.html'):
+    from fastapi.responses import FileResponse
+    from agent_native import project_preview
+    try:
+        project_preview.authorize_session(agent_id, request.cookies.get('agent_preview_session', ''))
+        with connect_closing(board='default') as conn:
+            response = FileResponse(project_preview.asset(conn, agent_id, asset_path))
+            response.headers['Referrer-Policy'] = 'no-referrer'
+            response.headers['X-Content-Type-Options'] = 'nosniff'
+            response.headers['Cross-Origin-Opener-Policy'] = 'same-origin'
+            return response
+    except (KeyError, PermissionError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail='Preview asset not found') from exc
 
 
 class ConfigureWork(WorkLimits):

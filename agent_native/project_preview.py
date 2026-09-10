@@ -1,6 +1,9 @@
 """Stable static previews rooted inside an explicitly granted project workspace."""
 
 from pathlib import Path, PurePosixPath
+import secrets
+from threading import Lock
+import time
 
 from agent_native.identity import _now, _require_owner
 from hermes_cli.kanban_db_connect import write_txn
@@ -13,6 +16,50 @@ CREATE TABLE IF NOT EXISTS agent_native_project_previews (
  published_at TEXT NOT NULL
 );
 """
+
+_LAUNCH_TTL_SECONDS = 30
+_SESSION_TTL_SECONDS = 3600
+_launches = {}
+_sessions = {}
+_session_lock = Lock()
+
+
+def _prune(now):
+    for store in (_launches, _sessions):
+        for key, value in list(store.items()):
+            if value[1] <= now:
+                store.pop(key, None)
+
+
+def mint_launch(agent_id):
+    """Create one short-lived, single-use launch ticket bound to one preview."""
+    ticket, now = secrets.token_urlsafe(32), time.monotonic()
+    with _session_lock:
+        _prune(now)
+        _launches[ticket] = (agent_id, now + _LAUNCH_TTL_SECONDS)
+    return ticket
+
+
+def exchange_launch(agent_id, ticket):
+    """Consume a ticket and return an opaque preview-only browser session."""
+    now = time.monotonic()
+    with _session_lock:
+        _prune(now)
+        value = _launches.pop(ticket, None)
+        if value is None or value[0] != agent_id:
+            raise PermissionError('Preview launch is invalid or expired')
+        session = secrets.token_urlsafe(32)
+        _sessions[session] = (agent_id, now + _SESSION_TTL_SECONDS)
+        return session
+
+
+def authorize_session(agent_id, session):
+    now = time.monotonic()
+    with _session_lock:
+        _prune(now)
+        value = _sessions.get(session)
+        if value is None or value[0] != agent_id:
+            raise PermissionError('Preview session is invalid or expired')
 
 
 def _relative(value):

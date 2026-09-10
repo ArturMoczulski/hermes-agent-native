@@ -144,9 +144,7 @@ export default function AgentDetailPage() {
               {planeUrl && <IconTooltip label="Open project in Plane">
                 <a className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground shadow-sm hover:bg-muted" href={planeUrl} target="_blank" rel="noreferrer" aria-label="Open project in Plane"><SquareKanban className="size-5" strokeWidth={2.5} aria-hidden="true" /></a>
               </IconTooltip>}
-              {agent.project_preview?.url && <IconTooltip label="Open project preview">
-                <a className="inline-flex size-10 items-center justify-center rounded-md border border-border bg-background text-foreground shadow-sm hover:bg-muted" href={agent.project_preview.url} target="_blank" rel="noreferrer" aria-label="Open project preview"><MonitorPlay className="size-5" strokeWidth={2.5} aria-hidden="true" /></a>
-              </IconTooltip>}
+              {agent.project_preview?.url && <ProjectPreviewButton agentId={agent.id} />}
             </div>
             <div className="flex items-center gap-2">
               <span aria-label="Execution status" className="rounded-full border px-3 py-1 text-sm">{agentWorkStatus(agent)}</span>
@@ -344,6 +342,33 @@ function IconTooltip({ label, children }: { label: string; children: ReactNode }
     <span role="tooltip" className="pointer-events-none absolute left-1/2 top-full z-50 mt-2 -translate-x-1/2 whitespace-nowrap rounded-md bg-foreground px-2 py-1 text-xs text-background opacity-0 shadow-md transition-opacity group-hover:opacity-100 group-focus-within:opacity-100">
       {label}
     </span>
+  </span>;
+}
+
+function ProjectPreviewButton({ agentId }: { agentId: string }) {
+  const [opening, setOpening] = useState(false);
+  const [error, setError] = useState(false);
+  async function openPreview() {
+    if (opening) return;
+    const preview = window.open("about:blank", "_blank");
+    if (preview) preview.opener = null;
+    setOpening(true); setError(false);
+    try {
+      const launch = await fetchJSON<{ url: string }>(`${agentsEndpoint}/${encodeURIComponent(agentId)}/preview-launch`, { method: "POST" });
+      if (preview) preview.location.replace(launch.url);
+      else window.open(launch.url, "_blank", "noopener,noreferrer");
+    } catch {
+      preview?.close(); setError(true);
+    } finally { setOpening(false); }
+  }
+  return <span>
+    <IconTooltip label="Open playable project preview">
+      <Button size="icon" className="size-10 border border-border bg-background text-foreground shadow-sm hover:bg-muted"
+        disabled={opening} aria-label="Open playable project preview" onClick={() => void openPreview()}>
+        <MonitorPlay className="size-5" strokeWidth={2.5} aria-hidden="true" />
+      </Button>
+    </IconTooltip>
+    {error && <span role="alert" className="sr-only">Could not open the project preview. Reload and try again.</span>}
   </span>;
 }
 
