@@ -2531,3 +2531,10 @@ autonomous cadence. Plane item AN-115 is In Progress. Next: use a deterministic
 managed-run fixture to prove a corrected follow-up evaluation completes instead
 of becoming an owner-attention state, then expose any remaining recoverable run
 reason in the compact agent view.
+
+The effect-boundary regression now also proves same-run recovery: after the
+explicit rejection, a new call records the corrected `continue` judgment and
+next action. The two focused checks pass directly (`2 passed, 4 deselected`). A
+worker-level Playwright attempt remained running, and a subsequent harness start
+exceeded its existing 60-second server timeout, so neither is counted as E2E
+evidence and AN-115 remains open for deterministic worker-path verification.

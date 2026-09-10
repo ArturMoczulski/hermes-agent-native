@@ -106,3 +106,16 @@ def test_rejected_purpose_evaluation_explains_the_recoverable_argument_error(bro
     assert rejected['status'] == 'rejected'
     assert rejected['error'] == 'ValueError'
     assert rejected['message'] == 'Next action is required'
+
+    corrected = s.run._effect(s.conn, s.planning, effect(s, 'corrected-next-action', 'purpose_evaluate', {
+        'judgment': 'continue', 'evidence': ['The current result is recorded.'],
+        'remaining_obligations': ['Continue the next useful assignment.'],
+        'uncertainty': None, 'next_action': 'Select the next useful assignment.', 'question_id': None,
+    }))
+
+    assert corrected['judgment'] == 'continue'
+    assert corrected['next_action'] == 'Select the next useful assignment.'
+    assert s.conn.execute(
+        'SELECT count(*) FROM agent_native_purpose_evaluations WHERE run_id=?',
+        (s.work['id'],),
+    ).fetchone()[0] == 1
