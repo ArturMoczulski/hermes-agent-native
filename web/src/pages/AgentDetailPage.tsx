@@ -885,6 +885,7 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
   const visible = entries.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   const outputId = searchParams.get("output");
   const version = searchParams.get("version");
+  const mediaId = searchParams.get("media");
   const hasSelection = outputId !== null || version !== null;
   const uniqueSelection = searchParams.getAll("output").length === 1 && searchParams.getAll("version").length === 1;
 
@@ -893,10 +894,20 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
       const next = new URLSearchParams(previous);
       next.delete("output");
       next.delete("version");
+      next.delete("media");
       if (output) { next.set("output", output.output_id); next.set("version", String(output.version)); }
       return next;
     });
   }
+  function selectMedia(artifact: MediaOutput | null) {
+    setSearchParams((previous) => {
+      const next = new URLSearchParams(previous);
+      next.delete("output"); next.delete("version"); next.delete("media");
+      if (artifact) next.set("media", artifact.artifact_id);
+      return next;
+    });
+  }
+  const selectedMedia = allMedia.find((artifact) => artifact.artifact_id === mediaId) ?? null;
 
   const label = compact ? "Recent outputs" : "Saved outputs";
   return <section aria-label={label} className="space-y-4 rounded-xl border p-5">
@@ -904,16 +915,16 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
     {!entries.length && <p>No output versions saved yet.</p>}
     {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
       outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
+    {selectedMedia && <SelectedMediaOutput agent={agent} artifact={selectedMedia} onClose={() => selectMedia(null)} />}
     <div className="space-y-4">{visible.map((entry, index) => {
       if (entry.kind === 'media') {
         const artifact = entry.media;
-        const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
+        const selected = selectedMedia?.artifact_id === artifact.artifact_id;
         return <article key={artifact.artifact_id} className="space-y-3 rounded-lg border p-4">
         <details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{artifact.title} <span className="ml-2 text-xs font-normal text-muted-foreground">Feedback available</span></summary>
         <p className="text-xs text-muted-foreground">{artifact.mime_type} · {(artifact.byte_count / 1024).toFixed(1)} KB · <time dateTime={artifact.created_at}>{new Date(artifact.created_at).toLocaleString()}</time></p>
-        <AuthenticatedMedia artifact={artifact} source={source} />
         <PlanningItemLink agent={agent} itemId={artifact.item_id} />
-        <WorkFeedback agentId={agent.id} revision={agent.soul_revision} outputId={artifact.artifact_id} outputVersion={1} />
+        {selected ? <p className="text-sm text-muted-foreground">Viewing this output above.</p> : <Button onClick={() => selectMedia(artifact)}>View output</Button>}
         </details>
       </article>;
       }
@@ -927,6 +938,19 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
     })}</div>
     {entries.length > pageSize && <nav aria-label="Saved outputs pages" className="flex items-center justify-between text-sm"><Button disabled={currentPage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</Button><span>Page {currentPage + 1} of {pageCount}</span><Button disabled={currentPage === pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</Button></nav>}
   </section>;
+}
+
+function SelectedMediaOutput({ agent, artifact, onClose }: { agent: Agent; artifact: MediaOutput; onClose: () => void }) {
+  const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
+  return <article aria-label="Selected media output" className="space-y-4 border-t pt-5">
+    <div className="flex items-start justify-between gap-3">
+      <div><h3 className="text-xl font-semibold">{artifact.title}</h3><p className="text-sm text-muted-foreground">{artifact.mime_type} · {(artifact.byte_count / 1024).toFixed(1)} KB</p></div>
+      <Button onClick={onClose}>Close output</Button>
+    </div>
+    <AuthenticatedMedia artifact={artifact} source={source} />
+    <PlanningItemLink agent={agent} itemId={artifact.item_id} />
+    <WorkFeedback agentId={agent.id} revision={agent.soul_revision} outputId={artifact.artifact_id} outputVersion={1} />
+  </article>;
 }
 
 function AuthenticatedMedia({ artifact, source, compact = false }: { artifact: MediaOutput; source: string; compact?: boolean }) {

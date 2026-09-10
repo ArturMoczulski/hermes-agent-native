@@ -398,6 +398,7 @@ test('protected media output loads with dashboard authentication', async ({ page
   });
 
   await page.goto(`/agents/${id}`);
+  await page.getByRole('button', { name: 'View output' }).click();
   const image = page.getByRole('img', { name: 'Playable milestone screenshot' });
   await expect(image).toBeVisible();
   await expect.poll(() => image.evaluate(element => (element as HTMLImageElement).naturalWidth)).toBeGreaterThan(0);
