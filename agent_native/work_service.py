@@ -160,10 +160,13 @@ class _Run:
             fingerprint = (hashlib.sha256(
                 json.dumps([tool, arguments], sort_keys=True).encode()).hexdigest()
                 if isinstance(tool, str) and isinstance(arguments, dict) else None)
-            from agent_native.purpose_evaluation import WaitWithoutDependency
             result = self._reject_effect(
                 conn, params.get('tool_call_id'), tool, type(exc), fingerprint,
-                message=str(exc) if isinstance(exc,WaitWithoutDependency) else None)
+                # Purpose evaluation is the mandatory end-of-attempt checkpoint.
+                # Its validation messages are bounded, non-secret remediation the
+                # worker needs to correct its next call rather than looping on a
+                # generic rejection until the turn guardrail stops it.
+                message=str(exc) if tool == 'purpose_evaluate' else None)
             if result is None:
                 raise
             return result

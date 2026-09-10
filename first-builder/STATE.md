@@ -2516,3 +2516,18 @@ focused store and managed-broker tests pass, the production web build passes, an
 live browser inspection verifies the Greenmoor image in both its owner-review card
 and Recent outputs. The existing PNG was backfilled as artifact `02dc3a81`; future
 authorized agents receive `output_media_publish` when repository access is active.
+## AN-115 recoverable purpose-evaluation errors — 2026-09-10
+
+Fantasy Game Builder exposed a framework-level loop: an invalid
+`purpose_evaluate` call received only a generic rejection, so a model could retry
+without learning the missing field and eventually reach the tool guardrail. The
+managed effect boundary now returns the bounded validation reason for that
+mandatory whole-purpose checkpoint; other tool rejection surfaces are unchanged.
+
+The new focused test first failed with the generic message and then passed with
+the explicit `Next action is required` remediation. The existing optional-review
+regression also passes, preserving the rule that optional review cannot block
+autonomous cadence. Plane item AN-115 is In Progress. Next: use a deterministic
+managed-run fixture to prove a corrected follow-up evaluation completes instead
+of becoming an owner-attention state, then expose any remaining recoverable run
+reason in the compact agent view.

@@ -93,3 +93,16 @@ def test_optional_review_cannot_be_converted_into_a_wait(broker):
     assert 'Optional review is nonblocking' in rejected['message']
     assert s.conn.execute('SELECT count(*) FROM agent_native_purpose_evaluations WHERE run_id=?',
                           (s.work['id'],)).fetchone()[0]==0
+
+
+def test_rejected_purpose_evaluation_explains_the_recoverable_argument_error(broker):
+    s = broker
+    rejected = s.run._effect(s.conn, s.planning, effect(s, 'missing-next-action', 'purpose_evaluate', {
+        'judgment': 'continue', 'evidence': ['The current result is recorded.'],
+        'remaining_obligations': ['Continue the next useful assignment.'],
+        'uncertainty': None, 'next_action': '', 'question_id': None,
+    }))
+
+    assert rejected['status'] == 'rejected'
+    assert rejected['error'] == 'ValueError'
+    assert rejected['message'] == 'Next action is required'
