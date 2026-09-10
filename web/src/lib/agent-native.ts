@@ -52,6 +52,7 @@ export type Agent = {
   execution: "not_started" | AgentWork["state"];
   created_at: string;
   work: AgentWork | null;
+  usage: { agent: UsageTotals; subtree: UsageTotals };
   cadence?: { enabled: boolean; interval_seconds: number | null; next_due: string | null };
   progress_concerns?: ProgressConcern[];
   progress_concern_settings?: { failure_threshold: number };
@@ -98,6 +99,29 @@ export const autonomyLabels: Record<number, string> = {
 export const agentsEndpoint = "/api/agent-native/agents";
 
 export type WorkLimits = { timeout_seconds: number; max_iterations: number };
+
+export type UsageTotals = {
+  record_count: number;
+  api_calls: number;
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_tokens: number;
+  cache_write_tokens: number;
+  reasoning_tokens: number;
+  estimated_cost_usd: number | null;
+  actual_cost_usd: number | null;
+  cost_kind: "measured" | "estimated" | "included" | "unavailable";
+};
+
+export type RunUsage = Omit<UsageTotals, "record_count" | "cost_kind"> & {
+  run_id: string;
+  agent_id: string;
+  provider: string;
+  model: string;
+  cost_status: "known" | "estimated" | "included" | "free" | "unknown";
+  cost_source: string;
+  recorded_at: string;
+};
 
 export type StoryMetadata = {
   story_id: string;
@@ -178,6 +202,8 @@ export type AgentWork = {
   outputs: OutputMetadata[];
   media_outputs: MediaOutput[];
   results: WorkResult[];
+  usage: RunUsage | null;
+  usage_by_run: Record<string, RunUsage>;
 };
 
 export function validWorkLimits(value: unknown): value is WorkLimits {

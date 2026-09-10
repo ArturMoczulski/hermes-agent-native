@@ -40,7 +40,8 @@ from agent_native.child_delegation import SCHEMA as CHILD_DELEGATION_SCHEMA
 from agent_native.child_supervision import SCHEMA as CHILD_SUPERVISION_SCHEMA
 from agent_native.child_autonomy import SCHEMA as CHILD_AUTONOMY_SCHEMA
 from agent_native.subtree_lifecycle import SCHEMA as SUBTREE_LIFECYCLE_SCHEMA
-WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA + CHILD_AUTONOMY_SCHEMA + SUBTREE_LIFECYCLE_SCHEMA
+from agent_native.usage import SCHEMA as USAGE_SCHEMA
+WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA + PROGRESS_SCHEMA + FEEDBACK_SCHEMA + QUESTIONS_SCHEMA + CONCERNS_SCHEMA + ASSIGNMENT_REVIEW_SCHEMA + PURPOSE_EVALUATION_SCHEMA + RETIREMENT_SCHEMA + CHILD_DELEGATION_SCHEMA + CHILD_SUPERVISION_SCHEMA + CHILD_AUTONOMY_SCHEMA + SUBTREE_LIFECYCLE_SCHEMA + USAGE_SCHEMA
 
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 
@@ -129,6 +130,11 @@ def read_work(conn, agent_id):
     result['outputs'] = list_outputs(conn, agent_id)
     result['media_outputs'] = list_media(conn, agent_id)
     result['results'] = list_results(conn, agent_id)
+    from agent_native.usage import for_run
+    result['usage'] = for_run(conn, result['id'])
+    run_ids = {output['run_id'] for output in result['outputs'] + result['media_outputs']}
+    result['usage_by_run'] = {run_id: value for run_id in run_ids
+                              if (value := for_run(conn, run_id)) is not None}
     from agent_native.purpose_evaluation import list_evaluations
     result['purpose_evaluations'] = list_evaluations(conn,agent_id)
     from agent_native.work_focus import read_focus

@@ -8,7 +8,7 @@ import type { FormEvent, ReactNode } from "react";
 import { Link, useLocation, useNavigate, useParams, useSearchParams } from "react-router";
 import { Button } from "@nous-research/ui/ui/components/button";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@nous-research/ui/ui/components/dialog";
-import { agentsEndpoint, agentWaitingForOwner, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type MediaOutput, type OutputReference, type OutputVersion, type WorkResult, modelChoiceLabel } from "@/lib/agent-native";
+import { agentsEndpoint, agentWaitingForOwner, agentWorkStatus, validWorkLimits, validModelChoice, outputVersionLink, type Agent, type MediaOutput, type OutputReference, type OutputVersion, type WorkResult, type UsageTotals, modelChoiceLabel } from "@/lib/agent-native";
 import { Input } from "@nous-research/ui/ui/components/input";
 import { Label } from "@nous-research/ui/ui/components/label";
 import { Markdown } from "@/components/Markdown";
@@ -396,7 +396,7 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     ? "Review the project again at the next eligible check-in."
     : "Enable automatic work or give the agent new direction.");
   return <section aria-label="Current work overview" className="space-y-3 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">Work direction</h2>
+    <div className="flex flex-wrap items-start justify-between gap-3"><h2 className="text-lg font-semibold">Work direction</h2><UsageSummary usage={agent.usage.agent} /></div>
     <p className="text-sm"><strong>Stage:</strong> {stage}</p>
     <div><h3 className="text-sm font-semibold">Working on now</h3><p className="whitespace-pre-wrap text-sm">{currentDirection}</p></div>
     <div><h3 className="text-sm font-semibold">Up next</h3><p className="whitespace-pre-wrap text-sm">{nextDirection}</p></div>
@@ -405,6 +405,21 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     {work?.focus ? <PlanningItemLink agent={agent} itemId={work.focus.item_id} label={work.focus.name} />
       : <p className="text-sm text-muted-foreground">No work item selected.</p>}
   </section>;
+}
+
+function UsageSummary({ usage }: { usage: UsageTotals }) {
+  const tokens = usage.input_tokens + usage.output_tokens;
+  const amount = usage.actual_cost_usd ?? usage.estimated_cost_usd;
+  const cost = usage.cost_kind === "included" ? "Included"
+    : amount == null ? "Cost unavailable"
+    : `${usage.cost_kind === "estimated" ? "~" : ""}$${amount.toFixed(amount < 0.01 ? 4 : 2)}`;
+  const title = usage.record_count
+    ? `${usage.api_calls.toLocaleString()} model calls · ${usage.input_tokens.toLocaleString()} input · ${usage.output_tokens.toLocaleString()} output · ${usage.reasoning_tokens.toLocaleString()} reasoning · ${cost}`
+    : "No completed managed model run has reported usage yet.";
+  return <div aria-label="Model usage" title={title} className="text-right text-sm">
+    <p className="font-medium">{tokens.toLocaleString()} tokens</p>
+    <p className="text-xs text-muted-foreground">{cost}</p>
+  </div>;
 }
 
 function RetirementSummary({ agent }: { agent: Agent }) {

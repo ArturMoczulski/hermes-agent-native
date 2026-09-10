@@ -533,6 +533,10 @@ class _Run:
                             self.host.send_work_result(frame['id'],reply)
                         elif method == 'event' and params.get('type') == 'message.complete':
                             self.final_text = str(params.get('payload',{}).get('text',''))[:16000]
+                        elif method == 'event' and params.get('type') == 'usage.complete':
+                            from agent_native.usage import record
+                            payload = dict(params.get('payload', {}))
+                            record(conn, run_id=self.work['id'], agent_id=self.work['agent_id'], usage=payload)
         except Exception as exc:
             _log.warning('Work run stopped (%s)',type(exc).__name__)
             self.fail(type(exc).__name__)

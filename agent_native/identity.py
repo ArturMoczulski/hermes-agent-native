@@ -59,6 +59,8 @@ def _read(conn, agent_id):
     root['setup'] = read_setup(conn, agent_id)
     from agent_native.work_state import read_work
     root['work'] = read_work(conn, agent_id)
+    from agent_native.usage import summary as usage_summary
+    root['usage'] = usage_summary(conn, agent_id)
     from agent_native.cadence import read as read_cadence
     root['cadence'] = read_cadence(conn, agent_id)
     from agent_native import model_settings

@@ -72,6 +72,24 @@ def run_turn(host, frame):
             context.admit('persist', agent)
             if result.get('error') or result.get('failed') or result.get('interrupted'):
                 raise RuntimeError('Managed native work did not complete successfully')
+            emit('usage.complete', {
+                'run_id': context.run_id,
+                'agent_id': context.agent_id,
+                'provider': str(selection.get('provider') or getattr(agent, 'provider', None)
+                                or runtime.get('provider') or 'unknown'),
+                'model': str(getattr(agent, 'model', None) or model),
+                'api_calls': int(getattr(agent, 'session_api_calls', 0) or 0),
+                'input_tokens': int(getattr(agent, 'session_input_tokens', 0) or 0),
+                'output_tokens': int(getattr(agent, 'session_output_tokens', 0) or 0),
+                'cache_read_tokens': int(getattr(agent, 'session_cache_read_tokens', 0) or 0),
+                'cache_write_tokens': int(getattr(agent, 'session_cache_write_tokens', 0) or 0),
+                'reasoning_tokens': int(getattr(agent, 'session_reasoning_tokens', 0) or 0),
+                'estimated_cost_usd': (None if getattr(agent, 'session_cost_status', 'unknown') == 'unknown'
+                                       else float(getattr(agent, 'session_estimated_cost_usd', 0) or 0)),
+                'actual_cost_usd': None,
+                'cost_status': str(getattr(agent, 'session_cost_status', 'unknown') or 'unknown'),
+                'cost_source': str(getattr(agent, 'session_cost_source', 'none') or 'none'),
+            })
             emit('message.complete', {'status': 'complete', 'text': result.get('final_response') or '',
                                       'run_id': context.run_id})
             host._reply('turn.end', sid, request_id, ended_ns=time.perf_counter_ns(),

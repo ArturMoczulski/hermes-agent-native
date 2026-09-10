@@ -24,9 +24,14 @@ the framework can identify an unresolved required owner-review gate. Optional re
 is nonblocking, and needed owner input must be represented by a linked unanswered
 question and `clarify`; dependency-free waits are rejected with corrective guidance,
 and already-recorded legacy waits without a gate no longer suppress cadence.
-The next major capability is AN-107: persist measured model-token usage and
-provider/model cost, aggregate it by attempt, agent and subtree, and enforce
-owner-controlled soft and hard budgets. AN-108 then expands the compact Work
+AN-107 is in progress. Its first vertical slice copies the managed runtime's final
+absolute input, output, cache, reasoning, API-call and cost counters into durable
+Agent Native storage. Retried event delivery replaces one run record rather than
+double-counting it; the API exposes run, direct-agent and recursive-subtree totals,
+and the compact Work direction card shows direct usage with measured, estimated,
+subscription-included or unavailable cost semantics. The remaining AN-107 work is
+owner-controlled soft and hard agent/subtree budgets, admission enforcement and
+budget visualization. AN-108 then expands the compact Work
 direction card with the current concrete step and its three newest related
 activities. This must keep bounded-attempt outcomes distinct from whole-agent state.
 

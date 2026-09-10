@@ -206,6 +206,25 @@ def test_native_work_loop_has_scoped_tools_parent_admission_and_canonical_histor
     assert {'tool.start', 'tool.complete', 'message.complete'} <= event_types
 
 
+def test_native_work_emits_canonical_final_usage(worker, model):
+    model.tools = []
+    worker.start()
+    result = eventually(lambda: worker.result, bool)
+    assert result['type'] == 'turn.end', result
+    usage = next(f['params']['payload'] for f in worker.frames
+                 if f.get('method') == 'event' and f.get('params', {}).get('type') == 'usage.complete')
+    assert usage['run_id'] == worker.attempt['run_id']
+    assert usage['agent_id'] == worker.attempt['agent_id']
+    assert usage['provider'] == 'custom:work-fixture'
+    assert usage['model'] == 'work-fixture'
+    assert usage['api_calls'] == 1
+    assert all(usage[name] >= 0 for name in (
+        'input_tokens', 'output_tokens', 'cache_read_tokens',
+        'cache_write_tokens', 'reasoning_tokens'))
+    assert usage['cost_status'] == 'unknown'
+    assert usage['estimated_cost_usd'] is None
+
+
 def test_native_analyst_can_report_a_result_without_a_saved_file(worker, model):
     model.tools = ['plane_resource_inspect', 'plane_operation_execute', 'result_record']
     worker.start()
