@@ -385,7 +385,7 @@ function CompactAgentView({ agent }: { agent: Agent }) {
     <WorkResults agent={agent} attentionOnly />
     <ProgressConcernAttention agent={agent} />
     <CompactWorkOverview agent={agent} />
-    <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} limit={3} compact />
+    <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} compact />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
       <h2 className="text-lg font-semibold">Recent activity</h2>
       {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
@@ -817,7 +817,7 @@ function PlanningItemLink({ agent, itemId, label = "Open work item" }: { agent: 
     href={`${setup.plane_origin}/${encodeURIComponent(setup.workspace_slug)}/projects/${encodeURIComponent(setup.project_id)}/issues/${encodeURIComponent(itemId)}/`}>{label}</a>;
 }
 
-function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?: number; compact?: boolean }) {
+function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
   const allOutputs = agent.work?.outputs ?? [];
