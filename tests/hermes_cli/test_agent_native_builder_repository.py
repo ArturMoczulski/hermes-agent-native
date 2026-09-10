@@ -1,5 +1,6 @@
 import hashlib
 import time
+from types import SimpleNamespace
 from uuid import uuid4
 
 import pytest
@@ -62,6 +63,15 @@ def test_repository_tools_are_absent_from_ordinary_managed_work():
     assert BUILDER_TOOL_NAMES <= {row["function"]["name"] for row in tool_schemas(builder)}
     with pytest.raises(PermissionError):
         ordinary.tool(None, "repository_file_read", {"path": "README.md"}, "call")
+
+
+def test_repository_tool_descriptions_apply_to_an_agents_granted_project_workspace():
+    context = SimpleNamespace(authorized_tools=sorted(TOOL_NAMES | BUILDER_TOOL_NAMES))
+    schemas = {row['function']['name']: row['function'] for row in tool_schemas(context)}
+
+    assert 'granted project workspace' in schemas['repository_file_read']['description']
+    assert 'expected_sha256 to missing' in schemas['repository_file_write']['description']
+    assert 'rg --files' in schemas['repository_command']['description']
 
 
 def test_owner_grants_one_ordinary_agent_an_isolated_repository(client, tmp_path):

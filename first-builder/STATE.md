@@ -1,3 +1,24 @@
+## Empty-project bootstrap and agent-home design — 2026-09-10
+
+AN-103 fixes the false repository blocker after AN-102 recovery. The project grant
+was active, but the agent used disallowed `pwd`/`ls` commands and tried to read
+First Builder files from an intentionally empty game project, then inferred that no
+workspace existed. Managed context and repository tool descriptions now identify the
+granted project, teach `rg --files` and `expected_sha256="missing"`, and distinguish
+per-operation rejection from revoked authority. Both focused contract tests pass.
+
+The unnecessary live question was answered with the already-known grant, which woke
+cadence. The Fantasy Game Builder progressed to nine model steps and created its
+package, unit tests, Playwright/Vitest configuration and README under
+`/Users/arturmoczulski/Projects/fantasy-game-builder`.
+
+AN-104 records the broader storage finding. The canonical design now separates
+protected identity/soul, durable memory/practices, mutable project work, immutable
+published outputs, attempt scratch and observable history. The implementation has
+parts of this layout but still mixes areas and does not provide a default project
+root with explicit lifecycle. AN-105 retains the separate missing managed-memory and
+practice access. Next: implement the AN-104 resolvers and compatible migration.
+
 ## Stable output storage after coding-workspace grant — 2026-09-10
 
 AN-102 reproduced the Fantasy Game Builder's three zero-model-call

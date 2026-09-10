@@ -28,3 +28,12 @@ def test_scoped_operation_denial_does_not_revoke_the_run():
                               PermissionError('Denied during revoked run')) is True
     assert _authority_revoked(lambda: (_ for _ in ()).throw(AssertionError('must not run')),
                               ValueError('Malformed arguments')) is False
+
+
+def test_managed_prompt_explains_how_to_bootstrap_an_empty_project_workspace():
+    prompt = _initial_context({}, {})
+
+    assert 'A granted project workspace may initially be empty' in prompt
+    assert 'expected_sha256="missing"' in prompt
+    assert 'rg --files' in prompt
+    assert 'does not mean the workspace grant is absent' in prompt

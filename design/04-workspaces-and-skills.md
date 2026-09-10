@@ -26,6 +26,41 @@ agent's private information. Access to resources and the ability to act on them
 must be explicitly granted and enforced by the framework. No particular
 isolation technology is prescribed.
 
+## Agent home and distinct working areas
+
+Every agent has a durable private home under storage managed by the framework
+operator. It exists independently of the source repository used to build the
+framework and is never committed merely because the framework repository is
+committed. Stable agent identity determines this home; a chat session, bounded
+attempt, model change, restart, or new assignment does not create a new home.
+
+The home separates areas with different meaning, authority, and lifetime:
+
+| Area | Purpose | Authority and lifetime |
+| --- | --- | --- |
+| Protected identity and soul | Agent identity, current purpose revision, fundamental rules, and host configuration projections | Host-written and agent-readable. The agent cannot write here. It lasts for the agent's retained history. |
+| Memory and working practices | Durable learned context, conventions, and methods | Agent-writable through bounded framework capabilities. Changes are observable and cannot override the soul or grant authority. They survive attempts and restarts. |
+| Project work | Mutable source material, drafts, code, tests, media-project files, and other material used to produce the purpose's outcomes | Writable during authorized work. Every agent receives a private default project area. The owner may explicitly bind a different directory for a project such as the First Builder's repository; that binding does not relocate the rest of the agent home. |
+| Published outputs | Human-visible deliverables such as a book version, report, recording, build manifest, or design document | Published only through the framework as immutable, versioned evidence. Storage is host-owned and remains stable when project bindings change. Planning records and temporary drafts are not published outputs. |
+| Runtime and scratch | Process records, temporary files, caches, tool staging, and other attempt-local material | Scoped to an attempt or retained only as needed for diagnosis and audit. Cleanup cannot erase durable project work, memory, outputs, decisions, or event history. |
+| Observable history | Attempts, events, conversations, questions, decisions, receipts, and links to Plane work | Host-recorded and retained according to framework history policy. It is not an agent-editable substitute for memory or project files. |
+
+The logical separation is mandatory even if an implementation uses databases,
+object storage, mounts, or directories rather than exactly one directory per row.
+The owner interface identifies the active project area and distinguishes editable
+project material from immutable published outputs.
+
+An agent that writes a book may keep outlines, research, and editable manuscript
+sources in project work, then publish reviewable manuscript versions as outputs.
+An application-building agent keeps source and tests in project work and publishes
+a stable playable preview or release evidence without treating its source tree as
+an immutable output. Plane remains the authoritative planning system in both cases.
+
+Retirement stops execution and preserves the retained home and history. Replacement
+creates a new home for the successor; selected outputs and project references may be
+included in an explicit handoff, while private memory is not silently copied. Deleting
+retained data is a separate owner action governed by the framework's data policy.
+
 ## Loadable skills
 
 A skill teaches an agent how to perform a kind of work. Agents can be equipped

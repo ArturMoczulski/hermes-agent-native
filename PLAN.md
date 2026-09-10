@@ -1,5 +1,15 @@
 # Current implementation work
 
+AN-103 corrects the empty-project false blocker exposed by the live Fantasy Game
+Builder. Repository capabilities now describe the agent's granted project workspace,
+the safe first-file compare-and-swap value and allowed inspection command, and warn
+that one rejected command or missing file is not loss of the whole grant. After the
+trusted corrective answer woke cadence, the live MiniMax M3 agent created its package,
+test and configuration files in the granted project. AN-104 is next: the canonical
+agent-home topology and migration are specified in
+[agent storage topology](implementation/agent-storage-topology.md). AN-105 follows
+with functional durable memory and working-practice access.
+
 AN-102 fixes the live Fantasy Game Builder continuation failure. Saved outputs now
 use a stable host-owned evidence root, while an owner-granted coding workspace is
 used only by repository tools and as the worker's project directory. Granting a
