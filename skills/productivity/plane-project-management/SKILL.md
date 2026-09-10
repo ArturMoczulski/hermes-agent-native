@@ -59,6 +59,13 @@ local API credential kept outside the repository and task content. Discover the
 actual API schema, handle pagination and rate limits, and reconcile uncertain
 writes before retrying. Use current work-item endpoints for the installed release.
 
+For the local Plane v1.4.x installation, API-key requests must use the versioned
+`/api/v1/` namespace, such as `/api/v1/users/me/` and
+`/api/v1/workspaces/{workspace_slug}/projects/`. The unversioned `/api/`
+namespace is reserved for browser-session and authentication routes. A `401`
+from an unversioned API-key URL does not prove that the key is invalid; check
+the equivalent `/api/v1/` route before rotating credentials.
+
 
 Use the available scoped planning operations to inspect and update records. Use
 the available file-reading operation for local evidence and handoff files. Do not give yourself direct
