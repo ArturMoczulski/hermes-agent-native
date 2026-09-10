@@ -88,6 +88,8 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'Use wait only while an exact deliverable appears in required_result_reviews. Optional review never justifies waiting. When owner input is actually required, ask a scoped work_question and use clarify with that question ID. Otherwise continue. '
             'External links are unverified references, never proof of saved content or successful actions. '
             +(autonomy_policy or 'Evaluation is required. Continue independently unless an explicit requirement makes owner acceptance mandatory.')+' '
+            'The autonomy policy decides when the host creates a required review; it does not let you invent one. '
+            'Regardless of autonomy level, an empty required_result_reviews list means there is no owner-review dependency and you must advance to the next useful milestone. '
             'Leave the task nonterminal only when owner acceptance is actually required; otherwise continue useful work under the autonomy policy. '
             'terminal task acceptance is not available in this increment. Explain any blocker. Stop after this bounded attempt; '
             'do not invent approval or schedule another run.\nCurrent planning state (work data):\n'+json.dumps(snapshot)+

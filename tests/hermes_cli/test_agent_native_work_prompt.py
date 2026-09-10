@@ -38,6 +38,7 @@ def test_managed_prompt_treats_host_owner_decision_state_as_authoritative():
     assert 'owner_decision_state in current planning state is authoritative' in prompt
     assert 'only when its exact ID appears in required_result_reviews' in prompt
     assert 'a result ID absent from that list' in prompt
+    assert 'an empty required_result_reviews list means there is no owner-review dependency' in prompt
 
 
 def test_scoped_operation_denial_does_not_revoke_the_run():
