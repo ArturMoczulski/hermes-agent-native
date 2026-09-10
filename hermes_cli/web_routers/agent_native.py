@@ -163,7 +163,7 @@ def exchange_project_preview_launch(request: Request, agent_id: str, ticket: str
     clean_url = f'{request.url.scheme}://{request.url.hostname}{port}/agent-preview/{agent_id}/'
     response = RedirectResponse(clean_url, status_code=303)
     response.set_cookie('agent_preview_session', session, max_age=3600, httponly=True,
-                        samesite='strict', path=f'/agent-preview/{agent_id}')
+                        samesite='lax', path=f'/agent-preview/{agent_id}')
     return response
 
 

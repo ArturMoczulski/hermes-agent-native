@@ -136,6 +136,7 @@ def test_granted_agent_publishes_a_stable_isolated_preview(client, tmp_path):
     assert exchange.status_code == 303
     assert 'ticket=' not in exchange.headers['location']
     assert 'HttpOnly' in exchange.headers['set-cookie']
+    assert 'SameSite=lax' in exchange.headers['set-cookie']
     assert client.get(exchange.headers['location']).status_code == 200
     assert client.get(exchange.headers['location'] + 'game.css').text == 'h1 { color: green; }'
     assert client.get(launch_url, follow_redirects=False).status_code == 401
