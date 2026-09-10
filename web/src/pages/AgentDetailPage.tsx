@@ -356,7 +356,7 @@ function ProjectPreviewButton({ agentId }: { agentId: string }) {
     try {
       const launch = await fetchJSON<{ url: string }>(`${agentsEndpoint}/${encodeURIComponent(agentId)}/preview-launch`, { method: "POST" });
       if (preview) preview.location.replace(launch.url);
-      else window.open(launch.url, "_blank", "noopener,noreferrer");
+      else window.location.assign(launch.url);
     } catch {
       preview?.close(); setError(true);
     } finally { setOpening(false); }
