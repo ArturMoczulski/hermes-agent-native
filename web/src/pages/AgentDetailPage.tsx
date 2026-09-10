@@ -902,6 +902,8 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
   return <section aria-label={label} className="space-y-4 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">{label}</h2>
     {!entries.length && <p>No output versions saved yet.</p>}
+    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
+      outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
     <div className="space-y-4">{visible.map((entry, index) => {
       if (entry.kind === 'media') {
         const artifact = entry.media;
@@ -920,13 +922,10 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
       <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>
       {!compact && <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>}
       <PlanningItemLink agent={agent} itemId={output.item_id} />
-      <div><Button onClick={() => select(output)}>Read output</Button></div>
-      <WorkFeedback agentId={agent.id} revision={agent.soul_revision} outputId={output.output_id} outputVersion={output.version} />
+      {!hasSelection || outputId !== output.output_id || version !== String(output.version) ? <div><Button onClick={() => select(output)}>Read output</Button></div> : <p className="text-sm text-muted-foreground">Reading this output above.</p>}
     </details></article>;
     })}</div>
     {entries.length > pageSize && <nav aria-label="Saved outputs pages" className="flex items-center justify-between text-sm"><Button disabled={currentPage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</Button><span>Page {currentPage + 1} of {pageCount}</span><Button disabled={currentPage === pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</Button></nav>}
-    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
-      outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
   </section>;
 }
 
@@ -1022,6 +1021,7 @@ function OutputReader({ agent, outputId, requestedVersion, uniqueSelection, show
     <div className="flex items-start justify-between gap-3"><h3 className="text-xl font-semibold">{output.title} · Version {output.version}</h3><Button onClick={onClose}>Close output</Button></div>
     <a className="inline-block text-sm underline underline-offset-4" href={outputVersionLink(agentId, output)}>Link to this version</a>
     {output.format === "markdown" ? <Markdown content={output.content} /> : <pre className="whitespace-pre-wrap break-words text-sm">{output.content}</pre>}
+    <WorkFeedback agentId={agent.id} revision={agent.soul_revision} outputId={output.output_id} outputVersion={output.version} />
     {result && (showOptionalReview || result.review.required || result.acceptance !== "not_evaluated") && <OutputReview agent={agent} result={result} />}
     {output.evaluation != null && <section aria-label="Saved version evaluation" className="space-y-2 border-t pt-4">
       <h4 className="font-semibold">Agent evaluation</h4>
