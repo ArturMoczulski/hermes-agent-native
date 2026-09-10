@@ -203,6 +203,12 @@ assignment and criteria, current attempt and limits, recent results and
 agent/work and evaluation links. Use **Open output**, **Download** where available,
 and format-appropriate controls such as audio playback. The result detail below
 owns the complete review interaction; do not maintain duplicate result records.
+An agent-created binary artifact is not a working attachment until the framework has
+copied it from an authorized project workspace into durable host-owned output storage
+and recorded its MIME type, size and checksum. Filesystem paths in Markdown are plain
+references and must not look actionable. Images render inline after publication;
+other formats receive a supported preview or an authenticated download. Missing,
+denied and not-yet-published artifacts remain explicit.
 
 Within **Work direction**, retain the purpose-level **Working on now** and **Up next**
 summary, then show the current concrete step and the three newest activities related

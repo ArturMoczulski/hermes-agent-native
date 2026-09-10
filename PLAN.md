@@ -1,5 +1,13 @@
 # Current implementation work
 
+AN-110 is the active output-integrity defect exposed by the Fantasy Game Builder.
+The agent produced a valid PNG inside its granted project workspace, but the current
+saved-output contract supports only Markdown and plain text. It therefore recorded a
+note containing a filesystem path that the dashboard cannot open. Add managed binary
+artifact publication into immutable host-owned storage, authenticated serving,
+image preview and Open/Download controls. Missing or uncommitted evidence must remain
+visibly unavailable. This is a generic framework capability, not a game-specific UI.
+
 The live Fantasy Game Builder has exposed a stale-wait defect after productive,
 bounded attempts. AN-106 is the immediate reliability fix: a superseded `wait`
 judgment must not prevent a cadence-enabled agent from starting its next attempt.

@@ -2504,3 +2504,12 @@ AN-109 raises the ordinary creation and replacement fallback from 180 to 900 sec
 while keeping the 50-model-step ceiling. Existing explicit limits are preserved. The
 focused installed-Chromium creation journey proves the collapsed 15-minute default,
 the persisted 900-second run and the unchanged autonomy default.
+## Durable binary output attachments — 2026-09-10
+
+The Fantasy Game Builder produced an 87,798-byte PNG at
+`artifacts/milestone-2.png` in its granted project workspace. Agent Native only
+accepts Markdown and text saved outputs, so output `fd523652` contains a descriptive
+note and code-formatted path rather than an attachment. AN-110 is now In Progress to
+add safe binary publication, immutable host-owned storage, MIME/checksum metadata,
+authenticated serving, and inline image/Open/Download UI. The screenshot itself is
+valid; the broken interaction is a framework output-contract gap.
