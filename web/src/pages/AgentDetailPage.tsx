@@ -24,6 +24,8 @@ export default function AgentDetailPage() {
   const { agentId } = useParams<{ agentId: string }>();
   const [pageSearchParams] = useSearchParams();
   const fullView = pageSearchParams.get("view") === "full";
+  const requestedTab = pageSearchParams.get("tab");
+  const activeTab = requestedTab === "activity" || requestedTab === "settings" ? requestedTab : "work";
   const { setTitle } = usePageHeader();
   const navigate = useNavigate();
   const [retryError, setRetryError] = useState<string | null>(null);
@@ -172,6 +174,7 @@ export default function AgentDetailPage() {
             </Link>
           </div>
         </header>
+        {!fullView && <AgentTabs agentId={agent.id} activeTab={activeTab} />}
         {automaticWorkError && <p role="alert">Could not confirm the automatic-work change. The last confirmed state is still shown; reload and try again.</p>}
         {resumeNotice && <p role="status" className="rounded-xl border border-green-500/50 bg-green-500/5 p-4">{resumeNotice}</p>}
         {agent.pause?.paused && <PauseSummary agent={agent} onMutationStart={() => { mutationVersion.current += 1; }} onResumed={(result) => {
@@ -183,7 +186,7 @@ export default function AgentDetailPage() {
         }} />}
         {agent.replacement?.role === "successor" && <ReplacementSummary agent={agent} />}
         {agent.retirement && <RetirementSummary agent={agent} />}
-        {!fullView ? <CompactAgentView agent={agent} /> : <>
+        {!fullView ? activeTab === "work" ? <CompactAgentView agent={agent} /> : activeTab === "activity" ? <AgentActivityTab agent={agent} /> : <AgentSettingsTab agent={agent} onOpenSettings={() => setSettingsOpen(true)} /> : <>
         {inactive ? <p role="status">{agent.retirement ? 'Agent retired. ' : 'Agent removed. '}Autonomous work and conversations are disabled; history is retained. {agent.work?.state === 'stopping' && 'The existing work process is still stopping.'}</p> : <section aria-label="Agent lifecycle actions" className="space-y-5 rounded-xl border p-5">
           <ReplacementControls agent={agent} onReplaced={(successorId) => void navigate(`/agents/${encodeURIComponent(successorId)}`)} />
           <div className="space-y-3 border-t pt-5">
@@ -371,6 +374,58 @@ function ProjectPreviewButton({ agentId }: { agentId: string }) {
     </IconTooltip>
     {error && <span role="alert" className="sr-only">Could not open the project preview. Reload and try again.</span>}
   </span>;
+}
+
+function AgentTabs({ agentId, activeTab }: { agentId: string; activeTab: "work" | "activity" | "settings" }) {
+  const tabs: Array<{ id: "work" | "activity" | "settings"; label: string }> = [
+    { id: "work", label: "Work" },
+    { id: "activity", label: "Activity" },
+    { id: "settings", label: "Settings" },
+  ];
+  return <nav aria-label="Agent view" className="flex border-b border-border">
+    {tabs.map((tab) => <Link key={tab.id} to={`/agents/${encodeURIComponent(agentId)}?tab=${tab.id}`}
+      aria-current={activeTab === tab.id ? "page" : undefined}
+      className={`border-b-2 px-4 py-2 text-sm ${activeTab === tab.id ? "border-foreground font-medium" : "border-transparent text-muted-foreground hover:text-foreground"}`}>
+      {tab.label}
+    </Link>)}
+  </nav>;
+}
+
+function AgentActivityTab({ agent }: { agent: Agent }) {
+  const events = [...(agent.work?.events ?? [])].reverse();
+  return <section aria-label="Agent activity" className="space-y-3 rounded-xl border p-5">
+    <div>
+      <h2 className="text-lg font-semibold">Activity</h2>
+      <p className="text-sm text-muted-foreground">Most recent activity first. Open the complete view for diagnostics and lifecycle history.</p>
+    </div>
+    {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
+      <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th></tr></thead>
+      <tbody>{events.map((event) => <tr key={event.id} className="border-t">
+        <td className="whitespace-nowrap p-2"><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></td>
+        <td className="p-2">{event.summary}</td>
+      </tr>)}</tbody>
+    </table></div> : <p>No execution activity recorded yet.</p>}
+    <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>Open complete activity and diagnostics</Link>
+  </section>;
+}
+
+function AgentSettingsTab({ agent, onOpenSettings }: { agent: Agent; onOpenSettings: () => void }) {
+  return <section aria-label="Agent settings summary" className="space-y-4 rounded-xl border p-5">
+    <div className="flex flex-wrap items-center justify-between gap-3">
+      <div>
+        <h2 className="text-lg font-semibold">Settings</h2>
+        <p className="text-sm text-muted-foreground">Configuration that governs this agent’s identity and automatic work.</p>
+      </div>
+      <Button onClick={onOpenSettings}>Edit agent settings</Button>
+    </div>
+    <dl className="grid gap-3 text-sm sm:grid-cols-[auto_1fr]">
+      <dt className="text-muted-foreground">Purpose revision</dt><dd>{agent.soul_revision}</dd>
+      <dt className="text-muted-foreground">Automatic work</dt><dd>{agent.cadence?.enabled ? `Every ${agent.cadence.interval_seconds ?? "?"} seconds` : "Disabled"}</dd>
+      <dt className="text-muted-foreground">Autonomy level</dt><dd>{agent.autonomy?.level ?? 3} of 5</dd>
+      <dt className="text-muted-foreground">Model</dt><dd>{agent.model_selection ? modelChoiceLabel(agent.model_selection) : "Hermes default"}</dd>
+      <dt className="text-muted-foreground">Workspace</dt><dd className="break-all">{agent.project_workspace?.root ?? "Not configured"}</dd>
+    </dl>
+  </section>;
 }
 
 function CompactAgentView({ agent }: { agent: Agent }) {
