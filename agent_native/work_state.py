@@ -124,8 +124,10 @@ def read_work(conn, agent_id):
     from agent_native.story_store import list_stories
     result['stories'] = list_stories(conn, agent_id)
     from agent_native.output_store import list_outputs
+    from agent_native.media_store import list_media
     from agent_native.result_store import list_results
     result['outputs'] = list_outputs(conn, agent_id)
+    result['media_outputs'] = list_media(conn, agent_id)
     result['results'] = list_results(conn, agent_id)
     from agent_native.purpose_evaluation import list_evaluations
     result['purpose_evaluations'] = list_evaluations(conn,agent_id)

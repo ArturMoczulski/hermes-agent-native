@@ -2510,6 +2510,9 @@ The Fantasy Game Builder produced an 87,798-byte PNG at
 `artifacts/milestone-2.png` in its granted project workspace. Agent Native only
 accepts Markdown and text saved outputs, so output `fd523652` contains a descriptive
 note and code-formatted path rather than an attachment. AN-110 is now In Progress to
-add safe binary publication, immutable host-owned storage, MIME/checksum metadata,
-authenticated serving, and inline image/Open/Download UI. The screenshot itself is
-valid; the broken interaction is a framework output-contract gap.
+add safe media publication, immutable host-owned storage, MIME/checksum metadata,
+authenticated serving, and inline image/audio/video plus Open/Download UI. Five
+focused store and managed-broker tests pass, the production web build passes, and a
+live browser inspection verifies the Greenmoor image in both its owner-review card
+and Recent outputs. The existing PNG was backfilled as artifact `02dc3a81`; future
+authorized agents receive `output_media_publish` when repository access is active.

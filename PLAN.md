@@ -1,12 +1,14 @@
 # Current implementation work
 
-AN-110 is the active output-integrity defect exposed by the Fantasy Game Builder.
+AN-110 resolves the output-integrity defect exposed by the Fantasy Game Builder.
 The agent produced a valid PNG inside its granted project workspace, but the current
 saved-output contract supports only Markdown and plain text. It therefore recorded a
-note containing a filesystem path that the dashboard cannot open. Add managed binary
-artifact publication into immutable host-owned storage, authenticated serving,
-image preview and Open/Download controls. Missing or uncommitted evidence must remain
-visibly unavailable. This is a generic framework capability, not a game-specific UI.
+note containing a filesystem path that the dashboard could not open. Managed media
+publication now verifies image/audio/video signatures, rejects path and symlink
+escapes, copies files into immutable host-owned storage, and records MIME type, size,
+checksum, agent, run and work item. The authenticated dashboard renders images and
+native audio/video players with Open/Download controls. The existing Greenmoor PNG
+was backfilled and now appears inline in both its owner-review card and Recent outputs.
 
 The live Fantasy Game Builder has exposed a stale-wait defect after productive,
 bounded attempts. AN-106 is the immediate reliability fix: a superseded `wait`

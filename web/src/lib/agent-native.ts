@@ -127,8 +127,22 @@ export type OutputMetadata = OutputReference & {
 
 export type OutputVersion = OutputMetadata & { content: string };
 
+export type MediaOutput = {
+  artifact_id: string;
+  agent_id: string;
+  run_id: string;
+  item_id: string;
+  title: string;
+  filename: string;
+  mime_type: string;
+  content_sha256: string;
+  byte_count: number;
+  created_at: string;
+};
+
 export type WorkResult = {
   id: string;
+  run_id: string;
   item_id: string;
   criteria_revision: string;
   outcome: "submitted" | "discovery" | "waiting" | "blocked";
@@ -162,6 +176,7 @@ export type AgentWork = {
   error: string | null;
   stories: StoryMetadata[];
   outputs: OutputMetadata[];
+  media_outputs: MediaOutput[];
   results: WorkResult[];
 };
 

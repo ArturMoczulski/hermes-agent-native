@@ -730,6 +730,8 @@ function WorkResults({ agent, attentionOnly = false }: { agent: Agent; attention
 }
 
 function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult; label: string }) {
+  const media = (agent.work?.media_outputs ?? []).filter(
+    artifact => artifact.run_id === result.run_id && artifact.item_id === result.item_id);
   return <article id={`result-${result.id}`} className="space-y-3 rounded-lg border p-4">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h3 className="font-semibold">{label}</h3>
@@ -747,8 +749,18 @@ function ResultCard({ agent, result, label }: { agent: Agent; result: WorkResult
           {metadata?.title ?? "Saved output"} · Version {output.version}
         </Link></li>;
       })}</ul> : <p className="text-sm text-muted-foreground">No saved outputs for this result.</p>}
+      {media.map(artifact => {
+        const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
+        return <div key={artifact.artifact_id} className="space-y-2 rounded-md border p-3">
+          <p className="text-sm font-medium">{artifact.title}</p>
+          {artifact.mime_type.startsWith("image/") && <img className="max-h-80 max-w-full rounded border object-contain" src={source} alt={artifact.title} />}
+          {artifact.mime_type.startsWith("audio/") && <audio className="w-full" controls preload="metadata" src={source}>Audio preview is unavailable.</audio>}
+          {artifact.mime_type.startsWith("video/") && <video className="max-h-80 max-w-full rounded border" controls preload="metadata" src={source}>Video preview is unavailable.</video>}
+          <a className="text-sm underline underline-offset-4" href={source} target="_blank" rel="noreferrer">Open media evidence</a>
+        </div>;
+      })}
       <PlanningItemLink agent={agent} itemId={result.item_id} />
-      {result.review.required && result.acceptance === "not_evaluated" && <p className="text-sm font-medium">Open the exact saved output version above to accept it or request revision.</p>}
+      {result.review.required && result.acceptance === "not_evaluated" && <p className="text-sm font-medium">Review the saved outputs and media evidence above, then open the exact saved output version to accept it or request revision.</p>}
       {result.owner_decision?.note && <p className="whitespace-pre-wrap text-sm">Owner note: {result.owner_decision.note}</p>}
     </article>;
 }
@@ -764,6 +776,8 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
   const [searchParams, setSearchParams] = useSearchParams();
   const allOutputs = agent.work?.outputs ?? [];
   const outputs = limit == null ? allOutputs : allOutputs.slice(0, limit);
+  const allMedia = agent.work?.media_outputs ?? [];
+  const media = limit == null ? allMedia : allMedia.slice(0, limit);
   const outputId = searchParams.get("output");
   const version = searchParams.get("version");
   const hasSelection = outputId !== null || version !== null;
@@ -782,7 +796,19 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
   const label = compact ? "Recent outputs" : "Saved outputs";
   return <section aria-label={label} className="space-y-4 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">{label}</h2>
-    {!outputs.length && <p>No output versions saved yet.</p>}
+    {!outputs.length && !media.length && <p>No output versions saved yet.</p>}
+    <div className="space-y-4">{media.map((artifact) => {
+      const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
+      return <article key={artifact.artifact_id} className="space-y-3 rounded-lg border p-4">
+        <h3 className="font-semibold">{artifact.title}</h3>
+        <p className="text-xs text-muted-foreground">{artifact.mime_type} · {(artifact.byte_count / 1024).toFixed(1)} KB · <time dateTime={artifact.created_at}>{new Date(artifact.created_at).toLocaleString()}</time></p>
+        {artifact.mime_type.startsWith("image/") && <img className="max-h-[32rem] max-w-full rounded-md border object-contain" src={source} alt={artifact.title} />}
+        {artifact.mime_type.startsWith("audio/") && <audio className="w-full" controls preload="metadata" src={source}>Audio preview is unavailable.</audio>}
+        {artifact.mime_type.startsWith("video/") && <video className="max-h-[32rem] max-w-full rounded-md border" controls preload="metadata" src={source}>Video preview is unavailable.</video>}
+        <PlanningItemLink agent={agent} itemId={artifact.item_id} />
+        <div className="flex flex-wrap gap-2"><a className="text-sm underline underline-offset-4" href={source} target="_blank" rel="noreferrer">Open media</a><a className="text-sm underline underline-offset-4" href={`${source}?download=true`}>Download</a></div>
+      </article>;
+    })}</div>
     <div className="space-y-4">{outputs.map((output) => <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4">
       <h3 className="font-semibold">{output.title} · Version {output.version}</h3>
       <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>

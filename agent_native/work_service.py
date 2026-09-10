@@ -69,7 +69,7 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'Apply it within current purpose and grants, then report handling with work_feedback; never claim acceptance. '
             'Keep project briefs, cycle and module descriptions, task descriptions, acceptance criteria, dependencies, planning notes and progress updates in Plane. '
             'They are not saved outputs unless the purpose or selected assignment explicitly requests a planning document as its deliverable. '
-            'Use output_publish only for the actual purpose-level work product, such as the requested story, analysis, design, recording or other deliverable. '
+            'Use output_publish only for the actual purpose-level work product when it is text or Markdown. Use output_media_publish for an image, audio or video file already created in the granted project workspace; a filesystem path in Markdown is not an attachment. '
             'A confirmed planning change is a valid result with an empty outputs list. '
             'Use output_read to read complete prior output versions when excerpts are truncated. Use output_id only when revising an existing output. The host reports saved outputs and result records in Plane; '
             'do not duplicate these notifications with artifact.record or rewrite the task description to announce completion. '
@@ -166,7 +166,7 @@ class _Run:
         if params.get('run_id') != self.work['id']:
             raise PermissionError('Work identity changed')
         tool, args, call_id = params.get('tool'), params.get('arguments'), params.get('tool_call_id')
-        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments','repository_file_read','repository_file_write','repository_command','repository_preview_publish')
+        if (tool not in ('child_create','child_replace','child_inspect','child_result_evaluate','child_autonomy_configure','plane_resource_inspect','plane_operation_execute','output_publish','output_media_publish','output_read','result_record','purpose_evaluate','purpose_retire','work_item_select','progress_report','work_feedback','work_question','work_comments','repository_file_read','repository_file_write','repository_command','repository_preview_publish')
                 or not isinstance(args,dict) or not isinstance(call_id,str) or not 1 <= len(call_id) <= 256):
             raise PermissionError('Unsupported work effect')
         fingerprint = hashlib.sha256(json.dumps([tool,args],sort_keys=True).encode()).hexdigest()
@@ -328,6 +328,17 @@ class _Run:
                              agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
                              record_progress=lambda c, r: progress.output_saved(c, r, base), **args)
             progress.deliver(conn, planning, self.validate, f"output:{result['output_id']}:{result['version']}")
+        elif tool == 'output_media_publish':
+            if set(args) != {'title', 'item_id', 'path'}:
+                return self._reject_effect(conn, call_id, tool, ValueError)
+            planning.inspect({'kind':'item','resource_id':args['item_id']})
+            from agent_native.media_store import publish
+            from agent_native.repository_access import active_repository
+            result = publish(conn, validate=self.validate,
+                             project_workspace=active_repository(conn, self.work['agent_id']),
+                             output_workspace=self.output_workspace,
+                             agent_id=self.work['agent_id'], run_id=self.work['id'],
+                             call_id=call_id, **args)
         else:
             from agent_native.result_store import record
             from agent_native import progress
@@ -351,6 +362,7 @@ class _Run:
                        ('Evaluated child result: '+result['decision']) if tool=='child_result_evaluate' else
                        ('Read saved output: '+result['title']) if tool=='output_read' else
                        ('Saved output: '+result['title']) if tool=='output_publish' else
+                       ('Published media output: '+result['title']) if tool=='output_media_publish' else
                        ('Recorded result: '+result['summary']) if tool=='result_record' else
                        ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
                        ('Retired agent from purpose evaluation') if tool=='purpose_retire' else
@@ -437,9 +449,11 @@ class _Run:
                     snapshot = planning.snapshot()
                     from agent_native.result_store import list_results
                     from agent_native.output_store import list_outputs
+                    from agent_native.media_store import list_media
                     from agent_native.questions import recent as recent_questions
                     snapshot['previous_results'] = list_results(conn,root['id'])[:10]
                     snapshot['saved_outputs'] = list_outputs(conn,root['id'])[:10]
+                    snapshot['saved_media_outputs'] = list_media(conn,root['id'])[:10]
                     snapshot['saved_output_excerpts'] = []
                     from agent_native.output_store import read_output
                     for output in snapshot['saved_outputs'][:3]:

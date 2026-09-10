@@ -379,6 +379,27 @@ def read_output(agent_id: str, output_id: str, version: int, actor=Depends(owner
             raise HTTPException(status_code=409, detail='Output content could not be verified') from exc
 
 
+@router.get('/{agent_id}/media/{artifact_id}')
+def read_media(agent_id: str, artifact_id: str, download: bool = False,
+               actor=Depends(owner_session)):
+    from fastapi.responses import FileResponse
+    from hermes_constants import get_hermes_home
+    from agent_native.agent_home import paths
+    from agent_native.media_store import read
+    with connect_closing(board='default') as conn:
+        try:
+            identity.get_root(conn, actor=actor, agent_id=agent_id)
+            workspace = paths(get_hermes_home() / 'agent-native' / 'agents', agent_id).legacy_workspace
+            metadata, path = read(conn, agent_id, artifact_id, workspace=workspace)
+            return FileResponse(path, media_type=metadata['mime_type'], filename=metadata['filename'],
+                                content_disposition_type='attachment' if download else 'inline',
+                                headers={'Cache-Control':'private, immutable'})
+        except (KeyError, LookupError) as exc:
+            raise HTTPException(status_code=404, detail='Media output not found') from exc
+        except (ValueError, OSError) as exc:
+            raise HTTPException(status_code=409, detail='Media output could not be verified') from exc
+
+
 @router.get('/{agent_id}/planning')
 def read_planning(agent_id: str, actor=Depends(owner_session)):
     from hermes_constants import get_hermes_home

@@ -17,7 +17,7 @@ from uuid import UUID
 
 _current = ContextVar('agent_native_work_context', default=None)
 TOOL_NAMES = frozenset({'child_create', 'child_replace', 'child_inspect', 'child_result_evaluate', 'child_autonomy_configure', 'plane_resource_inspect', 'plane_operation_execute', 'output_publish', 'output_read', 'result_record', 'purpose_evaluate', 'purpose_retire', 'work_item_select', 'progress_report', 'work_feedback', 'work_question', 'work_comments'})
-BUILDER_TOOL_NAMES = frozenset({'repository_file_read', 'repository_file_write', 'repository_command', 'repository_preview_publish'})
+BUILDER_TOOL_NAMES = frozenset({'repository_file_read', 'repository_file_write', 'repository_command', 'repository_preview_publish', 'output_media_publish'})
 
 
 def _object(properties, required):
@@ -60,6 +60,9 @@ def tool_schemas(context=None):
             'title': string, 'content': string, 'item_id': string,
             'format': {'type': 'string', 'enum': ['markdown', 'text']}, 'output_id': string,
         }, ['title', 'content', 'item_id', 'format']),
+        'output_media_publish': _object({
+            'title': string, 'item_id': string, 'path': string,
+        }, ['title', 'item_id', 'path']),
         'result_record': _object({
             'item_id': string, 'summary': string, 'evaluation': string,
             'outcome': {'type': 'string', 'enum': ['submitted', 'discovery', 'waiting', 'blocked']},
@@ -96,6 +99,7 @@ def tool_schemas(context=None):
         'work_item_select': 'Select the authorized Plane item you are working on before substantive work and whenever your focus changes. The service records its current criteria and cycle for monitoring. Selection adds no permissions and does not accept or complete work.',
         'output_read': 'Read a verified immutable saved output belonging to this agent by exact output_id and version. Reads do not change the active item. Offset and limit count Unicode characters; default limit is 16000, maximum 32000. Follow next_offset until null to read all content before claiming a full review; initial context excerpts may be truncated. No filesystem path is accepted.',
         'output_publish': 'Save an immutable text or Markdown output for the authorized work item. Omit output_id for a new output, or supply its existing ID to save a new version. The service chooses the private artifact path. Report the result and evaluation with result_record.',
+        'output_media_publish': 'Publish an image, audio or video file already created inside this agent\'s granted project workspace. Supply its relative path, title and authorized work item. The host validates and copies the file into immutable output storage and returns an owner-visible artifact identity. A filesystem path by itself is not published evidence.',
         'result_record': 'Record a work result and evaluation against the authorized item criteria. Link saved output IDs and exact versions, or use an empty outputs array when no file is needed. References are unverified links, not saved outputs or proof of effects. Reporting a result never accepts the work on behalf of its owner.',
         'purpose_evaluate': 'Record whether the protected whole purpose should continue, wait, seek clarification, or is a retirement candidate. Include evidence, every remaining obligation, uncertainty and the next action. Clarify requires the exact unanswered question_id; other judgments use null. Assignment completion alone does not fulfill the whole purpose.',
         'purpose_retire': 'Initiate retirement using the exact latest retirement-candidate evaluation_id. The framework rechecks purpose revision, obligations, uncertainty, questions, required reviews and unresolved effects. A rejected retirement leaves the agent active.',
