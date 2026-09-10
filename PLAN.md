@@ -1,5 +1,22 @@
 # Current implementation work
 
+AN-114 is the current urgent reliability repair exposed by the live Fantasy Game
+Builder. The framework had no explicit authoritative list of pending owner decisions
+in a new attempt, so stale model prose could incorrectly treat an optional result as a
+blocking approval gate. Managed attempts now receive that exact host-derived list and
+an explicit no-gate statement when it is empty. Compact work direction no longer
+repeats internal stop/resume prose as the owner-facing next step; it derives the next
+action from real required reviews, questions, cadence and run state, and shows the
+latest three progress checkpoints. Successful-attempt activity now states whether a
+real review is required or automatic work may continue. The affected live agent stays
+paused until this slice is deployed and verified.
+
+AN-113 records the accompanying product correction: runnable previews belong to
+versioned work results and outputs. The agent header may offer the latest runnable
+output as a convenience, but an agent without a runnable output has no preview. The
+current single mutable agent preview is transitional and must be replaced without
+discarding earlier published versions.
+
 AN-110 resolves the output-integrity defect exposed by the Fantasy Game Builder.
 The agent produced a valid PNG inside its granted project workspace, but the current
 saved-output contract supports only Markdown and plain text. It therefore recorded a

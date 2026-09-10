@@ -22,6 +22,24 @@ def test_high_autonomy_does_not_invent_owner_acceptance_gate():
     assert 'Leave the task nonterminal for owner review' not in prompt
 
 
+def test_managed_prompt_treats_host_owner_decision_state_as_authoritative():
+    prompt = _initial_context({
+        'owner_decision_state': {
+            'required_result_reviews': [],
+            'message': 'No result currently requires owner review.',
+        },
+        'previous_results': [{
+            'id': 'optional-result',
+            'review': {'required': False},
+            'acceptance': 'not_evaluated',
+        }],
+    }, {})
+
+    assert 'owner_decision_state in current planning state is authoritative' in prompt
+    assert 'only when its exact ID appears in required_result_reviews' in prompt
+    assert 'a result ID absent from that list' in prompt
+
+
 def test_scoped_operation_denial_does_not_revoke_the_run():
     assert _authority_revoked(lambda: None, PermissionError('Wrong work item')) is False
     assert _authority_revoked(lambda: (_ for _ in ()).throw(PermissionError('Run stopped')),

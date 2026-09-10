@@ -83,7 +83,9 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'command or a read of a file that does not exist does not mean the workspace grant is absent. Use the '
             'returned operation error to correct the call before reporting an authority blocker. '
             'Before ending a work review, use purpose_evaluate to record whether the whole protected purpose should continue, wait, seek clarification or is a retirement candidate. '
-            'Use wait only while an exact deliverable has a current required owner-review gate. Optional review never justifies waiting. When owner input is actually required, ask a scoped work_question and use clarify with that question ID. Otherwise continue. '
+            'The owner_decision_state in current planning state is authoritative. A result is an owner-review dependency only when its exact ID appears in required_result_reviews. '
+            'Never infer a gate from prior prose, an optional review, a result ID absent from that list, or the mere existence of a submitted result. '
+            'Use wait only while an exact deliverable appears in required_result_reviews. Optional review never justifies waiting. When owner input is actually required, ask a scoped work_question and use clarify with that question ID. Otherwise continue. '
             'External links are unverified references, never proof of saved content or successful actions. '
             +(autonomy_policy or 'Evaluation is required. Continue independently unless an explicit requirement makes owner acceptance mandatory.')+' '
             'Leave the task nonterminal only when owner acceptance is actually required; otherwise continue useful work under the autonomy policy. '
@@ -455,6 +457,18 @@ class _Run:
                     from agent_native.media_store import list_media
                     from agent_native.questions import recent as recent_questions
                     snapshot['previous_results'] = list_results(conn,root['id'])[:10]
+                    required_reviews = [
+                        {'result_id': result['id'], 'item_id': result['item_id'],
+                         'summary': result['summary'], 'reason': result['review']['reason']}
+                        for result in list_results(conn, root['id'])
+                        if result['review']['required'] and result['acceptance'] == 'not_evaluated'
+                    ]
+                    snapshot['owner_decision_state'] = {
+                        'required_result_reviews': required_reviews,
+                        'message': ('Owner review is required only for the exact results listed here.'
+                                    if required_reviews else
+                                    'No result currently requires owner review. Continue useful work; do not wait for result acceptance.'),
+                    }
                     snapshot['saved_outputs'] = list_outputs(conn,root['id'])[:10]
                     snapshot['saved_media_outputs'] = list_media(conn,root['id'])[:10]
                     snapshot['saved_output_excerpts'] = []
@@ -624,8 +638,15 @@ class _Run:
                     summary += ' Saved outputs remain available.'
             conn.execute('UPDATE agent_native_work_runs SET state=?,summary=?,finished_at=? WHERE id=?',
                          (target,summary,_now(),self.work['id']))
-            state.event(conn,self.work['id'],'work.'+target,
-                        'Result recorded; attempt finished. Work acceptance remains separate.' if success else summary[:1000])
+            if success:
+                required = [result for result in results
+                            if result['review']['required'] and result['acceptance'] == 'not_evaluated']
+                event_summary = ('Deliverable recorded; owner review is required before dependent work continues.'
+                                 if required else
+                                 'Result recorded; this attempt finished and automatic work may continue.')
+            else:
+                event_summary = summary[:1000]
+            state.event(conn,self.work['id'],'work.'+target,event_summary)
 
     def fail(self, reason):
         dead = self.host.force_stop(timeout=2)
