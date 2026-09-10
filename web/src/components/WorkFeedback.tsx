@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { fetchJSON } from '@/lib/api';
 import { Button } from '@nous-research/ui/ui/components/button';
-type Feedback = { id: string; text: string; status: 'pending' | 'handled'; response: string | null; applicable: boolean };
-export function WorkFeedback({ agentId, revision }: { agentId: string; revision: number }) {
+type Feedback = { id: string; text: string; status: 'pending' | 'handled'; response: string | null; applicable: boolean; output_id?: string | null; output_version?: number | null };
+export function WorkFeedback({ agentId, revision, outputId, outputVersion }: { agentId: string; revision: number; outputId?: string; outputVersion?: number }) {
   const [text, setText] = useState('');
   const [rows, setRows] = useState<Feedback[]>([]);
   const [error, setError] = useState('');
@@ -22,15 +22,15 @@ export function WorkFeedback({ agentId, revision }: { agentId: string; revision:
     if (!receipt.current || receipt.current.text !== text) receipt.current = { id: crypto.randomUUID(), text };
     try {
       await fetchJSON(`/api/agent-native/agents/${agentId}/feedback`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({
-        request_id: receipt.current.id, text, expected_revision: revision }) });
+        request_id: receipt.current.id, text, expected_revision: revision, ...(outputId ? { output_id: outputId, output_version: outputVersion ?? 1 } : {}) }) });
       setText(''); receipt.current = null;
       setRows(await fetchJSON<Feedback[]>(`/api/agent-native/agents/${agentId}/feedback`));
     } catch { setError('Feedback was not confirmed. Retry unchanged text to reuse its receipt, or reload if the purpose changed.'); }
     finally { setBusy(false); }
   };
   return <section aria-label="Feedback for work" className="space-y-3 rounded-xl border p-5">
-    <h2 className="text-lg font-semibold">Feedback for work</h2>
-    <p className="text-sm text-muted-foreground">Direction for the agent's work, within its current purpose. This does not interrupt or resume work. Use Pause to stop immediately. Handling is the agent's report, not owner acceptance.</p>
+    <h2 className="text-lg font-semibold">{outputId ? 'Feedback on this output' : 'Feedback for work'}</h2>
+    <p className="text-sm text-muted-foreground">{outputId ? 'Your feedback is attached to this exact output version.' : "Direction for the agent's work, within its current purpose."} It does not create an approval gate or replace owner acceptance.</p>
     <label className="block text-sm">Direction for subsequent work
       <textarea className="mt-1 w-full rounded border bg-background p-2" value={text} maxLength={4000} disabled={busy} onChange={e => setText(e.target.value)} />
     </label>

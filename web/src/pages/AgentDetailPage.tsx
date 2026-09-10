@@ -834,10 +834,15 @@ function PlanningItemLink({ agent, itemId, label = "Open work item" }: { agent: 
 
 function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?: number; compact?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
+  const [page, setPage] = useState(0);
   const allOutputs = agent.work?.outputs ?? [];
-  const outputs = limit == null ? allOutputs : allOutputs.slice(0, limit);
   const allMedia = agent.work?.media_outputs ?? [];
-  const media = limit == null ? allMedia : allMedia.slice(0, limit);
+  const entries = [...allOutputs.map(output => ({ kind: 'output' as const, created_at: output.created_at, output })), ...allMedia.map(media => ({ kind: 'media' as const, created_at: media.created_at, media }))]
+    .sort((a, b) => b.created_at.localeCompare(a.created_at));
+  const pageSize = compact ? (limit ?? 3) : 5;
+  const pageCount = Math.max(1, Math.ceil(entries.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visible = entries.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   const outputId = searchParams.get("output");
   const version = searchParams.get("version");
   const hasSelection = outputId !== null || version !== null;
@@ -856,23 +861,30 @@ function SavedOutputs({ agent, limit, compact = false }: { agent: Agent; limit?:
   const label = compact ? "Recent outputs" : "Saved outputs";
   return <section aria-label={label} className="space-y-4 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">{label}</h2>
-    {!outputs.length && !media.length && <p>No output versions saved yet.</p>}
-    <div className="space-y-4">{media.map((artifact) => {
-      const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
-      return <article key={artifact.artifact_id} className="space-y-3 rounded-lg border p-4">
-        <h3 className="font-semibold">{artifact.title}</h3>
+    {!entries.length && <p>No output versions saved yet.</p>}
+    <div className="space-y-4">{visible.map((entry, index) => {
+      if (entry.kind === 'media') {
+        const artifact = entry.media;
+        const source = `${agentsEndpoint}/${encodeURIComponent(agent.id)}/media/${encodeURIComponent(artifact.artifact_id)}`;
+        return <article key={artifact.artifact_id} className="space-y-3 rounded-lg border p-4">
+        <details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{artifact.title}</summary>
         <p className="text-xs text-muted-foreground">{artifact.mime_type} · {(artifact.byte_count / 1024).toFixed(1)} KB · <time dateTime={artifact.created_at}>{new Date(artifact.created_at).toLocaleString()}</time></p>
         <AuthenticatedMedia artifact={artifact} source={source} />
         <PlanningItemLink agent={agent} itemId={artifact.item_id} />
+        <WorkFeedback agentId={agent.id} revision={agent.soul_revision} outputId={artifact.artifact_id} outputVersion={1} />
+        </details>
       </article>;
-    })}</div>
-    <div className="space-y-4">{outputs.map((output) => <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4">
-      <h3 className="font-semibold">{output.title} · Version {output.version}</h3>
+      }
+      const output = entry.output;
+      return <article key={`${output.output_id}:${output.version}`} className="space-y-2 rounded-lg border p-4"><details open={currentPage === 0 && index === 0}><summary className="cursor-pointer font-semibold">{output.title} · Version {output.version}</summary>
       <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>
       {!compact && <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>}
       <PlanningItemLink agent={agent} itemId={output.item_id} />
       <div><Button onClick={() => select(output)}>Read output</Button></div>
-    </article>)}</div>
+      <WorkFeedback agentId={agent.id} revision={agent.soul_revision} outputId={output.output_id} outputVersion={output.version} />
+    </details></article>;
+    })}</div>
+    {entries.length > pageSize && <nav aria-label="Saved outputs pages" className="flex items-center justify-between text-sm"><Button disabled={currentPage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</Button><span>Page {currentPage + 1} of {pageCount}</span><Button disabled={currentPage === pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</Button></nav>}
     {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
       outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
   </section>;

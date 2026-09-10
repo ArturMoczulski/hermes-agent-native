@@ -380,6 +380,7 @@ test('protected media output loads with dashboard authentication', async ({ page
     execution: 'completed', created_at: '2026-09-10T10:00:00+00:00', removed_at: null, retirement: null, replacement: null,
     pause: { paused: false, sources: [] }, cadence: { enabled: false, interval_seconds: null, next_due: null },
     project_workspace: null, project_preview: null, model_selection: null, model_activity: [], progress_concerns: [],
+    usage: { agent: { input_tokens: 0, output_tokens: 0, reasoning_tokens: 0, api_calls: 0, record_count: 0, actual_cost_usd: null, estimated_cost_usd: null, cost_kind: 'unavailable' }, subtree: { input_tokens: 0, output_tokens: 0, reasoning_tokens: 0, api_calls: 0, record_count: 0, actual_cost_usd: null, estimated_cost_usd: null, cost_kind: 'unavailable' } },
     progress_concern_settings: { failure_threshold: 3 }, assignment_review_policies: [],
     autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null }, setup: null, startup: null,
     work: { id: 'media-run', state: 'completed', limits: { timeout_seconds: 180, max_iterations: 50 },

@@ -6,13 +6,21 @@ from hermes_cli.kanban_db_connect import write_txn
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS agent_native_feedback (
  id TEXT PRIMARY KEY, agent_id TEXT NOT NULL REFERENCES agent_native_agents(id),
+ output_id TEXT, output_version INTEGER,
  soul_revision INTEGER NOT NULL, request_id TEXT NOT NULL, text TEXT NOT NULL,
  status TEXT NOT NULL CHECK(status IN ('pending','handled')),
  offered_run_id TEXT, handled_run_id TEXT, response TEXT, created_at TEXT NOT NULL,
  UNIQUE(agent_id,request_id)
 );
 """
-KEYS = ('id','soul_revision','text','status','handled_run_id','response','created_at')
+KEYS = ('id','soul_revision','output_id','output_version','text','status','handled_run_id','response','created_at')
+
+def migrate(conn):
+    columns = {row[1] for row in conn.execute('PRAGMA table_info(agent_native_feedback)')}
+    if 'output_id' not in columns:
+        conn.execute('ALTER TABLE agent_native_feedback ADD COLUMN output_id TEXT')
+    if 'output_version' not in columns:
+        conn.execute('ALTER TABLE agent_native_feedback ADD COLUMN output_version INTEGER')
 
 
 def _rows(conn, agent_id, suffix='', params=()):
@@ -30,27 +38,39 @@ def recent(conn, agent_id):
     return rows
 
 
-def submit(conn, *, actor, agent_id, expected_revision, request_id, text):
+def submit(conn, *, actor, agent_id, expected_revision, request_id, text, output_id=None, output_version=None):
     _require_owner(actor)
     if (not isinstance(text,str) or not text.strip() or len(text)>4000 or '\x00' in text
             or not isinstance(request_id,str) or not 1 <= len(request_id)<=128):
         raise ValueError('Feedback requires bounded text and request identity')
+    if output_id is not None and (not isinstance(output_id, str) or not output_id.strip()):
+        raise ValueError('Output reference must be valid')
+    if output_id is not None and (type(output_version) is not int or output_version < 1):
+        raise ValueError('Output version is required with an output reference')
     with write_txn(conn):
         root = conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
         if not root:
             raise KeyError(agent_id)
+        if output_id is not None and not (
+            conn.execute('SELECT 1 FROM agent_native_output_versions WHERE output_id=? AND version=? AND agent_id=?',
+                         (output_id, output_version, agent_id)).fetchone()
+            or (output_version == 1 and conn.execute(
+                'SELECT 1 FROM agent_native_media_outputs WHERE artifact_id=? AND agent_id=?',
+                (output_id, agent_id)).fetchone())
+        ):
+            raise ConflictError('Output version is no longer available; reload the agent')
         if type(expected_revision) is not int or root[0] != expected_revision:
             raise ConflictError('Purpose changed; reload before sending feedback')
-        old = conn.execute('SELECT id,text,soul_revision FROM agent_native_feedback WHERE agent_id=? AND request_id=?',(agent_id,request_id)).fetchone()
+        old = conn.execute('SELECT id,text,soul_revision,output_id,output_version FROM agent_native_feedback WHERE agent_id=? AND request_id=?',(agent_id,request_id)).fetchone()
         if old:
-            if (old[1],old[2]) != (text,expected_revision):
+            if (old[1],old[2],old[3],old[4]) != (text,expected_revision,output_id,output_version):
                 raise ConflictError('Feedback request was reused with different content')
             key = old[0]
         else:
             key = str(uuid4())
             created_at = _now()
-            conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,text,status,created_at) VALUES(?,?,?,?,?,?,?)',
-                         (key,agent_id,expected_revision,request_id,text,'pending',created_at))
+            conn.execute('INSERT INTO agent_native_feedback(id,agent_id,soul_revision,request_id,output_id,output_version,text,status,created_at) VALUES(?,?,?,?,?,?,?,?,?)',
+                         (key,agent_id,expected_revision,request_id,output_id,output_version,text,'pending',created_at))
             from agent_native.work_state import event
             run = conn.execute('SELECT id FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if run:
