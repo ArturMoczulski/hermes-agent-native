@@ -300,7 +300,7 @@ test('compact header enables automatic work when cadence is off', async ({ page 
     model_selection: null, model_activity: [], progress_concerns: [], assignment_review_policies: [],
     startup: null, setup: null,
     work: { id: 'waiting-run', state: 'completed', limits: { timeout_seconds: 180, max_iterations: 50 },
-      session_id: 'waiting-session', model_calls: 1, events: [], summary: 'Waiting.', error: null,
+      session_id: 'waiting-session', model_calls: 1, events: Array.from({ length: 21 }, (_, index) => ({ id: index + 1, kind: 'work.progress', summary: `Progress checkpoint ${index + 1}`, created_at: `2026-09-09T10:${String(index).padStart(2, '0')}:00+00:00` })), summary: 'Waiting.', error: null,
       stories: [], outputs: [], results: [], progress: [], output_sections: [], focus: null, purpose_evaluations: [{ id: 'clarify', run_id: 'waiting-run', soul_revision: 1, purpose: 'Build after owner direction.', judgment: 'clarify', evidence: ['Design ready.'], remaining_obligations: ['Owner choice.'], uncertainty: 'Owner choice.', next_action: 'Wait for owner.', question_id: 'question-1', created_at: '2026-09-09T10:00:00+00:00' }] },
   };
   await page.route(`**/api/agent-native/agents/${id}`, async route => {
@@ -322,6 +322,14 @@ test('compact header enables automatic work when cadence is off', async ({ page 
   await expect(page.getByLabel('Execution status')).toHaveText('Needs your decision');
   await expect(page.getByRole('region', { name: 'Current work overview' })).toContainText('Choose the next design direction.');
   await expect(page.getByRole('button', { name: 'Pause automatic work', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Activity', exact: true }).click();
+  const activity = page.getByRole('region', { name: 'Agent activity', exact: true });
+  await expect(activity.getByRole('row')).toHaveCount(21);
+  await expect(activity.getByRole('button', { name: 'Next', exact: true })).toBeVisible();
+  await activity.getByRole('button', { name: 'Next', exact: true }).click();
+  await expect(activity.getByText('Progress checkpoint 1', { exact: true })).toBeVisible();
+  await activity.getByLabel('Activity rows per page').selectOption('50');
+  await expect(activity.getByRole('row')).toHaveCount(22);
 });
 
 test('owner grants a protected project workspace from agent settings', async ({ page }) => {

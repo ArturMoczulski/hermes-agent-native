@@ -393,18 +393,29 @@ function AgentTabs({ agentId, activeTab }: { agentId: string; activeTab: "work" 
 
 function AgentActivityTab({ agent }: { agent: Agent }) {
   const events = [...(agent.work?.events ?? [])].reverse();
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(20);
+  const pageCount = Math.max(1, Math.ceil(events.length / pageSize));
+  const currentPage = Math.min(page, pageCount - 1);
+  const visibleEvents = events.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
   return <section aria-label="Agent activity" className="space-y-3 rounded-xl border p-5">
-    <div>
+    <div className="flex flex-wrap items-end justify-between gap-3">
+      <div>
       <h2 className="text-lg font-semibold">Activity</h2>
-      <p className="text-sm text-muted-foreground">Most recent activity first. Open the complete view for diagnostics and lifecycle history.</p>
+        <p className="text-sm text-muted-foreground">Most recent activity first. Open the complete view for diagnostics and lifecycle history.</p>
+      </div>
+      <label className="text-sm text-muted-foreground">Rows per page<select aria-label="Activity rows per page" className="ml-2 rounded-md border bg-background px-2 py-1 text-foreground" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(0); }}>
+        {[20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+      </select></label>
     </div>
     {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
       <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th></tr></thead>
-      <tbody>{events.map((event) => <tr key={event.id} className="border-t">
+      <tbody>{visibleEvents.map((event) => <tr key={event.id} className="border-t">
         <td className="whitespace-nowrap p-2"><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></td>
         <td className="p-2">{event.summary}</td>
       </tr>)}</tbody>
     </table></div> : <p>No execution activity recorded yet.</p>}
+    {events.length > pageSize && <nav aria-label="Activity pages" className="flex items-center justify-between text-sm"><Button disabled={currentPage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</Button><span>Page {currentPage + 1} of {pageCount}</span><Button disabled={currentPage === pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</Button></nav>}
     <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>Open complete activity and diagnostics</Link>
   </section>;
 }
