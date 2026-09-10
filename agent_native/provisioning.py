@@ -12,6 +12,7 @@ import stat
 import tempfile
 
 from agent_native.identity import get_root
+from agent_native.agent_home import ensure_mutable_areas, paths, public_layout
 
 
 def _projection(root):
@@ -87,6 +88,7 @@ def provision_root(conn, *, actor, agent_id, storage_root, refresh_projection=Fa
     storage = storage.resolve()
     storage.mkdir(parents=True, exist_ok=True, mode=0o700)
     base = storage / root['id']
+    layout = paths(storage, root['id'])
     expected = _projection(root)
     if not base.exists() and not base.is_symlink():
         stage = Path(tempfile.mkdtemp(prefix='.provision-', dir=storage))
@@ -112,10 +114,10 @@ def provision_root(conn, *, actor, agent_id, storage_root, refresh_projection=Fa
                 shutil.rmtree(stage)
     if refresh_projection:
         _refresh_projection(base, expected)
+    ensure_mutable_areas(layout)
     _verify(base, expected)
     return {'agent_id': root['id'], 'soul_revision': root['soul_revision'],
-            'profile': str(base / 'profile'), 'workspace': str(base / 'workspace'),
-            'memory': str(base / 'profile' / 'memories')}
+            **public_layout(layout)}
 
 
 def sandbox_mounts(conn, *, actor, agent_id, storage_root):

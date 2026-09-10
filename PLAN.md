@@ -8,7 +8,9 @@ trusted corrective answer woke cadence, the live MiniMax M3 agent created its pa
 test and configuration files in the granted project. AN-104 is next: the canonical
 agent-home topology and migration are specified in
 [agent storage topology](implementation/agent-storage-topology.md). AN-105 follows
-with functional durable memory and working-practice access.
+with functional durable memory and working-practice access. AN-104's first TDD slice
+adds the authoritative home resolver and safely provisions distinct practices,
+default-project, output and attempt-runtime areas without relocating existing data.
 
 AN-102 fixes the live Fantasy Game Builder continuation failure. Saved outputs now
 use a stable host-owned evidence root, while an owner-granted coding workspace is

@@ -42,8 +42,10 @@ host-owned output root at runtime after that grant exposed the mixed-root defect
 
 Remaining migration work belongs to AN-104:
 
-1. Introduce explicit protected, memory, practices, project, output, and runtime
-   resolvers instead of assembling paths independently in callers.
+1. The first slice introduces one authoritative resolver and safely creates the
+   missing practices, default-project, output and attempt-runtime areas for new or
+   existing homes without moving live data. Remaining callers must adopt it instead
+   of assembling paths independently.
 2. Give every ordinary agent a default private project root and treat an external
    grant as a versioned project binding.
 3. Move or compatibly resolve existing `workspace/outputs` and practices without

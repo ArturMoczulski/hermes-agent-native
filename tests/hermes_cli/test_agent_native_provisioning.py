@@ -30,6 +30,17 @@ def test_private_profile_projection_and_writable_layers(setup):
     assert get_execution(conn, root) == 'not_started'
 
 
+def test_agent_home_has_distinct_project_output_practice_and_runtime_areas(setup):
+    conn, root, storage = setup
+    layout = provision_root(conn, actor=OWNER, agent_id=root['id'], storage_root=storage)
+
+    assert Path(layout['project']).relative_to(Path(layout['home'])) == Path('projects/main')
+    assert Path(layout['outputs']).relative_to(Path(layout['home'])) == Path('outputs')
+    assert Path(layout['practices']).relative_to(Path(layout['home'])) == Path('practices')
+    assert Path(layout['runtime']).relative_to(Path(layout['home'])) == Path('runtime/attempts')
+    assert all(Path(layout[key]).is_dir() for key in ('project', 'outputs', 'practices', 'runtime'))
+
+
 def get_execution(conn, root):
     from agent_native.identity import get_root
     return get_root(conn, actor=OWNER, agent_id=root['id'])['execution']

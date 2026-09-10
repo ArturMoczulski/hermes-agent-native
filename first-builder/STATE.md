@@ -17,7 +17,11 @@ protected identity/soul, durable memory/practices, mutable project work, immutab
 published outputs, attempt scratch and observable history. The implementation has
 parts of this layout but still mixes areas and does not provide a default project
 root with explicit lifecycle. AN-105 retains the separate missing managed-memory and
-practice access. Next: implement the AN-104 resolvers and compatible migration.
+practice access. AN-104's first focused test now passes: one authoritative resolver
+creates distinct `practices`, `projects/main`, `outputs`, and `runtime/attempts`
+areas for new and existing homes while repeat provisioning preserves legacy memory
+and workspace files. Next: adopt the resolver in runtime callers and migrate each
+mixed legacy area with checksum-preserving tests.
 
 ## Stable output storage after coding-workspace grant — 2026-09-10
 
