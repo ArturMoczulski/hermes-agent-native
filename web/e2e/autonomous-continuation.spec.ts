@@ -44,6 +44,7 @@ test('highly autonomous agent advances to a different ready assignment without o
     await expect(direction.getByRole('heading', { name: 'Current milestone', exact: true })).toBeVisible()
     await expect(direction.getByRole('heading', { name: 'Working on now', exact: true })).toBeVisible()
     await expect(direction.getByRole('heading', { name: 'Up next', exact: true })).toBeVisible()
+    await expect(page.getByRole('article', { name: 'Output reader', exact: true })).toBeVisible()
     await page.getByRole('region', { name: 'Recent outputs', exact: true })
       .getByRole('button', { name: 'Read output', exact: true }).first().click()
     await expect(page.getByRole('article', { name: 'Output reader', exact: true })

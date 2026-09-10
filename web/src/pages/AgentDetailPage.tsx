@@ -890,6 +890,7 @@ function PlanningItemLink({ agent, itemId, label = "Open work item" }: { agent: 
 function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: boolean }) {
   const [searchParams, setSearchParams] = useSearchParams();
   const [page, setPage] = useState(0);
+  const [defaultSelectionDismissed, setDefaultSelectionDismissed] = useState(false);
   const allOutputs = agent.work?.outputs ?? [];
   const allMedia = agent.work?.media_outputs ?? [];
   const entries = [...allOutputs.map(output => ({ kind: 'output' as const, created_at: output.created_at, output })), ...allMedia.map(media => ({ kind: 'media' as const, created_at: media.created_at, media }))]
@@ -898,13 +899,20 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
   const pageCount = Math.max(1, Math.ceil(entries.length / pageSize));
   const currentPage = Math.min(page, pageCount - 1);
   const visible = entries.slice(currentPage * pageSize, (currentPage + 1) * pageSize);
-  const outputId = searchParams.get("output");
-  const version = searchParams.get("version");
+  const requestedOutputId = searchParams.get("output");
+  const requestedVersion = searchParams.get("version");
   const mediaId = searchParams.get("media");
-  const hasSelection = outputId !== null || version !== null;
-  const uniqueSelection = searchParams.getAll("output").length === 1 && searchParams.getAll("version").length === 1;
+  const hasExplicitSelection = requestedOutputId !== null || requestedVersion !== null || mediaId !== null;
+  const newest = entries[0];
+  const defaultOutput = !hasExplicitSelection && !defaultSelectionDismissed && newest?.kind === "output" ? newest.output : null;
+  const defaultMedia = !hasExplicitSelection && !defaultSelectionDismissed && newest?.kind === "media" ? newest.media : null;
+  const outputId = requestedOutputId ?? defaultOutput?.output_id ?? null;
+  const version = requestedVersion ?? (defaultOutput ? String(defaultOutput.version) : null);
+  const hasTextSelection = outputId !== null || version !== null;
+  const uniqueSelection = defaultOutput !== null || (searchParams.getAll("output").length === 1 && searchParams.getAll("version").length === 1);
 
   function select(output: OutputReference | null) {
+    if (output) setDefaultSelectionDismissed(false);
     setSearchParams((previous) => {
       const next = new URLSearchParams(previous);
       next.delete("output");
@@ -915,6 +923,7 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
     });
   }
   function selectMedia(artifact: MediaOutput | null) {
+    if (artifact) setDefaultSelectionDismissed(false);
     setSearchParams((previous) => {
       const next = new URLSearchParams(previous);
       next.delete("output"); next.delete("version"); next.delete("media");
@@ -922,15 +931,19 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
       return next;
     });
   }
-  const selectedMedia = allMedia.find((artifact) => artifact.artifact_id === mediaId) ?? null;
+  function closeSelection() {
+    setDefaultSelectionDismissed(true);
+    select(null);
+  }
+  const selectedMedia = allMedia.find((artifact) => artifact.artifact_id === mediaId) ?? defaultMedia;
 
   const label = compact ? "Recent outputs" : "Saved outputs";
   return <section aria-label={label} className="space-y-4 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">{label}</h2>
     {!entries.length && <p>No output versions saved yet.</p>}
-    {hasSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
-      outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={() => select(null)} />}
-    {selectedMedia && <SelectedMediaOutput agent={agent} artifact={selectedMedia} onClose={() => selectMedia(null)} />}
+    {hasTextSelection && <OutputReader key={`${outputId}:${version}:${uniqueSelection}`} agent={agent} showOptionalReview={!compact}
+      outputId={outputId} requestedVersion={version} uniqueSelection={uniqueSelection} onClose={closeSelection} />}
+    {selectedMedia && <SelectedMediaOutput agent={agent} artifact={selectedMedia} onClose={closeSelection} />}
     <div className="space-y-4">{visible.map((entry, index) => {
       if (entry.kind === 'media') {
         const artifact = entry.media;
@@ -948,7 +961,7 @@ function SavedOutputs({ agent, compact = false }: { agent: Agent; compact?: bool
       <p className="text-xs text-muted-foreground">{output.format === "markdown" ? "Markdown" : "Plain text"} · <time dateTime={output.created_at}>{new Date(output.created_at).toLocaleString()}</time></p>
       {!compact && <p className="break-all text-xs text-muted-foreground">{output.relative_path}</p>}
       <PlanningItemLink agent={agent} itemId={output.item_id} />
-      {!hasSelection || outputId !== output.output_id || version !== String(output.version) ? <div><Button onClick={() => select(output)}>Read output</Button></div> : <p className="text-sm text-muted-foreground">Reading this output above.</p>}
+      {!hasTextSelection || outputId !== output.output_id || version !== String(output.version) ? <div><Button onClick={() => select(output)}>Read output</Button></div> : <p className="text-sm text-muted-foreground">Reading this output above.</p>}
     </details></article>;
     })}</div>
     {entries.length > pageSize && <nav aria-label="Saved outputs pages" className="flex items-center justify-between text-sm"><Button disabled={currentPage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</Button><span>Page {currentPage + 1} of {pageCount}</span><Button disabled={currentPage === pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</Button></nav>}
