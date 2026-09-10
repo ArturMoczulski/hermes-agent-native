@@ -104,5 +104,5 @@ def automatic_work(conn, agent_id, *, now=None, busy=False):
         due = max(due, datetime.fromisoformat(work[2]) + timedelta(seconds=cadence[1]))
     if now_value < due:
         return _decision('scheduled', blocker='Waiting for the next configured check-in.',
-                         release='The cadence becomes due at ' + cadence[2] + '.', actor='framework')
+                         release='The cadence becomes due at ' + due.isoformat() + '.', actor='framework')
     return _decision('ready', may_start=True)

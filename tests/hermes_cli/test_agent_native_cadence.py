@@ -19,6 +19,26 @@ def test_due_cadence_retains_attempts_and_never_overlaps_or_resumes_pause(broker
     assert cadence.read(s.conn,s.root['id'])['enabled'] is False
 
 
+def test_readiness_reports_the_effective_next_check_in_after_a_finished_attempt(broker):
+    from agent_native import cadence
+    from agent_native.readiness import automatic_work
+    s = broker
+    cadence.configure(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                      interval_seconds=60, enabled=True)
+    s.conn.execute("UPDATE agent_native_cadence SET next_due='2099-01-01T00:01:00+00:00' WHERE agent_id=?",
+                   (s.root['id'],))
+    s.conn.execute("UPDATE agent_native_work_runs SET state='completed',finished_at='2099-01-01T00:02:00+00:00' WHERE id=?",
+                   (s.work['id'],))
+
+    assert automatic_work(s.conn, s.root['id'], now='2099-01-01T00:02:30+00:00') == {
+        'state': 'scheduled', 'may_start': False,
+        'blocker': 'Waiting for the next configured check-in.',
+        'release_condition': 'The cadence becomes due at 2099-01-01T00:03:00+00:00.',
+        'responsible_actor': 'framework',
+    }
+    assert automatic_work(s.conn, s.root['id'], now='2099-01-01T00:03:00+00:00')['state'] == 'ready'
+
+
 def test_due_cadence_continues_after_a_normal_run_limit_without_resuming_owner_pause(broker):
     from agent_native import cadence, work_state
     s=broker
