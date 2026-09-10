@@ -58,6 +58,12 @@ def test_clarification_blocks_cadence_until_the_linked_question_is_answered(brok
         'remaining_obligations':['Finish the ending.'],'uncertainty':'Owner preference is required.',
         'next_action':'Use the owner answer.','question_id':question['id']}))
     s.conn.execute("UPDATE agent_native_work_runs SET state='completed',finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",(s.work['id'],))
+    from agent_native.readiness import automatic_work
+    assert automatic_work(s.conn, s.root['id'], now='2099-01-01T00:00:00+00:00') == {
+        'state': 'waiting_owner_answer', 'may_start': False,
+        'blocker': question['question'], 'release_condition': 'Answer the agent question.',
+        'responsible_actor': 'owner',
+    }
     assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
     questions.answer(s.conn,actor=OWNER,agent_id=s.root['id'],question_id=question['id'],
                      expected_revision=1,answer='Make it hopeful.')

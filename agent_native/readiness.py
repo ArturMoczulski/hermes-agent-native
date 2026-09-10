@@ -52,6 +52,12 @@ def automatic_work(conn, agent_id, *, now=None, busy=False):
     if concern:
         return _decision('owner_attention', blocker=concern[0],
                          release='Review the progress concern and provide direction.', actor='owner')
+    if work[1] == 'unknown':
+        return _decision('framework_reconciliation', blocker='A work outcome is uncertain.',
+                         release='Reconcile the uncertain effect before continuing.', actor='framework')
+    if work[1] == 'failed':
+        return _decision('owner_attention', blocker='The latest attempt failed.',
+                         release='Review the failure and retry the work.', actor='owner')
     cadence = conn.execute(
         'SELECT enabled,interval_seconds,next_due FROM agent_native_cadence WHERE agent_id=?',
         (agent_id,),
@@ -80,12 +86,6 @@ def automatic_work(conn, agent_id, *, now=None, busy=False):
             if question and question[1] is None:
                 return _decision('waiting_owner_answer', blocker=question[0],
                                  release='Answer the agent question.', actor='owner')
-    if work[1] == 'failed':
-        return _decision('owner_attention', blocker='The latest attempt failed.',
-                         release='Review the failure and retry the work.', actor='owner')
-    if work[1] == 'unknown':
-        return _decision('framework_reconciliation', blocker='A work outcome is uncertain.',
-                         release='Reconcile the uncertain effect before continuing.', actor='framework')
     from agent_native.delivery_barrier import unresolved_terminal_notices
     try:
         unresolved_terminal_notices(conn, agent_id)

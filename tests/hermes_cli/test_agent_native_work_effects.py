@@ -101,6 +101,13 @@ def test_lost_plane_write_preserves_unknown_and_blocks_all_later_admission(broke
     assert s.conn.execute('SELECT COUNT(*) FROM agent_native_work_effects WHERE run_id=?',
                           (s.work['id'],)).fetchone()[0] == 1
     assert work_state.read_work(s.conn, s.root['id'])['model_calls'] == 0
+    from agent_native.readiness import automatic_work
+    assert automatic_work(s.conn, s.root['id']) == {
+        'state': 'framework_reconciliation', 'may_start': False,
+        'blocker': 'A work outcome is uncertain.',
+        'release_condition': 'Reconcile the uncertain effect before continuing.',
+        'responsible_actor': 'framework',
+    }
     s.run.fail('PlaneWriteError')
     with connect_closing(s.db_path) as reopened:
         assert work_state.read_work(reopened, s.root['id'])['state'] == 'unknown'

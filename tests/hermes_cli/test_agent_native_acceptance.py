@@ -85,9 +85,18 @@ def test_required_review_stops_cadence_until_owner_decides(configured,decision,n
     with connect_closing(board='default') as conn:
         cadence.configure(conn,actor=OWNER,agent_id=root['id'],expected_revision=1,
                           interval_seconds=1,enabled=True)
+        conn.execute("UPDATE agent_native_setup SET status='ready',message='Ready' WHERE agent_id=?",
+                     (root['id'],))
         conn.execute("UPDATE agent_native_work_runs SET state='completed',"
                      "finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
                      (root['work']['id'],))
+        from agent_native.readiness import automatic_work
+        assert automatic_work(conn, root['id'], now='2099-01-01T00:00:00+00:00') == {
+            'state': 'waiting_owner_review', 'may_start': False,
+            'blocker': 'A required output review is unanswered.',
+            'release_condition': 'Accept the output or request a revision.',
+            'responsible_actor': 'owner',
+        }
         assert cadence.queue_due(conn,now='2099-01-01T00:00:00+00:00')==[]
 
     path = f'{URL}/{root["id"]}/results/{result_id}/decision'
