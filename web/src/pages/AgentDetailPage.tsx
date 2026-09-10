@@ -392,7 +392,11 @@ function AgentTabs({ agentId, activeTab }: { agentId: string; activeTab: "work" 
 }
 
 function AgentActivityTab({ agent }: { agent: Agent }) {
-  const events = [...(agent.work?.events ?? [])].reverse();
+  const [sort, setSort] = useState<"newest" | "oldest">("newest");
+  const events = [...(agent.work?.events ?? [])].sort((left, right) =>
+    sort === "newest"
+      ? right.created_at.localeCompare(left.created_at)
+      : left.created_at.localeCompare(right.created_at));
   const [page, setPage] = useState(0);
   const [pageSize, setPageSize] = useState(20);
   const pageCount = Math.max(1, Math.ceil(events.length / pageSize));
@@ -402,11 +406,16 @@ function AgentActivityTab({ agent }: { agent: Agent }) {
     <div className="flex flex-wrap items-end justify-between gap-3">
       <div>
       <h2 className="text-lg font-semibold">Activity</h2>
-        <p className="text-sm text-muted-foreground">Most recent activity first. Open the complete view for diagnostics and lifecycle history.</p>
+        <p className="text-sm text-muted-foreground">{sort === "newest" ? "Most recent activity first." : "Oldest activity first."} Open the complete view for diagnostics and lifecycle history.</p>
       </div>
-      <label className="text-sm text-muted-foreground">Rows per page<select aria-label="Activity rows per page" className="ml-2 rounded-md border bg-background px-2 py-1 text-foreground" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(0); }}>
-        {[20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
-      </select></label>
+      <div className="flex flex-wrap gap-3 text-sm text-muted-foreground">
+        <label>Sort<select aria-label="Activity sort order" className="ml-2 rounded-md border bg-background px-2 py-1 text-foreground" value={sort} onChange={(event) => { setSort(event.target.value as "newest" | "oldest"); setPage(0); }}>
+          <option value="newest">Newest first</option><option value="oldest">Oldest first</option>
+        </select></label>
+        <label>Rows per page<select aria-label="Activity rows per page" className="ml-2 rounded-md border bg-background px-2 py-1 text-foreground" value={pageSize} onChange={(event) => { setPageSize(Number(event.target.value)); setPage(0); }}>
+          {[20, 50, 100].map((size) => <option key={size} value={size}>{size}</option>)}
+        </select></label>
+      </div>
     </div>
     {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
       <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th></tr></thead>

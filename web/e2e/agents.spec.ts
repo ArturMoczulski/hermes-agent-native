@@ -330,6 +330,8 @@ test('compact header enables automatic work when cadence is off', async ({ page 
   await expect(activity.getByText('Progress checkpoint 1', { exact: true })).toBeVisible();
   await activity.getByLabel('Activity rows per page').selectOption('50');
   await expect(activity.getByRole('row')).toHaveCount(22);
+  await activity.getByLabel('Activity sort order').selectOption('oldest');
+  await expect(activity.locator('tbody tr').first()).toContainText('Progress checkpoint 1');
 });
 
 test('owner grants a protected project workspace from agent settings', async ({ page }) => {
