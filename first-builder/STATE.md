@@ -2547,3 +2547,20 @@ then the three AN-115-focused checks passed (`3 passed, 4 deselected`). Running
 the entire purpose-evaluation file also exposed an older retirement test that
 still expects `_effect` to raise even though managed validation failures are
 returned as rejection receipts; keep that separate from AN-115.
+
+## Urgent autonomous-runtime recovery plan — 2026-09-10
+
+The live Fantasy Game Builder proved a pause/resume deadlock rather than an owner
+dependency: an unresolved informational pause notification remains pending after the
+owner resumes, the delivery barrier rejects that terminal state, and cadence silently
+skips the otherwise eligible agent. No model work runs while the dashboard describes
+the agent as recovering.
+
+Plane now tracks the repair as urgent Cycle 06 work: AN-116 fixes the demonstrated
+deadlock; AN-117 makes automatic-work readiness authoritative across scheduler, API
+and UI; AN-118 aligns actual owner gates; AN-119 adds typed, bounded stall recovery;
+and AN-120 is the deterministic lifecycle gate before First Builder launch. The order
+is AN-116 → AN-117 → AN-118 → AN-119 → AN-120. Plane retains the exact acceptance
+criteria and dependency graph. Next: write the focused AN-116 pause/resume regression,
+then change informational-delivery reconciliation without weakening uncertain-effect
+safety.

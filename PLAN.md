@@ -1,6 +1,40 @@
 # Current implementation work
 
-AN-114 is the current urgent reliability repair exposed by the live Fantasy Game
+## Urgent autonomous-runtime recovery
+
+The live Fantasy Game Builder exposed a framework deadlock after an owner-authorized
+resume. A pending informational `paused` terminal notification survives the resume,
+the delivery barrier rejects it, and cadence silently declines to schedule a fresh
+attempt. The dashboard therefore says the agent is recovering even though no recovery
+or model work is running and no useful owner action is available.
+
+Plane owns the full acceptance criteria and dependencies for the urgent repair:
+
+1. **AN-116 — Fix pause/resume deadlock caused by an unresolved pause notification**
+   is In Progress. Preserve uncertain-effect safety while allowing an authorized
+   resume to supersede or reconcile informational pause delivery and schedule one
+   fresh attempt.
+2. **AN-117 — Publish one authoritative automatic-work readiness decision.** Make
+   the scheduler, API and UI consume the same answer to whether work may run, and
+   expose the exact blocker, release condition and responsible actor.
+3. **AN-118 — Make owner-decision gates identical in scheduler, agent context, and
+   UI.** Only concrete unanswered questions and explicitly required deliverable
+   reviews may block work; optional review must remain nonblocking.
+4. **AN-119 — Classify and recover stalled autonomous work without empty owner
+   actions.** Retry transient failures with bounded backoff, ask a concrete question
+   for real human dependencies, and surface framework faults without token-burning
+   loops or a meaningless Resume button.
+5. **AN-120 — Gate First Builder launch on deterministic autonomous lifecycle
+   journeys.** Prove continuation, pause/resume, required and optional review,
+   informational delivery, uncertain-effect reconciliation, restart safety and
+   repeated-no-progress recovery before the First Builder is activated.
+
+All five items are urgent and assigned to the current undated Cycle 06. Their delivery
+order is AN-116, AN-117, AN-118, AN-119, then AN-120; AN-119 depends on the shared
+readiness and decision-gate work, and AN-120 is the final integration gate. The next
+code change starts AN-116 with a focused failing pause/resume regression.
+
+AN-114 is the preceding reliability repair exposed by the live Fantasy Game
 Builder. The framework had no explicit authoritative list of pending owner decisions
 in a new attempt, so stale model prose could incorrectly treat an optional result as a
 blocking approval gate. Managed attempts now receive that exact host-derived list and
