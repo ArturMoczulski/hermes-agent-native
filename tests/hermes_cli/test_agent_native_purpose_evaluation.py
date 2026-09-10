@@ -49,10 +49,19 @@ def test_clarification_blocks_cadence_until_the_linked_question_is_answered(brok
     assert len(cadence.queue_due(s.conn,now='2099-01-01T00:00:01+00:00'))==1
 
 
-def test_wait_is_dormant_until_owner_feedback_wakes_one_fresh_attempt(broker):
-    from agent_native import cadence, feedback
+def test_wait_is_dormant_only_while_required_review_is_pending(broker):
+    from agent_native import acceptance, autonomy, cadence
     from agent_native.identity import OWNER
+    from tests.hermes_cli.test_agent_native_results import record
     s=broker
+    autonomy.change_settings(s.conn,actor=OWNER,agent_id=s.root['id'],level=3,
+                             require_owner_review=True,expected_revision=1)
+    output=s.run._effect(s.conn,s.planning,effect(s,'gated-output','output_publish',{
+        'title':'Design draft','content':'A complete design.','format':'markdown',
+        'item_id':s.setup['discovery_item_id']}))
+    result=record(s,'gated-result',outcome='submitted',outputs=[{
+        'output_id':output['output_id'],'version':output['version']}])
+    assert result['review']['required'] is True
     cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
                       interval_seconds=1,enabled=True)
     s.run._effect(s.conn,s.planning,effect(s,'purpose-wait','purpose_evaluate',{
@@ -65,7 +74,22 @@ def test_wait_is_dormant_until_owner_feedback_wakes_one_fresh_attempt(broker):
     assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
     assert cadence.queue_due(s.conn,now='2099-01-02T00:00:00+00:00')==[]
 
-    feedback.submit(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
-                    request_id='approve-design',text='The design is approved. Begin implementation.')
+    acceptance.decide(s.conn,actor=OWNER,agent_id=s.root['id'],result_id=result['id'],
+                      request_id='approve-design',decision='accepted',
+                      expected_criteria_revision=result['criteria_revision'])
     assert len(cadence.queue_due(s.conn,now='2099-01-02T00:00:01+00:00'))==1
-    assert cadence.queue_due(s.conn,now='2099-01-03T00:00:00+00:00')==[]
+
+
+def test_optional_review_cannot_be_converted_into_a_wait(broker):
+    s=broker
+    rejected=s.run._effect(s.conn,s.planning,effect(s,'invalid-wait','purpose_evaluate',{
+        'judgment':'wait','evidence':['An optional draft is available.'],
+        'remaining_obligations':['Continue the next milestone.'],
+        'uncertainty':'The owner may review later.','next_action':'Wait for optional review.',
+        'question_id':None}))
+
+    assert rejected['status']=='rejected'
+    assert rejected['error']=='WaitWithoutDependency'
+    assert 'Optional review is nonblocking' in rejected['message']
+    assert s.conn.execute('SELECT count(*) FROM agent_native_purpose_evaluations WHERE run_id=?',
+                          (s.work['id'],)).fetchone()[0]==0

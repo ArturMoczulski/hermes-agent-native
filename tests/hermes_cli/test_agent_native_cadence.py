@@ -37,7 +37,7 @@ def test_due_cadence_continues_after_a_normal_run_limit_without_resuming_owner_p
     assert history==['limit_reached','queued']
 
 
-def test_superseded_wait_cannot_stop_a_later_productive_attempt(broker):
+def test_legacy_dependency_free_wait_cannot_stop_productive_cadence(broker):
     import hashlib
     import json
     from agent_native import cadence, work_state
@@ -58,16 +58,8 @@ def test_superseded_wait_cannot_stop_a_later_productive_attempt(broker):
     s.conn.execute("UPDATE agent_native_work_runs SET state='completed',finished_at=? WHERE id=?",
                    ('2000-01-01T00:00:00+00:00',s.work['id']))
 
-    # A genuine current wait is dormant and consumes no model call.
-    assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
-
-    cadence.wake(s.conn,s.root['id'],'owner_feedback',requested_at='2099-01-01T00:00:00+00:00')
-    [productive]=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
-    s.conn.execute("UPDATE agent_native_work_runs SET state='limit_reached',finished_at=? WHERE id=?",
-                   ('2099-01-01T00:01:00+00:00',productive))
-
-    [continued]=cadence.queue_due(s.conn,now='2099-01-01T00:02:00+00:00')
-    assert continued!=productive
+    [continued]=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+    assert continued!=s.work['id']
     assert work_state.read_work(s.conn,s.root['id'])['id']==continued
 
 

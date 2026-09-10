@@ -94,13 +94,10 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if latest_evaluation:
                 import json
                 evaluation=json.loads(latest_evaluation[0])
-                # A wait judgment gates only the attempt that recorded it. Routine
-                # time passing must not spend another model call, but once actionable
-                # input admits a newer attempt the older judgment is historical and
-                # cannot return later productive work to dormancy.
-                if (evaluation['judgment']=='wait' and not wake_row
-                        and previous and evaluation['run_id']==previous[0]):
-                    continue
+                # Required reviews are gated above by their immutable result record.
+                # A plain historical wait has no independently verifiable dependency
+                # and cannot suppress cadence; new dependency-free waits are rejected
+                # when the purpose evaluation is recorded.
                 if evaluation['judgment']=='clarify':
                     question=conn.execute('SELECT answer FROM agent_native_questions WHERE id=? AND agent_id=?',
                                           (evaluation['question_id'],agent_id)).fetchone()

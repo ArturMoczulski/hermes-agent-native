@@ -83,6 +83,7 @@ def _initial_context(snapshot, contracts, autonomy_policy=None):
             'command or a read of a file that does not exist does not mean the workspace grant is absent. Use the '
             'returned operation error to correct the call before reporting an authority blocker. '
             'Before ending a work review, use purpose_evaluate to record whether the whole protected purpose should continue, wait, seek clarification or is a retirement candidate. '
+            'Use wait only while an exact deliverable has a current required owner-review gate. Optional review never justifies waiting. When owner input is actually required, ask a scoped work_question and use clarify with that question ID. Otherwise continue. '
             'External links are unverified references, never proof of saved content or successful actions. '
             +(autonomy_policy or 'Evaluation is required. Continue independently unless an explicit requirement makes owner acceptance mandatory.')+' '
             'Leave the task nonterminal only when owner acceptance is actually required; otherwise continue useful work under the autonomy policy. '
@@ -155,8 +156,10 @@ class _Run:
             fingerprint = (hashlib.sha256(
                 json.dumps([tool, arguments], sort_keys=True).encode()).hexdigest()
                 if isinstance(tool, str) and isinstance(arguments, dict) else None)
+            from agent_native.purpose_evaluation import WaitWithoutDependency
             result = self._reject_effect(
-                conn, params.get('tool_call_id'), tool, type(exc), fingerprint)
+                conn, params.get('tool_call_id'), tool, type(exc), fingerprint,
+                message=str(exc) if isinstance(exc,WaitWithoutDependency) else None)
             if result is None:
                 raise
             return result
@@ -377,7 +380,7 @@ class _Run:
                 state.event(conn,self.work['id'],'work.effect',summary)
         return result
 
-    def _reject_effect(self, conn, call_id, tool, error_type, fingerprint=None):
+    def _reject_effect(self, conn, call_id, tool, error_type, fingerprint=None, message=None):
         row = conn.execute(
             'SELECT tool,result,fingerprint FROM agent_native_work_effects '
             'WHERE run_id=? AND call_id=?',
@@ -392,8 +395,8 @@ class _Run:
             'status': 'rejected',
             'tool': tool,
             'error': error_type.__name__,
-            'message': ('The managed tool rejected this call before any effect was '
-                        'attempted. Review its arguments and retry with a new tool call.'),
+            'message': message or ('The managed tool rejected this call before any effect was '
+                                   'attempted. Review its arguments and retry with a new tool call.'),
         }
         with write_txn(conn):
             conn.execute(

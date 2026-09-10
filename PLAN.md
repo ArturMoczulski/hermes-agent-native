@@ -19,6 +19,11 @@ bounded attempts. AN-106 binds a plain `wait` judgment to the attempt that recor
 it: a current wait remains token-free, while actionable input followed by a newer
 productive attempt permanently makes the older wait historical. Unanswered explicit
 questions remain blocking.
+AN-111 closes the related current-wait defect: a worker may record `wait` only while
+the framework can identify an unresolved required owner-review gate. Optional review
+is nonblocking, and needed owner input must be represented by a linked unanswered
+question and `clarify`; dependency-free waits are rejected with corrective guidance,
+and already-recorded legacy waits without a gate no longer suppress cadence.
 The next major capability is AN-107: persist measured model-token usage and
 provider/model cost, aggregate it by attempt, agent and subtree, and enforce
 owner-controlled soft and hard budgets. AN-108 then expands the compact Work

@@ -16,6 +16,9 @@ CREATE INDEX IF NOT EXISTS agent_native_purpose_evaluation_agent
  ON agent_native_purpose_evaluations(agent_id,created_at);
 """
 
+class WaitWithoutDependency(ValueError):
+    """The worker requested dormancy without a framework-visible gate."""
+
 def _encode(record):
     return json.dumps(record,sort_keys=True,ensure_ascii=False,allow_nan=False)
 
@@ -59,6 +62,12 @@ def record(conn,*,validate,agent_id,run_id,call_id,arguments):
             comparable={key:existing[key] for key in required}
             if comparable!=arguments: raise ValueError('Purpose evaluation call identity was reused')
             return existing
+        if arguments['judgment']=='wait':
+            from agent_native.acceptance import pending_required
+            if not pending_required(conn,agent_id):
+                raise WaitWithoutDependency(
+                    'Wait requires a current unresolved owner-review gate. Optional review is nonblocking; '
+                    'continue useful work, or use work_question and clarify when owner input is required.')
         work=conn.execute('SELECT agent_id,soul_revision FROM agent_native_work_runs WHERE id=?',(run_id,)).fetchone()
         if not work or work[0]!=agent_id: raise PermissionError('Purpose evaluation identity changed')
         purpose=conn.execute('SELECT purpose FROM agent_native_events WHERE agent_id=? AND soul_revision=?',(agent_id,work[1])).fetchone()
