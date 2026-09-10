@@ -204,6 +204,20 @@ agent/work and evaluation links. Use **Open output**, **Download** where availab
 and format-appropriate controls such as audio playback. The result detail below
 owns the complete review interaction; do not maintain duplicate result records.
 
+Within **Work direction**, retain the purpose-level **Working on now** and **Up next**
+summary, then show the current concrete step and the three newest activities related
+to that direction or attempt. Each preview row has a time, plain-language action and
+known outcome. Link to the complete Activity table. Do not expose private reasoning
+or fill this preview with unrelated system events.
+
+The compact overview also shows total measured token usage and known or estimated
+cost for the agent. Show usage for the current Work direction and for each saved
+output when attribution is available. If a budget applies, place a small progress
+bar beneath the cost or token total; hovering either reveals the exact percentage,
+used and total amounts, scope and whether cost is measured or estimated. Budget
+configuration belongs in Agent settings and supports agent-only and whole-subtree
+scope. Unknown cost remains explicit rather than appearing as zero.
+
 A current work item must come from an explicit assignment/selection record,
 not an inference from Plane priority, status or cycle order. When work stops,
 label the retained record as last selected work. Preserve the requirements and

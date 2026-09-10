@@ -173,7 +173,7 @@ with fresh admission, and never enables disabled cadence.
 Repeated failures remain visible as separate attempts for later no-progress policy.
 A normal per-attempt runtime limit is now recorded separately
 from owner pause and remains eligible for a later cadence attempt; legacy timeout
-records are repaired on startup. Agent creation uses 180 seconds and 50 model
+records are repaired on startup. Agent creation uses 900 seconds and 50 model
 steps per attempt by default, with overrides collapsed under advanced controls.
 AN-73 conversations and AN-84 comment review have implemented
 increments, with broader acceptance still open. AN-80 remains in Backlog:
@@ -253,7 +253,7 @@ Follow small TDD increments and the existing Playwright setup, using
 [named test cases by default](first-builder/PRACTICES.md#targeted-verification-by-default). Keep one active
 implementation slice, no cycle dates or duration estimates. Runtime cadence and
 finite limits remain explicit agent configuration; creation starts with the
-owner-selected 180-second and 50-model-step defaults unless advanced values are set.
+owner-selected 900-second and 50-model-step defaults unless advanced values are set.
 
 Owner promoted AN-84 (incoming Plane comment review/replies) next, after the AN-73
 question-comment increment. AN-84 now supplies scoped in-run discussion review;

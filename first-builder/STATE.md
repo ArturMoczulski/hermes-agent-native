@@ -2499,3 +2499,8 @@ auditable history. A work attempt reaching its three-minute or model-step bound 
 normal attempt outcome: the long-running agent may remain active and await its next
 cadence check-in. AN-106 separately fixes the observed stale-wait judgment that can
 incorrectly suppress that next productive attempt.
+
+AN-109 raises the ordinary creation and replacement fallback from 180 to 900 seconds
+while keeping the 50-model-step ceiling. Existing explicit limits are preserved. The
+focused installed-Chromium creation journey proves the collapsed 15-minute default,
+the persisted 900-second run and the unchanged autonomy default.

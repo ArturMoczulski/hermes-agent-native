@@ -12,7 +12,7 @@ import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentM
 type PendingCreation = { request_id: string; name: string; purpose: string; parent_id?: string; work?: WorkLimits; model_selection?: ModelChoice; autonomy_level: number };
 type FirstBuilder = { registration: { agent_id: string; launch_state: "held_for_owner_test" | "ready_to_launch" | "active" }; agent: Agent };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
-const defaultWorkLimits: WorkLimits = { timeout_seconds: 180, max_iterations: 50 };
+const defaultWorkLimits: WorkLimits = { timeout_seconds: 900, max_iterations: 50 };
 
 function restoreCreation(): PendingCreation | null {
   try {
@@ -225,7 +225,7 @@ export default function AgentsPage() {
           <p className="text-xs text-muted-foreground">Balanced is the default. The agent continues ordinary reversible work and asks before significant commitments, costly actions, or material changes in direction.</p>
         </div>
         <details className="rounded-lg border p-4">
-          <summary className="cursor-pointer text-sm font-medium">Advanced work limits <span className="ml-2 text-muted-foreground">· 3 minutes · 50 model steps by default</span></summary>
+          <summary className="cursor-pointer text-sm font-medium">Advanced work limits <span className="ml-2 text-muted-foreground">· 15 minutes · 50 model steps by default</span></summary>
           <fieldset className="mt-4 space-y-3" disabled={saving}>
             <p className="text-sm text-muted-foreground">These safety limits apply to each attempt. Thinking cadence can start a new attempt after a normal limit is reached.</p>
             <div className="grid gap-4 sm:grid-cols-2">

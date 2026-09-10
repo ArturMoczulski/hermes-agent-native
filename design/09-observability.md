@@ -37,6 +37,7 @@ For any agent, the human can inspect:
 | Reason for inactivity | Whether it has no useful next action, is waiting for an answer or result, is paused, is retired, or has failed. |
 | Conditions for continuation | What answer, event, scheduled check-in, or owner action would allow it to proceed. |
 | Pending questions | What is being asked, which work depends on it, and where the question is in the parent escalation chain. |
+| Model usage | Measured token usage and known or estimated cost for the current work, the agent, and its subtree; show the applicable budget and remaining capacity. |
 
 A check-in that decides to wait must not appear as completed project work.
 Cadence changes and suspended schedules must be visible. Paused or retired
@@ -79,6 +80,25 @@ the human answers, and the original work continues.
 The activity record includes failures and unsuccessful actions, not just an
 agent's summary of accomplishments. Event content must not expose credentials
 or secrets; any omitted or redacted content is identified as such.
+
+## Model usage and budgets
+
+Persist provider-reported input, cached-input, reasoning and output usage at the
+smallest reliable model-call boundary. Attribute that usage to its attempt, agent,
+selected work direction and any output produced by that work. An output's usage is
+the model work causally recorded for producing its version; do not assign unrelated
+cadence or planning activity merely because it happened nearby in time.
+
+Aggregate usage for an agent and for its subtree. A child contributes exactly once
+to every applicable ancestor subtree total. Owners can set token and monetary
+budgets for one agent or a whole subtree, with visible warning and hard-stop levels.
+Agents may request a change but cannot raise their own effective budget. Hard limits
+prevent further paid model admission and identify the budget that stopped work.
+
+Distinguish measured tokens, estimated cost and unavailable cost. Provider pricing
+and subscription plans can make marginal currency cost unknown; never present an
+invented dollar value. Token accounting and token budgets remain useful in that case.
+Budget changes and enforcement are observable events.
 
 ## Agent communication is event history
 
