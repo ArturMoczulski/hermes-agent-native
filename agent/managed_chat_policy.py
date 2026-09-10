@@ -45,18 +45,31 @@ def assert_current(agent):
     return binding
 
 
-def deny_tools(agent):
+def deny_tools(agent, name=None):
+    """Reject ambient native tools while allowing the bound Plane surface.
+
+    A managed conversation is still not an autonomous work run.  Its one
+    exception is the host-owned project surface attached during construction;
+    it revalidates the existing agent/project grant for every call.
+    """
     if current_binding(agent) is not None:
-        raise PermissionError('Managed conversation does not authorize tools or project work')
+        from agent_native.chat_project import current
+        context = current(agent)
+        if context is not None and name in context.authorized_tools:
+            return
+        raise PermissionError('Managed conversation does not authorize this tool')
 
 
 def protected_prompt(binding):
     return (
         f'You are {binding.name}. Your protected purpose is:\n{binding.purpose}\n\n'
         'This is a conversation with your human owner. Discuss your purpose, answer '
-        'questions, and clarify plans. This conversation does not start autonomous '
-        'project work, grant tools, change your purpose, or resume paused work. '
-        'Be honest about that scope; never claim that project actions were performed.'
+        'questions, and clarify plans. You may use only the supplied Plane tools '
+        'to inspect and maintain this agent\'s already-authorized planning project. '
+        'This conversation does not start autonomous project work, grant new '
+        'permissions, change your purpose, or resume paused work. Be honest about '
+        'that scope; never claim that project actions were performed without a '
+        'confirmed tool result.'
     )
 
 

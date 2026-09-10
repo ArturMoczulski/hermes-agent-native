@@ -1040,8 +1040,13 @@ def _load_tools(agent, enabled_toolsets, disabled_toolsets):
     from agent.managed_chat_policy import current_binding
     if current_binding(agent) is not None:
         # Conversation authority cannot be widened by plugin discovery, kanban
-        # worker defaults, or a shared mutable registry snapshot.
-        agent.tools, agent.valid_tool_names = [], frozenset()
+        # worker defaults, or a shared mutable registry snapshot.  The only
+        # project capability is supplied by the host-owned agent binding.
+        from agent_native.chat_project import current as current_chat_project
+        from agent.work_policy import tool_schemas
+        context = current_chat_project(agent)
+        agent.tools = tool_schemas(context) if context is not None else []
+        agent.valid_tool_names = frozenset(tool['function']['name'] for tool in agent.tools)
         agent._tool_snapshot_generation = 0
         agent._kanban_worker_guidance = ""
         return
@@ -2238,6 +2243,9 @@ def init_agent(
     managed = current_binding()
     work = current_work()
     agent._managed_chat_binding = managed
+    if managed is not None:
+        from agent_native.chat_project import ChatProjectContext
+        agent._chat_project_context = ChatProjectContext(managed)
     agent._work_context = work
     restricted = managed is not None or work is not None
     if restricted:

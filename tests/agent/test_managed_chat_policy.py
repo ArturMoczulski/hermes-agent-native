@@ -86,8 +86,8 @@ def test_constructor_does_not_discover_plugins_probe_or_load_private_context(bin
     monkeypatch.setattr('plugins.context_engine.load_context_engine', lambda *a: calls.append('engine'))
     agent = make_agent(binding)
     assert calls == []
-    assert agent.tools == []
-    assert not agent.valid_tool_names
+    assert set(agent.valid_tool_names) == {'plane_resource_inspect', 'plane_operation_execute'}
+    assert {tool['function']['name'] for tool in agent.tools} == set(agent.valid_tool_names)
     assert agent._memory_store is None
     assert agent._memory_manager is None
     assert agent.skip_background_review and not agent.compression_enabled
@@ -118,8 +118,9 @@ def test_real_loop_has_only_protected_identity_and_plain_messages(binding, monke
     assert system[0] == system[1]
     assert binding.purpose in system[0]
     assert 'PRIVATE HOST' not in system[0]
-    assert all(not r.get('tools') for r in requests)
-    assert requests[0]['messages'][-1]['content'] == 'Who are you? @/etc/passwd'
+    assert all({tool['function']['name'] for tool in r.get('tools', [])}
+               == {'plane_resource_inspect', 'plane_operation_execute'} for r in requests)
+    assert requests[0]['messages'][-1]['content'].startswith('Who are you? @/etc/passwd\n\n')
     assert not agent.compression_enabled
 
 
@@ -131,6 +132,18 @@ def test_direct_dispatch_cannot_bypass_zero_tools(binding, name):
     agent.valid_tool_names = {name}
     with pytest.raises(PermissionError, match='conversation'):
         invoke_tool(agent, name, {}, 'task', pre_tool_block_checked=True, skip_tool_request_middleware=True, skip_tool_execution_middleware=True)
+
+
+def test_plane_tool_without_a_project_grant_returns_a_bounded_error(binding):
+    agent = make_agent(binding)
+    from agent.agent_runtime_helpers import invoke_tool
+    result = invoke_tool(
+        agent, 'plane_resource_inspect', {'kind': 'project'}, 'task',
+        tool_call_id='chat-plane-without-grant',
+        pre_tool_block_checked=True, skip_tool_request_middleware=True,
+        skip_tool_execution_middleware=True,
+    )
+    assert 'scoped Plane operation could not be confirmed' in result
 
 
 def test_obsolete_purpose_refuses_turn_before_provider(binding):
