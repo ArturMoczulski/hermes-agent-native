@@ -8,8 +8,11 @@ an explicit no-gate statement when it is empty. Compact work direction no longer
 repeats internal stop/resume prose as the owner-facing next step; it derives the next
 action from real required reviews, questions, cadence and run state, and shows the
 latest three progress checkpoints. Successful-attempt activity now states whether a
-real review is required or automatic work may continue. The affected live agent stays
-paused until this slice is deployed and verified.
+real review is required or automatic work may continue. Live verification also found
+that the Fantasy Game Builder itself was still configured at Level 1 even though its
+purpose calls for an approval-gated specification followed by continuing development.
+Its future attempts now use the Level 3 balanced policy; the accepted GDD remains the
+explicit phase gate, while ordinary later milestones do not require invented reviews.
 
 AN-113 records the accompanying product correction: runnable previews belong to
 versioned work results and outputs. The agent header may offer the latest runnable
