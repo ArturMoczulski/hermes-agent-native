@@ -69,6 +69,13 @@ def test_three_unproductive_failures_create_one_concern_and_suspend_cadence(brok
     assert concern['status']=='open' and concern['attempt_ids']==attempts
     assert '3 consecutive attempts' in concern['summary']
     assert 'FileNotFoundError' in concern['summary']
+    from agent_native.readiness import automatic_work
+    assert automatic_work(s.conn, s.root['id']) == {
+        'state': 'owner_attention', 'may_start': False,
+        'blocker': concern['summary'],
+        'release_condition': 'Review the progress concern and provide direction.',
+        'responsible_actor': 'owner',
+    }
     with pytest.raises(ConflictError,match='progress concern'):
         cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
                           interval_seconds=60,enabled=True)
