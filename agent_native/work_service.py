@@ -96,6 +96,9 @@ class _Run:
         self.stopped = threading.Event()
         self.final_text = ''
         self.stop_lock = threading.Lock()
+        # Saved outputs are host-owned evidence. Their storage root must remain
+        # stable when the owner later grants a separate coding repository.
+        self.output_workspace = service.home / 'agents' / work['agent_id'] / 'workspace'
         self.host = HostSupervisor(registry_path=service.home / 'work-hosts' / (work['id']+'.json'),
             env={'HERMES_HOME':str(service.home.parent),'HERMES_MANAGED_COMPUTE_HOST':'1'},
             expected_hermes_home=str(service.home.parent), rpc_sink=self.inbox.put,
@@ -299,7 +302,7 @@ class _Run:
             deliver(conn, planning, self.validate, result['selection_id'])
         elif tool == 'output_read':
             from agent_native.output_read import read_chunk
-            result = read_chunk(conn, agent_id=self.work['agent_id'], workspace=self.workspace, arguments=args)
+            result = read_chunk(conn, agent_id=self.work['agent_id'], workspace=self.output_workspace, arguments=args)
         elif tool == 'purpose_evaluate':
             from agent_native.purpose_evaluation import record
             result=record(conn,validate=self.validate,agent_id=self.work['agent_id'],
@@ -316,7 +319,7 @@ class _Run:
             if not required <= set(args) or set(args) - required - {'output_id'}:
                 return self._reject_effect(conn, call_id, tool, ValueError)
             planning.inspect({'kind':'item','resource_id':args['item_id']})
-            result = publish(conn,validate=self.validate,workspace=self.workspace,
+            result = publish(conn,validate=self.validate,workspace=self.output_workspace,
                              agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
                              record_progress=lambda c, r: progress.output_saved(c, r, base), **args)
             progress.deliver(conn, planning, self.validate, f"output:{result['output_id']}:{result['version']}")
@@ -327,7 +330,7 @@ class _Run:
             if 'item_id' not in args:
                 return self._reject_effect(conn, call_id, tool, ValueError)
             observation = planning.inspect({'kind':'item','resource_id':args['item_id']})
-            result = record(conn,validate=self.validate,workspace=self.workspace,
+            result = record(conn,validate=self.validate,workspace=self.output_workspace,
                             agent_id=self.work['agent_id'],run_id=self.work['id'],call_id=call_id,
                             observation=observation,arguments=args,
                             record_progress=lambda c, r: progress.result_recorded(c, r, base))
@@ -436,7 +439,7 @@ class _Run:
                     from agent_native.output_store import read_output
                     for output in snapshot['saved_outputs'][:3]:
                         planning.inspect({'kind':'item','resource_id':output['item_id']})
-                        saved = read_output(conn,root['id'],output['output_id'],output['version'],workspace=self.workspace)
+                        saved = read_output(conn,root['id'],output['output_id'],output['version'],workspace=self.output_workspace)
                         snapshot['saved_output_excerpts'].append({'output_id':saved['output_id'],'version':saved['version'],
                             'content':saved['content'][:8000],'truncated':len(saved['content'])>8000})
                     snapshot['questions'] = recent_questions(conn,root['id'])

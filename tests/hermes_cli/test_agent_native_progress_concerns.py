@@ -26,6 +26,10 @@ def failed_attempts(s, count=3):
                 "created_at='2000-01-01T00:00:00+00:00',"
                 "finished_at='2000-01-01T00:00:01+00:00' WHERE id=?",(run_id,))
         ids.append(run_id)
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET error='Work stopped; FileNotFoundError.' "
+        f"WHERE id IN ({','.join('?' for _ in ids)})", ids,
+    )
     return ids
 
 
@@ -64,6 +68,7 @@ def test_three_unproductive_failures_create_one_concern_and_suspend_cadence(brok
     [concern]=list_concerns(s.conn,s.root['id'])
     assert concern['status']=='open' and concern['attempt_ids']==attempts
     assert '3 consecutive attempts' in concern['summary']
+    assert 'FileNotFoundError' in concern['summary']
     with pytest.raises(ConflictError,match='progress concern'):
         cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
                           interval_seconds=60,enabled=True)

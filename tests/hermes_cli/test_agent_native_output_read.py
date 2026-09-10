@@ -53,3 +53,23 @@ def test_output_read_checks_scope_arguments_and_file_integrity(broker):
     path.write_text('tampered')
     with pytest.raises(StoryIntegrityError):
         s.run._effect(s.conn, s.planning, effect(s, 'tampered', 'output_read', args))
+
+
+def test_saved_output_remains_readable_after_coding_workspace_is_granted(broker, tmp_path):
+    s = broker
+    saved = publish(s)
+    private_output = s.run.output_workspace / saved['relative_path']
+    project = tmp_path / 'fantasy-game'
+    project.mkdir()
+
+    s.run.workspace = project
+    result = s.run._effect(s.conn, s.planning, effect(s, 'read-after-grant', 'output_read', {
+        'output_id': saved['output_id'], 'version': saved['version'],
+    }))
+    revised = publish(s, 'publish-after-grant', output_id=saved['output_id'], content='# Findings\nRevised result.')
+
+    assert result['content'] == '# Findings\nA saved result.'
+    assert private_output.is_file()
+    assert (s.run.output_workspace / revised['relative_path']).is_file()
+    assert not (project / saved['relative_path']).exists()
+    assert not (project / revised['relative_path']).exists()

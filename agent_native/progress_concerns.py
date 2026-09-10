@@ -119,8 +119,9 @@ def suspend_if_stalled(conn, agent_id):
     threshold = settings(conn, agent_id)['failure_threshold']
     attempts = []
     kind = None
-    for run_id, run_state, created_at in conn.execute(
-        'SELECT id,state,created_at FROM agent_native_work_runs '
+    latest_error = None
+    for run_id, run_state, created_at, error in conn.execute(
+        'SELECT id,state,created_at,error FROM agent_native_work_runs '
         'WHERE agent_id=? ORDER BY rowid DESC',
         (agent_id,),
     ).fetchall():
@@ -144,6 +145,8 @@ def suspend_if_stalled(conn, agent_id):
             break
         kind = candidate
         attempts.append(run_id)
+        if latest_error is None and error:
+            latest_error = error
         if len(attempts) == threshold:
             break
     if len(attempts) < threshold:
@@ -162,6 +165,8 @@ def suspend_if_stalled(conn, agent_id):
             f'Repeated work without progress: {threshold} consecutive attempts failed '
             'without a result or saved output.'
         )
+        if latest_error:
+            summary += ' Latest failure: ' + latest_error
     conn.execute(
         'INSERT OR IGNORE INTO agent_native_progress_concerns '
         '(id,agent_id,kind,status,attempt_ids,summary,created_at) '

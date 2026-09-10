@@ -1,5 +1,13 @@
 # Current implementation work
 
+AN-102 fixes the live Fantasy Game Builder continuation failure. Saved outputs now
+use a stable host-owned evidence root, while an owner-granted coding workspace is
+used only by repository tools and as the worker's project directory. Granting a
+coding workspace can no longer make earlier outputs fail verification. Repeated
+failure concerns now retain the latest concrete error in their owner-facing
+summary. Focused storage and concern regressions pass; the live stale concern was
+resolved after deployment and the Builder resumed with model calls advancing.
+
 The owner selected the Hermes fork and Plane. The live
 [Plane project](first-builder/PLANE.md) owns actionable items, priorities,
 dependencies and cycles. Read it before selecting work; this is not another board.

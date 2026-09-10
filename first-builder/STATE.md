@@ -1,3 +1,19 @@
+## Stable output storage after coding-workspace grant — 2026-09-10
+
+AN-102 reproduced the Fantasy Game Builder's three zero-model-call
+`FileNotFoundError` attempts. GDD v1/v2 lived in the original private output tree,
+but granting `/Users/arturmoczulski/Projects/fantasy-game-builder` caused the work
+service to verify those immutable outputs under the new coding root. Managed work
+now keeps a separate host-owned output workspace for publication, reads, result
+verification and continuation excerpts; repository operations retain the granted
+project root. Future repeated-failure concerns include the latest concrete error.
+
+The two focused regressions passed. The local dashboard was rebuilt and restarted,
+the stale live concern was resolved, cadence was restored, and a fresh MiniMax M3
+attempt progressed beyond startup with model calls instead of repeating the missing
+file failure. Next: observe the recovered implementation attempt and retain its
+playable-increment evidence before the final First Builder checkpoint.
+
 ## Purpose revision automatically replans and resumes — 2026-09-09
 
 AN-76 now carries a purpose change through the whole running product. After obsolete
