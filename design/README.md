@@ -31,6 +31,7 @@ behavior; they do not require a particular profession, workflow, or application.
 | [Projects and delegation](03-projects-and-delegation.md) | How is work organized, and how do agent relationships differ from project boundaries? |
 | [Project management with Plane](13-project-management.md) | How do agents organize most work through shared backlogs, boards and planning cycles? |
 | [Workspaces and skills](04-workspaces-and-skills.md) | What support does the framework provide for doing and managing work? |
+| [Output feedback and demonstrations](16-output-feedback-and-demonstrations.md) | How do owners respond to exact outputs, and how do agents communicate demonstrable work? |
 | [Human interaction and authority](05-human-interaction.md) | How do people talk to, steer, pause, and authorize agents? |
 | [User experience](10-user-experience.md) | How do Chat, Monitor, Inbox and Work fit together? |
 | [Control center screens](12-control-center-screens.md) | What does each screen contain, and what do its controls do? |
