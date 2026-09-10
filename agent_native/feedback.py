@@ -105,6 +105,14 @@ def worker(conn, *, validate, agent_id, run_id, arguments):
                 from agent_native.work_state import event
                 event(conn,run_id,'work.feedback_handled','Agent reports feedback handled: '+key)
             conn.execute("UPDATE agent_native_feedback SET status='handled',handled_run_id=?,response=? WHERE id=?",(run_id,response,key))
+            if not conn.execute(
+                "SELECT 1 FROM agent_native_feedback WHERE agent_id=? AND soul_revision=? AND status='pending'",
+                (agent_id, revision),
+            ).fetchone():
+                conn.execute(
+                    "DELETE FROM agent_native_cadence_wakes WHERE agent_id=? AND reason='owner_feedback'",
+                    (agent_id,),
+                )
             return {'status':'handled','feedback_id':key,'note':'Agent report, not owner acceptance'}
         pending = _rows(conn,agent_id,"AND soul_revision=? AND status='pending' ORDER BY created_at,id LIMIT 20",(revision,))
         for row in pending:

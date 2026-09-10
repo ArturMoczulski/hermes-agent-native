@@ -13,8 +13,11 @@ def test_feedback_receipt_replay_and_worker_handling_preserve_pause(broker):
         feedback.submit(s.conn, **{**args, 'text':'Different feedback'})
     offered = s.run._effect(s.conn,s.planning,{**effect(s,'feedback-read','work_feedback'), 'arguments':{}})
     assert offered['pending'][0]['text'] == args['text']
+    s.conn.execute("INSERT OR REPLACE INTO agent_native_cadence_wakes(agent_id,requested_at,reason) VALUES(?,?,?)",
+                   (s.root['id'], '2026-09-10T00:00:00+00:00', 'owner_feedback'))
     s.run._effect(s.conn,s.planning,effect(s,'feedback-handle','work_feedback',{'feedback_id':row['id'],'response':'Revised the ending for review.'}))
     assert feedback.recent(s.conn,s.root['id'])[0]['status'] == 'handled'
+    assert s.conn.execute('SELECT 1 FROM agent_native_cadence_wakes WHERE agent_id=?', (s.root['id'],)).fetchone() is None
     assert s.conn.execute("SELECT count(*) FROM agent_native_work_events WHERE kind='work.feedback_received'").fetchone()[0] == 1
     assert s.conn.execute("SELECT count(*) FROM agent_native_work_events WHERE kind='work.feedback_handled'").fetchone()[0] == 1
     s.run.stop()
