@@ -1,16 +1,18 @@
 # Current implementation work
 
-AN-103 corrects the empty-project false blocker exposed by the live Fantasy Game
-Builder. Repository capabilities now describe the agent's granted project workspace,
-the safe first-file compare-and-swap value and allowed inspection command, and warn
-that one rejected command or missing file is not loss of the whole grant. After the
-trusted corrective answer woke cadence, the live MiniMax M3 agent created its package,
-test and configuration files in the granted project. AN-104 is next: the canonical
-agent-home topology and migration are specified in
-[agent storage topology](implementation/agent-storage-topology.md). AN-105 follows
-with functional durable memory and working-practice access. AN-104's first TDD slice
-adds the authoritative home resolver and safely provisions distinct practices,
+The live Fantasy Game Builder has exposed a stale-wait defect after productive,
+bounded attempts. AN-106 is the immediate reliability fix: a superseded `wait`
+judgment must not prevent a cadence-enabled agent from starting its next attempt.
+The next major capability is AN-107: persist measured model-token usage and
+provider/model cost, aggregate it by attempt, agent and subtree, and enforce
+owner-controlled soft and hard budgets. AN-108 then expands the compact Work
+direction card with the current concrete step and its three newest related
+activities. This must keep bounded-attempt outcomes distinct from whole-agent state.
+
+AN-104 remains the active storage migration foundation. Its first TDD slice adds
+the authoritative home resolver and safely provisions distinct practices,
 default-project, output and attempt-runtime areas without relocating existing data.
+AN-105 follows with functional durable memory and working-practice access.
 
 AN-102 fixes the live Fantasy Game Builder continuation failure. Saved outputs now
 use a stable host-owned evidence root, while an owner-granted coding workspace is

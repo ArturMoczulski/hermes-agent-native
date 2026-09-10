@@ -2482,3 +2482,20 @@ deployed. The owner's GDD v2 acceptance was delivered as trusted feedback and th
 recorded against the exact output version. The agent woke, handled that direction,
 opened its implementation cycle, and received the isolated project directory
 `/Users/arturmoczulski/Projects/fantasy-game-builder`. The First Builder remains held.
+## Usage budgets and clearer current-work detail — 2026-09-10
+
+Plane now tracks AN-107 as the next major capability: record input, output and other
+provider-reported token classes per managed model call; derive cost without
+fabricating precision; aggregate usage by attempt, agent and subtree; and enforce
+owner-controlled warnings and hard budgets. A child's usage contributes exactly once
+to every applicable ancestor subtree budget. Subscription-backed providers may have
+unknown marginal currency cost, but their token usage and token budgets remain
+enforceable. Agents may not raise their own limits.
+
+AN-108 tracks the compact Work direction expansion. It retains the big-picture
+current and next direction, adds the concrete current step, and previews the three
+newest activities related to that direction. The complete Activity table remains the
+auditable history. A work attempt reaching its three-minute or model-step bound is a
+normal attempt outcome: the long-running agent may remain active and await its next
+cadence check-in. AN-106 separately fixes the observed stale-wait judgment that can
+incorrectly suppress that next productive attempt.
