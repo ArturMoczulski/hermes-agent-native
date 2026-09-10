@@ -11,9 +11,9 @@ or model work is running and no useful owner action is available.
 Plane owns the full acceptance criteria and dependencies for the urgent repair:
 
 1. **AN-116 — Fix pause/resume deadlock caused by an unresolved pause notification**
-   is In Progress. Preserve uncertain-effect safety while allowing an authorized
-   resume to supersede or reconcile informational pause delivery and schedule one
-   fresh attempt.
+   is Done. An authorized resume now carries an exact host-authored pause notice
+   forward as auditable information and schedules one fresh attempt, while uncertain
+   external effects remain blocking. The live Fantasy Game Builder resumed work.
 2. **AN-117 — Publish one authoritative automatic-work readiness decision.** Make
    the scheduler, API and UI consume the same answer to whether work may run, and
    expose the exact blocker, release condition and responsible actor.
@@ -32,7 +32,8 @@ Plane owns the full acceptance criteria and dependencies for the urgent repair:
 All five items are urgent and assigned to the current undated Cycle 06. Their delivery
 order is AN-116, AN-117, AN-118, AN-119, then AN-120; AN-119 depends on the shared
 readiness and decision-gate work, and AN-120 is the final integration gate. The next
-code change starts AN-116 with a focused failing pause/resume regression.
+implementation priority is AN-117, using the now-proven admission behavior as its
+first readiness case.
 
 AN-114 is the preceding reliability repair exposed by the live Fantasy Game
 Builder. The framework had no explicit authoritative list of pending owner decisions

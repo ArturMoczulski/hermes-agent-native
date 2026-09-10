@@ -87,3 +87,35 @@ def test_cadence_continues_past_pending_normal_limit_notice(broker):
     event=s.conn.execute("SELECT summary FROM agent_native_work_events WHERE run_id=? "
                          "AND kind='work.notification_unresolved'",(queued[0],)).fetchone()
     assert notice[0] in event[0]
+
+
+def test_cadence_continues_past_pending_pause_notice_after_owner_resume(broker):
+    """A recorded pause is informational once owner resume restored cadence."""
+    from agent_native import cadence
+    s = broker
+    cadence.configure(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                      interval_seconds=60, enabled=True)
+    select(s)
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='paused',stop_requested=1,"
+        "summary='Work paused or its execution authority ended.',"
+        "finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+        (s.work['id'],),
+    )
+    with write_txn(s.conn):
+        progress.terminal(s.conn, s.work['id'])
+    notice = s.conn.execute(
+        "SELECT operation_id,status FROM agent_native_progress WHERE source_id=?",
+        ('terminal:' + s.work['id'],),
+    ).fetchone()
+    assert tuple(notice)[1] == 'pending'
+
+    queued = cadence.queue_due(s.conn, now='2099-01-01T00:00:00+00:00')
+
+    assert len(queued) == 1
+    event = s.conn.execute(
+        "SELECT summary FROM agent_native_work_events WHERE run_id=? "
+        "AND kind='work.notification_unresolved'",
+        (queued[0],),
+    ).fetchone()
+    assert notice[0] in event[0]

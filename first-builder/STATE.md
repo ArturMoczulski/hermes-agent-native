@@ -2564,3 +2564,10 @@ is AN-116 → AN-117 → AN-118 → AN-119 → AN-120. Plane retains the exact a
 criteria and dependency graph. Next: write the focused AN-116 pause/resume regression,
 then change informational-delivery reconciliation without weakening uncertain-effect
 safety.
+
+AN-116 is now complete. The focused regression failed before the change and the
+complete retry-notification test file passes afterward. The repaired preview service
+preserved five old terminal notices as audit events without resending them and queued
+exactly one fresh Fantasy Game Builder attempt. That attempt entered `running` and
+made model calls. The agent has no unanswered owner question, its Milestone 2 output
+is optional review, and its current autonomy setting is Level 3. AN-117 is next.
