@@ -19,6 +19,7 @@ behavior or introduce implementation choices.
 
 | Decision | Question to settle | Current proposal |
 | --- | --- | --- |
+| Secrets deployment (AN-144) | Which backend, hosting boundary, seal-key custody and owner recovery arrangement should be provisioned? | [Proposed design](18-secrets-and-credential-authority.md): OpenBao behind protected operation adapters, use-only agent grants and independent owner recovery. No agent password changes, owner lockout or out-of-scope secret access is an established owner requirement. |
 | Participation across projects | Can an agent work on unrelated projects concurrently, and who resolves competing priorities? | No default adopted. |
 | Retained-work operations (AN-68) | What retention periods, export/deletion controls and deliberate transfers outside replacement should be supported? | Retain history/results/unfinished-work records; no automatic reassignment or erasure. Operational choices remain open separately from the accepted lifespan and cancellation rules. |
 | Resume and project pause | How does subtree resume treat separately paused descendants? Does project pause stop only work belonging to that project? | Preserve separate descendant pauses; project pause scope remains open. |

@@ -33,6 +33,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 
 | Document | Purpose |
 | --- | --- |
+| [Secrets and credential authority](../design/18-secrets-and-credential-authority.md) | Owner-requested design: scoped custody, protected operations, backend comparison, current isolation gaps and security acceptance. |
 | [Independent security review milestone](security-review-milestone.md) | Deferred M8 / AN-135: independent reviewers, action gates, behavior audits, scoped containment, owner decisions and adversarial acceptance. |
 | [Repository consolidation](repository-consolidation.md) | Proposed one-directory migration, submodule comparison, preservation, cutover checks and rollback; not yet executed. |
 | [Agent storage topology](agent-storage-topology.md) | Protected identity, memory, practices, mutable projects, immutable outputs and runtime scratch. |

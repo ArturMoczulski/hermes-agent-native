@@ -62,8 +62,9 @@ These are observations, not immutable preconditions; recheck them at cutover.
 | `Projects/fantasy-game-builder` | An agent's separately authorized output/source workspace | Preserve in place; it is not duplicate framework code |
 | Codex saved project `agent-native` | Points to `Projects/agent-native` | Retain desired path; refresh project/repository context after replacement |
 
-The old checkout has a modified PLAN.md and untracked browser/demo artifacts.
-Its PLAN.md contains a later adaptive-model-selection note worth reconciling.
+The old checkout has uncommitted planning edits and untracked browser/demo
+artifacts. Salvage any still-current planning content into Plane, including a later
+adaptive-model-selection note, before discarding the old tree.
 Its remote main also has history not represented by the checked-out branch:
 an earlier remote inspection returned `f67ddd5205d1344b5745dfa28946aa44bc9e5cb1`.
 Inspect and preserve that history; do not assume the local old branch contains
@@ -71,7 +72,8 @@ all work worth keeping or that it is safe to discard the remote.
 
 The current fork has uncommitted AN-132 code, tests and documentation, plus
 pre-existing changes to AGENTS.md, README.md and a tool test. Preserve each.
-PLAN.md currently overstates AN-132 completion: browser verification is unfinished
+The old checkout's planning notes overstate AN-132 completion: browser verification
+is unfinished
 and these changes are not in the inspected main commit. Reconcile that evidence
 before migration; moving files must not turn incomplete work into accepted work.
 

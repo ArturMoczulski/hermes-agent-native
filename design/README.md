@@ -25,6 +25,7 @@ behavior; they do not require a particular profession, workflow, or application.
 
 | Document | What it answers |
 | --- | --- |
+| [Secrets and credential authority](18-secrets-and-credential-authority.md) | How are framework, instance and agent secrets scoped while the owner retains administration and recovery? |
 | [Models and providers](15-model-selection.md) | How are defaults, per-agent choices, effective changes and test costs controlled? |
 | [Agents and their layers](01-agents.md) | What is an agent, what can it change, and when is it no longer needed? |
 | [Independent work and thinking cadence](02-independent-work.md) | How does an agent keep making useful progress without repeated prompts? |

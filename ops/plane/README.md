@@ -146,9 +146,22 @@ configuration, current human-account requirement, recovery behavior and limits.
 
 ## Agent API request budget
 
-The local deployment defaults to `API_KEY_RATE_LIMIT=600/minute`, configurable in
-the private `plane.env`. The previous 60/minute limit throttled a single managed
-writer: scoped item inspection also checks cycles and dependencies, while progress
-and monitoring add requests. This is a local installation setting, not an LLM
-quota. It does not remove throttling; clients must still honor HTTP 429 backoff.
-Apply changes with `up -d --no-deps api` using the Compose prefix above.
+This is a single-owner installation published only on `127.0.0.1:19230`, behind a
+proxy with no rate limiting of its own, so application throttling is effectively
+disabled rather than tuned. Compose now defaults both limits to the deliberately
+extreme `100000/minute` (about 1666 requests/second), overridable in the private
+`plane.env`:
+
+- `API_KEY_RATE_LIMIT` bounds API-key requests (`ApiKeyRateThrottle`); this is the
+  limit a managed writer can hit, since scoped inspection, progress and monitoring
+  each add requests.
+- `AUTHENTICATION_RATE_LIMIT` bounds sign-in attempts (`AuthenticationThrottle`);
+  it was present in `plane.env` but not passed by Compose until this change.
+
+These are local installation settings, not an LLM quota. The high ceiling exists
+only as a runaway-loop guard; clients must still honor HTTP `429` backoff. A few
+limits remain hardcoded in the pinned image and are not env-tunable: the DRF
+anonymous default (`30/minute`) and the per-user email-verification throttle
+(`3/hour`). Neither applies to Builder planning traffic. Apply changes with
+`up -d --no-deps api` using the Compose prefix above.
+

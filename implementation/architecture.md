@@ -155,6 +155,12 @@ plugin code from agent edits. Maintain an immutable deny list for forwarding
 operator secrets, including through skills, environment declarations or credential
 files. Only deliberately granted task credentials may cross this boundary.
 
+The owner-requested [secrets design](../design/18-secrets-and-credential-authority.md)
+proposes a stricter baseline: agents use scoped operations through protected
+adapters without receiving raw passwords. It records current host-command and
+credential-inheritance gaps, independent owner recovery, and backend options.
+Its storage/deployment choices remain proposals; no vault is installed by this plan.
+
 Use default-denied resource access. Restrict container egress and tool/MCP
 capabilities to granted resources; a shell with unrestricted network and publishing
 credentials would bypass a publishing approval tool. Prefer existing network

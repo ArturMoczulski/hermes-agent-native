@@ -38,9 +38,11 @@ Plane, provide credentials, or establish a connector or invented tool command.
 If the service or access is missing, report the specific missing capability to
 your parent (root agents to the human), preserving a durable handoff. Do not claim
 to have created Plane records. Do useful authorized discovery that does not require
-that access. The externally hosted First Builder may use its repository PLAN.md
-and first-builder/STATE.md as an explicit pre-provisioning handoff, then reconcile
-and import outstanding items once; it must not run a competing permanent board.
+that access. The externally hosted First Builder uses the live Plane project once
+it is provisioned and `first-builder/tools/plane_status.py` for cheap status
+discovery; only a short STATE.md handoff is kept alongside the live project. Before
+provisioning, preserve the handoff in STATE.md, then reconcile and import
+outstanding items once; never run a competing permanent board.
 During this initial bootstrap, the human’s instruction and the coding environment
 supply execution authority. The Builder may implement authorized changes, following
 its test-first practices and recording explicit evaluation in the repository handoff.

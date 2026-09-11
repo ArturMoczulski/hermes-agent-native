@@ -283,12 +283,14 @@ its work history while revoking active access; parent retirement retires descend
 ## First Builder before provisioning
 
 The externally hosted First Builder applies the same planning and evaluation
-workflow using repository PLAN.md and first-builder/STATE.md until Plane is ready.
-It can perform human-authorized development through its coding environment;
-framework run admission does not yet exist for that contributor. Record tests,
-evidence and next actions there, then reconcile outstanding work into Plane once.
-This bootstrap exception does not permit managed agents to bypass control during
-a planning-service outage.
+workflow. Once a Plane project is provisioned, that live project is its only
+planning, status and priority source, with `first-builder/tools/plane_status.py`
+for cheap deterministic status; it keeps only a short STATE.md handoff and no
+repository backlog. Before provisioning, a temporary repository handoff may stand
+in, and outstanding items are reconciled into Plane once. The Builder can perform
+human-authorized development through its coding environment; framework run
+admission does not yet exist for that contributor. This bootstrap exception does
+not permit managed agents to bypass control during a planning-service outage.
 
 ## Acceptance examples
 
