@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 const backend = 'http://127.0.0.1:19219';
 const headers = { 'X-Hermes-Session-Token': 'agent-native-local-e2e-only' };

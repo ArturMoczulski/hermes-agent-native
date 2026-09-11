@@ -1,29 +1,42 @@
 #!/usr/bin/env bash
-# Dedicated, long-lived Chromium for agent browsing and browser tests.
+# Dedicated, long-lived Chromium instances for agent browsing and browser tests.
 #
-# Keeps ONE browser alive with a private profile and a loopback CDP endpoint so
-# the agent's Playwright MCP and opt-in test runs attach to the same instance
-# instead of cold-starting and closing a browser per action. The session (cookies,
-# localStorage, open tabs) survives across turns, sessions and Kilo restarts.
+# Two roles keep profiles separate so test state never mixes with the agent's:
+#   agent -> CDP 9222, profile ~/.local/share/agent-native/browser/profile
+#   test  -> CDP 9223, profile ~/.local/share/agent-native/browser/profile-e2e
+#
+# Both are long-lived. The agent's Playwright MCP attaches to "agent"; every
+# dashboard e2e spec attaches to "test" over CDP. Sessions (cookies,
+# localStorage, open tabs) survive across turns, sessions and Kilo restarts.
 #
 # Usage:
-#   scripts/dev/persistent-browser.sh start     # run in the foreground; supervise it as a
-#                                               # persistent background process, do not nohup
-#   scripts/dev/persistent-browser.sh stop
-#   scripts/dev/persistent-browser.sh status    # exit 0 + /json/version JSON when up
-#   scripts/dev/persistent-browser.sh endpoint  # print the CDP HTTP endpoint
-#   scripts/dev/persistent-browser.sh ws-endpoint  # print the browser WebSocket URL for test attach
+#   scripts/dev/persistent-browser.sh <command> [agent|test]
+#     start       run in the foreground; supervise as a persistent background process
+#     stop        stop the role's browser (matches only its own profile)
+#     status      exit 0 + /json/version when up
+#     endpoint    print the CDP HTTP endpoint
+#     ws-endpoint print the browser WebSocket URL
 #
 # Environment:
-#   AN_BROWSER_PORT       CDP port on loopback (default 9222)
-#   AN_BROWSER_PROFILE    private profile dir (default ~/.local/share/agent-native/browser/profile)
-#   AN_BROWSER_BIN        explicit Chrome/Chromium executable (overrides discovery)
+#   AN_BROWSER_ROLE      default role when omitted (agent)
+#   AN_BROWSER_PORT      override the role's CDP port
+#   AN_BROWSER_PROFILE   override the role's profile dir
+#   AN_BROWSER_BIN       explicit Chrome/Chromium executable
 #
-# The profile lives outside the repository; never commit it or point tests at it.
+# Profiles live outside the repository; never commit them or point tests at a
+# personal profile.
 set -euo pipefail
 
-PORT="${AN_BROWSER_PORT:-9222}"
-PROFILE="${AN_BROWSER_PROFILE:-$HOME/.local/share/agent-native/browser/profile}"
+CMD="${1:-start}"
+ROLE="${2:-${AN_BROWSER_ROLE:-agent}}"
+
+case "$ROLE" in
+  agent) DEF_PORT=9222; DEF_PROFILE="$HOME/.local/share/agent-native/browser/profile" ;;
+  test)  DEF_PORT=9223; DEF_PROFILE="$HOME/.local/share/agent-native/browser/profile-e2e" ;;
+  *) echo "unknown role: $ROLE (use agent|test)" >&2; exit 2 ;;
+esac
+PORT="${AN_BROWSER_PORT:-$DEF_PORT}"
+PROFILE="${AN_BROWSER_PROFILE:-$DEF_PROFILE}"
 CACHE="${HOME}/Library/Caches/ms-playwright"   # macOS; Linux uses ~/.cache/ms-playwright
 [[ -d "$CACHE" ]] || CACHE="${HOME}/.cache/ms-playwright"
 
@@ -61,11 +74,12 @@ find_bin() {
   return 1
 }
 
-case "${1:-start}" in
+case "$CMD" in
   start)
     BIN="$(find_bin)"
     mkdir -p "$PROFILE"
-    printf 'persistent browser\n  bin:     %s\n  profile: %s\n  cdp:     %s\n' "$BIN" "$PROFILE" "$(endpoint)"
+    printf 'persistent browser (%s)\n  bin:     %s\n  profile: %s\n  cdp:     %s\n' \
+      "$ROLE" "$BIN" "$PROFILE" "$(endpoint)"
     exec "$BIN" \
       --remote-debugging-port="$PORT" \
       --remote-debugging-address=127.0.0.1 \
@@ -77,9 +91,9 @@ case "${1:-start}" in
       about:blank
     ;;
   stop)
-    # Match only the dedicated profile so unrelated Chrome windows are untouched.
+    # Match only this role's profile so the other role and other Chrome windows survive.
     pkill -f "user-data-dir=$PROFILE" || true
-    printf 'stopped persistent browser (profile %s)\n' "$PROFILE"
+    printf 'stopped %s browser (profile %s)\n' "$ROLE" "$PROFILE"
     ;;
   status)
     curl -fsS "$(endpoint)/json/version" || { echo "not running: $(endpoint)" >&2; exit 1; }
@@ -92,7 +106,7 @@ case "${1:-start}" in
       | sed -n 's/.*"webSocketDebuggerUrl":[[:space:]]*"\([^"]*\)".*/\1/p'
     ;;
   *)
-    echo "usage: $0 {start|stop|status|endpoint|ws-endpoint}" >&2
+    echo "usage: $0 {start|stop|status|endpoint|ws-endpoint} [agent|test]" >&2
     exit 2
     ;;
 esac

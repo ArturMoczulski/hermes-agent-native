@@ -1,4 +1,4 @@
-import { test, expect, type Page, type APIRequestContext } from '@playwright/test';
+import { test, expect, type Page, type APIRequestContext } from './fixtures';
 
 const backend = 'http://127.0.0.1:19219';
 const api = `${backend}/api/agent-native`;

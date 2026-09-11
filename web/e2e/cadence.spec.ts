@@ -1,4 +1,4 @@
-import {test,expect} from '@playwright/test';
+import {test,expect} from './fixtures';
 const backend='http://127.0.0.1:19219';
 const headers={'X-Hermes-Session-Token':'agent-native-local-e2e-only'};
 test('cadence starts a separate attempt that revises saved work from Plane feedback',async({page,request})=>{

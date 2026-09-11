@@ -14,24 +14,40 @@ gate; do not rerun the default suite for each small change.
 
 ## Dedicated persistent browser (shared instance)
 
-When iterating, reuse the long-lived Chromium instead of cold-starting one per
-run. Start it with `scripts/dev/persistent-browser.sh start` (supervise it as a
-persistent background process) and confirm `scripts/dev/persistent-browser.sh
-status`. Specs attach over CDP through `persistent-cdp.fixture.ts`; the focused
-config for this starts no webServer:
+Every spec imports `web/e2e/fixtures.ts`, which attaches the suite to the
+long-lived **test** Chromium over CDP instead of cold-starting a browser per run.
+The test instance has its own profile, separate from the agent's browsing
+profile, so test cookies/storage never mix with the agent's session; each test
+still receives a fresh isolated context.
+
+| Role | CDP | Profile |
+| --- | --- | --- |
+| `agent` (Playwright MCP) | `http://127.0.0.1:9222` | `~/.local/share/agent-native/browser/profile` |
+| `test` (dashboard e2e) | `http://127.0.0.1:9223` | `~/.local/share/agent-native/browser/profile-e2e` |
+
+Start the test instance before a suite run (supervise it as a persistent
+background process) and confirm it is healthy:
 
 ```sh
-AN_BROWSER_CDP="$(scripts/dev/persistent-browser.sh endpoint)" \
-  npm run test:e2e --workspace web -- --config playwright.persistent.config.ts \
+scripts/dev/persistent-browser.sh start test
+scripts/dev/persistent-browser.sh status test
+```
+
+When the instance is down the fixture launches a normal per-run browser, so CI
+and a plain local run are unchanged. Demo recordings force a local launch because
+video capture needs a Playwright-launched browser. Override the endpoint with
+`AN_BROWSER_E2E_CDP`, or set it to `off` to force a local launch.
+
+The `persistent-browser.spec.ts` case is the attach proof; it runs with the
+focused config that starts no webServer:
+
+```sh
+npm run test:e2e --workspace web -- --config playwright.persistent.config.ts \
   persistent-browser.spec.ts --retries 0
 ```
 
-`persistent-browser.spec.ts` is the attach proof; each test still receives an
-isolated context on the shared browser. The default `playwright.config.ts` suite
-and CI are unchanged and keep launching their own browser. For app specs, keep the
-default config's real backend and Vite and import the fixture in the spec. Raw CDP
-cannot be reached through Playwright's `connectOptions`, so do not use that path.
-The instance, profile, and MCP wiring are documented in
+Raw CDP cannot be reached through Playwright's `connectOptions`, so do not use
+that path. The instances, profiles, and MCP wiring are documented in
 [First Builder practices](../../first-builder/PRACTICES.md#dedicated-persistent-browser).
 
 Playwright starts the real Hermes FastAPI application and Vite on loopback ports

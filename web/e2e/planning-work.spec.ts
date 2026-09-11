@@ -1,4 +1,4 @@
-import { type APIRequestContext } from '@playwright/test'
+import { type APIRequestContext } from './fixtures'
 import { expect, test, demoCheckpoint } from './demo-fixture'
 
 const backend = 'http://127.0.0.1:19219'

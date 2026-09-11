@@ -84,35 +84,41 @@ the future framework-hosted Builder.
 
 ## Dedicated persistent browser
 
-Keep one long-lived Chromium for agent browsing and opt-in browser tests instead
-of cold-starting a browser for every action. It uses a private profile and a
-loopback DevTools (CDP) endpoint, so cookies, localStorage and open tabs survive
-across turns and sessions. Run it as a persistent background process with:
+Keep long-lived Chromium instances instead of cold-starting a browser for every
+action. Two roles keep profiles separate so test state never mixes with the
+agent's session:
+
+| Role | CDP | Profile |
+| --- | --- | --- |
+| `agent` (Playwright MCP) | `http://127.0.0.1:9222` | `~/.local/share/agent-native/browser/profile` |
+| `test` (dashboard e2e) | `http://127.0.0.1:9223` | `~/.local/share/agent-native/browser/profile-e2e` |
+
+Each is a persistent background process; cookies, localStorage and open tabs
+survive across turns and sessions.
 
 ```sh
-scripts/dev/persistent-browser.sh start     # foreground; supervise as a persistent background process
-scripts/dev/persistent-browser.sh status    # exit 0 + /json/version when healthy
-scripts/dev/persistent-browser.sh endpoint  # http://127.0.0.1:9222
-scripts/dev/persistent-browser.sh ws-endpoint
-scripts/dev/persistent-browser.sh stop
+scripts/dev/persistent-browser.sh start [agent|test]   # foreground; supervise as a persistent background process
+scripts/dev/persistent-browser.sh status [agent|test]
+scripts/dev/persistent-browser.sh endpoint [agent|test]
+scripts/dev/persistent-browser.sh ws-endpoint [agent|test]
+scripts/dev/persistent-browser.sh stop [agent|test]
 ```
 
-- The profile lives at `~/.local/share/agent-native/browser/profile` (override
-  with `AN_BROWSER_PROFILE`). It is outside the repository; never commit it or
-  point tests at a personal profile.
+- Profiles live outside the repository (`AN_BROWSER_PROFILE`/`AN_BROWSER_PORT`
+  override). Never commit them or point tests at a personal profile.
 - The agent's Playwright MCP connects with `--cdp-endpoint
   http://127.0.0.1:9222` (global Kilo config, `mcp.playwright`). Changing that
   config needs an MCP/Kilo reload before the browser tools use the instance.
-- The instance is raw Chrome DevTools, so attach over CDP. Playwright Test's
-  `connectOptions`/`connect()` speaks Playwright's own protocol and hangs against
-  raw CDP; do not use it here. A spec that wants the shared instance imports
-  `web/e2e/persistent-cdp.fixture.ts` and runs with
-  `web/playwright.persistent.config.ts`:
-  `AN_BROWSER_CDP="$(scripts/dev/persistent-browser.sh endpoint)" npm run test:e2e --workspace web -- --config playwright.persistent.config.ts <spec> --retries 0`.
-  Each test still gets its own isolated browser context.
-- The default `web/playwright.config.ts` suite and CI keep launching their own
-  browser; do not weaken that isolation. If the instance is down, `start` it
-  again or run the default config.
+- Every dashboard spec imports `web/e2e/fixtures.ts`, which attaches to the
+  `test` instance over CDP and falls back to a normal per-run browser when it is
+  down, so CI and plain local runs are unchanged. Each test still gets its own
+  isolated context. Demo recordings force a local launch because video capture
+  needs a Playwright-launched browser. Set `AN_BROWSER_E2E_CDP=off` to force a
+  local launch, or to another endpoint to override.
+- Start the test instance before a suite run when you want the shared browser:
+  `scripts/dev/persistent-browser.sh start test`. It is raw Chrome DevTools, so
+  attach over CDP. Playwright Test's `connectOptions`/`connect()` speaks
+  Playwright's own protocol and hangs against raw CDP; do not use it here.
 
 Model-driven evaluations supplement deterministic end-to-end tests where agent
 judgment matters. A scripted model response proves integration behavior, not

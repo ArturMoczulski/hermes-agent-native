@@ -22,46 +22,54 @@ honor 429 backoff. Not committed; pre-existing unrelated edits retained.
 Next: no further action unless 429 recurs, which would indicate a new non-env limit.
 
 
-Owner direction: keep one Chromium running in the background with a persistent
-profile and remote debugging, used by the agent's own Playwright MCP and by
-browser tests, so we stop cold-starting a browser per action and preserve the
-session. Tracked as Plane AN-146 (urgent, cycle 06) as the immediate priority.
+## Dedicated persistent browser for agent and tests — 2026-09-11
 
-Added `scripts/dev/persistent-browser.sh` (start/stop/status/endpoint/ws-endpoint)
-that launches the newest cached Chrome for Testing with
-`--remote-debugging-port=9222`, a private profile at
-`~/.local/share/agent-native/browser/profile`, `--restore-last-session` and a
-1600x1100 window. It runs as a persistent background process.
+Owner direction: keep a long-lived Chromium in the background, used by the
+agent's own Playwright MCP and by every browser test, with test state on a
+separate profile so it never mixes with the agent session. Tracked as Plane
+AN-146 (urgent, cycle 06), the immediate priority.
 
-Wiring: the global Kilo Playwright MCP command now includes
-`--cdp-endpoint http://127.0.0.1:9222` (requires an MCP/Kilo reload to take
-effect). `web/e2e/persistent-cdp.fixture.ts` attaches specs over CDP via
-`connectOverCDP`; `web/playwright.persistent.config.ts` is the focused config and
-`web/e2e/persistent-browser.spec.ts` is the attach proof. Playwright Test's
-`connectOptions`/`connect()` speaks Playwright's own protocol and hangs on raw
-CDP, so it is deliberately not used.
+`scripts/dev/persistent-browser.sh <cmd> [agent|test]` runs two long-lived Chrome
+for Testing instances with `--restore-last-session`, a 1600x1100 window and
+loopback CDP:
 
-Verification (real, no paid model): instance `/json/version` = Chrome/153.0.8010.12;
-a `connectOverCDP` write to localStorage on `http://localhost:19230` survived a
-supervised instance restart (`persist-1789130244617`, tabs restored); a standalone
-Playwright MCP launched with the exact new command
-(`--cdp-endpoint http://127.0.0.1:9222`) navigated and read
-`document.title == "mcp-probe-persistent"`; `AN_BROWSER_CDP=… npm run test:e2e
---workspace web -- --config playwright.persistent.config.ts
-persistent-browser.spec.ts --retries 0` → 1 passed (249ms); the fixture fallback
-without `AN_BROWSER_CDP` → 1 passed (3.8s), so the default suite and CI are
-unchanged.
+| Role | CDP | Profile |
+| --- | --- | --- |
+| agent | 9222 | ~/.local/share/agent-native/browser/profile |
+| test | 9223 | ~/.local/share/agent-native/browser/profile-e2e |
+
+Both run as persistent background processes. The global Kilo Playwright MCP
+command carries `--cdp-endpoint http://127.0.0.1:9222`; after the owner reloaded
+Kilo, the live MCP showed the persistent instance's tabs.
+
+Every dashboard spec now imports `web/e2e/fixtures.ts`, which attaches to the
+test instance over CDP and falls back to a per-run browser when it is down (CI
+and plain local runs unchanged). Each test keeps an isolated context; demo
+recordings force a local launch, and `AN_BROWSER_E2E_CDP=off` forces local.
+Playwright Test's `connectOptions`/`connect()` speaks Playwright's own protocol
+and hangs on raw CDP, so the fixture uses `connectOverCDP`.
+
+Verification (real, no paid model): agent and test `/json/version` =
+Chrome/153.0.8010.12; a `connectOverCDP` localStorage marker survived a
+supervised agent-instance restart (`persist-1789130244617`, tabs restored); the
+live Kilo MCP navigated and read `document.title == "mcp-attach-verify-146"` on
+the agent instance; `persistent-browser.spec.ts` logged
+`attached http://127.0.0.1:9223` and passed (796ms); the real app spec
+`output-read.spec.ts` passed attached (9.6s). `planning-work.spec.ts`'s
+"selected work shows brief, cycle and criteria" case fails identically with and
+without the shared browser (pre-existing, not caused by this change).
+`npm run typecheck --workspace web` passes.
 
 Docs: `first-builder/PRACTICES.md` (Dedicated persistent browser) and
-`web/e2e/README.md`. Profile is outside the repository; no secrets committed.
-Changed/added: `scripts/dev/persistent-browser.sh`,
-`web/e2e/persistent-cdp.fixture.ts`, `web/e2e/persistent-browser.spec.ts`,
-`web/playwright.persistent.config.ts`, plus the two docs. Not committed; the tree
-retains pre-existing unrelated edits.
+`web/e2e/README.md`. Profiles live outside the repository; no secrets committed.
 
-Next: reload the MCP/Kilo so the running browser tools use the instance; then
-resume AN-143's live repair (run its read-limit spec with the real backend/Vite,
-or adopt the CDP fixture in app specs).
+Changed: `scripts/dev/persistent-browser.sh` (roles), `web/e2e/fixtures.ts` (new,
+replaces `persistent-cdp.fixture.ts`), every `web/e2e/*.spec.ts` import, the
+`demo-fixture.ts` base, `web/e2e/persistent-browser.spec.ts`,
+`web/playwright.persistent.config.ts`, and the two docs.
+
+Next: resume AN-143's live repair and real-boundary verification (its fix is
+committed and unit-tested; the run still needs the live stale-receipt repair).
 
 ## Owner-controlled secrets design — 2026-09-11
 

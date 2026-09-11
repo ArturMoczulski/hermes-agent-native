@@ -1,4 +1,4 @@
-import { expect, test } from '@playwright/test';
+import { expect, test } from './fixtures';
 
 test('a descendant retirement explains and links its parent decision', async ({ page }) => {
   const parentId = '11111111-1111-4111-8111-111111111111';

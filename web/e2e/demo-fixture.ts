@@ -1,4 +1,4 @@
-import { test as base, expect, type Locator, type Page, type TestInfo } from '@playwright/test'
+import { test as base, expect, type Locator, type Page, type TestInfo } from './fixtures'
 import { writeFile } from 'node:fs/promises'
 
 const enabled = process.env.AN_E2E_DEMO === '1'

@@ -1,5 +1,5 @@
 
-import {test,expect} from '@playwright/test';
+import {test,expect} from './fixtures';
 const backend='http://127.0.0.1:19219';
 const headers={'X-Hermes-Session-Token':'agent-native-local-e2e-only'};
 test('temporary Plane outage waits then completes without an owner retry',async({page,request})=>{
