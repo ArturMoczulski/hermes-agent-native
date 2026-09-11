@@ -679,7 +679,142 @@ class WorkService:
         self.db_path,self.home = Path(db_path),Path(home).resolve()
         self.stopped = threading.Event()
         self.runs = {}
+        # Unknown runs may need a host-side Plane read before cadence can
+        # continue. Keep that reconciliation bounded while Plane is unavailable;
+        # this is deliberately process-local because it is only a read-back
+        # throttle, never the source of truth for a mutation receipt.
+        self._recovery_next = {}
+        self._recovery_observations = {}
         self.thread = threading.Thread(target=self.run,name='agent-native-work',daemon=True)
+
+    @staticmethod
+    def _unknown_effects(conn, run_id):
+        """Return unsettled Plane operation IDs for one unknown run.
+
+        The worker's effect result can be absent even when Plane committed the
+        mutation. The protected journal is the authority for whether a read-back
+        is still needed; local result rows and progress receipts are both
+        included because terminal reporting is a Plane comment mutation too.
+        """
+        rows = conn.execute(
+            "SELECT DISTINCT e.operation_id "
+            "FROM agent_native_work_effects e "
+            "LEFT JOIN agent_native_plane_mutations m ON m.operation_id=e.operation_id "
+            "WHERE e.run_id=? AND e.result IS NULL "
+            "AND (m.status IS NULL OR m.status IN ('pending','unknown')) "
+            "UNION SELECT DISTINCT p.operation_id "
+            "FROM agent_native_progress p "
+            "WHERE p.run_id=? AND p.status IN ('pending','unknown')",
+            (run_id, run_id),
+        ).fetchall()
+        return [row[0] for row in rows if isinstance(row[0], str)]
+
+    def _reconcile_unknown_run(self, run):
+        """Read back unknown Plane effects without replaying them.
+
+        A worker that cannot prove its exit must not be replaced blindly. Once
+        every external effect has a confirmed or rejected journal receipt,
+        ``reconcile_confirmed_unknown`` releases the old bounded attempt and the
+        normal cadence path can queue a fresh one. A failed read-back stays a
+        framework reconciliation state, with no model call and no owner click.
+        """
+        from agent_native.plane_recovery import PlaneRecoveryUnresolved
+        from agent_native.plane_reads import PlaneReadError
+        from agent_native.plane_writes import PlaneWriteError
+        from agent_native.startup import _row as setup_row
+        from agent_native.writer_planning import open_planning
+        from agent_native import work_state
+
+        with connect_closing(self.db_path) as conn:
+            row = conn.execute(
+                'SELECT agent_id,state,soul_revision,binding_id FROM agent_native_work_runs '
+                'WHERE id=?', (run['run_id'],)
+            ).fetchone()
+            if not row or row[1] != 'unknown' or not row[3]:
+                return False
+            operation_ids = self._unknown_effects(conn, run['run_id'])
+            if not operation_ids:
+                return False
+            setup = setup_row(conn, row[0])
+            if not setup or setup['status'] != 'ready':
+                return False
+            expected_agent, expected_revision, binding_id = row[0], row[2], row[3]
+
+        def validate(active_conn):
+            current = active_conn.execute(
+                'SELECT w.agent_id,w.state,w.stop_requested,w.soul_revision,'
+                'a.soul_revision,w.binding_id FROM agent_native_work_runs w '
+                'JOIN agent_native_agents a ON a.id=w.agent_id WHERE w.id=?',
+                (run['run_id'],),
+            ).fetchone()
+            if (not current or current[0] != expected_agent or current[1] != 'unknown'
+                    or current[2] != 1 or current[3] != expected_revision
+                    or current[4] != expected_revision or current[5] != binding_id):
+                raise PermissionError('Unknown work run is no longer eligible for reconciliation')
+
+        confirmed, unresolved = 0, None
+        try:
+            with open_planning(
+                    db_path=self.db_path, home=self.home, agent_id=expected_agent,
+                    binding_id=binding_id, validate=validate) as planning:
+                for operation_id in operation_ids[:32]:
+                    try:
+                        planning.recover(operation_id)
+                        confirmed += 1
+                    except (PlaneRecoveryUnresolved, PlaneReadError, PlaneWriteError,
+                            PermissionError, KeyError, ValueError) as exc:
+                        unresolved = type(exc).__name__
+        except (PlaneRecoveryUnresolved, PlaneReadError, PlaneWriteError,
+                PermissionError, KeyError, ValueError, OSError) as exc:
+            unresolved = type(exc).__name__
+
+        with connect_closing(self.db_path) as conn:
+            # Terminal/progress receipts keep a local delivery row in
+            # ``pending`` or ``unknown`` until the delivery helper sees its
+            # acknowledgement. Recovery already proved the journal outcome;
+            # project that proof into the progress row so it cannot keep the
+            # entire run blocked forever.
+            from agent_native.plane_write_journal import MutationJournal
+            journal = MutationJournal(conn)
+            for operation_id in operation_ids:
+                try:
+                    receipt = journal.get(operation_id, actor=OWNER)
+                except KeyError:
+                    continue
+                if receipt['status'] == 'confirmed':
+                    conn.execute(
+                        "UPDATE agent_native_progress SET status='confirmed',"
+                        'comment_id=COALESCE(comment_id,?) WHERE operation_id=? '
+                        "AND status IN ('pending','unknown')",
+                        (receipt.get('resource_id'), operation_id),
+                    )
+            released = work_state.reconcile_confirmed_unknown(conn, expected_agent)
+            if released:
+                self._recovery_observations.pop(run['run_id'], None)
+                return True
+            observation = unresolved or ('recovery_budget_exceeded' if len(operation_ids) > 32 else 'effect_not_confirmed')
+            if self._recovery_observations.get(run['run_id']) != observation:
+                work_state.event(
+                    conn, run['run_id'], 'work.recovery_unresolved',
+                    'Automatic Plane reconciliation could not confirm every effect '
+                    f'({observation}); no mutation was resent.',
+                )
+                self._recovery_observations[run['run_id']] = observation
+        return False
+
+    def reconcile_unknown_runs(self):
+        """Attempt at most one bounded read-back per unknown run per cooldown."""
+        now = time.monotonic()
+        with connect_closing(self.db_path) as conn:
+            rows = conn.execute(
+                "SELECT id,agent_id FROM agent_native_work_runs WHERE state='unknown' "
+                "AND binding_id IS NOT NULL ORDER BY rowid"
+            ).fetchall()
+        for run_id, agent_id in rows:
+            if now < self._recovery_next.get(run_id, 0):
+                continue
+            self._recovery_next[run_id] = now + 5
+            self._reconcile_unknown_run({'run_id': run_id, 'agent_id': agent_id})
 
     def start(self):
         # Never replay an interrupted process. Cadence may start a fresh attempt
@@ -722,6 +857,10 @@ class WorkService:
                     else 'Work paused or its execution authority ended.',
                     superseded=superseded,
                 )
+        # Resolve any lost Plane responses before cadence evaluates readiness.
+        # This is host-side evidence reconciliation, not a model run or a
+        # replay of the original mutation.
+        self.reconcile_unknown_runs()
         with connect_closing(self.db_path) as conn:
             from agent_native.cadence import queue_due, queue_revised_purposes
             queue_revised_purposes(conn)

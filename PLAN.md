@@ -48,6 +48,12 @@ Plane owns the full acceptance criteria and dependencies for the urgent repair:
      (high, blocked by AN-130 through AN-132). Focused journeys cover transient
      failure, uncertain effect, real owner dependency, repeated no-progress, and
      restart/pause-resume durability.
+
+   AN-130 is implemented on `main`: the host now reads back unsettled Plane
+   operations before cadence admission, never resends the original mutation,
+   settles confirmed progress receipts, and leaves unavailable evidence in a
+   throttled framework-reconciliation state. Focused recovery and adjacent
+   cadence regressions pass. AN-131 remains the next recovery slice.
 5. **AN-120 — Gate First Builder launch on deterministic autonomous lifecycle
    journeys.** Prove continuation, pause/resume, required and optional review,
    informational delivery, uncertain-effect reconciliation, restart safety and
