@@ -131,7 +131,7 @@ def test_owner_review_policy_gates_submitted_output_at_balanced_autonomy(broker)
 
 def test_assignment_review_gate_binds_to_observed_item_revision(broker):
     from agent_native.assignment_review import configure_current
-    from agent_native.identity import ConflictError, OWNER
+    from agent_native.identity import OWNER
     from tests.hermes_cli.test_agent_native_work_focus import select
     s=broker
     focus=select(s)
@@ -146,9 +146,12 @@ def test_assignment_review_gate_binds_to_observed_item_revision(broker):
     assert result['review']['source']=='assignment_policy'
 
     s.plane.items[s.setup['discovery_item_id']]['description_html']='<p>Changed criteria</p>'
-    with pytest.raises(ConflictError,match='Assignment changed'):
-        record(s,'stale-assignment-result',outcome='submitted',outputs=[{
-            'output_id':output['output_id'],'version':output['version']}])
+    stale=record(s,'stale-assignment-result',outcome='submitted',outputs=[{
+        'output_id':output['output_id'],'version':output['version']}])
+    # The gate binds to the observed revision: the stale submission is refused as
+    # a settled rejection and never stored.
+    assert stale['status']=='rejected'
+    assert [r['id'] for r in work_state.read_work(s.conn,s.root['id'])['results']]==[result['id']]
 
 
 def test_approval_driven_attempt_requires_review_for_submitted_output(broker):
@@ -174,8 +177,19 @@ def test_approval_driven_attempt_requires_review_for_submitted_output(broker):
     {'evaluation': ''}, {'summary': ''},
 ])
 def test_result_rejects_forged_authority_unknown_outputs_and_unsafe_references(broker, changes):
-    with pytest.raises((PermissionError, ValueError, LookupError)):
-        record(broker, **changes)
+    # A forged or invalid submission is refused. The host records a pre-effect
+    # validation/authority failure as a settled rejection and returns it, so the
+    # caller sees a rejection record rather than an exception; errors raised
+    # outside that path (e.g. an unknown output id) still propagate. Either way
+    # no forged result is stored.
+    outcome = None
+    try:
+        outcome = record(broker, **changes)
+    except (PermissionError, ValueError, LookupError):
+        pass
+    if outcome is not None:
+        assert outcome['status'] == 'rejected'
+        assert outcome['tool'] == 'result_record'
     assert work_state.read_work(broker.conn, broker.root['id'])['results'] == []
 
 
@@ -192,6 +206,8 @@ def test_late_completion_cannot_override_revoked_run_authority(broker, cause):
         s.run.deadline = time.monotonic() - 1
     s.run.finish(s.conn, {'type': 'turn.end'})
     work = work_state.read_work(s.conn, s.root['id'])
-    assert work['state'] == 'paused'
+    # A purpose revision supersedes the attempt (interrupted); an expired deadline
+    # stops it for owner review (paused). Neither may accept the late completion.
+    assert work['state'] == ('interrupted' if cause == 'purpose' else 'paused')
     assert work['results'] == [original]
     assert original['soul_revision'] == 1 and original['acceptance'] == 'not_evaluated'

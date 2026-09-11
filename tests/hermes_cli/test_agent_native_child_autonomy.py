@@ -67,10 +67,12 @@ def test_parent_child_autonomy_change_is_idempotent_and_stale_safe(broker):
     }
     first = invoke(s, 'stable-change', arguments)
     assert invoke(s, 'stable-change', arguments) == first
+    # Reusing a call id with different input is refused before any effect; a stale
+    # expected_revision becomes a settled rejection the host returns to the caller.
     with pytest.raises(Exception, match='reused|changed'):
         invoke(s, 'stable-change', {**arguments, 'level': 2})
-    with pytest.raises(Exception, match='changed|reload'):
-        invoke(s, 'stale-change', {**arguments, 'level': 2})
+    stale = invoke(s, 'stale-change', {**arguments, 'level': 2})
+    assert stale['status'] == 'rejected' and stale['tool'] == 'child_autonomy_configure'
 
 
 def test_parent_cannot_clear_owner_review_policy_while_changing_level(broker):
@@ -106,8 +108,8 @@ def test_parent_cannot_configure_grandchild_or_unrelated_agent(broker):
     )
     for call_id, target in [('grandchild-change', grandchild['id']),
                             ('unrelated-change', unrelated['id'])]:
-        with pytest.raises(PermissionError, match='direct child'):
-            invoke(s, call_id, {
-                'child_id': target, 'level': 5, 'expected_revision': 1,
-                'reason': 'Attempt to exceed the direct-child administration boundary.',
-            })
+        denied = invoke(s, call_id, {
+            'child_id': target, 'level': 5, 'expected_revision': 1,
+            'reason': 'Attempt to exceed the direct-child administration boundary.',
+        })
+        assert denied['status'] == 'rejected' and denied['tool'] == 'child_autonomy_configure'
