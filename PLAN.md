@@ -31,15 +31,33 @@ Plane owns the full acceptance criteria and dependencies for the urgent repair:
    actions.** Retry transient failures with bounded backoff, ask a concrete question
    for real human dependencies, and surface framework faults without token-burning
    loops or a meaningless Resume button.
+   Its immediate Plane execution sequence is now explicit:
+   - **AN-130 — Reconcile uncertain effects before autonomous retry** (urgent).
+     Read back pending or unknown external mutations before replaying them; a
+     confirmed effect clears the barrier, while unresolved state remains a named
+     framework reconciliation blocker.
+   - **AN-131 — Automatically recover temporary failures without empty owner
+     actions** (urgent, blocked by AN-130). Use bounded backoff and a stable
+     recovery identity; do not turn a retryable failure into a fake owner gate or
+     an unbounded token-spending loop.
+   - **AN-132 — Escalate only concrete owner dependencies with an actionable
+     release condition** (urgent, blocked by AN-130 and AN-131). Owner attention
+     must name the unanswered question, required review, credential, or product
+     decision that releases the gate.
+   - **AN-133 — Verify autonomous recovery and attention classification end to end**
+     (high, blocked by AN-130 through AN-132). Focused journeys cover transient
+     failure, uncertain effect, real owner dependency, repeated no-progress, and
+     restart/pause-resume durability.
 5. **AN-120 — Gate First Builder launch on deterministic autonomous lifecycle
    journeys.** Prove continuation, pause/resume, required and optional review,
    informational delivery, uncertain-effect reconciliation, restart safety and
    repeated-no-progress recovery before the First Builder is activated.
 
-All five items are urgent and assigned to the current undated Cycle 06. Their delivery
-order is AN-116, AN-117, AN-118, AN-119, then AN-120; AN-119 depends on the shared
-readiness and decision-gate work, and AN-120 is the final integration gate. The next
-implementation priority is AN-117. Its first vertical slice now publishes one
+All five umbrella items are assigned to the current undated Cycle 06. The recovery
+slices above are also in Cycle 06, with Plane dependencies enforcing their order.
+Their delivery order is AN-116, AN-117, AN-118, AN-119 (AN-130 through AN-133),
+then AN-120; AN-119 depends on the shared readiness and decision-gate work, and
+AN-120 is the final integration gate. The next implementation priority is AN-117. Its first vertical slice now publishes one
 host-derived readiness decision through the API, uses it for cadence admission,
 and renders it in Compact view. The remaining acceptance work is a focused matrix
 for every lifecycle category before AN-118 takes over decision-gate semantics.
@@ -125,8 +143,8 @@ dependencies and cycles. Read it before selecting work; this is not another boar
 
 Cycle 03 (**Shared agent work and the fantasy writer**) is reconciled: AN-73 is
 accepted, while the unfinished portions of AN-74, AN-80 and AN-84 remain explicit
-Backlog work outside the closed cycle. The current undated cycle is 04, focused on
-the First Builder handoff. AN-57 is active.
+Backlog work outside the closed cycle. The current undated cycle is 06, focused on
+autonomous-runtime recovery and the First Builder handoff. AN-57 is active.
 
 The First Builder preparation path pins `openai-codex/gpt-5.6-sol` with Low
 reasoning, deploys owner-controlled instructions and an immutable compute-runtime
