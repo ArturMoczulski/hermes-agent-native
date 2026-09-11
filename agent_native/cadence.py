@@ -84,11 +84,18 @@ def queue_due(conn, *, now=None, busy_agents=()):
                 continue
             from agent_native.progress_concerns import suspend_if_stalled
             if suspend_if_stalled(conn, agent_id): continue
+            root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
+            previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
+            if previous and previous[4] == 'unknown':
+                # A lost Plane response may have been reconciled after the
+                # worker stopped. Settle only when every linked effect is now
+                # confirmed or rejected; an unresolved run remains blocked.
+                from agent_native.work_state import reconcile_confirmed_unknown
+                reconcile_confirmed_unknown(conn, agent_id)
+                previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             from agent_native.readiness import automatic_work
             if not automatic_work(conn, agent_id, now=now, busy=agent_id in busy_agents)['may_start']:
                 continue
-            root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
-            previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             wake_row=conn.execute(
                 'SELECT reason FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,),
             ).fetchone()

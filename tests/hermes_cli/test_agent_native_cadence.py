@@ -132,6 +132,52 @@ def test_cadence_requires_owner_and_stops_on_unknown_or_changed_purpose(broker):
     assert cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')==[]
 
 
+def test_cadence_reconciles_confirmed_plane_effect_before_starting_fresh_attempt(broker):
+    from agent_native import cadence, work_state
+    s = broker
+    cadence.configure(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                      interval_seconds=60, enabled=True)
+    effect = {
+        'run_id': s.work['id'],
+        'tool_call_id': 'confirmed-then-response-lost',
+        'tool': 'plane_operation_execute',
+        'arguments': {'operation': 'item.create',
+                      'arguments': {'name': 'Settled after recovery'}},
+    }
+    s.run._effect(s.conn, s.planning, effect)
+    s.conn.execute(
+        "UPDATE agent_native_work_effects SET result=NULL "
+        "WHERE run_id=? AND call_id=?",
+        (s.work['id'], effect['tool_call_id']),
+    )
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='unknown',stop_requested=1 "
+        "WHERE id=?", (s.work['id'],),
+    )
+    work_state.event(s.conn, s.work['id'], 'work.unknown',
+                    'Plane write outcome is unknown; recovery is required.')
+    s.conn.execute(
+        "UPDATE agent_native_progress SET status='confirmed' WHERE run_id=?",
+        (s.work['id'],),
+    )
+
+    [queued] = cadence.queue_due(s.conn, now='2099-01-01T00:00:00+00:00')
+
+    assert queued != s.work['id']
+    assert [row[0] for row in s.conn.execute(
+        'SELECT state FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid',
+        (s.root['id'],),
+    ).fetchall()] == ['interrupted', 'queued']
+    assert s.conn.execute(
+        "SELECT 1 FROM agent_native_work_events "
+        "WHERE run_id=? AND kind='work.unknown'", (s.work['id'],)
+    ).fetchone()
+    assert s.conn.execute(
+        "SELECT 1 FROM agent_native_work_events "
+        "WHERE run_id=? AND kind='work.interrupted'", (s.work['id'],)
+    ).fetchone()
+
+
 def test_ready_revised_purpose_queues_one_fresh_attempt_and_preserves_cadence(broker):
     from agent_native import cadence, work_state
     from agent_native.identity import revise_soul

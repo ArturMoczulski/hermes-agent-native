@@ -162,6 +162,47 @@ def test_created_cycle_or_append_is_recovered_from_complete_correlated_inventory
     assert len([r for r in upstream.requests if r["method"] != "GET"]) == 1
 
 
+def test_cycle_recovery_reads_detail_correlation_when_inventory_is_projected(
+    setup, upstream
+):
+    """Plane list responses may omit the correlation fields used by recovery."""
+    s = setup
+    op, created = fixtures.uid(), fixtures.uid()
+    saved = {}
+    path = s.path + "cycles/"
+    args = {"name": "Projected recovery cycle", "description": "Confirm once"}
+
+    def post(request):
+        saved.update({
+            "id": created,
+            "workspace": s.workspace,
+            "project": s.project,
+            "created_by": s.user,
+            "owned_by": s.user,
+            **request["body"],
+        })
+        return 201, {}, b"lost response"
+
+    upstream.routes["POST", path] = post
+    upstream.routes["GET", path] = lambda _: (200, {}, fixtures.page([saved]))
+    upstream.routes["GET", path + created + "/"] = lambda _: (200, {}, saved)
+    lose_effect(s, op, "cycle.create", args)
+
+    # The inventory endpoint is a projection, while the detail endpoint retains
+    # the exact correlation markers needed to prove the original effect.
+    upstream.routes["GET", path] = lambda _: (
+        200,
+        {},
+        fixtures.page([{key: value for key, value in saved.items()
+                        if key not in {"external_source", "external_id"}}]),
+    )
+    recovered = s.service.recover(s.context, op)
+
+    assert recovered["resource"]["id"] == created
+    assert s.journal.get(op, actor=OWNER)["status"] == "confirmed"
+    assert len([r for r in upstream.requests if r["method"] == "POST"]) == 1
+
+
 @pytest.mark.parametrize("kind", ["project", "item", "cycle"])
 def test_lost_update_response_observes_intended_fields_without_reapplying_old_fingerprint(
     setup, upstream, kind

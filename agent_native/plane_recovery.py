@@ -159,12 +159,23 @@ def _append_or_cycle(writer, context, scope, record, args, prepared):
         writer._fetch(context, "item", parent)
         suffix = f"work-items/{parent}/comments/"
         candidates = _inventory(writer, context, suffix, kind, parent)
-    matched = [
-        raw
-        for raw in candidates
-        if raw.get("external_source") == "agent-native"
-        and raw.get("external_id") == opid
-    ]
+    # Plane's list representation is a projection and may omit the
+    # external-correlation fields that were written with the mutation. Fetch
+    # each bounded candidate's detail representation before deciding that an
+    # effect is absent; otherwise a successfully-created cycle can remain
+    # falsely unresolved forever.
+    matched = []
+    for candidate in candidates:
+        candidate_id = candidate.get("id")
+        if not isinstance(candidate_id, str):
+            raise PlaneRecoveryUnresolved(opid, "candidate_invalid")
+        _, detail, _ = writer._reads._request(context, suffix + candidate_id + "/")
+        _record(detail, scope, kind, item_id=parent)
+        if (
+            detail.get("external_source") == "agent-native"
+            and detail.get("external_id") == opid
+        ):
+            matched.append(detail)
     if len(matched) != 1:
         raise PlaneRecoveryUnresolved(opid, "correlation_not_unique")
     candidate = matched[0]

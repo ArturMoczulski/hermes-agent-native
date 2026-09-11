@@ -47,6 +47,62 @@ WORK_SCHEMA += CADENCE_SCHEMA + COMMENTS_SCHEMA + RESULT_SCHEMA + FOCUS_SCHEMA +
 TERMINAL = frozenset({'paused', 'interrupted', 'limit_reached', 'completed', 'retryable_failure', 'failed', 'unknown'})
 
 
+def _unsettled_effect(conn, run_id):
+    """Return whether a run still contains an effect whose outcome is unknown.
+
+    A Plane effect deliberately has no local result when its response is lost.
+    Once its mutation receipt is confirmed or rejected, that missing result is
+    settled and a fresh bounded attempt cannot duplicate it. Other missing
+    results remain unsafe to continue.
+    """
+    for result, status in conn.execute(
+        'SELECT e.result,m.status FROM agent_native_work_effects e '
+        'LEFT JOIN agent_native_plane_mutations m ON m.operation_id=e.operation_id '
+        'WHERE e.run_id=?', (run_id,),
+    ).fetchall():
+        if result is None and status not in ('confirmed', 'rejected'):
+            return True
+    return bool(conn.execute(
+        "SELECT 1 FROM agent_native_progress WHERE run_id=? "
+        "AND status IN ('pending','unknown') LIMIT 1", (run_id,),
+    ).fetchone())
+
+
+def reconcile_confirmed_unknown(conn, agent_id):
+    """Release a run whose uncertain Plane effects are now fully settled.
+
+    Recovery preserves the original ``work.unknown`` event and records an
+    interrupted terminal state. This permits cadence to start a new bounded
+    attempt without pretending the old attempt completed or replaying its
+    already-confirmed effects. Runs with any unresolved effect remain blocked.
+    """
+    row = conn.execute(
+        'SELECT id FROM agent_native_work_runs WHERE agent_id=? AND state=? '
+        'ORDER BY rowid DESC LIMIT 1', (agent_id, 'unknown'),
+    ).fetchone()
+    if (not row or not conn.execute(
+            'SELECT 1 FROM agent_native_work_effects WHERE run_id=? LIMIT 1',
+            (row[0],)).fetchone() or _unsettled_effect(conn, row[0])):
+        return False
+    run_id = row[0]
+    with write_txn(conn, allow_nested=True):
+        current = conn.execute(
+            'SELECT state FROM agent_native_work_runs WHERE id=? AND agent_id=?',
+            (run_id, agent_id),
+        ).fetchone()
+        if not current or current[0] != 'unknown' or _unsettled_effect(conn, run_id):
+            return False
+        summary = ('Plane effects confirmed during recovery; this bounded attempt '
+                   'was interrupted without replaying them.')
+        conn.execute(
+            "UPDATE agent_native_work_runs SET state='interrupted',stop_requested=1,"
+            'summary=?,finished_at=COALESCE(finished_at,?) WHERE id=?',
+            (summary, _now(), run_id),
+        )
+        event(conn, run_id, 'work.interrupted', summary)
+    return True
+
+
 def migrate_effect_tools(conn):
     """Add observable tool identity to receipts created by older releases."""
     columns = {row[1] for row in conn.execute(
