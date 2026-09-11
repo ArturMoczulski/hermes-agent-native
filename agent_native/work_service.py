@@ -310,9 +310,25 @@ class _Run:
             result = operation(repository, args)
         elif tool == 'work_item_select':
             from agent_native.work_focus import select
-            result = select(conn, validate=self.validate, inspect=planning.inspect,
-                            agent_id=self.work['agent_id'], run_id=self.work['id'],
-                            call_id=call_id, arguments=args)
+            from agent_native.plane_reads import PlaneReadError
+            try:
+                result = select(conn, validate=self.validate, inspect=planning.inspect,
+                                agent_id=self.work['agent_id'], run_id=self.work['id'],
+                                call_id=call_id, arguments=args)
+            except PlaneReadError as exc:
+                # Only inspection happens before the selection is committed.
+                # A missing/out-of-scope item or unavailable read is a settled
+                # rejection, not evidence of an uncertain external mutation.
+                # Keep comment delivery outside this handler: it CAN write.
+                if conn.execute('SELECT 1 FROM agent_native_work_selections '
+                                'WHERE run_id=? AND call_id=?',
+                                (self.work['id'], call_id)).fetchone():
+                    raise
+                return self._reject_effect(
+                    conn, call_id, tool, type(exc),
+                    message='Plane could not read the requested item. No work selection or write '
+                            'was made. Inspect the project for a valid item ID; if Plane is '
+                            'unavailable, retry the read later with a new tool call.')
             from agent_native.progress import deliver
             deliver(conn, planning, self.validate, result['selection_id'])
         elif tool == 'output_read':
@@ -627,6 +643,17 @@ class _Run:
                 state.event(conn,self.work['id'],'work.'+target,summary)
                 return
             results = [result for result in current['results'] if result['run_id'] == self.work['id']]
+            if (dead and frame.get('type') == 'turn.end'
+                    and frame.get('limit_reached') == 'model_steps'
+                    and current['model_calls'] >= current['limits']['max_iterations']):
+                target = 'limit_reached' if _recoverable_interruption(conn, self.work['id']) else 'unknown'
+                summary = 'Work reached its model-step limit. Recorded work is retained.'
+                if target == 'unknown':
+                    summary += ' An unsettled operation must be reconciled before continuing.'
+                conn.execute('UPDATE agent_native_work_runs SET state=?,summary=?,finished_at=? WHERE id=?',
+                             (target, summary, _now(), self.work['id']))
+                state.event(conn, self.work['id'], 'work.' + target, summary)
+                return
             success = dead and frame.get('type')=='turn.end' and bool(results)
             target = ('completed' if success else
                       ('retryable_failure' if dead and _cadence_can_retry(

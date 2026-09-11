@@ -206,6 +206,17 @@ def test_native_work_loop_has_scoped_tools_parent_admission_and_canonical_histor
     assert {'tool.start', 'tool.complete', 'message.complete'} <= event_types
 
 
+def test_native_work_reports_model_step_exhaustion(worker, model):
+    worker.attempt['max_iterations'] = 1
+    model.tools = ['plane_resource_inspect']
+    worker.start()
+    result = eventually(lambda: worker.result, bool)
+    assert result['type'] == 'turn.end', result
+    assert result.get('limit_reached') == 'model_steps'
+    assert len(worker.effects) == 1
+    assert len([f for f in worker.controls if f['params']['boundary'] == 'model']) == 1
+
+
 def test_native_work_emits_canonical_final_usage(worker, model):
     model.tools = []
     worker.start()

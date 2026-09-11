@@ -93,6 +93,8 @@ def run_turn(host, frame):
             emit('message.complete', {'status': 'complete', 'text': result.get('final_response') or '',
                                       'run_id': context.run_id})
             host._reply('turn.end', sid, request_id, ended_ns=time.perf_counter_ns(),
-                        interrupted=bool(result.get('interrupted')))
+                        interrupted=bool(result.get('interrupted')),
+                        limit_reached=('model_steps' if str(result.get('turn_exit_reason', '')).startswith(
+                            'max_iterations_reached(') else None))
     finally:
         db.close()

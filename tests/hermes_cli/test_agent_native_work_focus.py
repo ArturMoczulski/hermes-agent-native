@@ -5,7 +5,6 @@ import pytest
 
 from agent_native import work_state
 from agent_native.identity import OWNER, create_root
-from agent_native.plane_reads import PlaneReadError
 from agent_native.startup import prepare, read_setup
 from hermes_cli.kanban_db_connect import connect_closing, write_txn
 from tests.hermes_cli.test_agent_native_work_effects import broker, effect  # noqa: F401
@@ -74,9 +73,10 @@ def test_selection_cannot_read_a_foreign_project_item(broker):
     other = create_root(s.conn, actor=OWNER, request_id='foreign-focus', name='Other', purpose='Other project.')
     prepare(s.conn, actor=OWNER, agent_id=other['id'], home=s.home)
     foreign = read_setup(s.conn, other['id'])
-    with pytest.raises(PlaneReadError) as error:
-        select(s, item_id=foreign['discovery_item_id'])
-    assert error.value.status == 404
+    result = select(s, item_id=foreign['discovery_item_id'])
+    assert result['status'] == 'rejected'
+    assert result['error'] == 'PlaneReadError'
+    assert 'No work selection or write' in result['message']
     assert work_state.read_work(s.conn, s.root['id'])['focus'] is None
 
 

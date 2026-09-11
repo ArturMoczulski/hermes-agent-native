@@ -53,24 +53,34 @@ def _planning(messages):
     raise ValueError('Writer planning snapshot did not reach the native model')
 
 
-def _results(messages):
+def _results(messages, *, allow_read_rejection=False):
     results = {}
     for message in messages:
         if message.get('role') != 'tool':
             continue
         value = json.loads(_text(message))
-        if not isinstance(value, dict) or value.get('error'):
+        expected_rejection = (allow_read_rejection and isinstance(value, dict)
+                              and value.get('status') == 'rejected'
+                              and value.get('tool') == 'work_item_select'
+                              and value.get('error') == 'PlaneReadError')
+        if not isinstance(value, dict) or value.get('error') and not expected_rejection:
             raise ValueError('Writer tool did not return a successful structured result')
         results[message['tool_call_id']] = value
     return results
 
 
 def next_reply(messages, purpose):
-    results = _results(messages)
+    if 'E2E_FRAMEWORK_FAILURE' in purpose:
+        return {'role': 'assistant', 'content': 'Ended without recording the required work result.'}
+    recovery = 'E2E_READ_LIMIT_RECOVERY' in purpose
+    results = _results(messages, allow_read_rejection=recovery)
     index = len(results)
     result = lambda step: results[f'writer_fixture_{step}']
     item = lambda: result(3)['resource']['id']
     operation = lambda name, arguments: ('plane_operation_execute', {'operation': name, 'arguments': arguments})
+    if recovery:
+        from web.e2e.read_recovery_fixture import next_recovery_reply
+        return next_recovery_reply(_planning(messages), results)
     if 'E2E_PURPOSE_REDIRECT' in purpose:
         target = _planning(messages)['discovery']['id']
         if index == 0:
@@ -442,7 +452,7 @@ def handle_writer_request(handler, body, server, model_name):
     system_text = '\n'.join(_text(message) for message in messages if message.get('role') in ('system', 'developer'))
     marker = re.search(r'E2E_(?:WRITER|PLAN)_HOLD[A-Za-z0-9_-]*', system_text)
     try:
-        phase = len(_results(messages))
+        phase = len(_results(messages, allow_read_rejection='E2E_READ_LIMIT_RECOVERY' in system_text))
     except (KeyError, ValueError) as exc:
         handler._send({'error': {'message': 'Shared-work fixture contract failed: ' + str(exc)}}, status=400)
         return True
