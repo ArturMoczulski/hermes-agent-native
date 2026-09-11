@@ -1,0 +1,123 @@
+# scripts/dev/browser/profile-e2e — Playwright tests' persistent Chromium profile
+#
+# Same layout as the agent profile. Each dashboard e2e spec attaches to this
+# instance over CDP and receives a fresh isolated context, so this profile is
+# the long-lived Chromium holding the shared session.
+#
+# Start it with:
+#   scripts/dev/persistent-browser.sh start test
+# Override with:
+#   AN_BROWSER_PROFILE=/some/other/profile
+
+# Default profile directory: every sub-path except the explicit allow-list.
+Default/*
+!Default/.gitkeep
+
+Default/Cookies
+Default/Cookies-journal
+Default/History
+Default/History-journal
+Default/History Provider Root/
+Default/Local Storage/**
+Default/Session Storage/**
+Default/IndexedDB/**
+Default/Cache/**
+Default/Code Cache/**
+Default/GPUCache/**
+Default/DIPS/
+Default/Visited Links
+Default/Web Data
+Default/Web Data-journal
+Default/Account Web Data
+Default/Account Web Data-journal
+Default/Affiliation Database*
+Default/Autofill*
+Default/BookmarkMergedSurfaceOrdering
+Default/BudgetDatabase
+Default/ClientCertificates
+Default/Collaboration/
+Default/Extensions/
+Default/Extension Rules/**
+Default/Extension State/**
+Default/Feature Engagement/**
+Default/File System/**
+Default/Network/**
+Default/Preferences
+Default/Secure Preferences
+Default/Shared Dictionary/**
+Default/Site Characteristics Database*
+Default/Storage Extension/
+Default/Trust Tokens/**
+Default/TransportSecurity
+Default/blob_storage/
+Default/coupon_db/
+Default/databases/
+Default/download/
+Default/extensions_crx_cache/
+Default/favicons*
+Default/heavy_ad_intervention_opt_out.db
+Default/History Provider Root/
+Default/Login Data
+Default/Login Data-journal
+Default/Login Data For Account*
+Default/Navigation Capture/
+Default/Network Persistent State
+Default/Notifications/
+Default/Pepper Perms/
+Default/Platform Notifications/
+Default/PreferredApps/
+Default/SafetyTips/
+Default/Screenshots/
+Default/Shopping*/**
+Default/SmartScreen/
+Default/Snippets/
+Default/Speech Recognition/
+Default/Sync Data/
+Default/Tabs_**
+Default/TopSites*
+Default/Wallet*
+Default/Webstore Licenses/
+Default/Stats/
+Default/Bookmarks
+Default/Bookmarks-journal
+Default/RunningChromeVersion*
+
+Local State
+First Run
+BrowserMetrics*
+ChromeFeatureState
+Crowd Deny
+FirstPartySetsPreloaded
+GPUPersistentCache
+GraphiteDawnCache
+HistorySearch
+Last Version
+MEIPreload
+NativeMessagingHosts
+OnDeviceHeadSuggestModel
+OnDeviceModel*
+OptimizationGuideModelsManifest
+OptimizationHints*
+Safe Browsing*
+ShaderCache/
+Variations
+ActorSafetyLists
+AmountExtractionHeuristicRegexes
+CaptchaProviders
+CertificateRevocation
+Crashpad/
+DictationConnector
+FileTypePolicies
+InterventionPolicyDatabase
+Metrics/
+PnaclTranslationCache
+Recovery/
+SafetyNet/
+SiteEngagement/
+SmartCard/
+SystemProfile*
+Takeout/
+Translation/
+TrustTokenKey*
+WidevineCdm/
+Zygote/

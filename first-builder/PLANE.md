@@ -11,8 +11,7 @@ an independently maintained task board.
 - Initial cycle: [01 — Establish the Builder planning home](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/cycles/29a92720-d45b-49eb-8939-9c779427dd01/). The numbered cycle sequence is undated; advance on accepted outcomes, not calendar time.
 - Builder Plane user ID: `be4115f9-e7c5-47fb-863d-daeae60347cd`. This is a planning account, not a framework agent identity.
 - Human login: `owner@agent-native.test`; Builder login: `builder@agent-native.test`.
-- Credentials: `~/.local/share/agent-native/plane/accounts.json` (private local file).
-- Builder API configuration: `~/.local/share/agent-native/plane/builder-api.json`.
+- Credentials (in repo, AN-148): `ops/plane/data/accounts.json` and `ops/plane/data/builder-api.json`. The local Plane API key is checked-in configuration, not a credential — see `ops/plane/data/.gitignore` for the rationale. A legacy fallback at `~/.local/share/agent-native/plane/builder-api.json` still resolves when present.
 - Operation/restart instructions: [local deployment](../ops/plane/README.md).
 
 ## Fast status (do this first)

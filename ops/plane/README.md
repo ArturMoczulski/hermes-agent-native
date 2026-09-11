@@ -18,14 +18,16 @@ Never add `down -v` to routine stop/restart: it deletes persistent planning data
 Docker must be running. Closing the browser does not stop Plane; shutting down
 this computer does. The deployment is local, not an always-on remote installation.
 
-Private configuration is outside Git at `~/.local/share/agent-native/plane/`:
-`plane.env` holds generated service secrets; `accounts.json` holds local login
-credentials; `builder-api.json` holds the Builder's API credential. Do not print,
-commit, attach to work items, or forward these files to managed workers. The owner
-account is for installation control; routine planning uses the separate Builder.
-`ops/plane/plane.env.example` is the committed template for a fresh private env:
-copy it and replace every `CHANGE_ME`. It carries the non-secret local defaults,
-including the effectively-disabled rate limits documented below.
+Private configuration lives in the repo at `ops/plane/data/` (AN-148): the
+Plane API key and local accounts file are checked-in because the local
+service has no real credentials to protect. `plane.env` stays outside Git at
+`~/.local/share/agent-native/plane/plane.env` because it carries generated
+service secrets. Do not print, attach to work items, or forward any of these
+files to managed workers. The owner account is for installation control;
+routine planning uses the separate Builder. `ops/plane/plane.env.example` is
+the committed template for a fresh private env: copy it and replace every
+`CHANGE_ME`. It carries the non-secret local defaults, including the
+effectively-disabled rate limits documented below.
 
 The service uses no configured SMTP delivery. Local account identifiers use the
 reserved `agent-native.test` domain. No external email account is needed.

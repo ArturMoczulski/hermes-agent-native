@@ -22,8 +22,8 @@ still receives a fresh isolated context.
 
 | Role | CDP | Profile |
 | --- | --- | --- |
-| `agent` (Playwright MCP) | `http://127.0.0.1:9222` | `~/.local/share/agent-native/browser/profile` |
-| `test` (dashboard e2e) | `http://127.0.0.1:9223` | `~/.local/share/agent-native/browser/profile-e2e` |
+| `agent` (Playwright MCP) | `http://127.0.0.1:9222` | `<repo>/scripts/dev/browser/profile` |
+| `test` (dashboard e2e) | `http://127.0.0.1:9223` | `<repo>/scripts/dev/browser/profile-e2e` |
 
 Start the test instance before a suite run (supervise it as a persistent
 background process) and confirm it is healthy:

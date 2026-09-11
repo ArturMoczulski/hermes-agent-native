@@ -35,6 +35,42 @@ def test_state_name_maps_id_to_readable_name():
     assert ps.state_name(it, STATES) == "In Progress"
 
 
+def test_resolve_default_config_prefers_in_repo_path_when_present(tmp_path, monkeypatch):
+    """AN-148: the in-repo ``ops/plane/data/builder-api.json`` wins over the legacy home path."""
+    import json
+    import os
+    repo_path = tmp_path / "ops" / "plane" / "data" / "builder-api.json"
+    repo_path.parent.mkdir(parents=True)
+    repo_path.write_text(json.dumps({"api_key": "in-repo", "workspace_slug": "agent-native"}))
+    legacy = tmp_path / "legacy.json"
+    legacy.write_text(json.dumps({"api_key": "legacy"}))
+
+    # Patch both candidates to point at our temp files.
+    monkeypatch.setattr(ps, "_DEFAULT_CONFIG_REPO", str(repo_path))
+    monkeypatch.setattr(ps, "_LEGACY_CONFIG_HOME", str(legacy))
+    assert ps._resolve_default_config() == str(repo_path)
+
+
+def test_resolve_default_config_falls_back_to_legacy_when_repo_missing(tmp_path, monkeypatch):
+    """Older checkouts that have not migrated to the in-repo layout still resolve the legacy path."""
+    import json
+    legacy = tmp_path / "builder-api.json"
+    legacy.write_text(json.dumps({"api_key": "legacy"}))
+    missing = tmp_path / "absent.json"  # does not exist
+    monkeypatch.setattr(ps, "_DEFAULT_CONFIG_REPO", str(missing))
+    monkeypatch.setattr(ps, "_LEGACY_CONFIG_HOME", str(legacy))
+    assert ps._resolve_default_config() == str(legacy)
+
+
+def test_resolve_default_config_returns_repo_path_when_neither_exists(tmp_path, monkeypatch):
+    """Both missing → keep the in-repo path so error messages point at the new layout."""
+    repo_path = tmp_path / "ops" / "plane" / "data" / "builder-api.json"  # does not exist
+    legacy = tmp_path / "legacy.json"  # does not exist
+    monkeypatch.setattr(ps, "_DEFAULT_CONFIG_REPO", str(repo_path))
+    monkeypatch.setattr(ps, "_LEGACY_CONFIG_HOME", str(legacy))
+    assert ps._resolve_default_config() == str(repo_path)
+
+
 def test_select_last_worked_orders_by_latest_builder_activity():
     items = [
         item("a", "Old", "done", updated="2026-01-01T00:00:00Z"),

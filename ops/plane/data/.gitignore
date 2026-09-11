@@ -1,0 +1,16 @@
+# ops/plane/data — local Plane runtime state for this repository
+#
+# The Plane API key and accounts file are local-only configuration (the API
+# instance runs on localhost with no auth credentials that touch production
+# systems), so they live in the repo. Future bind-mounts or extra runtime
+# directories are excluded explicitly.
+
+# Postgres data is not part of this repo: it lives inside the Compose stack's
+# `pgdata` Docker volume. If you ever mount a host directory here for backups,
+# `postgres/` is the conventional name; exclude it from version control.
+postgres/
+
+# Defensive excludes for any future bind mounts.
+*.bak
+*.tmp
+*.log

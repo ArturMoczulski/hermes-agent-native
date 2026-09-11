@@ -57,7 +57,7 @@ These are observations, not immutable preconditions; recheck them at cutover.
 | `Projects/hermes-agent-native` | Current implementation; `main` at `50279f0`, with uncommitted work | This checkout and its Git identity become the final `agent-native` directory |
 | `~/.hermes-agent-native-preview` | Live profile, databases, credentials, protected runtime/instructions, agent state, outputs and logs | Preserve in place |
 | `~/.hermes-agent-native` | Earlier separate profile | Leave alone; do not merge credentials or state |
-| `~/.local/share/agent-native/plane` | Private Plane deployment configuration and API credentials | Preserve in place, outside Git |
+| `~/.local/share/agent-native/plane` | Private Plane deployment configuration and API credentials | API key + accounts moved into `ops/plane/data/` (AN-148). Runtime env, probe outputs and backups stay in `~/.local/share/agent-native/plane/`. |
 | Docker project `agent-native-plane` | Plane services and named storage volumes | Keep project name, data and port 19230 |
 | `Projects/fantasy-game-builder` | An agent's separately authorized output/source workspace | Preserve in place; it is not duplicate framework code |
 | Codex saved project `agent-native` | Points to `Projects/agent-native` | Retain desired path; refresh project/repository context after replacement |

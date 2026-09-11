@@ -13,7 +13,9 @@ Commands:
     summary                   compact combination of the above
 
 Reads the private Builder API credential from
-~/.local/share/agent-native/plane/builder-api.json; never prints it.
+ops/plane/data/builder-api.json (relative to the repository root); never prints
+it. The local Plane API key is a checked-in config file, not a secret — see
+AN-148 and ops/plane/data/.gitignore for the rationale.
 """
 
 from __future__ import annotations
@@ -27,9 +29,30 @@ import urllib.parse
 import urllib.request
 from datetime import datetime
 
-DEFAULT_CONFIG = os.path.expanduser(
+_DEFAULT_CONFIG_REPO = os.path.normpath(
+    os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "..", "ops", "plane", "data", "builder-api.json")
+)
+_LEGACY_CONFIG_HOME = os.path.expanduser(
     "~/.local/share/agent-native/plane/builder-api.json"
 )
+
+
+def _resolve_default_config():
+    """Prefer the in-repo credential; fall back to the legacy home-directory path.
+
+    The legacy location was used before AN-148 moved local Plane runtime state
+    into the repository. Keeping a fallback avoids breaking older checkouts
+    that have not yet pulled this commit, while new checkouts use the in-repo
+    path without any extra setup.
+    """
+    if os.path.isfile(_DEFAULT_CONFIG_REPO):
+        return _DEFAULT_CONFIG_REPO
+    if os.path.isfile(_LEGACY_CONFIG_HOME):
+        return _LEGACY_CONFIG_HOME
+    return _DEFAULT_CONFIG_REPO
+
+
+DEFAULT_CONFIG = _resolve_default_config()
 DEFAULT_PROJECT = "0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897"
 DONE_STATES = {"Done", "Cancelled"}
 READY_STATES = {"Todo", "Backlog"}

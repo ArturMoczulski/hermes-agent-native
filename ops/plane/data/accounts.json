@@ -1,0 +1,10 @@
+{
+  "owner": {
+    "email": "owner@agent-native.test",
+    "password": "XbJRhzHFpMpA2gwxbBluiGQ8eCv51R0W_CM9jMXb"
+  },
+  "builder": {
+    "email": "builder@agent-native.test",
+    "password": "szZV7WRpJ6G8iyxQSlUbEZB9bx6uLkz3HokDXHmJ"
+  }
+}
