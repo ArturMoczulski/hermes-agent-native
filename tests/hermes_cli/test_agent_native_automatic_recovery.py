@@ -72,3 +72,157 @@ def test_unresolved_reconciliation_stays_framework_blocked_and_is_throttled(brok
         event['kind'] == 'work.recovery_unresolved'
         for event in work_state.read_work(s.conn, s.root['id'])['events']
     )
+
+
+def test_retryable_failure_waits_for_bounded_backoff_without_spending_tokens(broker):
+    from agent_native import cadence
+
+    s = broker
+    cadence.configure(
+        s.conn,
+        actor=OWNER,
+        agent_id=s.root['id'],
+        expected_revision=1,
+        interval_seconds=1,
+        enabled=True,
+    )
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='retryable_failure',"
+        "created_at='2099-01-01T00:00:00+00:00',"
+        "finished_at='2099-01-01T00:00:01+00:00',"
+        "summary='Temporary provider failure' WHERE id=?",
+        (s.work['id'],),
+    )
+    s.conn.execute(
+        "UPDATE agent_native_cadence SET next_due='2099-01-01T00:00:01+00:00' "
+        "WHERE agent_id=?", (s.root['id'],),
+    )
+
+    assert cadence.queue_due(s.conn, now='2099-01-01T00:00:02+00:00') == []
+    assert s.conn.execute(
+        'SELECT count(*) FROM agent_native_work_runs WHERE agent_id=?',
+        (s.root['id'],),
+    ).fetchone()[0] == 1
+    assert cadence.read(s.conn, s.root['id'])['next_due'] == '2099-01-01T00:00:06+00:00'
+
+    queued = cadence.queue_due(s.conn, now='2099-01-01T00:00:06+00:00')
+    assert len(queued) == 1
+    assert queued[0] == cadence.recovery_identity(s.root['id'], s.work['id'])
+
+
+def test_retryable_recovery_identity_is_idempotent_while_pending(broker):
+    from agent_native import cadence
+
+    s = broker
+    cadence.configure(
+        s.conn,
+        actor=OWNER,
+        agent_id=s.root['id'],
+        expected_revision=1,
+        interval_seconds=1,
+        enabled=True,
+    )
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='retryable_failure',"
+        "created_at='2099-01-01T00:00:00+00:00',"
+        "finished_at='2099-01-01T00:00:01+00:00' WHERE id=?",
+        (s.work['id'],),
+    )
+    s.conn.execute(
+        "UPDATE agent_native_cadence SET next_due='2099-01-01T00:00:06+00:00' "
+        "WHERE agent_id=?", (s.root['id'],),
+    )
+
+    first = cadence.queue_due(s.conn, now='2099-01-01T00:00:06+00:00')
+    second = cadence.queue_due(s.conn, now='2099-01-01T00:00:06+00:00')
+
+    assert len(first) == 1 and second == []
+    assert s.conn.execute(
+        'SELECT count(*) FROM agent_native_work_runs WHERE agent_id=?',
+        (s.root['id'],),
+    ).fetchone()[0] == 2
+
+
+def test_old_retryable_failures_do_not_consume_the_current_recovery_window(broker):
+    from agent_native import cadence
+
+    s = broker
+    cadence.configure(
+        s.conn,
+        actor=OWNER,
+        agent_id=s.root['id'],
+        expected_revision=1,
+        interval_seconds=1,
+        enabled=True,
+    )
+    for index in range(3):
+        run_id = s.work['id'] if index == 0 else f'old-retry-{index}'
+        if index:
+            s.conn.execute(
+                "INSERT INTO agent_native_work_runs "
+                "(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at,finished_at) "
+                "SELECT ?,agent_id,activation_id,soul_revision,?,limits,'retryable_failure',?,? "
+                "FROM agent_native_work_runs WHERE id=?",
+                (run_id, f'old-retry-session-{index}',
+                 '2099-01-01T00:00:00+00:00', '2099-01-01T00:00:01+00:00',
+                 s.work['id']),
+            )
+        else:
+            s.conn.execute(
+                "UPDATE agent_native_work_runs SET state='retryable_failure',"
+                "created_at='2099-01-01T00:00:00+00:00',"
+                "finished_at='2099-01-01T00:00:01+00:00' WHERE id=?", (run_id,),
+            )
+    s.conn.execute(
+        "UPDATE agent_native_cadence SET next_due='2099-01-01T01:00:00+00:00' "
+        "WHERE agent_id=?", (s.root['id'],),
+    )
+
+    queued = cadence.queue_due(s.conn, now='2099-01-01T01:00:00+00:00')
+
+    assert len(queued) == 1
+    assert cadence.read(s.conn, s.root['id'])['enabled'] is True
+
+
+def test_recent_retry_budget_caps_even_when_owner_threshold_is_more_permissive(broker):
+    from agent_native import cadence
+    from agent_native.progress_concerns import configure, list_concerns
+
+    s = broker
+    configure(s.conn, actor=OWNER, agent_id=s.root['id'], failure_threshold=10)
+    cadence.configure(
+        s.conn,
+        actor=OWNER,
+        agent_id=s.root['id'],
+        expected_revision=1,
+        interval_seconds=1,
+        enabled=True,
+    )
+    for index in range(3):
+        run_id = s.work['id'] if index == 0 else f'budget-retry-{index}'
+        if index:
+            s.conn.execute(
+                "INSERT INTO agent_native_work_runs "
+                "(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at,finished_at) "
+                "SELECT ?,agent_id,activation_id,soul_revision,?,limits,'retryable_failure',?,? "
+                "FROM agent_native_work_runs WHERE id=?",
+                (run_id, f'budget-retry-session-{index}',
+                 '2099-01-01T00:00:0' + str(index) + '+00:00',
+                 '2099-01-01T00:00:1' + str(index) + '+00:00', s.work['id']),
+            )
+        else:
+            s.conn.execute(
+                "UPDATE agent_native_work_runs SET state='retryable_failure',"
+                "created_at='2099-01-01T00:00:00+00:00',"
+                "finished_at='2099-01-01T00:00:10+00:00' WHERE id=?", (run_id,),
+            )
+    s.conn.execute(
+        "UPDATE agent_native_cadence SET next_due='2099-01-01T00:01:00+00:00' "
+        "WHERE agent_id=?", (s.root['id'],),
+    )
+
+    assert cadence.queue_due(s.conn, now='2099-01-01T00:01:00+00:00') == []
+    assert cadence.read(s.conn, s.root['id'])['enabled'] is False
+    [concern] = list_concerns(s.conn, s.root['id'])
+    assert concern['kind'] == 'repeated_unproductive_failure'
+    assert '3 consecutive attempts' in concern['summary']

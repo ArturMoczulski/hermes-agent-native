@@ -3,6 +3,7 @@ from datetime import datetime, timedelta
 from uuid import uuid4
 from agent_native.identity import _now, _require_owner, ConflictError
 from hermes_cli.kanban_db_connect import write_txn
+from agent_native.recovery_policy import recovery_identity
 
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS agent_native_cadence (
@@ -83,9 +84,13 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if conn.execute('SELECT 1 FROM agent_native_work_holds WHERE agent_id=?', (agent_id,)).fetchone():
                 continue
             from agent_native.progress_concerns import suspend_if_stalled
-            if suspend_if_stalled(conn, agent_id): continue
+            if suspend_if_stalled(conn, agent_id, now=now): continue
             root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
             previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
+            if previous and previous[4] == 'retryable_failure':
+                from agent_native.recovery_policy import enforce_backoff
+                if not enforce_backoff(conn, agent_id, now=now):
+                    continue
             if previous and previous[4] == 'unknown':
                 # A lost Plane response may have been reconciled after the
                 # worker stopped. Settle only when every linked effect is now
@@ -104,12 +109,18 @@ def queue_due(conn, *, now=None, busy_agents=()):
             if conn.execute("SELECT 1 FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')",(agent_id,)).fetchone(): continue
             from agent_native.delivery_barrier import unresolved_terminal_notices, record_notices
             notices = unresolved_terminal_notices(conn, agent_id)
-            key=str(uuid4())
+            if previous[4] == 'retryable_failure':
+                from agent_native.recovery_policy import recovery_identity
+                key = recovery_identity(agent_id, previous[0])
+            else:
+                key=str(uuid4())
             conn.execute('INSERT INTO agent_native_work_runs(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at) VALUES(?,?,?,?,?,?,?,?)',
                 (key,agent_id,previous[1],revision,'an_work_'+uuid4().hex,previous[3],'queued',now))
             conn.execute('UPDATE agent_native_cadence SET next_due=? WHERE agent_id=?',((datetime.fromisoformat(now)+timedelta(seconds=interval)).isoformat(),agent_id))
             conn.execute('DELETE FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,))
-            summary = ('Scheduled check-in after actionable input: ' + wake_row[0] + '.' if wake_row else
+            summary = ('Automatic recovery after a temporary failure; continuing with a stable recovery identity.'
+                       if previous[4] == 'retryable_failure' else
+                       'Scheduled check-in after actionable input: ' + wake_row[0] + '.' if wake_row else
                        'Scheduled check-in: review progress and decide whether to work, ask or wait.')
             event(conn,key,'work.queued',summary)
             record_notices(conn, key, notices)

@@ -16,6 +16,11 @@ as an **unproductive failure** only when all of these are true:
 - no applicable owner answer or direction changed the work since the preceding
   attempt.
 
+The automatic-recovery budget is evaluated in a fifteen-minute recent window.
+Failures outside that window do not count toward the current retry sequence.
+Retry admission uses five seconds, thirty seconds and two minutes of bounded
+backoff before this concern is considered.
+
 Waiting results, useful discovery, a new purpose-level output, owner direction and
 a successful result reset the consecutive count. Plane edits, model calls, cadence
 ticks and repeated progress comments alone do not count as progress. This narrow

@@ -17,14 +17,14 @@ def failed_attempts(s, count=3):
                 "(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at,finished_at) "
                 "SELECT ?,agent_id,activation_id,soul_revision,?,limits,'retryable_failure',?,? "
                 "FROM agent_native_work_runs WHERE id=?",
-                (run_id,f'failed-session-{index}',f'2000-01-0{index+1}T00:00:00+00:00',
-                 f'2000-01-0{index+1}T00:00:01+00:00',s.work['id']),
+                (run_id,f'failed-session-{index}',f'2099-01-01T00:00:0{index}+00:00',
+                 f'2099-01-01T00:00:1{index}+00:00',s.work['id']),
             )
         else:
             s.conn.execute(
                 "UPDATE agent_native_work_runs SET state='retryable_failure',"
-                "created_at='2000-01-01T00:00:00+00:00',"
-                "finished_at='2000-01-01T00:00:01+00:00' WHERE id=?",(run_id,))
+                "created_at='2099-01-01T00:00:00+00:00',"
+                "finished_at='2099-01-01T00:00:01+00:00' WHERE id=?",(run_id,))
         ids.append(run_id)
     s.conn.execute(
         "UPDATE agent_native_work_runs SET error='Work stopped; FileNotFoundError.' "
@@ -43,14 +43,14 @@ def completed_attempts(s, count=3):
                 "(id,agent_id,activation_id,soul_revision,session_id,limits,state,created_at,finished_at) "
                 "SELECT ?,agent_id,activation_id,soul_revision,?,limits,'completed',?,? "
                 "FROM agent_native_work_runs WHERE id=?",
-                (run_id,f'completed-session-{index}',f'2000-01-0{index+1}T00:00:00+00:00',
-                 f'2000-01-0{index+1}T00:00:01+00:00',s.work['id']),
+                (run_id,f'completed-session-{index}',f'2099-01-01T00:00:0{index}+00:00',
+                 f'2099-01-01T00:00:1{index}+00:00',s.work['id']),
             )
         else:
             s.conn.execute(
                 "UPDATE agent_native_work_runs SET state='completed',"
-                "created_at='2000-01-01T00:00:00+00:00',"
-                "finished_at='2000-01-01T00:00:01+00:00' WHERE id=?",(run_id,))
+                "created_at='2099-01-01T00:00:00+00:00',"
+                "finished_at='2099-01-01T00:00:01+00:00' WHERE id=?",(run_id,))
         ids.append(run_id)
     return ids
 
@@ -107,7 +107,7 @@ def test_new_result_breaks_the_unproductive_failure_sequence(broker):
          'request','{}','record','2000-01-02T00:00:00+00:00'),
     )
 
-    queued=cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00')
+    queued=cadence.queue_due(s.conn,now='2099-01-01T00:02:00+00:00')
 
     assert len(queued)==1
     assert cadence.read(s.conn,s.root['id'])['enabled'] is True
@@ -145,7 +145,7 @@ def test_recorded_result_breaks_the_empty_completion_sequence(broker):
          'request','{}','record','2000-01-02T00:00:00+00:00'),
     )
 
-    assert len(cadence.queue_due(s.conn,now='2099-01-01T00:00:00+00:00'))==1
+    assert len(cadence.queue_due(s.conn,now='2099-01-01T00:02:00+00:00'))==1
     assert list_concerns(s.conn,s.root['id'])==[]
 
 

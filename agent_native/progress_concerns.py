@@ -1,5 +1,6 @@
 """Durable concerns for repeated cadence activity without useful progress."""
 import json
+from datetime import datetime, timedelta, timezone
 from uuid import NAMESPACE_URL, uuid5
 
 from agent_native.identity import ConflictError, _now, _require_owner
@@ -105,7 +106,7 @@ def _direction_cutoff(conn, agent_id):
     return max((row[0] for row in rows), default='')
 
 
-def suspend_if_stalled(conn, agent_id):
+def suspend_if_stalled(conn, agent_id, *, now=None):
     """Suspend before the next attempt once the approved threshold is met."""
     if conn.execute(
         "SELECT 1 FROM agent_native_progress_concerns WHERE agent_id=? AND status='open'",
@@ -116,6 +117,13 @@ def suspend_if_stalled(conn, agent_id):
         )
         return True
     cutoff = _direction_cutoff(conn, agent_id)
+    if now is not None:
+        from agent_native.recovery_policy import RECOVERY_WINDOW_SECONDS
+        current = datetime.fromisoformat(now)
+        if current.tzinfo is None:
+            current = current.replace(tzinfo=timezone.utc)
+        recent = (current - timedelta(seconds=RECOVERY_WINDOW_SECONDS)).isoformat()
+        cutoff = max(cutoff, recent)
     threshold = settings(conn, agent_id)['failure_threshold']
     attempts = []
     kind = None
@@ -147,9 +155,13 @@ def suspend_if_stalled(conn, agent_id):
         attempts.append(run_id)
         if latest_error is None and error:
             latest_error = error
-        if len(attempts) == threshold:
+        from agent_native.recovery_policy import MAX_AUTOMATIC_RETRIES
+        effective_threshold = min(threshold, MAX_AUTOMATIC_RETRIES) if kind == 'repeated_unproductive_failure' else threshold
+        if len(attempts) == effective_threshold:
             break
-    if len(attempts) < threshold:
+    from agent_native.recovery_policy import MAX_AUTOMATIC_RETRIES
+    effective_threshold = min(threshold, MAX_AUTOMATIC_RETRIES) if kind == 'repeated_unproductive_failure' else threshold
+    if len(attempts) < effective_threshold:
         return False
     attempts.reverse()
     concern_id = str(
@@ -157,12 +169,12 @@ def suspend_if_stalled(conn, agent_id):
     )
     if kind == 'repeated_empty_completion':
         summary = (
-            f'Repeated work without progress: {threshold} consecutive attempts '
+            f'Repeated work without progress: {effective_threshold} consecutive attempts '
             'completed without recording progress or a saved output.'
         )
     else:
         summary = (
-            f'Repeated work without progress: {threshold} consecutive attempts failed '
+            f'Repeated work without progress: {effective_threshold} consecutive attempts failed '
             'without a result or saved output.'
         )
         if latest_error:

@@ -53,7 +53,14 @@ Plane owns the full acceptance criteria and dependencies for the urgent repair:
    operations before cadence admission, never resends the original mutation,
    settles confirmed progress receipts, and leaves unavailable evidence in a
    throttled framework-reconciliation state. Focused recovery and adjacent
-   cadence regressions pass. AN-131 remains the next recovery slice.
+   cadence regressions pass.
+   AN-131 is implemented on `main`: retryable failures now use deterministic
+   recovery identities, a five/30/120-second bounded backoff and a 15-minute
+   recovery window. No new run is admitted while backoff is pending; useful
+   results reset the retry sequence, and the existing evidence-linked concern
+   remains the escalation after the automatic budget is exhausted. Focused
+   scheduler tests cover the backoff, stable identity and window reset.
+   AN-132 remains the next recovery slice.
 5. **AN-120 — Gate First Builder launch on deterministic autonomous lifecycle
    journeys.** Prove continuation, pause/resume, required and optional review,
    informational delivery, uncertain-effect reconciliation, restart safety and

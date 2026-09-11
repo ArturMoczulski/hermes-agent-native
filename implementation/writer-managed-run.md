@@ -150,8 +150,22 @@ dependency recovery; AN-75 tracks that remaining work.
 ### Automatic temporary dependency recovery
 
 Plane GET429/502/503/504 responses can recover in the same managed attempt.
-Up to three requests and30 seconds of backoff honor Retry-After; authority and
+Up to three requests and 30 seconds of backoff honor Retry-After; authority and
 deadline remain checked during waiting. Activity records Waiting for Plane and
 recovery, with no credentials or upstream bodies. This does not replay writes,
 reset the attempt budget, or silently start another model session. Longer outages
 and other failure classes still require review; this is not service-restart recovery.
+
+### Automatic temporary work-failure recovery
+
+When a bounded worker exits cleanly after a retryable provider, tool or transport
+failure and all external effects are settled, cadence schedules a fresh attempt
+without an owner click. The retry identity is deterministic from the agent and
+the failed predecessor, so a repeated scheduler tick cannot create duplicate
+recovery work. Backoff is five seconds, then thirty seconds, then two minutes;
+the configured cadence can only make it later. The policy allows three automatic
+retries inside a fifteen-minute window. No model session is created while that
+backoff is pending. A saved result, output or purpose evaluation resets the
+sequence, while three recent unproductive failures flow into the existing durable
+progress concern and owner review path. Old failures outside the window do not
+consume the current retry budget.
