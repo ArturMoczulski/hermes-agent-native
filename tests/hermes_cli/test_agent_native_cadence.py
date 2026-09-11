@@ -19,6 +19,31 @@ def test_due_cadence_retains_attempts_and_never_overlaps_or_resumes_pause(broker
     assert cadence.read(s.conn,s.root['id'])['enabled'] is False
 
 
+def test_non_retryable_failure_is_framework_attention_without_owner_retry(broker):
+    """A generic failed attempt must expose a framework defect, not a fake decision."""
+    from agent_native import cadence
+    from agent_native.readiness import automatic_work
+
+    s = broker
+    cadence.configure(s.conn, actor=OWNER, agent_id=s.root['id'], expected_revision=1,
+                      interval_seconds=60, enabled=True)
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='failed',"
+        "summary='The provider rejected the request.',"
+        "error='ProviderAuthenticationError: credentials rejected',"
+        "finished_at='2099-01-01T00:00:01+00:00' WHERE id=?",
+        (s.work['id'],),
+    )
+
+    assert automatic_work(s.conn, s.root['id'], now='2099-01-01T00:01:00+00:00') == {
+        'state': 'framework_failure', 'may_start': False,
+        'blocker': 'The latest attempt failed without a safe automatic recovery path.',
+        'release_condition': 'Inspect the failure diagnostics and repair the framework or dependency before continuing.',
+        'responsible_actor': 'framework',
+    }
+    assert cadence.queue_due(s.conn, now='2099-01-01T00:01:00+00:00') == []
+
+
 def test_readiness_reports_the_effective_next_check_in_after_a_finished_attempt(broker):
     from agent_native import cadence
     from agent_native.readiness import automatic_work

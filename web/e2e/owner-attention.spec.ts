@@ -4,12 +4,12 @@ const agentId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 
 const agent = {
   id: agentId,
-  name: 'Failed fantasy builder',
+  name: 'Fantasy builder',
   purpose: 'Build a fantasy game.',
   parent_id: null,
   child_ids: [],
   soul_revision: 1,
-  execution: 'failed',
+  execution: 'completed',
   created_at: '2026-09-11T00:00:00Z',
   removed_at: null,
   retirement: null,
@@ -18,10 +18,10 @@ const agent = {
   autonomy: { level: 3, require_owner_review: false, revision: 1, updated_at: null },
   cadence: { enabled: true, interval_seconds: 60, next_due: null },
   automatic_work: {
-    state: 'owner_attention',
+    state: 'waiting_owner_answer',
     may_start: false,
-    blocker: 'The latest attempt failed.',
-    release_condition: 'Review the failure and retry the work.',
+    blocker: 'Choose the next design direction.',
+    release_condition: 'Answer the agent question.',
     responsible_actor: 'owner',
   },
   progress_concerns: [],
@@ -34,8 +34,8 @@ const agent = {
   startup: null,
   work: {
     id: 'bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb',
-    state: 'failed',
-    summary: 'The run ended without a recorded result. Saved outputs remain available.',
+    state: 'completed',
+    summary: 'The run recorded its design question and is waiting for an answer.',
     error: null,
     focus: null,
     limits: { timeout_seconds: 900, max_iterations: 50 },
@@ -53,19 +53,24 @@ const agent = {
   },
 };
 
-test('compact owner attention explains a failed attempt and exposes recovery', async ({ page }) => {
+test('compact owner attention exposes the exact question and response control', async ({ page }) => {
   await page.addInitScript(() => { window.__HERMES_SESSION_TOKEN__ = 'agent-native-local-e2e-only'; });
   await page.route(`**/api/agent-native/agents/${agentId}`, route => route.fulfill({ json: agent }));
-  await page.route(`**/api/agent-native/agents/${agentId}/questions`, route => route.fulfill({ json: [] }));
+  let answered = false;
+  await page.route(`**/api/agent-native/agents/${agentId}/questions`, route => route.fulfill({ json: answered ? [] : [{
+    id: 'question-1', item_id: 'item-1', question: 'Choose the next design direction.', answer: null, applicable: true,
+  }] }));
+  await page.route(`**/api/agent-native/agents/${agentId}/questions/question-1/answer`, async route => {
+    answered = true;
+    await route.fulfill({ json: agent });
+  });
   await page.goto(`/agents/${agentId}`);
 
-  const attention = page.getByRole('region', { name: 'Needs your attention', exact: true });
-  await expect(attention).toContainText('The latest attempt failed.');
-  await expect(attention).toContainText('The run ended without a recorded result. Saved outputs remain available.');
-  await expect(attention).toContainText('Review the failure and retry the work.');
-  await expect(attention.getByRole('link', { name: 'Open activity and diagnostics', exact: true })).toBeVisible();
-
-  await page.route(`**/api/agent-native/agents/${agentId}/work/retry`, route => route.fulfill({ json: { recovery_run_id: 'cccccccc-cccc-4ccc-8ccc-cccccccccccc', agent } }));
-  await attention.getByRole('button', { name: 'Retry failed work', exact: true }).click();
-  await expect(attention.getByRole('status')).toContainText('Recovery requested');
+  const attention = page.getByRole('region', { name: 'Needs your answer', exact: true });
+  await expect(attention).toContainText('Choose the next design direction.');
+  await expect(attention).toContainText('Answer it here or open the affected Plane work item.');
+  await expect(attention.getByRole('textbox', { name: 'Your answer' })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Retry failed work', exact: true })).toHaveCount(0);
+  await attention.getByRole('textbox', { name: 'Your answer' }).fill('Continue with the hopeful direction.');
+  await attention.getByRole('button', { name: 'Send answer', exact: true }).click();
 });

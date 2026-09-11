@@ -2587,8 +2587,10 @@ the remaining lifecycle categories and accept AN-117 before moving to AN-118.
 
 The owner requested a detailed consolidation plan and consideration of our Hermes
 fork as a submodule. [The proposal](../implementation/repository-consolidation.md)
-recommends moving the existing fork checkout to `Projects/agent-native` after
-preserving the old repository, runtime data and uncommitted work. No filesystems,
+recommends moving the existing fork checkout to `Projects/agent-native` while
+preserving runtime data and uncommitted work. The old checkout need not be kept
+as a permanent archive; a temporary rollback copy may remain until verification.
+No filesystems,
 Git remotes or protected agent bindings have been migrated. First Builder remains
 held for the owner test. AN-132 source edits and incomplete browser verification
 remain separate unfinished work, despite earlier PLAN.md completion language.

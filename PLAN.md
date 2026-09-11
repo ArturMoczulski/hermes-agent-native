@@ -1,11 +1,14 @@
 # Current implementation work
 
-AN-129 is complete. When authoritative readiness reports `owner_attention` after
-a failed bounded attempt, Compact view now explains the blocker, shows the latest
-attempt summary, states the release action, links to activity and diagnostics,
-and exposes the guarded retry action. A focused Playwright journey verifies the
-surface and retry request; the production dashboard bundle and live Fantasy Game
-Builder were reloaded and verified. The live agent was left untouched.
+AN-132 is implemented on `main`. Owner attention is now reserved for an actual
+human dependency. A known `failed` attempt that has no safe automatic recovery
+path is reported as an explicit `framework_failure` with a framework-owned
+diagnostic release condition; it no longer becomes a fake owner gate with a
+generic Retry button. Retryable failures remain under bounded automatic recovery.
+The compact Work direction, Thinking cadence diagnostics and agent chat expose the
+same blocker and next action. Focused readiness, cadence and Playwright coverage
+prove that a real unanswered question has an answer control while a non-retryable
+failure has no meaningless owner retry action. The next recovery slice is AN-133.
 
 ## Urgent autonomous-runtime recovery
 
@@ -60,7 +63,13 @@ Plane owns the full acceptance criteria and dependencies for the urgent repair:
    results reset the retry sequence, and the existing evidence-linked concern
    remains the escalation after the automatic budget is exhausted. Focused
    scheduler tests cover the backoff, stable identity and window reset.
-   AN-132 remains the next recovery slice.
+   AN-132 is implemented on `main`: retryable failures continue through bounded
+   recovery, while known failures without a safe recovery path surface as an
+   explicit framework defect instead of owner attention. The owner-facing
+   readiness decision, cadence diagnostics and agent chat now share the blocker
+   and release condition. Focused backend and browser coverage distinguishes a
+   real unanswered question from a framework failure.
+   AN-133 is now the next recovery slice.
 5. **AN-120 — Gate First Builder launch on deterministic autonomous lifecycle
    journeys.** Prove continuation, pause/resume, required and optional review,
    informational delivery, uncertain-effect reconciliation, restart safety and
@@ -70,10 +79,10 @@ All five umbrella items are assigned to the current undated Cycle 06. The recove
 slices above are also in Cycle 06, with Plane dependencies enforcing their order.
 Their delivery order is AN-116, AN-117, AN-118, AN-119 (AN-130 through AN-133),
 then AN-120; AN-119 depends on the shared readiness and decision-gate work, and
-AN-120 is the final integration gate. The next implementation priority is AN-117. Its first vertical slice now publishes one
-host-derived readiness decision through the API, uses it for cadence admission,
-and renders it in Compact view. The remaining acceptance work is a focused matrix
-for every lifecycle category before AN-118 takes over decision-gate semantics.
+AN-120 is the final integration gate. The next implementation priority is AN-133:
+run the full autonomous recovery and owner-attention matrix end to end, including
+retryable failure, uncertain effects, concrete owner dependencies, repeated
+no-progress and restart/pause-resume durability.
 
 AN-114 is the preceding reliability repair exposed by the live Fantasy Game
 Builder. The framework had no explicit authoritative list of pending owner decisions
@@ -560,8 +569,9 @@ implementation.
 
 The owner requested a detailed plan before changing the two checkout locations.
 See [the consolidation plan](implementation/repository-consolidation.md): retain
-the current Hermes fork/history at `Projects/agent-native`, preserve the old
-checkout privately, keep runtime data in place, and verify bindings and services.
+the current Hermes fork/history at `Projects/agent-native`, keep runtime data in
+place, and verify bindings and services. Preserving the old checkout is optional;
+only a temporary rollback copy is needed until verification passes.
 The submodule alternative is evaluated there. No cutover is authorized by this
 entry. AN-132 remains uncommitted and its browser verification incomplete at the
 planning snapshot; earlier completion language above must not be used as proof.

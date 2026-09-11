@@ -534,7 +534,7 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
     ready: "Ready to start", working: "Working", scheduled: "Waiting for next check-in",
     owner_paused: "Paused", waiting_owner_review: "Waiting for your review",
     waiting_owner_answer: "Waiting for your answer", owner_attention: "Needs your attention",
-    framework_reconciliation: "Framework recovery needed", automatic_off: "Automatic work off",
+    framework_reconciliation: "Framework recovery needed", framework_failure: "Framework failure", automatic_off: "Automatic work off",
     setup: "Preparing agent", not_configured: "Work not configured", retired: "Retired", removed: "Removed",
   };
   const stage = agent.automatic_work ? readinessStage[agent.automatic_work.state]
@@ -887,6 +887,7 @@ function WorkControls({ agent, onMutationStart, onUpdate }: {
       {work.state === "paused" && <p>The run is paused. It will not restart automatically.</p>}
       {work.state === "interrupted" && <p>The previous process was interrupted after its effects settled. If thinking cadence is enabled, it will continue in a fresh attempt.</p>}
       {work.state === "retryable_failure" && <p>The attempt failed after its effects settled. Thinking cadence will continue with a fresh attempt; the failed attempt remains in history.</p>}
+      {work.state === "failed" && agent.automatic_work?.state === "framework_failure" && <p role="status">This attempt failed without a safe automatic recovery path. Inspect the diagnostics and repair the framework or dependency before continuing; no owner retry decision is required.</p>}
       {work.state === "limit_reached" && <p>This bounded attempt reached its configured limit. If thinking cadence is enabled, the next check-in can continue the work in a new attempt.</p>}
       {work.state === "completed" && <p>This run has finished. Review its results and saved outputs below. Finishing a run does not mean its work has been accepted.</p>}
       {work.state === "unknown" && <p>The run outcome needs checking before any further work.</p>}

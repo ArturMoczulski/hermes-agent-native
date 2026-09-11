@@ -56,8 +56,17 @@ def automatic_work(conn, agent_id, *, now=None, busy=False):
         return _decision('framework_reconciliation', blocker='A work outcome is uncertain.',
                          release='Reconcile the uncertain effect before continuing.', actor='framework')
     if work[1] == 'failed':
-        return _decision('owner_attention', blocker='The latest attempt failed.',
-                         release='Review the failure and retry the work.', actor='owner')
+        # A known failure does not, by itself, contain a human decision. The
+        # bounded recovery policy already handles failures whose effects are
+        # safe to retry. Anything left in ``failed`` is therefore a framework
+        # or dependency defect that needs diagnostics, rather than a request
+        # for the owner to press a generic retry button.
+        return _decision(
+            'framework_failure',
+            blocker='The latest attempt failed without a safe automatic recovery path.',
+            release='Inspect the failure diagnostics and repair the framework or dependency before continuing.',
+            actor='framework',
+        )
     cadence = conn.execute(
         'SELECT enabled,interval_seconds,next_due FROM agent_native_cadence WHERE agent_id=?',
         (agent_id,),

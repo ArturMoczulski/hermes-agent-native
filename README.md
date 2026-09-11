@@ -1,3 +1,22 @@
+# agent-native
+
+This Hermes fork is the implementation home of agent-native: a framework for
+persistent agents that pursue ongoing purposes, organize work, supervise children,
+and collaborate with a human owner. The repository is also the First Builder's
+workspace.
+
+- [Product specification](design/README.md)
+- [Implementation and delivery plan](implementation/README.md)
+- [First Builder startup instructions](first-builder/INSTRUCTIONS.md)
+- [First Builder purpose](first-builder/SOUL.md), [development practices](first-builder/PRACTICES.md),
+  and [current work](first-builder/STATE.md)
+
+The agent-native specification describes work to build; copying the documents
+and defining the Builder does not mean those capabilities are implemented.
+The inherited Hermes introduction and documentation follow.
+
+---
+
 <p align="center">
   <img src="assets/banner.png" alt="Hermes Agent" width="100%">
 </p>
@@ -262,3 +281,9 @@ scripts/run_tests.sh  # optional full-suite validation; use focused cases for fe
 MIT — see [LICENSE](LICENSE).
 
 Built by [Nous Research](https://nousresearch.com).
+# Agent Native
+
+This repository is the canonical `agent-native` project. Hermes is the runtime
+lineage used by the current implementation; references to the Hermes fork in
+historical implementation notes describe provenance and are not the repository
+identity.

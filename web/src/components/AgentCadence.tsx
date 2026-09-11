@@ -5,9 +5,11 @@ import {Input} from '@nous-research/ui/ui/components/input';
 
 type Cadence={enabled:boolean;interval_seconds:number|null;next_due:string|null};
 type Attempt={id:string;state:string;summary:string|null;created_at:string};
+type Readiness={state:string;blocker:string|null;release_condition:string|null};
 export function AgentCadence({agentId,revision}:{agentId:string;revision:number}){
   const [cadence,setCadence]=useState<Cadence>();
   const [attempts,setAttempts]=useState<Attempt[]>([]);
+  const [readiness,setReadiness]=useState<Readiness>();
   const [seconds,setSeconds]=useState('');
   const [busy,setBusy]=useState(false);
   const [error,setError]=useState('');
@@ -30,8 +32,8 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
   useEffect(()=>{
     let active=true;
     const load=async()=>{try{
-      const [agent,history]=await Promise.all([fetchJSON<{cadence:Cadence}>(api),fetchJSON<Attempt[]>(`${api}/attempts`)]);
-      if(active){setCadence(agent.cadence);setAttempts(history);}
+      const [agent,history]=await Promise.all([fetchJSON<{cadence:Cadence;automatic_work?:Readiness}>(api),fetchJSON<Attempt[]>(`${api}/attempts`)]);
+      if(active){setCadence(agent.cadence);setReadiness(agent.automatic_work);setAttempts(history);}
     }catch{if(active)setError('Could not refresh cadence.');}};
     void load();const timer=setInterval(()=>{void load();},1500);
     return()=>{active=false;clearInterval(timer);};
@@ -51,7 +53,9 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
   return <section aria-label="Thinking cadence" className="space-y-3 rounded-xl border p-5">
     <h2 className="text-lg font-semibold">Thinking cadence</h2>
     <p>{cadence?.enabled?`Enabled · every ${cadence.interval_seconds} seconds`:'Automatic check-ins are off'}</p>
-    {blocked&&<p role="status">Check-ins blocked: the latest attempt {attempts[0]?.state==='failed'?'failed':`is ${attempts[0]?.state}`}. Review its activity and outcome. Enabled cadence does not restart stopped or uncertain work.</p>}
+    {blocked&&<p role="status">{readiness?.state === 'framework_failure'
+      ? `${readiness.blocker ?? 'The latest attempt failed without a safe automatic recovery path.'} ${readiness.release_condition ?? 'Inspect the failure diagnostics before continuing.'}`
+      : `Check-ins blocked: the latest attempt ${attempts[0]?.state==='failed'?'failed':`is ${attempts[0]?.state}`}. Review its activity and outcome. Enabled cadence does not restart stopped or uncertain work.`}</p>}
     {cadence?.enabled&&!blocked&&cadence.next_due&&<p>Next eligible check-in: {new Date(cadence.next_due).toLocaleString()}. Active work and unresolved outcomes can delay it.</p>}
     {cadence?.enabled&&attempts[0]?.state==='retryable_failure'&&<p role="status">The latest attempt failed after all effects settled. A fresh attempt will start at the next eligible check-in; the failed process will not be replayed.</p>}
     <p className="text-sm">Each check-in reviews progress and decides whether to work, ask or wait. It uses the existing run limits. Missed intervals produce at most one check-in; normal run limits and safely retryable failures remain eligible, while owner-paused work does not restart.</p>
@@ -61,7 +65,7 @@ export function AgentCadence({agentId,revision}:{agentId:string;revision:number}
     <Button disabled={busy||!cadence?.enabled} onClick={()=>{void save(false);}}>Disable cadence</Button>
     {error&&<p role="alert">{error}</p>}
     {saveStatus&&<p role="status">{saveStatus}</p>}
-    {attempts[0]?.state==='failed'&&!recovery&&<Button disabled={busy} onClick={()=>{setRecovery({id:attempts[0].id,revision});setRecoveryStatus('');setError('');}}>Retry failed work</Button>}
+    {attempts[0]?.state==='failed'&&readiness?.state === 'owner_attention'&&!recovery&&<Button disabled={busy} onClick={()=>{setRecovery({id:attempts[0].id,revision});setRecoveryStatus('');setError('');}}>Retry failed work</Button>}
     {recovery&&<div role="group" aria-label="Review failed work recovery" className="space-y-2 border rounded p-3">
       <p>Previous attempts and saved outputs are preserved. Recovery starts a new attempt using this agent's current model and existing execution limits. Review the failure before continuing. Uncertain task changes block recovery.</p>
       <p className="text-xs break-all">Failed attempt: {recovery.id}</p>

@@ -1,5 +1,10 @@
 # Consolidate the two project directories
 
+The final repository identity is `git@github.com:ArturMoczulski/agent-native.git`,
+checked out locally at `/Users/arturmoczulski/Projects/agent-native`. Hermes is
+the runtime lineage of the current implementation; it is not the active
+repository identity.
+
 Status: proposed execution plan, 2026-09-11. Planning is authorized; this document
 neither performs nor authorizes the filesystem cutover. Owner review selects the
 repository arrangement before execution. No directory, remote or agent grant has

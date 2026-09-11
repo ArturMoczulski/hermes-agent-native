@@ -351,5 +351,8 @@ and `expected_run_id`. Only the latest failed attempt can start a fresh recovery
 with a distinct retained session and unchanged limits. Repeating the request
 returns the same recovery ID; it never redelivers failed tool calls. Changed soul,
 removed agent, active work and pending/unknown Plane outcomes prevent recovery.
-This is currently an API operation, not a dashboard retry button. Cadence remains
-unchanged; after successful recovery an enabled cadence can continue normally.
+This remains an explicit API operation for an inspected diagnostic, not a generic
+dashboard owner-attention action. Cadence does not turn an ordinary failed run
+into an owner gate; retryable failures recover automatically, while a known
+non-retryable failure is surfaced as a framework defect. After an explicit
+recovery succeeds, enabled cadence can continue normally.

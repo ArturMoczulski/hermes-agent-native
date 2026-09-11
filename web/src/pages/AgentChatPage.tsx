@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router';
-import { agentsEndpoint, modelChoiceLabel, type Agent } from '@/lib/agent-native';
+import { agentsEndpoint, agentWorkStatus, modelChoiceLabel, type Agent } from '@/lib/agent-native';
 import { fetchJSON } from '@/lib/api';
 import ChatPage from './ChatPage';
 
@@ -41,6 +41,11 @@ export default function AgentChatPage() {
         <p className="whitespace-pre-wrap break-words text-sm">{agent.purpose}</p>
         <p className="break-words text-xs">Next message model: {modelChoiceLabel(agent.model_selection)}</p>
         {agent.model_activity?.find((activity) => activity.kind === 'chat') && <p className="break-words text-xs text-muted-foreground">Latest message selection: {modelChoiceLabel(agent.model_activity.find((activity) => activity.kind === 'chat'))}</p>}
+        {agent.automatic_work && <section aria-label="Automatic work status" className="space-y-1 rounded border p-2 text-sm">
+          <p><strong>Automatic work:</strong> {agentWorkStatus(agent)}</p>
+          {agent.automatic_work.blocker && <p><strong>Current blocker:</strong> {agent.automatic_work.blocker}</p>}
+          {agent.automatic_work.release_condition && <p><strong>Next action:</strong> {agent.automatic_work.release_condition}</p>}
+        </section>}
         <p className="text-xs text-muted-foreground">Purpose revision {agent.soul_revision} · Conversation only · Use agent details to view and control project work</p>
       </header>
       <ChatPage key={`${agent.id}:${agent.soul_revision}`} managedAgent={agent} />

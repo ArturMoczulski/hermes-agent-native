@@ -136,16 +136,18 @@ only when protected progress and mutation records identify that exact notificati
 The unknown receipt remains unknown and is never resent. This exception does not
 cover questions, output links, ordinary progress, or task/project changes. The same
 classification permits cadence after the owner-recovered attempt completes;
-failed work itself still requires owner recovery.
+an ordinary `failed` attempt is instead a framework/dependency diagnostic and does
+not create an owner decision gate.
 
-### Owner recovery control
+### Explicit recovery override
 
-Thinking cadence exposes Retry failed work for the latest failed attempt. The
-owner reviews the attempt and confirms Start recovery. The request pins the
+The owner-only `/{agent_id}/work/retry` API remains an explicit diagnostic
+override for an operator who has already inspected a failed attempt. It pins the
 failed attempt and purpose revision; repeating an unconfirmed request cannot
-create another recovery. A rejected request shows a review message. Paused and
-unknown work are not eligible. This manual control does not implement automatic
-dependency recovery; AN-75 tracks that remaining work.
+create another recovery. A rejected request shows a review message. This is not
+an automatic-work readiness gate and the compact or Thinking cadence UI does not
+ask the owner to click a generic Retry button. Paused and unknown work are not
+eligible.
 
 ### Automatic temporary dependency recovery
 
