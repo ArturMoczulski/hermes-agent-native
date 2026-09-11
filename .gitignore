@@ -224,3 +224,6 @@ native/fts5_cjk/*.so
 # Agent-native browser test artifacts
 web/test-results/
 web/playwright-report/
+
+# Playwright MCP session artifacts (agent browsing); may contain page content
+.playwright-mcp/

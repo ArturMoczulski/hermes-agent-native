@@ -12,6 +12,28 @@ Follow the [targeted verification policy](../../first-builder/PRACTICES.md#targe
 Broaden to a whole spec or suite only for identified affected behavior or a required
 gate; do not rerun the default suite for each small change.
 
+## Dedicated persistent browser (shared instance)
+
+When iterating, reuse the long-lived Chromium instead of cold-starting one per
+run. Start it with `scripts/dev/persistent-browser.sh start` (supervise it as a
+persistent background process) and confirm `scripts/dev/persistent-browser.sh
+status`. Specs attach over CDP through `persistent-cdp.fixture.ts`; the focused
+config for this starts no webServer:
+
+```sh
+AN_BROWSER_CDP="$(scripts/dev/persistent-browser.sh endpoint)" \
+  npm run test:e2e --workspace web -- --config playwright.persistent.config.ts \
+  persistent-browser.spec.ts --retries 0
+```
+
+`persistent-browser.spec.ts` is the attach proof; each test still receives an
+isolated context on the shared browser. The default `playwright.config.ts` suite
+and CI are unchanged and keep launching their own browser. For app specs, keep the
+default config's real backend and Vite and import the fixture in the spec. Raw CDP
+cannot be reached through Playwright's `connectOptions`, so do not use that path.
+The instance, profile, and MCP wiring are documented in
+[First Builder practices](../../first-builder/PRACTICES.md#dedicated-persistent-browser).
+
 Playwright starts the real Hermes FastAPI application and Vite on loopback ports
 19219 and 19220. The backend uses disposable storage and removes inherited Hermes
 settings/provider credentials. No live model, personal profile, or paid API call
