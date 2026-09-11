@@ -29,7 +29,7 @@ CREATE TABLE IF NOT EXISTS agent_native_first_builder (
 
 MODEL = {"provider": "openai-codex", "model": "gpt-5.6-sol", "reasoning_effort": "low"}
 PURPOSE = "Build, maintain, and improve the agent-native framework in this repository under the human owner's direction."
-WORK_LIMITS = {"timeout_seconds": 180, "max_iterations": 50}
+WORK_LIMITS = {"timeout_seconds": 1800, "max_iterations": 200}
 PLANE = {
     "origin": "http://localhost:19230",
     "workspace_slug": "agent-native",

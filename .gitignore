@@ -36,6 +36,10 @@ data/
 # `data/` pattern above would otherwise swallow it.
 !hermes_cli/data/
 !hermes_cli/data/plugin_index.json
+# Local Plane runtime state lives in the repo (API key + accounts). AN-148.
+!ops/plane/data/
+!ops/plane/data/accounts.json
+!ops/plane/data/builder-api.json
 .pytest_cache/
 test_durations.json
 .pytest-cache/
@@ -155,6 +159,11 @@ docs/superpowers/*
 # also created in-repo when an agent operates in this checkout). Plans, audit
 # logs, and per-session caches are never artifacts of the codebase.
 .hermes/
+
+# Live agent-native preview profile home: databases, credentials, per-agent
+# workspaces, cron/session state and logs. Runtime state, never source — kept
+# with the checkout instead of scattered under $HOME. See ops/dashboard/README.md.
+.hermes-agent-native-preview/
 
 # Desktop/bootstrap install marker written into the managed checkout root by the
 # bootstrap installer. It is Hermes-managed runtime state, never a code change —

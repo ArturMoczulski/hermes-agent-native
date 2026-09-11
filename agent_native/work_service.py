@@ -808,7 +808,7 @@ class _Run:
                     conn, self.work['agent_id'], self.work['id']) else 'failed') if dead else 'unknown'
                 message = ('Purpose changed; obsolete work was stopped.' if superseded else
                            'Work stopped; '+reason+'. Inspect activity before retrying any uncertain operation.')
-                conn.execute('UPDATE agent_native_work_runs SET state=?,error=?,finished_at=? WHERE id=?',
+                conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,error=?,finished_at=? WHERE id=?',
                              (target,None if superseded else message,_now(),self.work['id']))
                 state.event(conn,self.work['id'],'work.'+target,message)
 

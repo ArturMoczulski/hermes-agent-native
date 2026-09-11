@@ -140,6 +140,41 @@ def test_invalid_managed_call_settles_as_rejected_and_allows_retry(broker):
     assert events[-1]['summary'] == 'plane_operation_execute rejected the call before any effect was attempted (ValueError).'
 
 
+def test_in_process_effect_failure_is_settled_so_the_run_can_recover(broker, monkeypatch):
+    """A failed local operation is a known outcome, not an uncertain effect.
+
+    Live regression (Fantasy Game Builder): ``repository_command`` raised
+    ``FileNotFoundError`` before it ran. The broker replied with an error but
+    left the effect result null; ``_unsettled_effect`` then treated a settled
+    local failure as an unresolved external mutation, permanently wedging the
+    run at ``framework_reconciliation`` with no owner path forward.
+    """
+    from agent_native import builder_repository, repository_access
+    from agent_native.work_service import _recoverable_interruption
+
+    s = broker
+    repo = s.home / 'repo'
+    repo.mkdir()
+    monkeypatch.setattr(repository_access, 'active_repository', lambda conn, agent_id: repo)
+
+    def missing_executable(root, arguments):
+        raise FileNotFoundError('rg')
+
+    monkeypatch.setattr(builder_repository, 'command', missing_executable)
+
+    with pytest.raises(FileNotFoundError):
+        s.run._effect(s.conn, s.planning, effect(
+            s, 'missing-command', 'repository_command', {'argv': ['rg', '--files']}))
+
+    stored = s.conn.execute(
+        'SELECT tool,result FROM agent_native_work_effects WHERE run_id=? AND call_id=?',
+        (s.work['id'], 'missing-command')).fetchone()
+    assert stored[0] == 'repository_command'
+    assert stored[1] is not None, 'a known local failure must not stay null and block recovery'
+    assert json.loads(stored[1])['status'] == 'error'
+    assert _recoverable_interruption(s.conn, s.work['id']) is True
+
+
 def test_output_cannot_use_a_foreign_item_or_create_an_artifact(broker):
     s = broker
     other = create_root(s.conn, actor=OWNER, request_id='foreign-work',

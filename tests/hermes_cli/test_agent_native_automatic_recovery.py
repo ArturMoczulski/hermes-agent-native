@@ -74,6 +74,38 @@ def test_unresolved_reconciliation_stays_framework_blocked_and_is_throttled(brok
     )
 
 
+def test_step_limit_unknown_run_is_reconcilable(broker):
+    """The step-limit ``unknown`` path must flag the run for read-back.
+
+    Every other transition to ``unknown`` sets ``stop_requested``; the
+    model-step-limit branch in ``finish`` did not, while
+    ``_reconcile_unknown_run.validate`` requires it. A genuine lost Plane write
+    at the step limit therefore could never be read back and the agent stayed
+    at ``framework_reconciliation`` with no way forward.
+    """
+    from agent_native import work_state
+    from hermes_cli.kanban_db_connect import write_txn
+
+    s = broker
+    operation_id, before = _lost_item_effect(s)
+    with write_txn(s.conn):
+        s.conn.execute(
+            "UPDATE agent_native_work_runs SET state='running',stop_requested=0,"
+            "model_calls=json_extract(limits,'$.max_iterations') WHERE id=?",
+            (s.work['id'],),
+        )
+
+    s.run.finish(s.conn, {'type': 'turn.end', 'limit_reached': 'model_steps'})
+
+    assert tuple(s.conn.execute(
+        'SELECT state,stop_requested FROM agent_native_work_runs WHERE id=?',
+        (s.work['id'],),
+    ).fetchone()) == ('unknown', 1)
+    s.run.service.reconcile_unknown_runs()
+    assert work_state.read_work(s.conn, s.root['id'])['state'] == 'interrupted'
+    assert len([r for r in s.plane.requests if r['method'] == 'POST']) == before
+
+
 def test_retryable_failure_waits_for_bounded_backoff_without_spending_tokens(broker):
     from agent_native import cadence
 

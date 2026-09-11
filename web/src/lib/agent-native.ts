@@ -225,7 +225,7 @@ export function validWorkLimits(value: unknown): value is WorkLimits {
   if (!value || typeof value !== "object") return false;
   const limits = value as WorkLimits;
   return Number.isInteger(limits.timeout_seconds) && limits.timeout_seconds >= 1 && limits.timeout_seconds <= 3600
-    && Number.isInteger(limits.max_iterations) && limits.max_iterations >= 1 && limits.max_iterations <= 100;
+    && Number.isInteger(limits.max_iterations) && limits.max_iterations >= 1 && limits.max_iterations <= 500;
 }
 
 export function agentWaitingForOwner(agent: Agent): boolean {

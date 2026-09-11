@@ -163,6 +163,13 @@ export default function AgentDetailPage() {
             <p className="text-sm font-medium text-muted-foreground">Purpose</p>
             <p className="whitespace-pre-wrap break-words">{agent.purpose}</p>
           </section>}
+          {!fullView && agent.project_preview?.url && <section aria-label="Playable preview" className="max-w-3xl space-y-1">
+            <p className="text-sm font-medium text-muted-foreground">Playable preview</p>
+            <p className="break-all text-sm">
+              <span className="font-mono">/agent-preview/{agent.id}/</span>
+              <span className="ml-2 text-muted-foreground">revision {agent.project_preview.revision} · {agent.project_preview.relative_root} · open with the preview button above</span>
+            </p>
+          </section>}
           <p className="break-all text-xs text-muted-foreground">{agent.parent_id ? "Child agent" : "Root agent"} · {agent.id}</p>
           {agent.parent_id && <p className="text-sm">Child of <Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.parent_id)}`}>{agent.parent_id}</Link></p>}
           {agent.child_ids.length > 0 && <p className="text-sm">Children: {agent.child_ids.map((childId, index) => <span key={childId}>{index > 0 && ", "}<Link className="underline underline-offset-4" to={`/agents/${encodeURIComponent(childId)}`}>{childId}</Link></span>)}</p>}

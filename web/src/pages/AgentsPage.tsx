@@ -12,7 +12,7 @@ import { AgentModelPicker, DefaultAgentModelControls } from "@/components/AgentM
 type PendingCreation = { request_id: string; name: string; purpose: string; parent_id?: string; work?: WorkLimits; model_selection?: ModelChoice; autonomy_level: number };
 type FirstBuilder = { registration: { agent_id: string; launch_state: "held_for_owner_test" | "ready_to_launch" | "active" }; agent: Agent };
 const creationKey = `${HERMES_BASE_PATH}:agent-native:create`;
-const defaultWorkLimits: WorkLimits = { timeout_seconds: 900, max_iterations: 50 };
+const defaultWorkLimits: WorkLimits = { timeout_seconds: 1800, max_iterations: 200 };
 
 function restoreCreation(): PendingCreation | null {
   try {

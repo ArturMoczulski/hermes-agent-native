@@ -55,7 +55,7 @@ These are observations, not immutable preconditions; recheck them at cutover.
 | --- | --- | --- |
 | `Projects/agent-native` | Old independent Git checkout; `docs/gpt6-design-review` at `cd6d7f6`; origin `ArturMoczulski/agent-native` | Vacate the desired final path; retaining a temporary rollback copy is optional |
 | `Projects/hermes-agent-native` | Current implementation; `main` at `50279f0`, with uncommitted work | This checkout and its Git identity become the final `agent-native` directory |
-| `~/.hermes-agent-native-preview` | Live profile, databases, credentials, protected runtime/instructions, agent state, outputs and logs | Preserve in place |
+| `.hermes-agent-native-preview` (in the checkout, gitignored) | Live profile, databases, credentials, protected runtime/instructions, agent state, outputs and logs | Runtime state travels with the repository; never committed |
 | `~/.hermes-agent-native` | Earlier separate profile | Leave alone; do not merge credentials or state |
 | `~/.local/share/agent-native/plane` | Private Plane deployment configuration and API credentials | API key + accounts moved into `ops/plane/data/` (AN-148). Runtime env, probe outputs and backups stay in `~/.local/share/agent-native/plane/`. |
 | Docker project `agent-native-plane` | Plane services and named storage volumes | Keep project name, data and port 19230 |
@@ -324,8 +324,9 @@ Exit: same prepared Builder, correct new repository, still held for owner testin
 ### Step H — Restore a reliable development service
 
 Today's recovered setup is Vite on `127.0.0.1:19221` and the Hermes backend on
-`127.0.0.1:19222`, using `~/.hermes-agent-native-preview`. Keep those external
-addresses stable, including `dashboard.public_url`. Preserve authenticated API
+`127.0.0.1:19222`, using the in-checkout `.hermes-agent-native-preview/` profile
+home (gitignored). Keep those external addresses stable, including
+`dashboard.public_url`. Preserve authenticated API
 and WebSocket forwarding and all required output/media/preview routes.
 
 Document one start/status/stop procedure using the consolidated root. Prefer

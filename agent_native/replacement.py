@@ -69,7 +69,7 @@ def replace(conn, *, actor, predecessor_id, request_id, name, purpose, reason, h
         model_input = ({key: model[key] for key in ('provider', 'model', 'reasoning_effort')
                         if key in model} if model else None)
         work = predecessor.get('work')
-        work_limits = work['limits'] if work else {'timeout_seconds': 900, 'max_iterations': 50}
+        work_limits = work['limits'] if work else {'timeout_seconds': 1800, 'max_iterations': 200}
         successor = create_root(
             conn, actor=actor, request_id='replacement-successor:' + request_id,
             name=name, purpose=purpose, parent_id=parent_id, work=work_limits,

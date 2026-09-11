@@ -4,12 +4,39 @@ Only the existing dashboard owner session is accepted. Scoped automation tokens
 cannot promote themselves to OWNER through request data or general middleware.
 """
 from typing import Literal
+import urllib.parse
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 from pydantic import BaseModel, ConfigDict, Field
 
 from agent_native import identity
 from hermes_cli.kanban_db_connect import connect_closing
+
+
+def _preview_origin(request: Request):
+    """Return the owner-facing ``(scheme, hostname, port_suffix)`` for previews.
+
+    A reverse proxy (including the Vite dev server) forwards the request with its
+    own host and port, so ``request.url`` is not a trustworthy public origin. Use
+    the operator-declared ``dashboard.public_url`` when present and fall back to
+    the request only when it is unset — the same rule the dashboard uses for saved
+    Plane links. Getting this wrong makes the launch redirect land on the backend
+    port, where the host-scoped preview cookie is absent and every asset 404s.
+    """
+    from hermes_cli.dashboard_auth.prefix import resolve_public_url
+    public = resolve_public_url()
+    if public:
+        parsed = urllib.parse.urlparse(public)
+        if parsed.hostname:
+            port = f':{parsed.port}' if parsed.port else ''
+            return parsed.scheme, parsed.hostname, port
+    port = f':{request.url.port}' if request.url.port else ''
+    return request.url.scheme, (request.url.hostname or ''), port
+
+
+def _preview_host(host: str) -> str:
+    """Flip a loopback host so the preview loads on its own origin."""
+    return 'localhost' if host == '127.0.0.1' else '127.0.0.1'
 
 
 def owner_session(request: Request):
@@ -64,7 +91,7 @@ def prepare_first_builder(actor=Depends(owner_session)):
 class WorkLimits(BaseModel):
     model_config = ConfigDict(extra='forbid')
     timeout_seconds: int = Field(strict=True, ge=1, le=3600)
-    max_iterations: int = Field(strict=True, ge=1, le=100)
+    max_iterations: int = Field(strict=True, ge=1, le=500)
 
 
 class FirstBuilderAction(BaseModel):
@@ -141,12 +168,10 @@ def create_project_preview_launch(request: Request, agent_id: str, actor=Depends
             identity.get_root(conn, actor=actor, agent_id=agent_id)
             project_preview.read(conn, agent_id)
             ticket = project_preview.mint_launch(agent_id)
-            host = request.url.hostname
+            scheme, host, port = _preview_origin(request)
             if host not in ('127.0.0.1', 'localhost'):
                 raise PermissionError('A separate configured preview origin is required')
-            preview_host = 'localhost' if host == '127.0.0.1' else '127.0.0.1'
-            port = f':{request.url.port}' if request.url.port else ''
-            return {'url': f'{request.url.scheme}://{preview_host}{port}/agent-preview/{agent_id}/launch?ticket={ticket}'}
+            return {'url': f'{scheme}://{_preview_host(host)}{port}/agent-preview/{agent_id}/launch?ticket={ticket}'}
         except (KeyError, PermissionError) as exc:
             raise HTTPException(status_code=404, detail='Project preview not found') from exc
 
@@ -159,8 +184,22 @@ def exchange_project_preview_launch(request: Request, agent_id: str, ticket: str
         session = project_preview.exchange_launch(agent_id, ticket)
     except PermissionError as exc:
         raise HTTPException(status_code=401, detail='Preview launch is invalid or expired') from exc
-    port = f':{request.url.port}' if request.url.port else ''
-    clean_url = f'{request.url.scheme}://{request.url.hostname}{port}/agent-preview/{agent_id}/'
+    from hermes_cli.dashboard_auth.prefix import resolve_public_url
+    public = resolve_public_url()
+    if public:
+        parsed = urllib.parse.urlparse(public)
+        host = parsed.hostname or ''
+        preview_host = _preview_host(host) if host in ('127.0.0.1', 'localhost') else host
+        scheme = parsed.scheme
+        port = f':{parsed.port}' if parsed.port else ''
+    else:
+        # Without a declared public URL, the browser already used the flipped
+        # launch host, so keep the incoming host verbatim — transferring it back
+        # would flip it a second time.
+        scheme = request.url.scheme
+        preview_host = request.url.hostname or ''
+        port = f':{request.url.port}' if request.url.port else ''
+    clean_url = f'{scheme}://{preview_host}{port}/agent-preview/{agent_id}/'
     response = RedirectResponse(clean_url, status_code=303)
     response.set_cookie('agent_preview_session', session, max_age=3600, httponly=True,
                         samesite='lax', path=f'/agent-preview/{agent_id}')

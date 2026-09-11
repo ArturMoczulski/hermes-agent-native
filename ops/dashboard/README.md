@@ -23,10 +23,16 @@ npm run build --workspace ui-tui
 npm run build --workspace web
 
 export HERMES_NODE="$(command -v node)"
-export HERMES_HOME="$HOME/.hermes-agent-native-preview"
+export HERMES_HOME="$PWD/.hermes-agent-native-preview"
 export HERMES_KANBAN_DB="$HERMES_HOME/kanban.db"
 .venv/bin/hermes dashboard --skip-build --no-open --port 19221
 ```
+
+The live profile home lives **inside the checkout** (`.hermes-agent-native-preview/`,
+gitignored) rather than under `$HOME`, so its databases, credentials, agent
+workspaces and logs travel with the project. Start from the repository root so
+`$PWD` resolves to it, or use `ops/dashboard/run.sh`, which derives the path and
+defaults the backend to port 19222.
 
 Keep the same home and database when restarting. Identify the process holding
 port 19221 before stopping it; do not kill unrelated Hermes services. Settings,
@@ -77,7 +83,7 @@ upgrade to load the new controls. No model request is made simply by saving a
 choice. See [model behavior](../../design/15-model-selection.md).
 
 Provider credentials must be saved in the profile that runs the preview,
-`$HERMES_HOME/.env` (currently `~/.hermes-agent-native-preview/.env`). A key in
+`$HERMES_HOME/.env` (`.hermes-agent-native-preview/.env` in the checkout). A key in
 the generic `~/.hermes` profile does not configure this dashboard. MiniMax Token
 Plan uses `MINIMAX_API_KEY` with the `sk-cp-…` subscription key. Restart the
 identified idle dashboard process after adding or rotating the key; the agent

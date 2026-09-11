@@ -158,6 +158,11 @@ export default defineConfig({
       // dashboard-plugins/* files, so without this, plugin scripts 404
       // or receive index.html in dev.
       "/dashboard-plugins": BACKEND,
+      // Owner-launched project previews are served by the backend at
+      // `/agent-preview/<agent_id>/…`. Without this proxy the dev server
+      // answers the launch URL with its own SPA index.html, whose router
+      // bounces the owner to the sessions list instead of the preview.
+      "/agent-preview": BACKEND,
     },
   },
 });

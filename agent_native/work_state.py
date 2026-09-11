@@ -234,8 +234,8 @@ def read_work(conn, agent_id):
 def limits_json(limits):
     if (not isinstance(limits, dict) or set(limits) != {'timeout_seconds', 'max_iterations'}
             or type(limits['timeout_seconds']) is not int or not 1 <= limits['timeout_seconds'] <= 3600
-            or type(limits['max_iterations']) is not int or not 1 <= limits['max_iterations'] <= 100):
-        raise ValueError('Choose a positive time limit (up to 3600 seconds) and model steps (up to 100)')
+            or type(limits['max_iterations']) is not int or not 1 <= limits['max_iterations'] <= 500):
+        raise ValueError('Choose a positive time limit (up to 3600 seconds) and model steps (up to 500)')
     return json.dumps(limits, sort_keys=True)
 
 
