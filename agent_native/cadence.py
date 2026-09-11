@@ -15,9 +15,45 @@ CREATE TABLE IF NOT EXISTS agent_native_cadence_wakes (
  agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
  requested_at TEXT NOT NULL, reason TEXT NOT NULL
 );
+CREATE TABLE IF NOT EXISTS agent_native_cadence_skips (
+ agent_id TEXT PRIMARY KEY REFERENCES agent_native_agents(id),
+ state TEXT NOT NULL, blocker TEXT, release_condition TEXT,
+ responsible_actor TEXT, overdue_since TEXT NOT NULL, observed_at TEXT NOT NULL
+);
 CREATE UNIQUE INDEX IF NOT EXISTS agent_native_one_active_run
  ON agent_native_work_runs(agent_id) WHERE state IN ('queued','preparing','running','stopping');
 """
+
+
+def _decision(state, blocker=None, release=None, actor=None):
+    return {'state': state, 'blocker': blocker, 'release_condition': release,
+            'responsible_actor': actor}
+
+
+def read_skip(conn, agent_id):
+    """Return the durable classification of the latest overdue skipped check-in."""
+    row = conn.execute(
+        'SELECT state,blocker,release_condition,responsible_actor,overdue_since,observed_at '
+        'FROM agent_native_cadence_skips WHERE agent_id=?', (agent_id,)).fetchone()
+    return dict(zip(('state', 'blocker', 'release_condition', 'responsible_actor',
+                     'overdue_since', 'observed_at'), row)) if row else None
+
+
+def _record_skip(conn, agent_id, decision, overdue_since, now):
+    """Upsert why a due, enabled cadence did not start this check-in."""
+    conn.execute(
+        'INSERT INTO agent_native_cadence_skips '
+        '(agent_id,state,blocker,release_condition,responsible_actor,overdue_since,observed_at) '
+        'VALUES(?,?,?,?,?,?,?) '
+        'ON CONFLICT(agent_id) DO UPDATE SET state=excluded.state,blocker=excluded.blocker,'
+        'release_condition=excluded.release_condition,responsible_actor=excluded.responsible_actor,'
+        'overdue_since=excluded.overdue_since,observed_at=excluded.observed_at',
+        (agent_id, decision['state'], decision.get('blocker'), decision.get('release_condition'),
+         decision.get('responsible_actor'), overdue_since, now))
+
+
+def clear_skip(conn, agent_id):
+    conn.execute('DELETE FROM agent_native_cadence_skips WHERE agent_id=?', (agent_id,))
 
 
 def read(conn, agent_id):
@@ -70,6 +106,7 @@ def configure(conn, *, actor, agent_id, expected_revision, interval_seconds, ena
         conn.execute('INSERT INTO agent_native_cadence VALUES(?,?,?,?,?) ON CONFLICT(agent_id) DO UPDATE SET soul_revision=excluded.soul_revision,enabled=excluded.enabled,interval_seconds=excluded.interval_seconds,next_due=excluded.next_due',
             (agent_id,expected_revision,int(enabled),interval_seconds,due))
         conn.execute('DELETE FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,))
+        clear_skip(conn, agent_id)
         event(conn,work['id'],'work.cadence','Cadence enabled: every '+str(interval_seconds)+' seconds' if enabled else 'Cadence disabled')
     return read(conn,agent_id)
 
@@ -79,17 +116,30 @@ def queue_due(conn, *, now=None, busy_agents=()):
     now=now or _now()
     queued=[]
     with write_txn(conn):
+        from agent_native.readiness import automatic_work
         for agent_id,revision,interval,due in conn.execute('SELECT agent_id,soul_revision,interval_seconds,next_due FROM agent_native_cadence WHERE enabled=1 AND next_due<=?',(now,)).fetchall():
-            if agent_id in busy_agents: continue
-            if conn.execute('SELECT 1 FROM agent_native_work_holds WHERE agent_id=?', (agent_id,)).fetchone():
+            # Every skip of a due, enabled check-in is durably classified so an
+            # overdue agent that does not start stays observable through the API/UI.
+            if agent_id in busy_agents:
+                _record_skip(conn, agent_id, _decision('working'), due, now)
+                continue
+            hold=conn.execute('SELECT reason FROM agent_native_work_holds WHERE agent_id=?', (agent_id,)).fetchone()
+            if hold:
+                _record_skip(conn, agent_id, _decision(
+                    'held', blocker=hold[0] or 'Automatic work is held.',
+                    release='Release the work hold.', actor='owner'), due, now)
                 continue
             from agent_native.progress_concerns import suspend_if_stalled
-            if suspend_if_stalled(conn, agent_id, now=now): continue
+            if suspend_if_stalled(conn, agent_id, now=now):
+                # The open progress concern is the durable classification and
+                # cadence is now disabled, so no skip record is needed.
+                continue
             root=conn.execute('SELECT soul_revision FROM agent_native_agents WHERE id=?',(agent_id,)).fetchone()
             previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
             if previous and previous[4] == 'retryable_failure':
                 from agent_native.recovery_policy import enforce_backoff
                 if not enforce_backoff(conn, agent_id, now=now):
+                    _record_skip(conn, agent_id, automatic_work(conn, agent_id, now=now), due, now)
                     continue
             if previous and previous[4] == 'unknown':
                 # A lost Plane response may have been reconciled after the
@@ -98,15 +148,24 @@ def queue_due(conn, *, now=None, busy_agents=()):
                 from agent_native.work_state import reconcile_confirmed_unknown
                 reconcile_confirmed_unknown(conn, agent_id)
                 previous=conn.execute('SELECT id,activation_id,soul_revision,limits,state,finished_at FROM agent_native_work_runs WHERE agent_id=? ORDER BY rowid DESC LIMIT 1',(agent_id,)).fetchone()
-            from agent_native.readiness import automatic_work
-            if not automatic_work(conn, agent_id, now=now, busy=agent_id in busy_agents)['may_start']:
+            decision=automatic_work(conn, agent_id, now=now, busy=False)
+            if not decision['may_start']:
+                _record_skip(conn, agent_id, decision, due, now)
                 continue
             wake_row=conn.execute(
                 'SELECT reason FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,),
             ).fetchone()
             if (not previous or root[0]!=revision or previous[2]!=revision
-                    or previous[4] not in ('completed','interrupted','limit_reached','retryable_failure','paused')): continue
-            if conn.execute("SELECT 1 FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')",(agent_id,)).fetchone(): continue
+                    or previous[4] not in ('completed','interrupted','limit_reached','retryable_failure','paused')):
+                _record_skip(conn, agent_id, _decision(
+                    'framework_reconciliation',
+                    blocker='The latest attempt is not eligible for a fresh check-in.',
+                    release='Prepare the revised purpose or reconcile the latest attempt.',
+                    actor='framework'), due, now)
+                continue
+            if conn.execute("SELECT 1 FROM agent_native_work_runs WHERE agent_id=? AND state IN ('queued','preparing','running','stopping')",(agent_id,)).fetchone():
+                _record_skip(conn, agent_id, _decision('working'), due, now)
+                continue
             from agent_native.delivery_barrier import unresolved_terminal_notices, record_notices
             notices = unresolved_terminal_notices(conn, agent_id)
             if previous[4] == 'retryable_failure':
@@ -118,6 +177,7 @@ def queue_due(conn, *, now=None, busy_agents=()):
                 (key,agent_id,previous[1],revision,'an_work_'+uuid4().hex,previous[3],'queued',now))
             conn.execute('UPDATE agent_native_cadence SET next_due=? WHERE agent_id=?',((datetime.fromisoformat(now)+timedelta(seconds=interval)).isoformat(),agent_id))
             conn.execute('DELETE FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,))
+            clear_skip(conn, agent_id)
             summary = ('Automatic recovery after a temporary failure; continuing with a stable recovery identity.'
                        if previous[4] == 'retryable_failure' else
                        'Scheduled check-in after actionable input: ' + wake_row[0] + '.' if wake_row else

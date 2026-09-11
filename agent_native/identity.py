@@ -105,6 +105,8 @@ def _read(conn, agent_id):
         root['execution'] = 'paused'
     from agent_native.readiness import automatic_work
     root['automatic_work'] = automatic_work(conn, agent_id)
+    from agent_native.cadence import read_skip
+    root['cadence_skip'] = read_skip(conn, agent_id)
     return root
 
 

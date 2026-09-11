@@ -61,6 +61,14 @@ export type Agent = {
     release_condition: string | null;
     responsible_actor: "owner" | "framework" | null;
   };
+  cadence_skip?: {
+    state: string;
+    blocker: string | null;
+    release_condition: string | null;
+    responsible_actor: "owner" | "framework" | null;
+    overdue_since: string;
+    observed_at: string;
+  } | null;
   progress_concerns?: ProgressConcern[];
   progress_concern_settings?: { failure_threshold: number };
   assignment_review_policies?: { agent_id:string; item_id:string; assignment_fingerprint:string; required:boolean; revision:number; updated_at:string }[];

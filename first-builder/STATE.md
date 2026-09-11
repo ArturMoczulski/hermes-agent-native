@@ -1,31 +1,63 @@
-## AN-117 increment: retry backoff is an explicit readiness state — 2026-09-11
+## AN-117 increments: retry-backoff readiness + durable cadence skips — 2026-09-11
 
-Fixed a scheduler/API disagreement: a retryable failure inside its bounded
-backoff window was gated by cadence's `enforce_backoff` but `automatic_work`
-still reported `ready`, so the API/UI decision differed from the scheduler. Added
-`recovery_policy.retry_ready_at` (a read-only twin of the backoff computation)
-and a `waiting_retry` decision in `readiness.automatic_work`; `enforce_backoff`
-now shares the helper so the two cannot drift. The Compact UI renders
-`waiting_retry` from the decision (`web/src/lib/agent-native.ts`,
-`AgentDetailPage.tsx`).
+Two increments landed.
 
-Verification: `tests/hermes_cli/test_agent_native_automatic_recovery.py` (7
-passed, including the new `waiting_retry` case that asserts the same decision
-before and after the scheduler evaluates the due row, then `ready` once the window
-elapses); cadence + autonomy (20 passed). Broker effects unchanged. The
-purpose-evaluation retirement case fails on base too (pre-existing, verified by
-stashing the change). `npm run typecheck --workspace web` and the new vitest
-`agentWorkStatus` case pass. Committed as `feat(agent-native): report retry
-backoff as an explicit readiness state`.
+1) Retry backoff is an explicit readiness state. A retryable failure inside its
+bounded backoff window was gated by cadence's `enforce_backoff` but
+`automatic_work` still reported `ready`. Added `recovery_policy.retry_ready_at`
+(a read-only twin of the backoff math) and a `waiting_retry` decision;
+`enforce_backoff` now shares the helper so they cannot drift. UI renders it.
 
-AN-117 remains In Progress. Remaining acceptance: durably classify scheduler
-skips and make an overdue eligible cadence that does not start observable (no skip
-table exists yet); reuse `waiting_retry` for the budget/provider wait once AN-107
-lands.
+2) Overdue cadence skips are durably classified. Every due, enabled check-in the
+scheduler does not start is recorded in `agent_native_cadence_skips` (state,
+blocker, release condition, responsible actor, overdue_since, observed_at),
+cleared when the check-in starts and on a cadence change. The agent API exposes it
+as `cadence_skip`; `AgentCadence` renders the overdue reason, so an eligible
+cadence that silently does not start is observable. A stall suspension stays
+classified by its open progress concern (cadence is disabled), so no duplicate.
 
-Next: add a durable cadence-skip classification (new table + upsert on every skip
-in `cadence.queue_due`, cleared when the agent is queued) exposed through the
-agent API and the Compact UI, with a focused test.
+Verification: `test_agent_native_automatic_recovery.py` 7 passed (waiting_retry
+before/after the due row evaluates, then ready at the window);
+`test_agent_native_cadence.py` 17 passed incl. the new skip case (framework-blocked
+and owner-held overdue skips, API exposure, clearing on start); autonomy 3,
+identity + planning-view 33 passed; web typecheck and vitest pass. The
+purpose-evaluation retirement failure is pre-existing (verified by stashing).
+Commits `b797e08` (retry) and the skip-classification commit.
+
+AN-117 remains In Progress. Remaining: a distinct `recovering` state valid only
+while a real recovery operation is active (`unknown` currently maps to
+`framework_reconciliation`); reuse `waiting_retry` for the budget wait once AN-107
+lands. Then accept AN-117 and move to AN-118.
+
+Note: the live preview dashboard must be restarted to create the new skip table
+(additive `CREATE TABLE IF NOT EXISTS` runs on the next process connect).
+
+## Activity tab enrichment planned (AN-147) and local-state-in-repo move planned (AN-148) — 2026-09-11
+
+Owner direction in chat:
+- Remove the redundant "Recent activity" panel from the compact Work tab
+  (`web/src/pages/AgentDetailPage.tsx` CompactAgentView, lines 465–475) because
+  the dedicated Activity tab already exists.
+- Enrich the Activity tab rows so repository operations expose the actual
+  file path, argv, bytes and exit code instead of only
+  "Repository operation: <tool>".
+- Drop the "Plane API key is a secret" framing for this fork: the local Plane
+  API key is config, not a credential. Move `~/.local/share/agent-native/plane/
+  accounts.json`, `builder-api.json` and the postgres data dir into
+  `ops/plane/data/` (postgres/.gitignore'd); move browser profile skeletons
+  into `scripts/dev/browser/profile*/` with per-profile `.gitignore` excluding
+  Chromium runtime data. Do NOT rotate the existing API key.
+
+Two urgent items filed in Plane, project 0f39f541, M0 / M4:
+- AN-147 — Enrich Activity tab with per-operation detail and remove duplicate
+  Recent activity panel (M4 — Complete owner control center).
+- AN-148 — Move local Plane runtime state and browser profile skeletons into
+  the repository (M0 — Validate the Hermes foundation).
+
+Both are Todo. AN-147 is the user's primary ask; AN-148 is the new
+foundation-level hygiene item. Next resume: start AN-147 with the focused
+backend red, then AN-148 once the activity work is verified. Pre-existing
+uncommitted work and AN-143's live repair are untouched.
 
 ## AN-143 complete: rejected-read and step-limit recovery — 2026-09-11
 

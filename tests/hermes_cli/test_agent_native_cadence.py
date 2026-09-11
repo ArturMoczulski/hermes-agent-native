@@ -349,3 +349,40 @@ def test_retryable_failure_terminal_notice_is_informational_not_a_cadence_gate(b
     assert notice[0] in s.conn.execute(
         "SELECT summary FROM agent_native_work_events WHERE run_id=? AND kind='work.notification_unresolved'",
         (queued[0],)).fetchone()[0]
+
+
+def test_overdue_cadence_skips_are_durably_classified_and_observable(broker):
+    """A due agent the scheduler never starts is classified, not silently skipped."""
+    from agent_native import cadence
+    from agent_native.identity import get_root
+
+    s=broker
+    cadence.configure(s.conn,actor=OWNER,agent_id=s.root['id'],expected_revision=1,
+                      interval_seconds=60,enabled=True)
+    s.conn.execute("UPDATE agent_native_cadence SET next_due='2099-01-01T00:00:00+00:00' WHERE agent_id=?",
+                   (s.root['id'],))
+    s.conn.execute("UPDATE agent_native_work_runs SET state='failed',finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+                   (s.work['id'],))
+
+    assert cadence.queue_due(s.conn,now='2099-01-01T00:00:30+00:00')==[]
+    skip=cadence.read_skip(s.conn,s.root['id'])
+    assert skip['state']=='framework_failure'
+    assert skip['responsible_actor']=='framework'
+    assert skip['overdue_since']=='2099-01-01T00:00:00+00:00'
+    assert get_root(s.conn,actor=OWNER,agent_id=s.root['id'])['cadence_skip']==skip
+
+    # Eligible work held by the owner is observable as the reason it did not start.
+    s.conn.execute("UPDATE agent_native_work_runs SET state='completed',finished_at='2000-01-01T00:00:00+00:00' WHERE id=?",
+                   (s.work['id'],))
+    s.conn.execute("UPDATE agent_native_cadence SET next_due='2099-01-01T00:00:00+00:00' WHERE agent_id=?",
+                   (s.root['id'],))
+    s.conn.execute("INSERT INTO agent_native_work_holds(agent_id,run_id,item_id,reason,created_at) VALUES(?,?,?,?,?)",
+                   (s.root['id'],s.work['id'],'item','Owner is reviewing the plan.','2000-01-01T00:00:00+00:00'))
+    assert cadence.queue_due(s.conn,now='2099-01-01T00:00:30+00:00')==[]
+    assert cadence.read_skip(s.conn,s.root['id'])['state']=='held'
+
+    # Clearing the hold lets the check-in start and clears the classification.
+    s.conn.execute('DELETE FROM agent_native_work_holds WHERE agent_id=?',(s.root['id'],))
+    [queued]=cadence.queue_due(s.conn,now='2099-01-01T00:00:30+00:00')
+    assert queued!=s.work['id']
+    assert cadence.read_skip(s.conn,s.root['id']) is None
