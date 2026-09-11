@@ -253,6 +253,13 @@ A supported feature with no records has a genuine empty state.
 
 ## 6. Inbox
 
+The deferred M8 security milestone adds a linked incident card on the main agent
+view, owner adjudication in this inbox, and security history/settings. Its
+[detailed interaction proposal](17-independent-security-review.md#9-owner-experience-and-alert-routing)
+specifies evidence, scope, stopping status and exact release controls. Security
+holds remain separate from output review and ordinary manual pause; do not add
+working-looking security controls before the supporting operations exist.
+
 Desktop layout: request list and selected request detail. On narrow screens use
 the list followed by a detail page with Back. Default to **Pending**, across all
 roots. Other views: **Answered**, **Declined**, and **Obsolete**. Filter by root,

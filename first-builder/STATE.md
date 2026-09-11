@@ -2602,3 +2602,33 @@ Owner clarification: include instruction-loading consolidation in AN-134. The
 external workspace currently loads the old root AGENTS.md; the final workspace
 must load the fork entry point and First Builder files. Existing conversation
 context requires explicit refresh/handoff; protected hosted prompts stay separate.
+
+## Future security milestone planned — 2026-09-11
+
+Owner requested a detailed design for independent AI security reviewers, outside
+the teams they inspect, with command/behavior assessment, scoped containment and
+owner/affected-agent alerts. This is future work, not the current implementation
+priority. Product design: [independent security review](../design/17-independent-security-review.md).
+Engineering/evaluation sequence: [M8 delivery](../implementation/security-review-milestone.md).
+
+Created Plane M8 and AN-135 umbrella with seven linked packages AN-136–142 via
+the API. Readback verified all eight items in Backlog, native parent/dependency
+relations, null planning dates and no membership in any existing cycle. Existing
+cycles and implementation priorities are unchanged. API OPTIONS is unavailable
+on this Plane version; GET record shapes and the documented write operations
+were used instead. Module/cycle GET membership rows contain work-item `id`, while
+dependency rows use `issue_id`.
+
+The plan distinguishes deterministic authority from model judgment, action gates
+from whole-agent security pauses, and security review from product acceptance.
+It specifies independent reviewer identity/assignment, evidence privacy, live
+stopping, cause-specific release, useful owner decisions, reviewer outages and
+budgets, and deterministic plus separate real-model adversarial evaluation.
+Detailed default policies need review before enforcement. No security runtime,
+new agents, deployment, model calls or permission changes were made.
+
+Verification: local Markdown links/anchors checked for the changed/new documents;
+whitespace checks passed. Documentation-only work: no application tests needed.
+Next implementation work remains the current reliability/First Builder sequence;
+consult live Plane because AN-132 remains In Progress and AN-133 Todo there.
+When M8 is prioritized, start with AN-136 policy/coverage before implementation.

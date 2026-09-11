@@ -5,6 +5,15 @@ authority to change the soul, product requirements, or permissions.
 
 ## Owner decisions
 
+- **2026-09-11 — Future independent security review:** the owner requested a
+  dedicated milestone for independent reviewer agents that assess commands and
+  behavior, identify security/boundary risks, trigger pauses and warn the owner
+  or authorized affected agents. This is explicitly not an immediate priority.
+  AN-135 / M8 and AN-136–142 record the deferred scope. Detailed policies in
+  [the design](../design/17-independent-security-review.md) remain proposals;
+  creating this plan does not enable runtime review or change existing grants.
+  Source: owner conversation requesting a detailed design plan.
+
 - **2026-09-05 — Implementation home:** Artur selected
   `ArturMoczulski/hermes-agent-native`, a Hermes fork, as the framework repository.
   This repository root is also the First Builder's workspace. The old agent-native

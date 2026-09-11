@@ -13,6 +13,18 @@ Plane plans and evidence, and the First Builder instructions and planning skill.
 Inherited Hermes documentation and old prototype research are implementation
 context, not a mandate to implement every upstream feature or old plan.
 
+## Future roadmap addition — independent security review
+
+Later roadmap addition, 2026-09-11: [M8 — Independent security review and containment](http://localhost:19230/agent-native/projects/0f39f541-5ef4-4a7f-8cdd-6a9a57ee0897/modules/7c8f10b7-7689-475b-a1c1-1f3e31cda7ed/)
+is a deferred capability milestone. AN-135 is its acceptance umbrella, with
+AN-136–142 for policy/coverage, action evidence, independent reviewers, continuous
+audits, containment, owner interaction and evaluated rollout. All remain Backlog
+without cycle dates or current-cycle membership. The
+[product chapter](../design/17-independent-security-review.md) and
+[delivery/evaluation plan](security-review-milestone.md) define the proposal.
+Existing authority, lifecycle, observability and First Builder work is reused;
+this addition does not reprioritize current autonomous recovery.
+
 ## Latest refinement — shared agent work
 
 Owner direction after the live writer demo, 2026-09-07: the common framework and

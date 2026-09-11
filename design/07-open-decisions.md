@@ -25,6 +25,7 @@ behavior or introduce implementation choices.
 | Timing and interruptions | Which events prompt immediate reconsideration? How are missed check-ins and reminders handled? | Answers and results can enable prompt reconsideration; redundant timer reviews can be combined without losing messages. |
 | Capacity limits | What installation-wide worker and child defaults apply, and how is capacity allocated fairly across roots? | Exact resource defaults remain open. |
 | Broader progress detection | Which domain-aware signals identify repeated replanning and unresolved delegation without misclassifying legitimate exploration or waiting? | The initial repeated-failure rule is resolved below; broader signals remain open. |
+| Independent security review (AN-135 / M8) | Which action classes require AI review, what evidence permits containment/release, and which reviewer models, data policies, budgets and evaluation thresholds should apply? | Future capability requested; [detailed proposed policy](17-independent-security-review.md#12-decisions-to-settle-before-enforcement) uses independent security agents, deterministic enforcement, scoped holds and staged rollout. Review before enabling enforcement; current delivery priorities remain unchanged. |
 
 The earlier writer milestone and subsequent Builder handoff use **AN-70** for
 explicit local runtime limits, required before real managed admission. This now

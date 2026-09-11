@@ -336,6 +336,21 @@ visibility, decisions, control, evaluation, isolation and recovery listed above
 are not deferred. Completing M7 does not automatically complete those groups or
 all multi-agent cases in M0–M2.
 
+## M8 — Independent security review and containment (deferred)
+
+Owner-requested future capability, 2026-09-11, tracked by AN-135. Independent
+security agents review proposed actions and observed behavior against purpose,
+permissions and risks, with a narrow host-enforced ability to contain affected
+agents and notify the owner. See the [product specification](../design/17-independent-security-review.md)
+and [detailed delivery plan](security-review-milestone.md).
+
+The delivery packages cover policy/coverage, action evidence, independent review
+agents, continuous audits, scoped holds, owner interaction and evaluated rollout.
+Keep implementation in Backlog without calendar dates or current-cycle membership.
+This does not displace autonomous recovery or create an additional AI-review gate
+for the existing First Builder handoff. Existing deterministic authority and
+protected-release requirements still apply before that handoff.
+
 ## Coverage of the full product specification
 
 The numbered references below are [product scenarios](../design/06-product-scenarios.md).

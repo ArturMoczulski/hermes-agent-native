@@ -565,6 +565,24 @@ acceptance of Fantasy Game Builder GDD v2 was delivered through that path, the e
 output decision was recorded, and its isolated coding workspace was granted for
 implementation.
 
+## Future milestone — M8 independent security review (AN-135)
+
+Owner direction, 2026-09-11: plan independent AI reviewers that audit proposed
+commands and observed agent behavior, identify security/boundary concerns, trigger
+scoped pauses and warn the owner or authorized affected agents. This is a future
+milestone, not the current implementation priority.
+
+See [product design](design/17-independent-security-review.md) and
+[delivery packages and acceptance](implementation/security-review-milestone.md).
+The separate owner-controlled security organization cannot be controlled by its
+review targets. Hard permission checks remain authoritative; AI assessments never
+grant access. Explicit incident evidence, release conditions, false-positive review,
+reviewer isolation, budgets, outage recovery and adversarial tests are included.
+
+Plane owns this milestone and its linked backlog packages AN-136–142; they have no cycle
+dates or active-cycle assignment. Detailed policy defaults remain proposals for
+review before enforcement. Current reliability/First Builder priorities continue.
+
 ## Repository consolidation — AN-134, awaiting owner review
 
 The owner requested a detailed plan before changing the two checkout locations.

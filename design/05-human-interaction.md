@@ -94,6 +94,14 @@ template is specified in [Workspaces and skills](04-workspaces-and-skills.md#def
 
 ## Unified human decision inbox
 
+The future [independent security review milestone](17-independent-security-review.md)
+adds a separately authorized security reporting path and named security holds.
+An owner-controlled security root can report concerns about another tree directly
+to the owner without routing through the suspected agent. That limited security
+mandate does not change parentage, soul ownership or ordinary question escalation.
+Security review, output acceptance and manual pause remain separate decisions;
+the detailed containment/release policy is proposed in that chapter.
+
 The human owner has one inbox for questions, decisions, and approval requests
 that require their input across all root agents. It aggregates requests that
 reach the human through the established escalation chain; it does not give

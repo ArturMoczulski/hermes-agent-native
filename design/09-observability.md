@@ -102,6 +102,14 @@ Budget changes and enforcement are observable events.
 
 ## Agent communication is event history
 
+The future [security review milestone](17-independent-security-review.md) adds
+action-review decisions, audit coverage/cursors, evidence-linked incidents,
+security holds, actual stop acknowledgements, independent reconsideration and
+owner release decisions to this same history. Show security-service health and
+reviewer usage separately from worker progress. A suspected violation, a confirmed
+denial and unavailable coverage are different observations. These records and UI
+extensions are planned, not a claim of current security monitoring.
+
 All agent-to-agent communication through the framework is recorded as events,
 including parent–child messages, sibling messages, and permitted communication
 between trees. This includes work requests, progress updates, results, questions,
