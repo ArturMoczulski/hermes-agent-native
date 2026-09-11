@@ -23,6 +23,9 @@ Private configuration is outside Git at `~/.local/share/agent-native/plane/`:
 credentials; `builder-api.json` holds the Builder's API credential. Do not print,
 commit, attach to work items, or forward these files to managed workers. The owner
 account is for installation control; routine planning uses the separate Builder.
+`ops/plane/plane.env.example` is the committed template for a fresh private env:
+copy it and replace every `CHANGE_ME`. It carries the non-secret local defaults,
+including the effectively-disabled rate limits documented below.
 
 The service uses no configured SMTP delivery. Local account identifiers use the
 reserved `agent-native.test` domain. No external email account is needed.
