@@ -1,5 +1,12 @@
 # Current implementation work
 
+AN-129 is complete. When authoritative readiness reports `owner_attention` after
+a failed bounded attempt, Compact view now explains the blocker, shows the latest
+attempt summary, states the release action, links to activity and diagnostics,
+and exposes the guarded retry action. A focused Playwright journey verifies the
+surface and retry request; the production dashboard bundle and live Fantasy Game
+Builder were reloaded and verified. The live agent was left untouched.
+
 ## Urgent autonomous-runtime recovery
 
 The live Fantasy Game Builder exposed a framework deadlock after an owner-authorized

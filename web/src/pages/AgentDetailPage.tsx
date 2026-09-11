@@ -457,8 +457,9 @@ function CompactAgentView({ agent }: { agent: Agent }) {
   ).reverse().slice(0, 20);
   return <div className="space-y-6">
     {!agent.removed_at && !agent.retirement && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
-    <WorkResults agent={agent} attentionOnly />
+    <OwnerAttentionAction agent={agent} />
     <ProgressConcernAttention agent={agent} />
+    <WorkResults agent={agent} attentionOnly />
     <CompactWorkOverview agent={agent} />
     <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} compact />
     <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
@@ -473,6 +474,52 @@ function CompactAgentView({ agent }: { agent: Agent }) {
       <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
     </section>
   </div>;
+}
+
+function OwnerAttentionAction({ agent }: { agent: Agent }) {
+  const attention = agent.automatic_work;
+  const concern = agent.progress_concerns?.some((entry) => entry.status === "open");
+  const [busy, setBusy] = useState(false);
+  const [status, setStatus] = useState("");
+  const [error, setError] = useState("");
+  const failed = agent.work?.state === "failed";
+  if (!attention || attention.state !== "owner_attention" || concern) return null;
+
+  async function retryFailedWork() {
+    if (!failed || !agent.work || busy) return;
+    setBusy(true); setStatus(""); setError("");
+    try {
+      await fetchJSON(`${agentsEndpoint}/${encodeURIComponent(agent.id)}/work/retry`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ expected_revision: agent.soul_revision, expected_run_id: agent.work.id }),
+      });
+      setStatus("Recovery requested. A fresh attempt will inspect the current project state before continuing.");
+    } catch {
+      setError("Recovery was not confirmed. Open the activity details, resolve any unresolved delivery, then reload and try again.");
+    } finally { setBusy(false); }
+  }
+
+  return <section aria-label="Needs your attention" className="space-y-3 rounded-xl border border-amber-500/50 bg-amber-500/5 p-5">
+    <h2 className="text-lg font-semibold">Needs your attention</h2>
+    <div>
+      <h3 className="font-medium">What needs attention</h3>
+      <p>{attention.blocker ?? "The framework has paused automatic work pending an owner decision."}</p>
+    </div>
+    {agent.work && <div>
+      <h3 className="font-medium">Latest attempt</h3>
+      <p className="whitespace-pre-wrap text-sm">{agent.work.error ?? agent.work.summary ?? `Attempt ended with state “${agent.work.state}”.`}</p>
+    </div>}
+    <div>
+      <h3 className="font-medium">What you can do</h3>
+      <p>{attention.release_condition ?? "Review the activity and provide direction before resuming."}</p>
+    </div>
+    <div className="flex flex-wrap items-center gap-3">
+      {failed && <Button disabled={busy} onClick={() => { void retryFailedWork(); }}>{busy ? "Requesting recovery…" : "Retry failed work"}</Button>}
+      <Link className="text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>Open activity and diagnostics</Link>
+    </div>
+    {status && <p role="status">{status}</p>}
+    {error && <p role="alert">{error}</p>}
+  </section>;
 }
 
 function CompactWorkOverview({ agent }: { agent: Agent }) {
