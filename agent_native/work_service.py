@@ -19,6 +19,74 @@ from hermes_cli.kanban_db_connect import connect_closing, write_txn
 _log = logging.getLogger(__name__)
 
 
+def _workspace_name(root):
+    """Short label for the activity row; falls back to the resolved path tail."""
+    try:
+        return Path(root).resolve().name or str(Path(root).resolve())
+    except OSError:
+        return str(root)
+
+
+def _derive_repository_event_detail(tool, result, args, workspace):
+    """Build the structured ``detail`` payload the Activity tab renders for repository tools.
+
+    The dashboard needs to show what the agent actually did, not ``Repository
+    operation: <tool>``. This returns a plain dict (JSON-serialized on the row)
+    with the path, byte count, sha256, argv, exit code, and workspace name.
+    """
+    detail = {'operation': tool, 'workspace': _workspace_name(workspace)}
+    if tool == 'repository_file_read':
+        path = result.get('path')
+        content = result.get('content')
+        detail.update({
+            'path': path,
+            'sha256': result.get('sha256'),
+            'bytes': len(content.encode('utf-8')) if isinstance(content, str) else None,
+        })
+    elif tool == 'repository_file_write':
+        detail.update({
+            'path': result.get('path'),
+            'sha256': result.get('sha256'),
+            'bytes': result.get('bytes'),
+        })
+    elif tool == 'repository_command':
+        argv = list(args.get('argv') or [])
+        body = result.get('output') or ''
+        detail.update({
+            'argv': argv,
+            'command': ' '.join(argv),
+            'exit_code': result.get('returncode'),
+            'output_bytes': len(body.encode('utf-8', errors='replace')),
+            'truncated': bool(result.get('truncated')),
+            'timed_out': bool(result.get('timed_out')),
+        })
+    return detail
+
+
+def _derive_repository_event_summary(tool, detail):
+    """Human-readable summary derived from the structured ``detail`` payload.
+
+    Kept narrow: one short line per kind, no embedded JSON, so the activity
+    feed remains readable without expanding every row.
+    """
+    if tool == 'repository_file_read':
+        return f'Read file {detail.get("path")}'
+    if tool == 'repository_file_write':
+        size = detail.get('bytes')
+        return f'Wrote {detail.get("path")} ({size} bytes)' if size is not None else f'Wrote {detail.get("path")}'
+    if tool == 'repository_command':
+        cmd = detail.get('command') or 'command'
+        exit_code = detail.get('exit_code')
+        in_ws = detail.get('workspace')
+        location = f' in {in_ws}' if in_ws else ''
+        if detail.get('timed_out'):
+            return f'Ran `{cmd}`{location} (timed out)'
+        if exit_code is None:
+            return f'Ran `{cmd}`{location}'
+        return f'Ran `{cmd}`{location} (exit {exit_code})'
+    return None
+
+
 def _authority_revoked(validate, error):
     """Separate a denied operation from loss of the whole run capability."""
     if not isinstance(error, PermissionError):
@@ -170,6 +238,44 @@ class _Run:
             if result is None:
                 raise
             return result
+        except Exception as exc:
+            # The operation raised before it could complete. That is a known
+            # local outcome, not an external mutation with an unknown receipt:
+            # settle the effect so a null result cannot wedge the run at
+            # ``framework_reconciliation`` forever. A still-pending Plane
+            # mutation keeps its null receipt and is reconciled by read-back.
+            self._settle_effect_failure(conn, params, exc)
+            raise
+
+    def _settle_effect_failure(self, conn, params, exc):
+        """Record a known in-process failure as a settled effect result."""
+        call_id, tool = params.get('tool_call_id'), params.get('tool')
+        row = conn.execute(
+            'SELECT operation_id,result FROM agent_native_work_effects '
+            'WHERE run_id=? AND call_id=?', (self.work['id'], call_id)).fetchone()
+        if row is None or row[1] is not None:
+            return
+        mutation = conn.execute(
+            'SELECT status FROM agent_native_plane_mutations WHERE operation_id=?',
+            (row[0],)).fetchone()
+        if mutation and mutation[0] in ('pending', 'unknown'):
+            return
+        result = {
+            'status': 'error',
+            'tool': tool,
+            'error': type(exc).__name__,
+            'message': ('The managed tool failed while executing; no external '
+                        'mutation was recorded for it.'),
+        }
+        with write_txn(conn):
+            conn.execute(
+                'UPDATE agent_native_work_effects SET result=? '
+                'WHERE run_id=? AND call_id=?',
+                (json.dumps(result), self.work['id'], call_id))
+            state.event(
+                conn, self.work['id'], 'work.effect_error',
+                f'{tool} failed while executing ({type(exc).__name__}).',
+            )
 
     def _effect_unsettled(self, conn, planning, params):
         self.validate(conn)
@@ -308,6 +414,8 @@ class _Run:
                          'repository_file_write': builder_repository.write_file,
                          'repository_command': builder_repository.command}[tool]
             result = operation(repository, args)
+            self._repository_detail = _derive_repository_event_detail(tool, result, args, repository)
+            self._repository_summary = _derive_repository_event_summary(tool, self._repository_detail)
         elif tool == 'work_item_select':
             from agent_native.work_focus import select
             from agent_native.plane_reads import PlaneReadError
@@ -393,14 +501,18 @@ class _Run:
                        ('Evaluated whole purpose: '+result['judgment']) if tool=='purpose_evaluate' else
                        ('Retired agent from purpose evaluation') if tool=='purpose_retire' else
                        ('Progress report: '+result['status']) if tool=='progress_report' else
-                       ('Repository operation: '+tool) if tool.startswith('repository_') else
+                       getattr(self, '_repository_summary', None) if tool.startswith('repository_') else
                        ('Plane rejected invalid '+result.get('operation','operation')+' arguments' if result.get('status')=='invalid_arguments' else
                         ('Plane conflict in '+result.get('operation','operation')+': refreshed state returned' if result.get('fresh') else 'Plane conflict: fresh inspection required') if result.get('status')=='conflict' else
                         'Plane: '+args.get('operation','inspected '+args.get('kind','resource'))))
             if tool != 'work_item_select':
                 # Selection and its event commit together; receipt recovery must
                 # not emit a second change or make an old item current again.
-                state.event(conn,self.work['id'],'work.effect',summary)
+                detail = getattr(self, '_repository_detail', None) if tool.startswith('repository_') else None
+                state.event(conn, self.work['id'], 'work.effect', summary, detail=detail)
+            if tool.startswith('repository_'):
+                self._repository_detail = None
+                self._repository_summary = None
         return result
 
     def _reject_effect(self, conn, call_id, tool, error_type, fingerprint=None, message=None):
@@ -650,7 +762,7 @@ class _Run:
                 summary = 'Work reached its model-step limit. Recorded work is retained.'
                 if target == 'unknown':
                     summary += ' An unsettled operation must be reconciled before continuing.'
-                conn.execute('UPDATE agent_native_work_runs SET state=?,summary=?,finished_at=? WHERE id=?',
+                conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,summary=?,finished_at=? WHERE id=?',
                              (target, summary, _now(), self.work['id']))
                 state.event(conn, self.work['id'], 'work.' + target, summary)
                 return
@@ -668,7 +780,7 @@ class _Run:
                            'The worker failed after recording a result.')
                 if current['outputs']:
                     summary += ' Saved outputs remain available.'
-            conn.execute('UPDATE agent_native_work_runs SET state=?,summary=?,finished_at=? WHERE id=?',
+            conn.execute('UPDATE agent_native_work_runs SET state=?,stop_requested=1,summary=?,finished_at=? WHERE id=?',
                          (target,summary,_now(),self.work['id']))
             if success:
                 required = [result for result in results

@@ -210,7 +210,7 @@ export type AgentWork = {
   limits: WorkLimits;
   session_id: string;
   model_calls: number;
-  events: { id: number; kind: string; summary: string; created_at: string }[];
+  events: { id: number; kind: string; summary: string; created_at: string; detail?: Record<string, unknown> | null }[];
   summary: string | null;
   error: string | null;
   stories: StoryMetadata[];

@@ -287,6 +287,7 @@ export default function AgentDetailPage() {
           <h2 className="text-lg font-semibold">Activity</h2>
           {agent.work?.events.length ? <ol className="space-y-3 text-sm">{agent.work.events.map((event) => <li key={event.id} className="space-y-1">
             <p className="whitespace-pre-wrap break-words">{event.summary}</p>
+            <ActivityDetailCell detail={event.detail ?? null} />
             <time className="text-xs text-muted-foreground" dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time>
           </li>)}</ol> : <p>No execution activity recorded yet.</p>}
           <p className="text-sm text-muted-foreground">Created <time dateTime={agent.created_at}>{new Date(agent.created_at).toLocaleString()}</time></p>
@@ -391,6 +392,47 @@ function AgentTabs({ agentId, activeTab }: { agentId: string; activeTab: "work" 
   </nav>;
 }
 
+function ActivityDetailCell({ detail }: { detail?: Record<string, unknown> | null }) {
+  if (!detail || typeof detail !== "object") return <span className="text-muted-foreground">—</span>;
+  const operation = typeof detail.operation === "string" ? detail.operation : null;
+  if (operation === "repository_file_read" || operation === "repository_file_write") {
+    const path = typeof detail.path === "string" ? detail.path : null;
+    const bytes = typeof detail.bytes === "number" ? detail.bytes : null;
+    const sha = typeof detail.sha256 === "string" ? detail.sha256 : null;
+    const workspace = typeof detail.workspace === "string" ? detail.workspace : null;
+    return <div className="space-y-0.5">
+      {path && <div className="font-mono text-xs break-all">{path}</div>}
+      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+        {bytes !== null && <span>{bytes} bytes</span>}
+        {workspace && <span>in {workspace}</span>}
+        {sha && <span className="font-mono">sha {sha.slice(0, 12)}…</span>}
+      </div>
+    </div>;
+  }
+  if (operation === "repository_command") {
+    const cmd = typeof detail.command === "string" ? detail.command : null;
+    const argv = Array.isArray(detail.argv) ? detail.argv.map(String) : null;
+    const exit = typeof detail.exit_code === "number" ? detail.exit_code : null;
+    const outputBytes = typeof detail.output_bytes === "number" ? detail.output_bytes : null;
+    const truncated = Boolean(detail.truncated);
+    const timedOut = Boolean(detail.timed_out);
+    const workspace = typeof detail.workspace === "string" ? detail.workspace : null;
+    return <div className="space-y-0.5">
+      {cmd && <pre className="overflow-x-auto rounded bg-muted px-2 py-1 font-mono text-xs"><code>{cmd}</code></pre>}
+      <div className="flex flex-wrap gap-2 text-xs text-muted-foreground">
+        {workspace && <span>in {workspace}</span>}
+        {timedOut
+          ? <span className="rounded bg-destructive/10 px-1.5 py-0.5 text-destructive">timed out</span>
+          : exit !== null && <span className="rounded bg-muted px-1.5 py-0.5">exit {exit}</span>}
+        {outputBytes !== null && <span>{outputBytes} bytes out</span>}
+        {truncated && <span className="rounded bg-amber-500/15 px-1.5 py-0.5 text-amber-700 dark:text-amber-300">truncated</span>}
+      </div>
+      {argv && argv.length > 0 && <div className="sr-only" aria-label={`argv: ${argv.join(' ')}`}>{argv.join(' ')}</div>}
+    </div>;
+  }
+  return <span className="text-muted-foreground">—</span>;
+}
+
 function AgentActivityTab({ agent }: { agent: Agent }) {
   const [sort, setSort] = useState<"newest" | "oldest">("newest");
   const events = [...(agent.work?.events ?? [])].sort((left, right) =>
@@ -418,10 +460,11 @@ function AgentActivityTab({ agent }: { agent: Agent }) {
       </div>
     </div>
     {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-      <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th></tr></thead>
+      <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th><th className="p-2">Detail</th></tr></thead>
       <tbody>{visibleEvents.map((event) => <tr key={event.id} className="border-t">
         <td className="whitespace-nowrap p-2"><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></td>
         <td className="p-2">{event.summary}</td>
+        <td className="p-2 align-top"><ActivityDetailCell detail={event.detail ?? null} /></td>
       </tr>)}</tbody>
     </table></div> : <p>No execution activity recorded yet.</p>}
     {events.length > pageSize && <nav aria-label="Activity pages" className="flex items-center justify-between text-sm"><Button disabled={currentPage === 0} onClick={() => setPage(value => Math.max(0, value - 1))}>Previous</Button><span>Page {currentPage + 1} of {pageCount}</span><Button disabled={currentPage === pageCount - 1} onClick={() => setPage(value => Math.min(pageCount - 1, value + 1))}>Next</Button></nav>}
@@ -449,12 +492,6 @@ function AgentSettingsTab({ agent, onOpenSettings }: { agent: Agent; onOpenSetti
 }
 
 function CompactAgentView({ agent }: { agent: Agent }) {
-  const work = agent.work;
-  const events = (work?.events ?? []).filter((event) =>
-    event.kind !== "work.model"
-    && !event.summary.startsWith("Model step ")
-    && !event.summary.startsWith("Plane: inspected ")
-  ).reverse().slice(0, 20);
   return <div className="space-y-6">
     {!agent.removed_at && !agent.retirement && <WorkQuestions key={`compact-questions:${agent.id}:${agent.soul_revision}`} agentId={agent.id} revision={agent.soul_revision} setup={agent.setup} attentionOnly />}
     <OwnerAttentionAction agent={agent} />
@@ -462,17 +499,6 @@ function CompactAgentView({ agent }: { agent: Agent }) {
     <WorkResults agent={agent} attentionOnly />
     <CompactWorkOverview agent={agent} />
     <SavedOutputs key={`compact-outputs:${agent.id}`} agent={agent} compact />
-    <section aria-label="Recent activity" className="space-y-3 rounded-xl border p-5">
-      <h2 className="text-lg font-semibold">Recent activity</h2>
-      {events.length ? <div className="overflow-x-auto"><table className="w-full text-left text-sm">
-        <thead><tr><th className="p-2">Time</th><th className="p-2">Activity</th></tr></thead>
-        <tbody>{events.map(event => <tr key={event.id} className="border-t">
-          <td className="whitespace-nowrap p-2"><time dateTime={event.created_at}>{new Date(event.created_at).toLocaleString()}</time></td>
-          <td className="p-2">{event.summary}</td>
-        </tr>)}</tbody>
-      </table></div> : <p>No execution activity recorded yet.</p>}
-      <Link className="inline-block text-sm underline underline-offset-4" to={`/agents/${encodeURIComponent(agent.id)}?view=full`}>View complete activity and diagnostics</Link>
-    </section>
   </div>;
 }
 

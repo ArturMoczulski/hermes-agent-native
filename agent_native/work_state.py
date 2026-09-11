@@ -17,7 +17,8 @@ CREATE TABLE IF NOT EXISTS agent_native_work_runs (
 );
 CREATE TABLE IF NOT EXISTS agent_native_work_events (
  id INTEGER PRIMARY KEY AUTOINCREMENT, run_id TEXT NOT NULL REFERENCES agent_native_work_runs(id),
- kind TEXT NOT NULL, summary TEXT NOT NULL, created_at TEXT NOT NULL
+ kind TEXT NOT NULL, summary TEXT NOT NULL, created_at TEXT NOT NULL,
+ detail TEXT
 );
 CREATE TABLE IF NOT EXISTS agent_native_work_effects (
  run_id TEXT NOT NULL REFERENCES agent_native_work_runs(id), call_id TEXT NOT NULL,
@@ -114,6 +115,24 @@ def migrate_effect_tools(conn):
                 "ADD COLUMN tool TEXT NOT NULL DEFAULT 'legacy_unknown'")
 
 
+def migrate_event_detail(conn):
+    """Attach a structured per-event ``detail`` JSON payload for the dashboard.
+
+    The Activity tab renders more than ``Repository operation: <tool>`` for the
+    three repository tools; callers pass an optional ``detail`` dict that is
+    stored as JSON on the same row as the human-readable ``summary``. Older
+    DBs that predate the column have every row's ``detail`` as NULL — that is
+    the contract: legacy events render summary-only without migration friction.
+    """
+    columns = {row[1] for row in conn.execute(
+        'PRAGMA table_info(agent_native_work_events)')}
+    if 'detail' in columns:
+        return
+    with write_txn(conn, allow_nested=True):
+        conn.execute(
+            "ALTER TABLE agent_native_work_events ADD COLUMN detail TEXT")
+
+
 def migrate_legacy_time_limits(conn):
     """Relabel deadline stops written before ``limit_reached`` existed.
 
@@ -157,10 +176,12 @@ def migrate_legacy_time_limits(conn):
         return len(changed)
 
 
-def event(conn, run_id, kind, summary):
+def event(conn, run_id, kind, summary, detail=None):
+    payload = json.dumps(detail, sort_keys=True) if isinstance(detail, dict) else None
     with write_txn(conn, allow_nested=True):
-        conn.execute('INSERT INTO agent_native_work_events(run_id,kind,summary,created_at) VALUES (?,?,?,?)',
-                     (run_id, kind, summary, _now()))
+        conn.execute('INSERT INTO agent_native_work_events(run_id,kind,summary,detail,created_at) '
+                     'VALUES (?,?,?,?,?)',
+                     (run_id, kind, summary, payload, _now()))
         if kind in ('work.completed', 'work.paused', 'work.interrupted', 'work.limit_reached',
                     'work.retryable_failure', 'work.failed', 'work.unknown'):
             from agent_native.progress import terminal
@@ -176,9 +197,12 @@ def read_work(conn, agent_id):
     result['limits'] = json.loads(result['limits'])
     from agent_native.model_settings import read_attempt
     result['model_selection'] = read_attempt(conn, 'work', result['id'])
-    result['events'] = [dict(zip(('id','kind','summary','created_at'), row)) for row in conn.execute(
-        'SELECT id,kind,summary,created_at FROM agent_native_work_events WHERE run_id=? ORDER BY id',
+    result['events'] = [dict(zip(('id','kind','summary','detail','created_at'), row)) for row in conn.execute(
+        'SELECT id,kind,summary,detail,created_at FROM agent_native_work_events WHERE run_id=? ORDER BY id',
         (result['id'],)).fetchall()]
+    for event in result['events']:
+        raw = event.get('detail')
+        event['detail'] = json.loads(raw) if raw else None
     from agent_native.story_store import list_stories
     result['stories'] = list_stories(conn, agent_id)
     from agent_native.output_store import list_outputs
