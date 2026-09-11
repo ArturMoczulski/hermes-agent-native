@@ -29,11 +29,12 @@ repository name. Do not rename GitHub repositories, force-push, erase branches,
 merge the abandoned implementation, or perform a dependency upgrade as part of
 this cleanup. Preserve the fork's upstream ancestry and license notices.
 
-Archive the old checkout outside the active project directory, including its Git
-history, dirty files and useful implementation documentation. It must not remain
-a second working source tree in the normal Projects location. Keep a short archive
-manifest pointing to the active checkout; do not place obsolete AGENTS.md files
-under an active source path where they could become contributor instructions.
+The old checkout does not need to remain as a maintained project or permanent
+archive. It must not remain a second active source tree in the normal Projects
+location. A temporary private preservation copy may be kept only until the
+cutover and verification checkpoints pass; after the owner is satisfied, it may
+be removed. Do not place obsolete AGENTS.md files under the active source path
+where they could become contributor instructions.
 
 Runtime data remains outside the source checkout. One project directory means
 one authoritative place to develop the framework, not putting every database,
@@ -47,7 +48,7 @@ These are observations, not immutable preconditions; recheck them at cutover.
 
 | Location | Observed state | Disposition |
 | --- | --- | --- |
-| `Projects/agent-native` | Old independent Git checkout; `docs/gpt6-design-review` at `cd6d7f6`; origin `ArturMoczulski/agent-native` | Preserve privately, then vacate the desired final path |
+| `Projects/agent-native` | Old independent Git checkout; `docs/gpt6-design-review` at `cd6d7f6`; origin `ArturMoczulski/agent-native` | Vacate the desired final path; retaining a temporary rollback copy is optional |
 | `Projects/hermes-agent-native` | Current implementation; `main` at `50279f0`, with uncommitted work | This checkout and its Git identity become the final `agent-native` directory |
 | `~/.hermes-agent-native-preview` | Live profile, databases, credentials, protected runtime/instructions, agent state, outputs and logs | Preserve in place |
 | `~/.hermes-agent-native` | Earlier separate profile | Leave alone; do not merge credentials or state |
@@ -100,7 +101,7 @@ a reusable runtime from a separate framework application.
 | Fit for current code | Direct | Adds management work without an established boundary |
 
 If the owner selects the submodule option instead, change this plan before
-cutover: archive obsolete parent source, explicitly assign canonical docs to one
+cutover: remove obsolete parent source, explicitly assign canonical docs to one
 repository, pin the fork's published commit, define CI/recursive checkout rules,
 start/test commands and cross-repository release order. Test detached submodule
 checkouts and missing initialization. Update First Builder's root assumptions
@@ -112,7 +113,8 @@ synchronization mechanism we do not currently need. It is outside this migration
 
 ## 4. Invariants throughout the migration
 
-- No lost commits, staged/unstaged changes, untracked work or private artifacts.
+- No lost commits, staged/unstaged changes, untracked work or private artifacts
+  during the cutover; long-term preservation of the old checkout is optional.
 - No secrets, API keys, model weights or runtime databases enter Git.
 - Preserve agent IDs, purposes, memory, output versions, decisions and Plane links.
 - Preserve manual pauses, disabled cadence, unanswered questions and review gates.
@@ -136,9 +138,10 @@ private artifact, obsolete source, or unresolved work.
 
 Use current fork design/implementation chapters as the active specification.
 Do not overwrite them with older chapters simply because filenames match.
-Preserve old implementation documents in the archive. If a historical document
-is useful in active docs, import only that document with explicit historical
-status and repaired links; do not import obsolete contributor instructions.
+If a historical document is useful in active docs, import only that document with
+explicit historical status and repaired links; do not import obsolete contributor
+instructions. Any temporary old-checkout copy is optional and may be discarded
+after verification.
 
 Record exact before/after paths, commits, dirty-file checksums, remote refs,
 profile locations, project grants, ports and process commands in a private
@@ -204,10 +207,12 @@ Exit: one consistent backup boundary and no old processes writing during moves.
 Execute from a stable directory outside both checkouts. Verify destination paths
 are absent and canonical parents are correct; do not overwrite a populated folder.
 
-1. Move the old `Projects/agent-native` into the recorded archive location.
+1. Move the old `Projects/agent-native` into a temporary private preservation
+   location.
 2. Move `Projects/hermes-agent-native` to `Projects/agent-native`.
 3. Verify the new root retains the fork's .git, HEAD, remotes, index and worktree.
-4. Verify the old checkout exists intact only at its archive location.
+4. Verify the old checkout is either in the temporary preservation location or
+   has been intentionally removed after its backups were verified.
 
 Prefer same-filesystem renames for live cutover; each rename is atomic but the
 pair is not. Record completion of each step so failure between them is recoverable.
@@ -254,7 +259,7 @@ the fork. Treat correcting it as required migration work, not optional cleanup.
 1. Inventory the old root AGENTS.md, CONVENTIONS.md, `.agents/builder/` prototype,
    `.kilo/` profile and any editor-specific prompt configuration. Compare them
    with the current fork's instructions and identify genuinely unique, still-valid
-   owner requirements. Preserve historical files in the private archive; do not
+   owner requirements. Do not copy historical files into the active tree; do not
    copy stale authority or abandoned implementation choices into active prompts.
 2. Keep the current fork's root AGENTS.md as the contributor entry point at the
    final path. Its links must resolve to `first-builder/INSTRUCTIONS.md`, SOUL.md,
@@ -279,7 +284,8 @@ the fork. Treat correcting it as required migration work, not optional cleanup.
 
 Exit: the external contributor loads the current fork's instructions from the
 final project root; no old prototype profile is active; hosted protected prompts
-and the First Builder launch hold remain intact. Archive recovery remains possible.
+and the First Builder launch hold remain intact. Recovery from verified backups
+remains possible.
 
 
 ### Step G — Rebind the First Builder without broadening authority
@@ -340,7 +346,7 @@ runtime test suite; these checks are requirements for eventual execution.
 
 | Boundary | Required evidence |
 | --- | --- |
-| Git/source | Same fork ancestry/HEAD at cutover; all intentional edits and staged state preserved; archive/bundles verifiable; no secrets staged |
+| Git/source | Same fork ancestry/HEAD at cutover; all intentional edits and staged state preserved; bundles/backups verifiable; no secrets staged |
 | Paths | CLI/imports/tool cwd resolve to new root; no live process depends on old checkout; legitimate profile/remote names unchanged |
 | Runtime storage | Agent identities, souls, memory, outputs/version hashes, questions, decisions, receipts and grants match expected pre-migration state |
 | Hermes UI | Agents and one existing detail/output page render; authenticated requests succeed; known media opens; hot-reload connection works |
@@ -361,7 +367,7 @@ complete merely because ports return HTTP 200.
 If a checkpoint fails before writers restart, keep maintenance active. Stop any
 new processes, preserve failure logs and partial migration journal, reverse the
 specific binding/configuration changes, move the fork back to its original
-location and restore the old directory from its intact archive. Restore the old
+location and restore the old directory from its temporary copy or verified backup. Restore the old
 virtual environment and launch configuration from backup, then verify services
 and original owner holds. Validate all path preconditions before each rename.
 
@@ -372,9 +378,10 @@ back while retaining current data, using the inverse supported binding migration
 If schema/data cannot be reversed safely, perform reviewed forward repair and
 reconcile effects instead of destructive rollback.
 
-Keep the archive and backups until the owner explicitly approves their disposal.
+Keeping the temporary preservation copy is optional. Remove it only after the
+owner has reviewed the active checkout and the verified Git/working-tree backups.
 There is no automatic delete-after-N-days step. Archive/read-only status for the
-old GitHub repository is optional later work, not part of this local cutover.
+old GitHub repository is outside this local cutover.
 
 ## 8. Tracking, scope and completion report
 
