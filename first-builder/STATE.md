@@ -1,3 +1,32 @@
+## AN-143 complete: rejected-read and step-limit recovery — 2026-09-11
+
+AN-143's framework fix is commit 73a0c51. Browser regression:
+`web/e2e/read-limit-recovery.spec.ts` passed (14.9s) attached to the shared test
+browser, proving a rejected work-item read plus model-step exhaustion retains
+output and continues (no framework_failure, no retry-only owner action).
+
+Live repair (Fantasy Game Builder AN-97 verification, run fb1297e4, pre-repair
+state failed with model_calls 50/50): settled the one proven stale pre-effect
+read as a rejected effect exactly as `_reject_effect` does (effect rowid 2286,
+call_01a08e17e5f37e91b9121dae, work_item_select, PlaneReadError; no Plane
+mutation exists for operation f0047139), then reclassified the run failed ->
+limit_reached with the fixed summary. Preserved its finished_at, every other
+effect (including the untouched result_record and plane_operation_execute
+null-result rows), history and grants. Consistent pre-repair backup:
+`~/.hermes-agent-native-preview/backups/read-receipt-repair-2026-09-11/kanban.db`
+(sha256 338687ec3f3e7a96c1772fd824c25103538a758731435ac78f3c1e0fc5eed8db).
+
+Verified with the framework's own functions against the live DB:
+`readiness.automatic_work` moved framework_failure/may_start=false ->
+ready/may_start=true; `_recoverable_interruption` and `_cadence_can_retry` both
+true. The running preview cadence then started a fresh bounded attempt
+(cac853ec-2f1f-48ab-adf7-05f13565eadf) at 2026-09-11T13:14:51Z with no owner
+action and it is progressing (model_calls 10). No limits raised, no game results
+accepted. Plane AN-143 moved to In review.
+
+Next: let the resumed bounded attempt reach a terminal state and confirm it stops
+by limit/timeout rather than failing; then continue AN-117's readiness matrix.
+
 ## Local Plane throttling effectively disabled — 2026-09-11
 
 Owner: this local, localhost-only project-management instance should carry no
