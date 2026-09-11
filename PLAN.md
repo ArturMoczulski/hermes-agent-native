@@ -565,3 +565,7 @@ checkout privately, keep runtime data in place, and verify bindings and services
 The submodule alternative is evaluated there. No cutover is authorized by this
 entry. AN-132 remains uncommitted and its browser verification incomplete at the
 planning snapshot; earlier completion language above must not be used as proof.
+
+AN-134 also requires explicit contributor prompt/instruction migration: refresh
+the saved workspace to load the current fork AGENTS and First Builder entry points,
+archive the prototype prompts, and separately preserve protected hosted instructions.

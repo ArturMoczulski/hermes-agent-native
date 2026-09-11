@@ -2595,3 +2595,8 @@ remain separate unfinished work, despite earlier PLAN.md completion language.
 The local UI outage was restored with backend 19222 and Vite 19221 using the
 existing profile; Plane was healthy. Follow-up evidence is in AN-15.
 Plane planning item: AN-134, In review; implementation is not started.
+
+Owner clarification: include instruction-loading consolidation in AN-134. The
+external workspace currently loads the old root AGENTS.md; the final workspace
+must load the fork entry point and First Builder files. Existing conversation
+context requires explicit refresh/handoff; protected hosted prompts stay separate.

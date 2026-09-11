@@ -244,6 +244,44 @@ active IDE/task continues writing the old location.
 
 Exit: CLI, imports, tests and build tooling identify the new root consistently.
 
+### Step F2 — Consolidate contributor instructions and prompt loading
+
+The current external contributor conversation is configured against the old
+`Projects/agent-native` directory and receives its old AGENTS.md. That is an
+active instruction-loading dependency even though running Hermes services use
+the fork. Treat correcting it as required migration work, not optional cleanup.
+
+1. Inventory the old root AGENTS.md, CONVENTIONS.md, `.agents/builder/` prototype,
+   `.kilo/` profile and any editor-specific prompt configuration. Compare them
+   with the current fork's instructions and identify genuinely unique, still-valid
+   owner requirements. Preserve historical files in the private archive; do not
+   copy stale authority or abandoned implementation choices into active prompts.
+2. Keep the current fork's root AGENTS.md as the contributor entry point at the
+   final path. Its links must resolve to `first-builder/INSTRUCTIONS.md`, SOUL.md,
+   PRACTICES.md, MEMORY.md, STATE.md, PLANE.md, the current specification and skills.
+   The inherited generic root SOUL.md is not the First Builder's soul; keep the
+   explicit First Builder selection. Do not independently rewrite owner-controlled
+   soul content as part of a path cleanup.
+3. Refresh/reopen the saved coding workspace after cutover using supported app
+   controls, and explicitly read the new root instructions before continuing.
+   Existing conversation context can retain old instructions: replacing a file
+   does not retroactively remove them. Use a fresh session if necessary, with a
+   concise handoff of current work, owner decisions and unfinished verification.
+   Verify the configured cwd, Git identity and loaded entry point agree.
+4. Separately verify framework-hosted instruction provenance: retain deployed
+   protected soul/instruction copies and runtime authority outside the writable
+   repository. A source-directory move must not silently replace the running
+   agent's prompts, expose them for self-editing or launch the held First Builder.
+5. Check active startup/editor configuration for references to archived instruction
+   paths. Remove or correct operational references, while preserving historical
+   mentions as history. Record which instructions the contributor loads and which
+   protected instructions the hosted Builder uses.
+
+Exit: the external contributor loads the current fork's instructions from the
+final project root; no old prototype profile is active; hosted protected prompts
+and the First Builder launch hold remain intact. Archive recovery remains possible.
+
+
 ### Step G — Rebind the First Builder without broadening authority
 
 The prepared First Builder is
@@ -311,7 +349,7 @@ runtime test suite; these checks are requirements for eventual execution.
 | Scheduling | Isolated restart test admits at most one eligible run; manual pauses, required owner decisions and uncertain-effect barriers survive |
 | First Builder | Correct repository binding, protected deployment preserved, Sol/Low settings retained, held for owner test and no autonomous run started |
 | Process lifetime | Dashboard/frontend survive launcher exit; supervised failure recovery and deliberate stop are distinguishable; one dispatcher only |
-| Contributor experience | Saved project opens current main; active AGENTS/specs and next Plane item are unambiguous |
+| Contributor experience | Saved project opens current main; refreshed instruction loading uses the current fork AGENTS and First Builder files; no archived prototype profile is active; protected hosted prompts remain unchanged |
 
 Select exact named Python/Playwright cases once the affected implementation is
 known. Record command, result and any omitted check with its reason. Reuse passing
