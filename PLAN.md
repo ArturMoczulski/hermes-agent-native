@@ -555,3 +555,13 @@ owner feedback now supplies that wake signal and admits one fresh attempt. The o
 acceptance of Fantasy Game Builder GDD v2 was delivered through that path, the exact
 output decision was recorded, and its isolated coding workspace was granted for
 implementation.
+
+## Repository consolidation — AN-134, awaiting owner review
+
+The owner requested a detailed plan before changing the two checkout locations.
+See [the consolidation plan](implementation/repository-consolidation.md): retain
+the current Hermes fork/history at `Projects/agent-native`, preserve the old
+checkout privately, keep runtime data in place, and verify bindings and services.
+The submodule alternative is evaluated there. No cutover is authorized by this
+entry. AN-132 remains uncommitted and its browser verification incomplete at the
+planning snapshot; earlier completion language above must not be used as proof.

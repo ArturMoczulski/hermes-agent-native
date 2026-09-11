@@ -33,6 +33,7 @@ work, not a configuration-only setup or a promise of a tiny patch.
 
 | Document | Purpose |
 | --- | --- |
+| [Repository consolidation](repository-consolidation.md) | Proposed one-directory migration, submodule comparison, preservation, cutover checks and rollback; not yet executed. |
 | [Agent storage topology](agent-storage-topology.md) | Protected identity, memory, practices, mutable projects, immutable outputs and runtime scratch. |
 | [Agent removal](agent-removal.md) | Owner removal, stopped execution and retained history. |
 | [Agent model selection](agent-model-selection.md) | Owner defaults, per-agent choices and fixed work/chat attempt selections. |

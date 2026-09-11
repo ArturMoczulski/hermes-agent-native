@@ -2582,3 +2582,16 @@ the same decision to the owner. The initial focused proofs cover setup, the
 owner-resumed informational-pause path, enabling cadence when an owner answer is
 still required, TypeScript, and Chromium. Next: extend the readiness matrix across
 the remaining lifecycle categories and accept AN-117 before moving to AN-118.
+
+## Repository cleanup planning — 2026-09-11
+
+The owner requested a detailed consolidation plan and consideration of our Hermes
+fork as a submodule. [The proposal](../implementation/repository-consolidation.md)
+recommends moving the existing fork checkout to `Projects/agent-native` after
+preserving the old repository, runtime data and uncommitted work. No filesystems,
+Git remotes or protected agent bindings have been migrated. First Builder remains
+held for the owner test. AN-132 source edits and incomplete browser verification
+remain separate unfinished work, despite earlier PLAN.md completion language.
+The local UI outage was restored with backend 19222 and Vite 19221 using the
+existing profile; Plane was healthy. Follow-up evidence is in AN-15.
+Plane planning item: AN-134, In review; implementation is not started.
