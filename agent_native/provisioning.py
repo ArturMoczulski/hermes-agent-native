@@ -88,6 +88,10 @@ def provision_root(conn, *, actor, agent_id, storage_root, refresh_projection=Fa
     storage = storage.resolve()
     storage.mkdir(parents=True, exist_ok=True, mode=0o700)
     base = storage / root['id']
+    if base.is_symlink():
+        # Reject before publishing anything: ensure_mutable_areas would otherwise
+        # write through the link into its target before _verify noticed.
+        raise ValueError('Agent directory must not be a symlink')
     layout = paths(storage, root['id'])
     expected = _projection(root)
     if not base.exists() and not base.is_symlink():

@@ -121,6 +121,13 @@ def test_resume_removes_only_its_pause_cause_and_restores_original_cadence(broke
     s = broker
     child = create_child(s.conn, s.root, 'resume-child', 'Child')
     grandchild = create_child(s.conn, child, 'resume-grandchild', 'Grandchild')
+    # Created agents are gated on setup readiness; complete it so this test
+    # isolates resume rather than the workspace-preparation gate.
+    for agent in (child, grandchild):
+        s.conn.execute(
+            "UPDATE agent_native_setup SET status='ready', message='Ready.' WHERE agent_id=?",
+            (agent['id'],),
+        )
     for agent in (s.root, child, grandchild):
         cadence.configure(
             s.conn, actor=OWNER, agent_id=agent['id'], expected_revision=1,
@@ -154,6 +161,11 @@ def test_resume_removes_only_its_pause_cause_and_restores_original_cadence(broke
 def test_resume_keeps_cadence_off_when_it_was_off_before_pause(broker):
     s = broker
     child = create_child(s.conn, s.root, 'manual-child', 'Manual child')
+    # create_root enables cadence by default; a manual child has it off.
+    cadence.configure(
+        s.conn, actor=OWNER, agent_id=child['id'], expected_revision=1,
+        interval_seconds=60, enabled=False,
+    )
     request_pause(s.conn, actor=OWNER, agent_id=child['id'])
 
     resumed = request_resume(s.conn, actor=OWNER, agent_id=child['id'])

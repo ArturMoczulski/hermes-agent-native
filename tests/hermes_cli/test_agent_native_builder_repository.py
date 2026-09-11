@@ -1,4 +1,5 @@
 import hashlib
+import shutil
 import time
 from types import SimpleNamespace
 from uuid import uuid4
@@ -43,6 +44,8 @@ def test_builder_repository_rejects_escape_symlinks_and_dangerous_commands(tmp_p
 
 
 def test_builder_repository_runs_bounded_non_shell_commands(tmp_path):
+    if shutil.which("rg") is None:
+        pytest.skip("rg (ripgrep) is required to exercise an approved bounded command")
     root = tmp_path / "repo"
     root.mkdir()
     (root / "needle.txt").write_text("needle\n")
@@ -140,3 +143,40 @@ def test_granted_agent_publishes_a_stable_isolated_preview(client, tmp_path):
     assert client.get(exchange.headers['location']).status_code == 200
     assert client.get(exchange.headers['location'] + 'game.css').text == 'h1 { color: green; }'
     assert client.get(launch_url, follow_redirects=False).status_code == 401
+
+
+def test_preview_launch_uses_the_public_dashboard_origin_behind_a_proxy(client, monkeypatch, tmp_path):
+    """A proxy forwards its own host/port, but the preview must open on the
+    origin the owner's browser actually used (``dashboard.public_url``).
+
+    Otherwise the launch redirect lands on the backend port, the host-scoped
+    preview cookie is absent there, and every preview asset 404s — the live
+    Fantasy Game Builder "preview button bounces to sessions" bug.
+    """
+    from agent_native.identity import OWNER
+    from agent_native.project_preview import publish
+    from hermes_cli.kanban_db_connect import connect_closing
+
+    monkeypatch.setenv('HERMES_DASHBOARD_PUBLIC_URL', 'http://127.0.0.1:19221')
+    agent = client.post('/api/agent-native/agents', json={
+        'request_id': 'proxied-preview', 'name': 'Site builder', 'purpose': 'Build a site',
+    }).json()
+    project = tmp_path / 'site'
+    (project / 'dist').mkdir(parents=True)
+    (project / 'dist' / 'index.html').write_text('<h1>Proxied preview</h1>')
+    assert client.post(f"/api/agent-native/agents/{agent['id']}/workspace", json={
+        'expected_revision': 1, 'root': str(project),
+    }).status_code == 201
+    with connect_closing(tmp_path / 'control.db') as conn:
+        publish(conn, actor=OWNER, agent_id=agent['id'], path='dist')
+
+    launch = client.post(f"/api/agent-native/agents/{agent['id']}/preview-launch")
+    assert launch.status_code == 200
+    launch_url = launch.json()['url']
+    assert launch_url.startswith('http://localhost:19221/agent-preview/')
+
+    exchange = client.get(launch_url, follow_redirects=False)
+    assert exchange.status_code == 303
+    assert exchange.headers['location'].startswith(
+        f"http://localhost:19221/agent-preview/{agent['id']}/")
+    assert client.get(exchange.headers['location']).status_code == 200
