@@ -55,7 +55,7 @@ export type Agent = {
   usage: { agent: UsageTotals; subtree: UsageTotals };
   cadence?: { enabled: boolean; interval_seconds: number | null; next_due: string | null };
   automatic_work?: {
-    state: "ready" | "working" | "scheduled" | "owner_paused" | "waiting_owner_review" | "waiting_owner_answer" | "owner_attention" | "framework_reconciliation" | "framework_failure" | "automatic_off" | "setup" | "not_configured" | "retired" | "removed";
+    state: "ready" | "working" | "scheduled" | "waiting_retry" | "owner_paused" | "waiting_owner_review" | "waiting_owner_answer" | "owner_attention" | "framework_reconciliation" | "framework_failure" | "automatic_off" | "setup" | "not_configured" | "retired" | "removed";
     may_start: boolean;
     blocker: string | null;
     release_condition: string | null;
@@ -233,6 +233,7 @@ export function agentWorkStatus(agent: Agent): string {
   if (agent.removed_at) return "Removed";
   if (agent.automatic_work?.state === "owner_paused") return "Paused";
   if (agent.automatic_work?.state === "waiting_owner_review" || agent.automatic_work?.state === "waiting_owner_answer") return "Needs your decision";
+  if (agent.automatic_work?.state === "waiting_retry") return "Waiting to retry";
   if (agent.automatic_work?.state === "framework_reconciliation") return "Framework recovery needed";
   if (agent.automatic_work?.state === "framework_failure") return "Framework failure";
   if (agent.automatic_work?.state === "owner_attention") return "Needs your attention";

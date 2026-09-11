@@ -105,6 +105,15 @@ def automatic_work(conn, agent_id, *, now=None, busy=False):
         return _decision('framework_reconciliation', blocker=str(exc),
                          release='Reconcile the unresolved delivery before continuing.', actor='framework')
     now_value = datetime.fromisoformat(now) if now else datetime.now(timezone.utc)
+    from agent_native.recovery_policy import retry_ready_at
+    retry_ready = retry_ready_at(conn, agent_id, now=now_value.isoformat())
+    if retry_ready and now_value < datetime.fromisoformat(retry_ready):
+        return _decision(
+            'waiting_retry',
+            blocker='Waiting for the automatic retry backoff to elapse.',
+            release='The next automatic retry becomes eligible at ' + retry_ready + '.',
+            actor='framework',
+        )
     due = datetime.fromisoformat(cadence[2])
     wake = conn.execute(
         'SELECT 1 FROM agent_native_cadence_wakes WHERE agent_id=?', (agent_id,),

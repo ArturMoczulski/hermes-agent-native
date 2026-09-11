@@ -1,3 +1,32 @@
+## AN-117 increment: retry backoff is an explicit readiness state — 2026-09-11
+
+Fixed a scheduler/API disagreement: a retryable failure inside its bounded
+backoff window was gated by cadence's `enforce_backoff` but `automatic_work`
+still reported `ready`, so the API/UI decision differed from the scheduler. Added
+`recovery_policy.retry_ready_at` (a read-only twin of the backoff computation)
+and a `waiting_retry` decision in `readiness.automatic_work`; `enforce_backoff`
+now shares the helper so the two cannot drift. The Compact UI renders
+`waiting_retry` from the decision (`web/src/lib/agent-native.ts`,
+`AgentDetailPage.tsx`).
+
+Verification: `tests/hermes_cli/test_agent_native_automatic_recovery.py` (7
+passed, including the new `waiting_retry` case that asserts the same decision
+before and after the scheduler evaluates the due row, then `ready` once the window
+elapses); cadence + autonomy (20 passed). Broker effects unchanged. The
+purpose-evaluation retirement case fails on base too (pre-existing, verified by
+stashing the change). `npm run typecheck --workspace web` and the new vitest
+`agentWorkStatus` case pass. Committed as `feat(agent-native): report retry
+backoff as an explicit readiness state`.
+
+AN-117 remains In Progress. Remaining acceptance: durably classify scheduler
+skips and make an overdue eligible cadence that does not start observable (no skip
+table exists yet); reuse `waiting_retry` for the budget/provider wait once AN-107
+lands.
+
+Next: add a durable cadence-skip classification (new table + upsert on every skip
+in `cadence.queue_due`, cleared when the agent is queued) exposed through the
+agent API and the Compact UI, with a focused test.
+
 ## AN-143 complete: rejected-read and step-limit recovery — 2026-09-11
 
 AN-143's framework fix is commit 73a0c51. Browser regression:

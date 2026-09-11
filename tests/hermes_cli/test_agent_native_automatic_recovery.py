@@ -110,6 +110,48 @@ def test_retryable_failure_waits_for_bounded_backoff_without_spending_tokens(bro
     assert queued[0] == cadence.recovery_identity(s.root['id'], s.work['id'])
 
 
+def test_retry_backoff_is_an_explicit_readiness_state_not_ready(broker):
+    """A retryable failure inside its backoff window is waiting, not ready."""
+    from agent_native import cadence
+    from agent_native.readiness import automatic_work
+
+    s = broker
+    cadence.configure(
+        s.conn,
+        actor=OWNER,
+        agent_id=s.root['id'],
+        expected_revision=1,
+        interval_seconds=1,
+        enabled=True,
+    )
+    s.conn.execute(
+        "UPDATE agent_native_work_runs SET state='retryable_failure',"
+        "created_at='2099-01-01T00:00:00+00:00',"
+        "finished_at='2099-01-01T00:00:01+00:00' WHERE id=?",
+        (s.work['id'],),
+    )
+    s.conn.execute(
+        "UPDATE agent_native_cadence SET next_due='2099-01-01T00:00:01+00:00' "
+        "WHERE agent_id=?", (s.root['id'],),
+    )
+
+    decision = automatic_work(s.conn, s.root['id'], now='2099-01-01T00:00:02+00:00')
+    assert decision == {
+        'state': 'waiting_retry', 'may_start': False,
+        'blocker': 'Waiting for the automatic retry backoff to elapse.',
+        'release_condition': (
+            'The next automatic retry becomes eligible at 2099-01-01T00:00:06+00:00.'
+        ),
+        'responsible_actor': 'framework',
+    }
+    # The scheduler skip and the API decision agree, before and after the due
+    # row is evaluated (which extends next_due to the retry-eligible time).
+    assert cadence.queue_due(s.conn, now='2099-01-01T00:00:02+00:00') == []
+    assert automatic_work(s.conn, s.root['id'], now='2099-01-01T00:00:02+00:00') == decision
+    assert automatic_work(
+        s.conn, s.root['id'], now='2099-01-01T00:00:06+00:00')['state'] == 'ready'
+
+
 def test_retryable_recovery_identity_is_idempotent_while_pending(broker):
     from agent_native import cadence
 

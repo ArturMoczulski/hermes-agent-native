@@ -533,7 +533,7 @@ function CompactWorkOverview({ agent }: { agent: Agent }) {
   const readinessStage: Record<string, string> = {
     ready: "Ready to start", working: "Working", scheduled: "Waiting for next check-in",
     owner_paused: "Paused", waiting_owner_review: "Waiting for your review",
-    waiting_owner_answer: "Waiting for your answer", owner_attention: "Needs your attention",
+    waiting_owner_answer: "Waiting for your answer", waiting_retry: "Waiting to retry", owner_attention: "Needs your attention",
     framework_reconciliation: "Framework recovery needed", framework_failure: "Framework failure", automatic_off: "Automatic work off",
     setup: "Preparing agent", not_configured: "Work not configured", retired: "Retired", removed: "Removed",
   };

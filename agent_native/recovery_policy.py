@@ -64,21 +64,34 @@ def recent_retry_attempts(conn, agent_id, *, now):
     return attempts
 
 
-def enforce_backoff(conn, agent_id, *, now):
-    """Return whether retry admission is allowed, extending cadence when needed."""
+def retry_ready_at(conn, agent_id, *, now):
+    """Return the ISO time a retryable failure becomes eligible again, else ``None``.
+
+    Read-only twin of the backoff computation: cadence uses it to gate
+    admission, and the readiness decision uses it to report "waiting for retry"
+    instead of a false "ready" while the scheduler is deliberately holding off.
+    """
     previous = conn.execute(
         'SELECT id,state,finished_at,created_at FROM agent_native_work_runs '
         'WHERE agent_id=? ORDER BY rowid DESC LIMIT 1', (agent_id,),
     ).fetchone()
     if not previous or previous[1] != 'retryable_failure':
-        return True
+        return None
     attempts = recent_retry_attempts(conn, agent_id, now=now)
     if not attempts:
-        return True
+        return None
     retry_number = len(attempts)
     delay = RECOVERY_BACKOFF_SECONDS[min(retry_number - 1, len(RECOVERY_BACKOFF_SECONDS) - 1)]
     finished = _at(previous[2] or previous[3])
-    minimum_due = (finished + timedelta(seconds=delay)).isoformat()
+    return (finished + timedelta(seconds=delay)).isoformat()
+
+
+def enforce_backoff(conn, agent_id, *, now):
+    """Return whether retry admission is allowed, extending cadence when needed."""
+    ready = retry_ready_at(conn, agent_id, now=now)
+    if ready is None:
+        return True
+    minimum_due = _at(ready)
     current = conn.execute(
         'SELECT next_due FROM agent_native_cadence WHERE agent_id=?',
         (agent_id,),
@@ -86,7 +99,7 @@ def enforce_backoff(conn, agent_id, *, now):
     if not current:
         return True
     current_due = _at(current[0])
-    due = max(current_due, _at(minimum_due))
+    due = max(current_due, minimum_due)
     if due != current_due:
         conn.execute(
             'UPDATE agent_native_cadence SET next_due=? WHERE agent_id=?',
