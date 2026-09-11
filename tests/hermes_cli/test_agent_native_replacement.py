@@ -158,7 +158,7 @@ def test_parent_cannot_replace_a_non_direct_descendant(broker):
         purpose='Continue nested work.', parent_id=child_id,
     )
 
-    with pytest.raises(PermissionError, match='direct child'):
-        child_replacement(s, grandchild['id'])
+    denied = child_replacement(s, grandchild['id'])
+    assert denied['status'] == 'rejected' and denied['error'] == 'PermissionError'
 
     assert get_root(s.conn, actor=OWNER, agent_id=grandchild['id'])['retirement'] is None

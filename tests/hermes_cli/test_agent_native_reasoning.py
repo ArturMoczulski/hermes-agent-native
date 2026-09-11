@@ -8,7 +8,7 @@ def test_codex_reasoning_options_are_exact_and_unknown_models_are_default_only(c
     from agent_native.model_runtime import get_reasoning_options, validate_reasoning
     options = get_reasoning_options('openai-codex', 'gpt-6-astra')
     assert options['efforts'] == ['default', 'low', 'medium', 'high', 'xhigh', 'max']
-    assert options['default_label'] == 'Hermes default'
+    assert options['default_label'] == 'Runtime automatic'
     for effort in ('none', 'minimal', 'ultra', 'invalid'):
         with pytest.raises(ValueError):
             validate_reasoning({'provider': 'openai-codex', 'model': 'gpt-6-astra', 'reasoning_effort': effort})

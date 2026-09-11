@@ -99,8 +99,8 @@ def test_stop_or_changed_purpose_prevents_selection_and_replay_before_network(br
 
 def test_selection_rejects_model_supplied_host_fields(broker):
     s = broker
-    with pytest.raises(ValueError):
-        select(s, soul_revision=100)
+    denied = select(s, soul_revision=100)
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
     assert work_state.read_work(s.conn, s.root['id'])['focus'] is None
 
 
@@ -112,8 +112,8 @@ def test_local_selection_and_event_roll_back_if_final_admission_is_revoked(broke
         if conn.in_transaction and conn.execute('SELECT COUNT(*) FROM agent_native_work_selections').fetchone()[0]:
             raise PermissionError('Authority revoked before local commit')
     monkeypatch.setattr(s.run, 'validate', revoke_after_insert)
-    with pytest.raises(PermissionError):
-        select(s)
+    denied = select(s)
+    assert denied['status'] == 'rejected' and denied['error'] == 'PermissionError'
     work = work_state.read_work(s.conn, s.root['id'])
     assert work['focus'] is None
     assert not any(e['kind'] == 'work.focus' for e in work['events'])

@@ -77,10 +77,6 @@ def test_child_delegation_replay_returns_the_same_child(broker):
 def test_child_creation_requires_frozen_parent_admission(broker):
     s = broker
 
-    try:
-        delegate(s)
-    except PermissionError as error:
-        assert 'frozen' in str(error)
-    else:
-        raise AssertionError('Delegation must not fall back to mutable current settings')
+    denied = delegate(s)
+    assert denied['status'] == 'rejected' and denied['error'] == 'PermissionError'
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['child_ids'] == []

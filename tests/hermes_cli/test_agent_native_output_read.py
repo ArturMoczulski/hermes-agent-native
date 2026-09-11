@@ -42,8 +42,8 @@ def test_output_read_checks_scope_arguments_and_file_integrity(broker):
     saved = publish(s)
     args = {'output_id':saved['output_id'], 'version':1}
     for index, changes in enumerate(({'version':True}, {'offset':-1}, {'limit':1000000}, {'path':'../../secret'})):
-        with pytest.raises(ValueError):
-            s.run._effect(s.conn, s.planning, effect(s, f'invalid-{index}', 'output_read', {**args, **changes}))
+        denied = s.run._effect(s.conn, s.planning, effect(s, f'invalid-{index}', 'output_read', {**args, **changes}))
+        assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
     s.conn.execute('UPDATE agent_native_output_versions SET agent_id=? WHERE output_id=?', ('other', saved['output_id']))
     with pytest.raises(LookupError):
         s.run._effect(s.conn, s.planning, effect(s, 'foreign', 'output_read', args))
@@ -51,8 +51,8 @@ def test_output_read_checks_scope_arguments_and_file_integrity(broker):
     path = s.run.workspace / saved['relative_path']
     path.chmod(0o600)
     path.write_text('tampered')
-    with pytest.raises(StoryIntegrityError):
-        s.run._effect(s.conn, s.planning, effect(s, 'tampered', 'output_read', args))
+    tampered = s.run._effect(s.conn, s.planning, effect(s, 'tampered', 'output_read', args))
+    assert tampered['status'] == 'rejected' and tampered['error'] == StoryIntegrityError.__name__
 
 
 def test_saved_output_remains_readable_after_coding_workspace_is_granted(broker, tmp_path):

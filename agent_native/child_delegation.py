@@ -89,11 +89,10 @@ def create(conn, *, validate, parent_id, parent_run_id, call_id, arguments):
                             work=work_limits, model_selection=model_choice,
                             autonomy_level=autonomy[0], parent_id=parent_id,
                             _allow_nested=True)
-        if configuration['cadence']['enabled']:
-            from agent_native.cadence import configure
-            configure(conn, actor=OWNER, agent_id=child['id'], expected_revision=1,
-                      interval_seconds=configuration['cadence']['interval_seconds'], enabled=True,
-                      _allow_nested=True)
+        from agent_native.cadence import configure
+        configure(conn, actor=OWNER, agent_id=child['id'], expected_revision=1,
+                  interval_seconds=configuration['cadence']['interval_seconds'] or 60,
+                  enabled=configuration['cadence']['enabled'], _allow_nested=True)
         created_at = _now()
         conn.execute(
             'INSERT INTO agent_native_child_delegations '

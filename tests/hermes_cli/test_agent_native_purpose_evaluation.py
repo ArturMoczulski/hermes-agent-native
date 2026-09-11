@@ -1,6 +1,4 @@
 """Whole-purpose judgments remain separate from attempt and assignment results."""
-import pytest
-
 from tests.hermes_cli.test_agent_native_work_effects import broker, effect  # noqa: F401
 
 
@@ -37,11 +35,12 @@ def test_worker_records_durable_whole_purpose_evaluation(broker):
 
 def test_retirement_candidate_requires_no_remaining_obligations(broker):
     s=broker
-    with pytest.raises(ValueError,match='remaining obligations'):
-        s.run._effect(s.conn,s.planning,effect(s,'purpose-retire','purpose_evaluate',{
-            'judgment':'retire_candidate','evidence':['One output exists.'],
-            'remaining_obligations':['Owner review remains.'],'uncertainty':None,
-            'next_action':'Retire.','question_id':None}))
+    denied=s.run._effect(s.conn,s.planning,effect(s,'purpose-retire','purpose_evaluate',{
+        'judgment':'retire_candidate','evidence':['One output exists.'],
+        'remaining_obligations':['Owner review remains.'],'uncertainty':None,
+        'next_action':'Retire.','question_id':None}))
+    assert denied['status']=='rejected' and denied['error']=='ValueError'
+    assert 'remaining obligations' in denied['message']
 
 
 def test_clarification_blocks_cadence_until_the_linked_question_is_answered(broker):

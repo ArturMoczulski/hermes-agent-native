@@ -58,8 +58,8 @@ def test_review_rejects_stale_comment_and_can_record_no_reply(broker):
     args={'item_id':c['issue']}
     r=invoke(s,'read',args)['pending'][0]
     c['comment_html']='<p>Additional context only.</p>'
-    with pytest.raises(ConflictError):
-        invoke(s,'stale',{**args,'review_id':r['id'],'response':'Thanks','reply':True})
+    stale=invoke(s,'stale',{**args,'review_id':r['id'],'response':'Thanks','reply':True})
+    assert stale['status']=='rejected' and stale['error']==ConflictError.__name__
     r=invoke(s,'fresh',args)['pending'][0]
     before=len(s.plane.comments)
     assert invoke(s,'no-reply',{**args,'review_id':r['id'],'response':'Informational context retained; no reply needed.','reply':False})['status']=='reviewed_without_reply'
@@ -91,8 +91,8 @@ def test_other_agent_shared_account_is_reviewed_but_reply_loops_are_blocked(brok
     assert len(pending)==1 and pending[0]['origin_agent_id']==other['id']
     # A protected reply intent identifies automation, not its shared actor or text.
     s.conn.execute("INSERT INTO agent_native_progress(operation_id,source_id,agent_id,run_id,item_id,summary,text,status,created_at) VALUES(?,?,?,?,?,?,?,'confirmed','now')",(operation,'comment-reply:other',other['id'],s.work['id'],args['item_id'],'reply','reply'))
-    with pytest.raises(PermissionError):
-        invoke(s,'loop',{**args,'review_id':pending[0]['id'],'response':'Replying to your reply','reply':True})
+    loop=invoke(s,'loop',{**args,'review_id':pending[0]['id'],'response':'Replying to your reply','reply':True})
+    assert loop['status']=='rejected' and loop['error']=='PermissionError'
 
 
 def test_related_item_discussion_does_not_change_current_assignment(broker):

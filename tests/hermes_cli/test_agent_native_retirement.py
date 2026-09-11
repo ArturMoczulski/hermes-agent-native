@@ -75,8 +75,8 @@ def test_retirement_rejects_unresolved_uncertainty_without_ending_agent(broker):
     s = broker
     evaluation = evaluate(s, uncertainty='The owner may expect another deliverable.')
 
-    with pytest.raises(ValueError, match='uncertainty'):
-        retire(s, evaluation)
+    denied = retire(s, evaluation)
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
 
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['removed_at'] is None
 
@@ -88,8 +88,8 @@ def test_retirement_rejects_an_unanswered_question(broker):
     select(s)
     ask(s)
 
-    with pytest.raises(ValueError, match='unanswered question'):
-        retire(s, evaluate(s))
+    denied = retire(s, evaluate(s))
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
 
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['removed_at'] is None
 
@@ -113,8 +113,8 @@ def test_retirement_rejects_a_required_owner_review(broker):
         'output_id': output['output_id'], 'version': output['version'],
     }])
 
-    with pytest.raises(ValueError, match='required owner review'):
-        retire(s, evaluate(s))
+    denied = retire(s, evaluate(s))
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
 
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['removed_at'] is None
 
@@ -127,8 +127,8 @@ def test_retirement_rejects_an_unresolved_effect_other_than_its_own(broker):
         (s.work['id'], 'older-effect', 'older-operation', 'fingerprint'),
     )
 
-    with pytest.raises(ValueError, match='unresolved effect'):
-        retire(s, evaluation)
+    denied = retire(s, evaluation)
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
 
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['removed_at'] is None
 
@@ -177,8 +177,8 @@ def test_descendant_unanswered_question_blocks_the_entire_retirement(broker):
          'scope', 'Should this delegated work be abandoned?', child['created_at']),
     )
 
-    with pytest.raises(ValueError, match='descendant has an unanswered question'):
-        retire(s, evaluate(s))
+    denied = retire(s, evaluate(s))
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
 
     assert get_root(s.conn, actor=OWNER, agent_id=s.root['id'])['retirement'] is None
     assert get_root(s.conn, actor=OWNER, agent_id=child['id'])['retirement'] is None

@@ -2,8 +2,6 @@
 from datetime import datetime, timedelta
 from pathlib import Path
 
-import pytest
-
 from agent_native.identity import OWNER, create_root, get_root
 from agent.work_policy import tool_schemas
 from agent_native.output_store import publish
@@ -152,14 +150,14 @@ def test_only_direct_parent_can_evaluate_and_one_result_has_one_decision(broker)
     )['work']['results'][0]
     assert child_result_after['parent_evaluation']['decision'] == 'accepted'
     assert invoke(s, 'accept-child', 'child_result_evaluate', arguments) == accepted
-    with pytest.raises(ValueError, match='already has a parent evaluation'):
-        invoke(s, 'reject-child', 'child_result_evaluate', {
-            **arguments, 'decision': 'rejected', 'evaluation': 'Changed judgment.',
-        })
-    with pytest.raises(PermissionError, match='direct parent'):
-        invoke(s, 'evaluate-grandchild', 'child_result_evaluate', {
-            **arguments, 'child_id': grandchild['id'],
-        })
+    repeat = invoke(s, 'reject-child', 'child_result_evaluate', {
+        **arguments, 'decision': 'rejected', 'evaluation': 'Changed judgment.',
+    })
+    assert repeat['status'] == 'rejected' and repeat['error'] == 'ValueError'
+    denied = invoke(s, 'evaluate-grandchild', 'child_result_evaluate', {
+        **arguments, 'child_id': grandchild['id'],
+    })
+    assert denied['status'] == 'rejected' and denied['error'] == 'PermissionError'
 
 
 def test_parent_cannot_inspect_unrelated_agent(broker):
@@ -168,8 +166,8 @@ def test_parent_cannot_inspect_unrelated_agent(broker):
         s.conn, actor=OWNER, request_id='unrelated', name='Unrelated', purpose='Other work.',
     )
 
-    with pytest.raises(PermissionError, match='descendant'):
-        invoke(s, 'inspect-unrelated', 'child_inspect', {'child_id': unrelated['id']})
+    denied = invoke(s, 'inspect-unrelated', 'child_inspect', {'child_id': unrelated['id']})
+    assert denied['status'] == 'rejected' and denied['error'] == 'PermissionError'
 
 
 def test_parent_evaluation_rejects_tampered_child_result(broker):
@@ -183,8 +181,8 @@ def test_parent_evaluation_rejects_tampered_child_result(broker):
         (encoded.replace('Completed the delegated lore research.', 'Tampered report.'), result['id']),
     )
 
-    with pytest.raises(ValueError, match='integrity'):
-        invoke(s, 'evaluate-tampered', 'child_result_evaluate', {
-            'child_id': child['id'], 'result_id': result['id'], 'decision': 'accepted',
-            'evaluation': 'Looks complete.', 'uncertainty': None,
-        })
+    denied = invoke(s, 'evaluate-tampered', 'child_result_evaluate', {
+        'child_id': child['id'], 'result_id': result['id'], 'decision': 'accepted',
+        'evaluation': 'Looks complete.', 'uncertainty': None,
+    })
+    assert denied['status'] == 'rejected' and denied['error'] == 'ValueError'
