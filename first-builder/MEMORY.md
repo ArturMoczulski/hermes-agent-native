@@ -5,6 +5,17 @@ authority to change the soul, product requirements, or permissions.
 
 ## Owner decisions
 
+- **2026-09-11 — Secrets authority requirements:** the owner requested a design
+  for framework, instance and agent secrets with scoped access and ultimate human
+  administration/recovery. Agents must not change passwords, remove owner access
+  or obtain unrelated secrets. AN-144 and
+  [the design](../design/18-secrets-and-credential-authority.md) record the review.
+  OpenBao, a protected operation broker and use-only agent access are proposals,
+  not an approved deployment. A synthetic non-secret probe confirmed that today's
+  repository-command helper can read outside its working-directory grant; actual
+  execution isolation is a prerequisite for the proposed protection. Source:
+  current owner request and production-helper probe; no real secret was inspected.
+
 - **2026-09-11 — Future independent security review:** the owner requested a
   dedicated milestone for independent reviewer agents that assess commands and
   behavior, identify security/boundary risks, trigger pauses and warn the owner
@@ -50,7 +61,8 @@ contradictory instructions or store secrets here.
 - **2026-09-06 — Local Plane and API-first work:** the owner authorized local
   Docker deployment and using Plane for the Builder's ongoing work. Live references
   and private API credential location are in PLANE.md. Use the separate Builder
-  account through Plane's API. PLAN.md is now a pointer, not a duplicate backlog.
+  account through Plane's API. Superseded 2026-09-11: Plane is the only planning
+  source (see the latest owner decision below).
 
 - **Autonomy/permission decisions — after the Plane roadmap review:** owner approved
   AN-60–62: ordinary authorized work proceeds; root defaults cover private work,
@@ -155,3 +167,11 @@ contradictory instructions or store secrets here.
   suite when warranted. Preserve actual TDD and end-to-end proof while keeping
   iteration fast. Source: owner conversation;
   [working policy](PRACTICES.md#targeted-verification-by-default).
+
+- **Plane is the only planning source — owner instruction (2026-09-11):**
+  long-term planning, current work status, next priorities, cycles and milestones
+  live only in the live Plane project. The repository keeps no planning backlog.
+  Fast status comes from the deterministic read-only tool
+  `first-builder/tools/plane_status.py` (`summary`, `last-worked`, `current`,
+  `milestones`) and the `/plane` Kilo command, so routine checks do not spend
+  inference tokens re-exploring the board. Source: owner conversation.

@@ -82,6 +82,38 @@ the future framework-hosted Builder.
 - Pair browser assertions with real process/container checks for cancellation
   and recovery. A UI label saying "stopped" does not establish that work stopped.
 
+## Dedicated persistent browser
+
+Keep one long-lived Chromium for agent browsing and opt-in browser tests instead
+of cold-starting a browser for every action. It uses a private profile and a
+loopback DevTools (CDP) endpoint, so cookies, localStorage and open tabs survive
+across turns and sessions. Run it as a persistent background process with:
+
+```sh
+scripts/dev/persistent-browser.sh start     # foreground; supervise as a persistent background process
+scripts/dev/persistent-browser.sh status    # exit 0 + /json/version when healthy
+scripts/dev/persistent-browser.sh endpoint  # http://127.0.0.1:9222
+scripts/dev/persistent-browser.sh ws-endpoint
+scripts/dev/persistent-browser.sh stop
+```
+
+- The profile lives at `~/.local/share/agent-native/browser/profile` (override
+  with `AN_BROWSER_PROFILE`). It is outside the repository; never commit it or
+  point tests at a personal profile.
+- The agent's Playwright MCP connects with `--cdp-endpoint
+  http://127.0.0.1:9222` (global Kilo config, `mcp.playwright`). Changing that
+  config needs an MCP/Kilo reload before the browser tools use the instance.
+- The instance is raw Chrome DevTools, so attach over CDP. Playwright Test's
+  `connectOptions`/`connect()` speaks Playwright's own protocol and hangs against
+  raw CDP; do not use it here. A spec that wants the shared instance imports
+  `web/e2e/persistent-cdp.fixture.ts` and runs with
+  `web/playwright.persistent.config.ts`:
+  `AN_BROWSER_CDP="$(scripts/dev/persistent-browser.sh endpoint)" npm run test:e2e --workspace web -- --config playwright.persistent.config.ts <spec> --retries 0`.
+  Each test still gets its own isolated browser context.
+- The default `web/playwright.config.ts` suite and CI keep launching their own
+  browser; do not weaken that isolation. If the instance is down, `start` it
+  again or run the default config.
+
 Model-driven evaluations supplement deterministic end-to-end tests where agent
 judgment matters. A scripted model response proves integration behavior, not
 independent planning ability; record that distinction in completion evidence.
@@ -159,6 +191,7 @@ ranges, duration estimates in days or weeks, or placeholder dates. Retain actual
 activity timestamps and thinking cadence. Record genuine externally required deadlines separately on affected work
 with their source; they are constraints, not cycle estimates.
 
-Link work items to commits, red/green evidence and evaluations. Once Plane is
-connected, PLAN.md is a roadmap and STATE.md a handoff pointing to authoritative
-Plane IDs, not duplicate boards.
+Link work items to commits, red/green evidence and evaluations. Plane is the only
+planning, status and priority source; STATE.md is a short session handoff pointing
+to authoritative Plane IDs. Do not keep a duplicate board or choose work from a
+repository planning file.

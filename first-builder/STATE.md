@@ -1,3 +1,120 @@
+## Local Plane throttling effectively disabled — 2026-09-11
+
+Owner: this local, localhost-only project-management instance should carry no
+meaningful rate limit; the app was still returning occasional HTTP 429. Live API
+logs pin the cause to `ApiKeyRateThrottle` (a `GET .../states/` returned 429 at
+12:42), whose Compose default was the 600/minute raised on 2026-09-08. Caddy has no
+limit, so the ceiling was purely application-level; `asset_id`/`anon` DRF rates are
+not on the Builder path.
+
+Raised both env-tunable limits to a runaway-loop-only `100000/minute` (~1666 rps):
+`API_KEY_RATE_LIMIT` in the private `plane.env`, and `AUTHENTICATION_RATE_LIMIT`,
+which existed in `plane.env` but Compose never passed (now wired in `x-app-env`).
+Repo: `ops/plane/compose.yaml` default and the README "Agent API request budget"
+section; hardcoded image limits (DRF anon 30/minute, email verification 3/hour) are
+documented as not applying to planning traffic.
+
+Verified after `up -d --no-deps api`: container env shows both limits; the API
+served HTTP 401 unauthenticated after 6s; an authenticated `GET users/me/` returned
+HTTP 200 with `X-Ratelimit-Remaining: 99999` (was 599 at 600/minute). Clients still
+honor 429 backoff. Not committed; pre-existing unrelated edits retained.
+
+Next: no further action unless 429 recurs, which would indicate a new non-env limit.
+
+
+Owner direction: keep one Chromium running in the background with a persistent
+profile and remote debugging, used by the agent's own Playwright MCP and by
+browser tests, so we stop cold-starting a browser per action and preserve the
+session. Tracked as Plane AN-146 (urgent, cycle 06) as the immediate priority.
+
+Added `scripts/dev/persistent-browser.sh` (start/stop/status/endpoint/ws-endpoint)
+that launches the newest cached Chrome for Testing with
+`--remote-debugging-port=9222`, a private profile at
+`~/.local/share/agent-native/browser/profile`, `--restore-last-session` and a
+1600x1100 window. It runs as a persistent background process.
+
+Wiring: the global Kilo Playwright MCP command now includes
+`--cdp-endpoint http://127.0.0.1:9222` (requires an MCP/Kilo reload to take
+effect). `web/e2e/persistent-cdp.fixture.ts` attaches specs over CDP via
+`connectOverCDP`; `web/playwright.persistent.config.ts` is the focused config and
+`web/e2e/persistent-browser.spec.ts` is the attach proof. Playwright Test's
+`connectOptions`/`connect()` speaks Playwright's own protocol and hangs on raw
+CDP, so it is deliberately not used.
+
+Verification (real, no paid model): instance `/json/version` = Chrome/153.0.8010.12;
+a `connectOverCDP` write to localStorage on `http://localhost:19230` survived a
+supervised instance restart (`persist-1789130244617`, tabs restored); a standalone
+Playwright MCP launched with the exact new command
+(`--cdp-endpoint http://127.0.0.1:9222`) navigated and read
+`document.title == "mcp-probe-persistent"`; `AN_BROWSER_CDP=… npm run test:e2e
+--workspace web -- --config playwright.persistent.config.ts
+persistent-browser.spec.ts --retries 0` → 1 passed (249ms); the fixture fallback
+without `AN_BROWSER_CDP` → 1 passed (3.8s), so the default suite and CI are
+unchanged.
+
+Docs: `first-builder/PRACTICES.md` (Dedicated persistent browser) and
+`web/e2e/README.md`. Profile is outside the repository; no secrets committed.
+Changed/added: `scripts/dev/persistent-browser.sh`,
+`web/e2e/persistent-cdp.fixture.ts`, `web/e2e/persistent-browser.spec.ts`,
+`web/playwright.persistent.config.ts`, plus the two docs. Not committed; the tree
+retains pre-existing unrelated edits.
+
+Next: reload the MCP/Kilo so the running browser tools use the instance; then
+resume AN-143's live repair (run its read-limit spec with the real backend/Vite,
+or adopt the CDP fixture in app specs).
+
+## Owner-controlled secrets design — 2026-09-11
+
+AN-144 records the owner-requested design and review, without changing the active
+implementation priorities. Deliverable:
+[secrets and credential authority](../design/18-secrets-and-credential-authority.md).
+Reviewed scoped Plane operations, owner ingress, provider resolution, native
+secret sources, process inheritance and the real repository-command path;
+compared OpenBao, Infisical, Bitwarden, 1Password and AWS primary documentation.
+Recommend OpenBao behind protected operation adapters, independent owner recovery
+and no raw password delivery to agents; backend/deployment choices remain proposals.
+
+The production `builder_repository.command` helper ran allowed Python that read
+a temporary synthetic non-secret file outside the granted repository (exit 0).
+The probe removed its file and accessed no real credentials. Actual code isolation
+is required before claiming the proposed policy; a reduced environment/cwd is
+insufficient. No runtime code, credential, grant or deployment changed in this work.
+
+Verification: 91 local links across the design and related indexes/architecture
+passed; scoped whitespace checks passed. No application test suite was run for
+these documentation-only edits. Existing
+uncommitted work is preserved. Next: review AN-144's proposed storage, hosting and
+recovery choices; use live Plane for the next authorized implementation item.
+
+## Plane-only planning with deterministic status tools — 2026-09-11
+
+Owner direction: long-term planning, current work status, next priorities, cycles
+and milestones live only in Plane; the repository keeps no planning backlog. Added
+the read-only First Builder status tool `first-builder/tools/plane_status.py` with
+subcommands `summary`, `last-worked`, `current` and `milestones`; it reads the
+private Builder API credential and never prints it. Wrapped as the Kilo command
+`/plane`.
+
+Instructions updated: `first-builder/INSTRUCTIONS.md` (startup routing plus a Fast
+status section), `first-builder/PLANE.md` (run the tool before reading the board),
+`first-builder/PRACTICES.md`, `first-builder/MEMORY.md`,
+`.kilo/rules/first-builder.md`, `.kilo/agents/first-builder.md`,
+`design/13-project-management.md`, and the bundled Plane skill's external-Builder
+paragraph.
+
+Verification: 10 focused selection-logic tests pass
+(`.venv/bin/python -m pytest first-builder/tools/test_plane_status.py`, 0.03s). All
+four subcommands ran live against local Plane: `summary` reported cycle 06, ten
+in-progress items and next urgent priorities AN-118/119/120; `last-worked` listed
+the five most recent items the Builder touched (AN-135/142/141/140/139);
+`milestones` classified the in-progress modules, the planned Next-handoff module
+and no fully-complete module. The Kilo config validator emitted a spurious
+"Failed to parse frontmatter" message for the new command/agent files; both
+frontmatters parse as valid YAML.
+
+Next: use `plane_status.py summary` on every resume, then continue the AN-119
+recovery sequence (AN-133 verification, then AN-120).
+
 ## Empty-project bootstrap and agent-home design — 2026-09-10
 
 AN-103 fixes the false repository blocker after AN-102 recovery. The project grant

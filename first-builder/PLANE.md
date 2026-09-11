@@ -15,17 +15,34 @@ an independently maintained task board.
 - Builder API configuration: `~/.local/share/agent-native/plane/builder-api.json`.
 - Operation/restart instructions: [local deployment](../ops/plane/README.md).
 
+## Fast status (do this first)
+
+Before reading the board turn by turn, run the read-only status tool. It reads
+the private Builder credential and never prints it:
+
+```sh
+.venv/bin/python first-builder/tools/plane_status.py summary       # default resume view
+.venv/bin/python first-builder/tools/plane_status.py last-worked    # last five items the Builder touched
+.venv/bin/python first-builder/tools/plane_status.py current        # in-progress work + next ready priorities
+.venv/bin/python first-builder/tools/plane_status.py milestones     # current / next / last milestone
+```
+
+Plane is the only planning source. Never choose work from a repository planning
+file or copy Plane status back into one.
+
 ## Resume through the API
 
-1. Read the skill, current human instruction and this connection context.
+1. Read the skill, current human instruction and this connection context, then run
+   the status tool above.
 2. Load the Builder credential from the private configuration using the available
    file/HTTP capability. Keep the key out of command arguments, output, logs, Git
    and work-item descriptions. Never use the owner credential for routine planning.
-3. Read current cycles, work items, dependencies and recent comments. The initial
-   cycle above is a stable reference, not a claim that it remains active forever.
-   Determine current focus from the ordered sequence, recorded cycle review and
-   unfinished outcomes. Do not infer it from today's date. Select the next cycle
-   when prerequisites are accepted; never fill planned dates or duration estimates.
+3. Confirm focus from the status tool and the live cycles, work items, dependencies
+   and recent comments it does not show. The initial cycle above is a stable
+   reference, not a claim that it remains active forever. Determine current focus
+   from the ordered sequence, recorded cycle review and unfinished outcomes. Do not
+   infer it from today's date. Select the next cycle when prerequisites are accepted;
+   never fill planned dates or duration estimates.
 4. Check active work and blockers before selecting an item. WIP starts at one
    implementation item for this external Builder. Read acceptance criteria, update
    the selected item, and perform the next authorized small increment using TDD.

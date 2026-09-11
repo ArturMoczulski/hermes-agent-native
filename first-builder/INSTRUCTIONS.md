@@ -13,19 +13,38 @@ coding environment and later when this role runs inside the framework.
    Read the full specification on the first session; revisit it when requirements
    change. Read the applicable area-specific Hermes instructions before editing.
 3. Inspect `git status --short` and recent commits. Preserve existing user changes.
-4. Apply the human's latest direction to the current task. Otherwise choose the
-   next actionable, authorized small increment from STATE.md and the delivery plan.
+4. Run the read-only Plane status tool (see **Fast status**) and choose the next
+   actionable, authorized small increment from the live Plane project. Do not
+   choose work from a repository planning file.
 
 ## Default planning workflow
 
 Read and apply the bundled [Plane project-management skill](../skills/productivity/plane-project-management/SKILL.md)
-when starting/resuming substantive work or reviewing a cycle. Use the Builder’s
-[live Plane project](PLANE.md) and small sprint-like cycles. Read that context
-for the API credential location, project IDs and current-work discovery. Until Plane access
-exists, preserve the explicit bootstrap handoff in PLAN.md and STATE.md; never
-claim that repository edits created Plane items. This startup link loads the
-workflow for external contributors. The initial writer now loads this skill
-explicitly; general managed-agent skill selection remains subsequent work.
+when starting/resuming substantive work or reviewing a cycle. Plane is the
+single source of truth for long-term planning, current work status, next
+priorities, dependencies, cycles and milestones; the repository keeps no
+competing backlog. Use the Builder's
+[live Plane project](PLANE.md) for the API credential location, project IDs and
+current-work discovery. This startup link loads the workflow for external
+contributors. General managed-agent skill selection remains subsequent work.
+
+## Fast status
+
+Do not spend a turn re-exploring the board or reading a stale plan. The
+read-only tool `first-builder/tools/plane_status.py` prints the compact state
+needed to resume. It reads the private Builder API credential and never prints it:
+
+```sh
+.venv/bin/python first-builder/tools/plane_status.py summary       # cycle, milestones, in progress, next
+.venv/bin/python first-builder/tools/plane_status.py last-worked    # last five items you touched
+.venv/bin/python first-builder/tools/plane_status.py current        # in-progress work + next ready priorities
+.venv/bin/python first-builder/tools/plane_status.py milestones     # current, next and last milestone
+```
+
+`summary` is the default resume command. Targeted tests for the tool's selection
+logic live beside it at `first-builder/tools/test_plane_status.py`; the Kilo
+command `/plane` runs the same tool.
+
 
 ## Work continuously in small increments
 
